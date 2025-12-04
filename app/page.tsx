@@ -119,7 +119,7 @@ export default function Home() {
       <footer className="border-t border-white/5 py-8">
         <div className="container mx-auto px-6 text-center text-slate-500 text-sm">
           <p>© 2025 WaitPlay. All rights reserved.</p>
-          <p className="mt-2">Built with Next.js, TypeScript, Tailwind CSS, and Prisma</p>
+          <p className="mt-2">Built with Next.js, TypeScript, Tailwind CSS, and Phaser</p>
         </div>
       </footer>
     </div>
