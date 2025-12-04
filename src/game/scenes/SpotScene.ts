@@ -3,7 +3,7 @@
  * 차이점 찾기 게임
  */
 
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { COLORS } from '../config';
 
 export class SpotScene extends Phaser.Scene {

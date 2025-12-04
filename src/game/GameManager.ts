@@ -2,7 +2,7 @@
  * Game Manager - Phaser 게임 초기화 및 관리
  */
 
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { GAME_CONFIG, GameType } from './config';
 import { PinballScene } from './scenes/PinballScene';
 import { MatchScene } from './scenes/MatchScene';

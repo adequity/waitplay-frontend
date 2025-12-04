@@ -3,7 +3,7 @@
  * 핀볼 게임 - 공을 튕겨서 점수를 획득하는 게임
  */
 
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { COLORS } from '../config';
 
 export class PinballScene extends Phaser.Scene {

@@ -3,7 +3,7 @@
  * 카드 매칭 게임 - 같은 그림의 카드를 찾는 게임
  */
 
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { COLORS } from '../config';
 
 export class MatchScene extends Phaser.Scene {

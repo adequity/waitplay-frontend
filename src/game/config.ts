@@ -3,7 +3,7 @@
  * WaitPlay 게임 엔진 기본 설정
  */
 
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 
 export const GAME_CONFIG = {
   width: 800,
