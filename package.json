@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=22.12.0",
+    "node": ">=20.0.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
@@ -13,11 +13,11 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@prisma/client": "^7.1.0",
+    "@prisma/client": "^6.0.1",
     "next": "16.0.7",
     "next-auth": "^5.0.0-beta.30",
     "phaser": "^3.90.0",
-    "prisma": "^7.1.0",
+    "prisma": "^6.0.1",
     "qrcode": "^1.5.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
