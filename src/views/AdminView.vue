@@ -1690,7 +1690,7 @@ const loadTemplate = () => {
 
   // Load predefined template
   if (selectedTemplate.value in predefinedTemplates) {
-    pushMessage.value = predefinedTemplates[selectedTemplate.value]
+    pushMessage.value = predefinedTemplates[selectedTemplate.value] || ''
     return
   }
 
@@ -2114,9 +2114,9 @@ watch(selectedFilter, (newFilter) => {
     selectedDateRange.value = '오늘'
     const lastData = todayData.value[todayData.value.length - 1]
     dashboardData.value = {
-      qrUsers: lastData.qrUsers,
-      couponUsed: lastData.couponUsed,
-      newFavorites: lastData.newFavorites,
+      qrUsers: lastData?.qrUsers || 0,
+      couponUsed: lastData?.couponUsed || 0,
+      newFavorites: lastData?.newFavorites || 0,
       totalFavorites: 248
     }
   } else if (newFilter === '7days') {
@@ -2134,9 +2134,9 @@ watch(selectedFilter, (newFilter) => {
     selectedDateRange.value = '30일'
     const lastData = monthlyData.value[monthlyData.value.length - 1]
     dashboardData.value = {
-      qrUsers: lastData.qrUsers,
-      couponUsed: lastData.couponUsed,
-      newFavorites: lastData.newFavorites,
+      qrUsers: lastData?.qrUsers || 0,
+      couponUsed: lastData?.couponUsed || 0,
+      newFavorites: lastData?.newFavorites || 0,
       totalFavorites: 248
     }
   }

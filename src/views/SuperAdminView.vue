@@ -1595,10 +1595,10 @@ const saveNotice = () => {
       id: notices.value.length + 1,
       ...noticeForm.value,
       author: '본사 관리자',
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString().split('T')[0] as string,
       views: 0
     }
-    notices.value.unshift(newNotice)
+    notices.value.unshift(newNotice as any)
     showToastNotification('공지사항이 작성되었습니다', '✓')
   }
 
@@ -1689,7 +1689,7 @@ const saveReply = () => {
       cs.reply = csReplyForm.value.reply
       cs.status = csReplyForm.value.status
       cs.replyAuthor = '본사 관리자'
-      cs.replyDate = new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0].substring(0, 5)
+      cs.replyDate = (new Date().toISOString().split('T')[0] || '') + ' ' + (new Date().toTimeString().split(' ')[0]?.substring(0, 5) || '')
       showToastNotification('답변이 등록되었습니다', '✓')
     }
   }
@@ -1844,18 +1844,20 @@ const saveStore = () => {
       region: storeForm.value.region,
       owner: storeForm.value.owner,
       phone: storeForm.value.phone,
-      email: storeForm.value.email || null,
-      businessNumber: storeForm.value.businessNumber || null,
-      joinDate: new Date().toISOString().split('T')[0],
+      email: storeForm.value.email || '',
+      businessNumber: storeForm.value.businessNumber || '',
+      joinDate: new Date().toISOString().split('T')[0] as string,
       customers: 0,
       totalCustomers: 0,
       monthlyNewCustomers: 0,
       monthlyCouponUsed: 0,
       activeGameTypes: 0,
+      dailyCouponUsed: 0,
+      topGames: [],
       status: storeForm.value.status,
-      memo: storeForm.value.memo || null
+      memo: storeForm.value.memo || ''
     }
-    stores.value.unshift(newStore)
+    stores.value.unshift(newStore as any)
     showToastNotification('가맹점이 추가되었습니다', '✓')
   }
 
@@ -2000,14 +2002,14 @@ const uploadAsset = () => {
       reader.onload = (e) => {
         const newAsset = {
           id: assets.value.length + 1,
-          name: file.name.split('.')[0],
+          name: file.name.split('.')[0] || '',
           category: 'food',
           gameType: 'spot-difference',
-          imageUrl: e.target?.result as string,
+          imageUrl: (e.target?.result as string) || '',
           usageCount: 0,
-          uploadDate: new Date().toISOString().split('T')[0]
+          uploadDate: new Date().toISOString().split('T')[0] as string
         }
-        assets.value.unshift(newAsset)
+        assets.value.unshift(newAsset as any)
         showToastNotification('에셋이 업로드되었습니다', '✓')
       }
       reader.readAsDataURL(file)
@@ -2076,7 +2078,7 @@ const saveAsset = () => {
       asset.category = assetForm.value.category
       asset.gameType = assetForm.value.gameType
       if (assetForm.value.imageUrl) {
-        asset.imageUrl = assetForm.value.imageUrl
+        asset.imageUrl = assetForm.value.imageUrl as any
       }
       showToastNotification('에셋이 수정되었습니다', '✓')
     }
@@ -2086,11 +2088,11 @@ const saveAsset = () => {
       name: assetForm.value.name,
       category: assetForm.value.category,
       gameType: assetForm.value.gameType,
-      imageUrl: assetForm.value.imageUrl,
+      imageUrl: assetForm.value.imageUrl || '',
       usageCount: 0,
-      uploadDate: new Date().toISOString().split('T')[0]
+      uploadDate: new Date().toISOString().split('T')[0] as string
     }
-    assets.value.unshift(newAsset)
+    assets.value.unshift(newAsset as any)
     showToastNotification('에셋이 추가되었습니다', '✓')
   }
 

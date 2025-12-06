@@ -3,7 +3,7 @@
  */
 
 import * as Phaser from 'phaser';
-import { GAME_CONFIG, GameType } from './config';
+import { GAME_CONFIG, type GameType } from './config';
 import { PinballScene } from './scenes/PinballScene';
 import { MatchScene } from './scenes/MatchScene';
 import { SpotScene } from './scenes/SpotScene';
