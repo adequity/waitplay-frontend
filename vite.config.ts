@@ -18,5 +18,10 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  preview: {
+    host: true,
+    port: Number(process.env.PORT) || 4173,
+    strictPort: false
   }
 })
