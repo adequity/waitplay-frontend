@@ -20,8 +20,12 @@ export default defineConfig({
     }
   },
   preview: {
-    host: true,
+    host: '0.0.0.0',
     port: Number(process.env.PORT) || 4173,
-    strictPort: false
+    strictPort: false,
+    allowedHosts: [
+      'waitplay-frontend-production-77e5.up.railway.app',
+      '.up.railway.app'
+    ]
   }
 })
