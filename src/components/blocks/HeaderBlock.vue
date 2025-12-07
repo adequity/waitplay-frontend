@@ -89,6 +89,7 @@ const gradientStyle = computed(() => {
   background-size: cover;
   background-position: center;
   border-radius: 0;
+  z-index: 1;
 }
 
 /* Gradient overlay effect - 사진에서 배경색으로 자연스럽게 페이드 */
@@ -99,6 +100,7 @@ const gradientStyle = computed(() => {
   right: 0;
   bottom: 0;
   pointer-events: none;
+  z-index: 2;
 }
 
 .header-content {
