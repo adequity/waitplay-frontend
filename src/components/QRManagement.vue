@@ -238,11 +238,31 @@ const qrImageUrl = ref<string>('')
 const isLoading = ref(false)
 
 // Landing page settings
-const storeName = ref('WaitPlay 데모 매장')
+const storeName = ref('')
 const logoUrl = ref<string>('')
 const logoFileInput = ref<HTMLInputElement | null>(null)
-const welcomeMessage = ref('환영합니다! QR 코드를 스캔하여 대기열에 참여하세요.')
+const welcomeMessage = ref('')
 const landingPageUrl = ref('waitplay.io/store/demo123')
+
+// Load settings from localStorage on mount
+const loadSettings = () => {
+  const savedSettings = localStorage.getItem('waitplay_landing_settings')
+  if (savedSettings) {
+    try {
+      const settings = JSON.parse(savedSettings)
+      storeName.value = settings.storeName || 'WaitPlay 데모 매장'
+      logoUrl.value = settings.logoUrl || ''
+      welcomeMessage.value = settings.welcomeMessage || '환영합니다! QR 코드를 스캔하여 대기열에 참여하세요.'
+      landingPageUrl.value = settings.landingPageUrl || 'waitplay.io/store/demo123'
+    } catch (error) {
+      console.error('Failed to load settings:', error)
+    }
+  } else {
+    // Set defaults if no saved settings
+    storeName.value = 'WaitPlay 데모 매장'
+    welcomeMessage.value = '환영합니다! QR 코드를 스캔하여 대기열에 참여하세요.'
+  }
+}
 
 const fetchQRCodes = async () => {
   isLoading.value = true
@@ -264,8 +284,19 @@ const fetchQRCodes = async () => {
 
 // Landing page settings functions
 const saveSettings = () => {
-  // TODO: Implement save settings API call
-  alert('설정이 저장되었습니다!')
+  try {
+    const settings = {
+      storeName: storeName.value,
+      logoUrl: logoUrl.value,
+      welcomeMessage: welcomeMessage.value,
+      landingPageUrl: landingPageUrl.value
+    }
+    localStorage.setItem('waitplay_landing_settings', JSON.stringify(settings))
+    alert('설정이 저장되었습니다!')
+  } catch (error) {
+    console.error('Failed to save settings:', error)
+    alert('설정 저장에 실패했습니다.')
+  }
 }
 
 const triggerLogoUpload = () => {
@@ -442,6 +473,7 @@ const formatDate = (dateString: string) => {
 }
 
 onMounted(() => {
+  loadSettings()
   fetchQRCodes()
 })
 </script>
