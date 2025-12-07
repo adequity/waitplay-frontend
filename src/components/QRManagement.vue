@@ -358,7 +358,9 @@ const handleLogoUpload = async (event: Event) => {
       if (response.data.success) {
         // Set the logo URL from the response
         logoUrl.value = response.data.fileUrl
-        alert('로고가 업로드되었습니다!')
+
+        // Auto-save settings after logo upload
+        await saveSettings()
       } else {
         alert(response.data.message || '파일 업로드에 실패했습니다.')
       }
