@@ -81,7 +81,7 @@ onMounted(async () => {
   let welcomeMessage = '📶 테라스_Guest / terrace1234\n🕐 매일 10:00 - 22:00\n📞 02-1234-5678'
 
   try {
-    const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-backend-production-99ae.up.railway.app'
+    const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
     // If QR code is provided, fetch settings by QR code
     // Otherwise fetch global settings
