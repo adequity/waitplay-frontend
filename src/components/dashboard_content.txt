@@ -1,0 +1,136 @@
+<!-- Apple-Style Greeting -->
+      <div class="apple-greeting">
+        <h1 class="greeting-title">WaitPlay 관리자</h1>
+        <p class="greeting-subtitle">오늘도 좋은 하루 보내세요</p>
+      </div>
+
+      <!-- Global Date Filter -->
+      <div class="global-filter-section">
+        <div class="filter-label">기간 선택</div>
+        <div class="date-filter-apple">
+          <button
+            v-for="filter in dateFilters"
+            :key="filter.value"
+            @click="selectedFilter = filter.value"
+            :class="['filter-btn-apple', { active: selectedFilter === filter.value }]"
+          >
+            {{ filter.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Apple-Style Key Metrics -->
+      <div class="metrics-apple">
+        <div class="metric-apple">
+          <p class="metric-value-apple">{{ animatedQrUsers }}</p>
+          <p class="metric-label-apple">QR 활용자</p>
+          <p class="metric-change-apple">{{ selectedDateRange }}</p>
+        </div>
+
+        <div class="metric-apple">
+          <p class="metric-value-apple">{{ animatedCouponUsed }}</p>
+          <p class="metric-label-apple">쿠폰 사용</p>
+          <p class="metric-change-apple">{{ selectedDateRange }}</p>
+        </div>
+
+        <div class="metric-apple">
+          <p class="metric-value-apple">{{ animatedNewFavorites }}</p>
+          <p class="metric-label-apple">신규 단골</p>
+          <p class="metric-change-apple">{{ selectedDateRange }}</p>
+        </div>
+
+        <div class="metric-apple">
+          <p class="metric-value-apple">{{ animatedTotalFavorites }}</p>
+          <p class="metric-label-apple">총 단골 수</p>
+          <p class="metric-change-apple">누적</p>
+        </div>
+      </div>
+
+      <!-- Apple-Style Chart Section -->
+      <div class="chart-apple">
+        <div class="chart-header-apple">
+          <h3 class="chart-title-apple">일자별 활동 추이</h3>
+        </div>
+
+        <div class="chart-legend-apple">
+          <div class="legend-item-apple">
+            <span class="legend-dot-apple" style="background: #007aff"></span>
+            <span class="legend-label-apple">QR 활용자</span>
+          </div>
+          <div class="legend-item-apple">
+            <span class="legend-dot-apple" style="background: #34c759"></span>
+            <span class="legend-label-apple">쿠폰 사용</span>
+          </div>
+          <div class="legend-item-apple">
+            <span class="legend-dot-apple" style="background: #ff9500"></span>
+            <span class="legend-label-apple">신규 단골</span>
+          </div>
+        </div>
+
+        <div class="chart-container-apple">
+          <div class="line-chart">
+            <!-- Y-axis labels -->
+            <div class="y-axis">
+              <div class="y-label-apple" v-for="i in 5" :key="i">
+                {{ Math.round((maxValue * (5 - i)) / 4) }}
+              </div>
+            </div>
+
+            <!-- Chart area -->
+            <div class="chart-area">
+              <!-- Grid lines -->
+              <div class="grid-lines-apple">
+                <div class="grid-line-apple" v-for="i in 5" :key="i"></div>
+              </div>
+
+              <!-- Lines -->
+              <svg class="chart-svg" viewBox="0 0 700 300" preserveAspectRatio="none">
+                <!-- QR Users line -->
+                <polyline
+                  :points="currentChartData.map((d, i) => `${i * 100 + 50},${300 - (d.qrUsers / maxValue * 280)}`).join(' ')"
+                  fill="none"
+                  stroke="#007aff"
+                  stroke-width="3"
+                />
+                <!-- Coupon Used line -->
+                <polyline
+                  :points="currentChartData.map((d, i) => `${i * 100 + 50},${300 - (d.couponUsed / maxValue * 280)}`).join(' ')"
+                  fill="none"
+                  stroke="#34c759"
+                  stroke-width="3"
+                />
+                <!-- New Favorites line -->
+                <polyline
+                  :points="currentChartData.map((d, i) => `${i * 100 + 50},${300 - (d.newFavorites / maxValue * 280)}`).join(' ')"
+                  fill="none"
+                  stroke="#ff9500"
+                  stroke-width="3"
+                />
+
+                <!-- Data points for QR Users -->
+                <g v-for="(d, i) in currentChartData" :key="`qr-${i}`">
+                  <circle :cx="i * 100 + 50" :cy="300 - (d.qrUsers / maxValue * 280)" r="4" fill="#007aff" />
+                </g>
+                <!-- Data points for Coupon Used -->
+                <g v-for="(d, i) in currentChartData" :key="`coupon-${i}`">
+                  <circle :cx="i * 100 + 50" :cy="300 - (d.couponUsed / maxValue * 280)" r="4" fill="#34c759" />
+                </g>
+                <!-- Data points for New Favorites -->
+                <g v-for="(d, i) in currentChartData" :key="`fav-${i}`">
+                  <circle :cx="i * 100 + 50" :cy="300 - (d.newFavorites / maxValue * 280)" r="4" fill="#ff9500" />
+                </g>
+              </svg>
+
+              <!-- X-axis labels -->
+              <div class="x-axis">
+                <div class="x-label-apple" v-for="(d, i) in currentChartData" :key="i">
+                  {{ d.label }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Management Tab -->

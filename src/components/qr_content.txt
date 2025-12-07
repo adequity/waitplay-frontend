@@ -1,0 +1,161 @@
+<!-- Apple-Style Greeting -->
+      <div class="apple-greeting">
+        <h1 class="greeting-title">QR 랜딩페이지 관리</h1>
+        <p class="greeting-subtitle">게임 랜딩페이지 QR 코드를 생성하고 관리하세요.</p>
+      </div>
+
+      <!-- Main QR Management Grid (Horizontal Layout) -->
+      <div class="qr-management-grid">
+        <!-- Left: Landing Page Settings -->
+        <div class="landing-settings-section">
+          <h2 class="settings-section-title">랜딩페이지 설정</h2>
+
+          <div class="settings-form-apple">
+            <div class="settings-form-group">
+              <label class="settings-label">매장 이름</label>
+              <input
+                type="text"
+                class="settings-input-apple"
+                v-model="storeName"
+                placeholder="예: 스타벅스 강남점"
+              />
+            </div>
+
+            <!-- Logo Upload Section -->
+            <div class="settings-form-group">
+              <label class="settings-label">매장 로고</label>
+              <div class="logo-upload-container">
+                <div v-if="logoUrl" class="logo-preview-wrapper">
+                  <div class="logo-preview">
+                    <img :src="logoUrl" alt="매장 로고" class="logo-image" />
+                  </div>
+                  <div class="logo-actions">
+                    <button type="button" class="btn-logo-change" @click="triggerLogoUpload">
+                      <span>🔄</span>
+                      <span>변경</span>
+                    </button>
+                    <button type="button" class="btn-logo-remove" @click="removeLogo">
+                      <span>🗑️</span>
+                      <span>삭제</span>
+                    </button>
+                  </div>
+                </div>
+                <div v-else class="logo-upload-box" @click="triggerLogoUpload">
+                  <div class="upload-icon">📷</div>
+                  <p class="upload-text">로고 이미지를 업로드하세요</p>
+                  <p class="upload-hint">PNG, JPG, SVG (최대 2MB)</p>
+                </div>
+                <input
+                  ref="logoFileInput"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                  @change="handleLogoUpload"
+                  class="logo-file-input"
+                  hidden
+                />
+              </div>
+            </div>
+
+            <div class="settings-form-group">
+              <label class="settings-label">환영 메시지</label>
+              <textarea
+                class="settings-textarea-apple"
+                v-model="welcomeMessage"
+                placeholder="고객에게 표시될 환영 메시지를 입력하세요..."
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="settings-form-group">
+              <label class="settings-label">활성화된 게임</label>
+              <div class="active-games-summary">
+                <span class="game-chip">🎯 브랜드 퀴즈</span>
+                <span class="game-chip">🃏 메뉴 픽 맞추기</span>
+                <span class="game-chip game-chip-disabled">🔍 틀린 그림 찾기 (비활성)</span>
+              </div>
+              <p class="settings-hint">게임 관리 탭에서 활성화/비활성화 할 수 있습니다.</p>
+            </div>
+
+            <div class="settings-form-group">
+              <label class="settings-label">랜딩페이지 URL</label>
+              <div class="url-display-box">
+                <span class="url-text">waitplay.io/store/demo123</span>
+                <button class="btn-url-copy" @click="showToastNotification('링크가 복사되었습니다', '🔗')">
+                  <span>🔗</span>
+                  <span>복사</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-form-actions">
+              <button class="btn-settings-save" @click="showToastNotification('설정이 저장되었습니다', '✓')">
+                <span>💾</span>
+                <span>설정 저장</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: QR Code Card -->
+        <div class="qr-code-card">
+          <h3 class="qr-code-title">QR 코드</h3>
+          <p class="qr-code-subtitle">고객이 스캔하면 랜딩페이지로 이동합니다</p>
+
+          <!-- QR Code Preview -->
+          <div class="qr-code-display">
+            <div class="qr-placeholder">
+              <svg viewBox="0 0 200 200" class="qr-svg">
+                <!-- Simple QR code representation -->
+                <rect width="200" height="200" fill="#ffffff" />
+                <rect x="10" y="10" width="60" height="60" fill="#000000" />
+                <rect x="130" y="10" width="60" height="60" fill="#000000" />
+                <rect x="10" y="130" width="60" height="60" fill="#000000" />
+                <rect x="20" y="20" width="20" height="20" fill="#ffffff" />
+                <rect x="140" y="20" width="20" height="20" fill="#ffffff" />
+                <rect x="20" y="140" width="20" height="20" fill="#ffffff" />
+                <rect x="80" y="80" width="40" height="40" fill="#000000" />
+                <!-- Additional QR pattern details -->
+                <rect x="90" y="10" width="10" height="10" fill="#000000" />
+                <rect x="110" y="10" width="10" height="10" fill="#000000" />
+                <rect x="90" y="30" width="10" height="10" fill="#000000" />
+                <rect x="110" y="30" width="10" height="10" fill="#000000" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="qr-actions">
+            <button class="btn-qr-download">
+              <span>⬇️</span>
+              <span>이미지 다운로드</span>
+            </button>
+            <button class="btn-qr-print">
+              <span>🖨️</span>
+              <span>인쇄하기</span>
+            </button>
+          </div>
+
+          <!-- Advanced Settings: Layout Management -->
+          <div class="advanced-settings-section">
+            <button class="btn-layout-manager" @click="goToLayoutEditor">
+              <span class="btn-icon">⚙️</span>
+              <span class="btn-text">레이아웃 관리</span>
+              <span class="btn-badge">고급</span>
+            </button>
+            <p class="advanced-hint">랜딩페이지 레이아웃을 블록 방식으로 편집합니다</p>
+          </div>
+
+          <div class="qr-info-box">
+            <div class="info-item-qr">
+              <span class="info-label-qr">📏 크기</span>
+              <span class="info-value-qr">300 × 300 px</span>
+            </div>
+            <div class="info-item-qr">
+              <span class="info-label-qr">📄 형식</span>
+              <span class="info-value-qr">PNG / SVG</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Games Management Tab -->

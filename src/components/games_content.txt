@@ -1,0 +1,318 @@
+<!-- Apple-Style Greeting -->
+      <div class="apple-greeting">
+        <h1 class="greeting-title">게임 라인업 설정</h1>
+        <p class="greeting-subtitle">매장 상황에 맞춰 원하는 게임을 활성화하세요.</p>
+      </div>
+
+      <!-- Games List -->
+      <div class="games-list-apple">
+        <!-- Game Item 1: 브랜드 퀴즈 -->
+        <div class="game-item-apple">
+          <div class="game-header-apple">
+            <div class="game-info-left">
+              <div class="game-icon-small">🎯</div>
+              <div class="game-title-section">
+                <h3 class="game-name-apple">브랜드 퀴즈</h3>
+                <p class="game-status-text active">ON • 가장 인기 있는 게임입니다.</p>
+              </div>
+            </div>
+            <div class="game-toggle-section">
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="game-quick-stats">
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">오늘 플레이</span>
+              <span class="quick-stat-value">24회</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">평균 점수</span>
+              <span class="quick-stat-value">8.2점</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">참여자</span>
+              <span class="quick-stat-value">127명</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">재참여율</span>
+              <span class="quick-stat-value">68%</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">쿠폰 평균점수</span>
+              <span class="quick-stat-value">7.5점</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">쿠폰 확인</span>
+              <span class="quick-stat-value">82회</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="game-action-buttons">
+            <button class="btn-benefit-link" @click="activeTab = 'benefits'">
+              혜택 설정
+            </button>
+            <button class="btn-detail-apple" @click="expandedGame = expandedGame === 'quiz' ? null : 'quiz'">
+              <span>{{ expandedGame === 'quiz' ? '접기' : '상세 보기' }}</span>
+              <span class="detail-arrow" :class="{ expanded: expandedGame === 'quiz' }">›</span>
+            </button>
+          </div>
+
+          <!-- Expanded Details -->
+          <div v-if="expandedGame === 'quiz'" class="game-details-expanded">
+            <div class="details-grid">
+              <div class="detail-card">
+                <h4 class="detail-title">이용 통계</h4>
+                <div class="detail-stats-list">
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">총 플레이 횟수</span>
+                    <span class="detail-stat-value">1,248회</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">평균 플레이 시간</span>
+                    <span class="detail-stat-value">15분</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">완료율</span>
+                    <span class="detail-stat-value">87%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <h4 class="detail-title">점수 현황</h4>
+                <div class="detail-stats-list">
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">평균 점수</span>
+                    <span class="detail-stat-value highlight">8.2점</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">최고 점수</span>
+                    <span class="detail-stat-value">10점</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">최고 득점자</span>
+                    <span class="detail-stat-value">김단골님</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Item 2: 메뉴 픽 맞추기 -->
+        <div class="game-item-apple">
+          <div class="game-header-apple">
+            <div class="game-info-left">
+              <div class="game-icon-small">🃏</div>
+              <div class="game-title-section">
+                <h3 class="game-name-apple">메뉴 픽 맞추기</h3>
+                <p class="game-status-text active">ON • 신메뉴 이미지로 자동 생성됩니다.</p>
+              </div>
+            </div>
+            <div class="game-toggle-section">
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="game-quick-stats">
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">오늘 플레이</span>
+              <span class="quick-stat-value">18회</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">평균 점수</span>
+              <span class="quick-stat-value">7.8점</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">참여자</span>
+              <span class="quick-stat-value">95명</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">재참여율</span>
+              <span class="quick-stat-value">54%</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">쿠폰 평균점수</span>
+              <span class="quick-stat-value">6.8점</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">쿠폰 확인</span>
+              <span class="quick-stat-value">63회</span>
+            </div>
+          </div>
+
+          <div class="game-action-buttons">
+            <button class="btn-benefit-link" @click="activeTab = 'benefits'">
+              혜택 설정
+            </button>
+            <button class="btn-detail-apple" @click="expandedGame = expandedGame === 'menu' ? null : 'menu'">
+              <span>{{ expandedGame === 'menu' ? '접기' : '상세 보기' }}</span>
+              <span class="detail-arrow" :class="{ expanded: expandedGame === 'menu' }">›</span>
+            </button>
+          </div>
+
+          <div v-if="expandedGame === 'menu'" class="game-details-expanded">
+            <div class="details-grid">
+              <div class="detail-card">
+                <h4 class="detail-title">이용 통계</h4>
+                <div class="detail-stats-list">
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">총 플레이 횟수</span>
+                    <span class="detail-stat-value">856회</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">평균 플레이 시간</span>
+                    <span class="detail-stat-value">12분</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">완료율</span>
+                    <span class="detail-stat-value">92%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <h4 class="detail-title">점수 현황</h4>
+                <div class="detail-stats-list">
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">평균 점수</span>
+                    <span class="detail-stat-value highlight">7.8점</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">최고 점수</span>
+                    <span class="detail-stat-value">10점</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">최고 득점자</span>
+                    <span class="detail-stat-value">박고객님</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Item 3: 틀린 그림 찾기 -->
+        <div class="game-item-apple">
+          <div class="game-header-apple">
+            <div class="game-info-left">
+              <div class="game-icon-small">🔍</div>
+              <div class="game-title-section">
+                <h3 class="game-name-apple">틀린 그림 찾기</h3>
+                <p class="game-status-text inactive">OFF • 잠시 비활성화 상태입니다.</p>
+              </div>
+            </div>
+            <div class="game-toggle-section">
+              <label class="toggle-switch">
+                <input type="checkbox" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="game-quick-stats">
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">오늘 플레이</span>
+              <span class="quick-stat-value">0회</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">평균 점수</span>
+              <span class="quick-stat-value">-</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">참여자</span>
+              <span class="quick-stat-value">0명</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">재참여율</span>
+              <span class="quick-stat-value">-</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">쿠폰 평균점수</span>
+              <span class="quick-stat-value">-</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">쿠폰 확인</span>
+              <span class="quick-stat-value">-</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="game-action-buttons">
+            <button class="btn-benefit-link" @click="activeTab = 'benefits'">
+              혜택 설정
+            </button>
+            <button class="btn-detail-apple" @click="expandedGame = expandedGame === 'find' ? null : 'find'">
+              <span>{{ expandedGame === 'find' ? '접기' : '상세 보기' }}</span>
+              <span class="detail-arrow" :class="{ expanded: expandedGame === 'find' }">›</span>
+            </button>
+          </div>
+
+          <div v-if="expandedGame === 'find'" class="game-details-expanded">
+            <div class="details-grid">
+              <div class="detail-card">
+                <h4 class="detail-title">이용 통계</h4>
+                <div class="detail-stats-list">
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">총 플레이 횟수</span>
+                    <span class="detail-stat-value">324회</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">평균 플레이 시간</span>
+                    <span class="detail-stat-value">10분</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">완료율</span>
+                    <span class="detail-stat-value">78%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <h4 class="detail-title">점수 현황</h4>
+                <div class="detail-stats-list">
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">평균 점수</span>
+                    <span class="detail-stat-value highlight">6.5점</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">최고 점수</span>
+                    <span class="detail-stat-value">9.8점</span>
+                  </div>
+                  <div class="detail-stat-row">
+                    <span class="detail-stat-label">최고 득점자</span>
+                    <span class="detail-stat-value">이손님님</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Marketplace CTA -->
+      <div class="marketplace-cta">
+        <div class="cta-content">
+          <div class="cta-icon">🛍️</div>
+          <div class="cta-text">
+            <h3 class="cta-title">더 많은 게임이 필요하신가요?</h3>
+            <p class="cta-description">마켓플레이스에서 새로운 게임을 구매하고 고객 경험을 확대하세요.</p>
+          </div>
+          <button class="btn-marketplace">
+            <span>마켓플레이스 바로가기</span>
+            <span class="arrow-icon">→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Benefits Tab -->

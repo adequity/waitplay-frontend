@@ -1,0 +1,398 @@
+<!-- Apple-Style Greeting -->
+      <div class="apple-greeting">
+        <h1 class="greeting-title">고객 분석</h1>
+        <p class="greeting-subtitle">고객 세그먼트별 현황과 참여도를 확인하세요.</p>
+      </div>
+
+      <!-- Customer Segments Overview -->
+      <div class="customer-segments-grid">
+        <!-- Segment Card 1: VIP -->
+        <div class="segment-card segment-vip">
+          <div class="segment-card-header">
+            <div class="segment-icon">👑</div>
+            <div class="segment-title-group">
+              <h3 class="segment-title">VIP 고객</h3>
+              <p class="segment-subtitle">방문 20회 이상</p>
+            </div>
+          </div>
+          <div class="segment-stat">
+            <span class="stat-number">12</span>
+            <span class="stat-label">명</span>
+          </div>
+          <div class="segment-metrics">
+            <div class="metric-item">
+              <span class="metric-label">평균 방문</span>
+              <span class="metric-value">27회</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">쿠폰 보유</span>
+              <span class="metric-value">평균 8장</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segment Card 2: Regular -->
+        <div class="segment-card segment-regular">
+          <div class="segment-card-header">
+            <div class="segment-icon">⭐</div>
+            <div class="segment-title-group">
+              <h3 class="segment-title">단골 고객</h3>
+              <p class="segment-subtitle">방문 10-19회</p>
+            </div>
+          </div>
+          <div class="segment-stat">
+            <span class="stat-number">28</span>
+            <span class="stat-label">명</span>
+          </div>
+          <div class="segment-metrics">
+            <div class="metric-item">
+              <span class="metric-label">평균 방문</span>
+              <span class="metric-value">14회</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">쿠폰 보유</span>
+              <span class="metric-value">평균 5장</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segment Card 3: Active -->
+        <div class="segment-card segment-active">
+          <div class="segment-card-header">
+            <div class="segment-icon">✨</div>
+            <div class="segment-title-group">
+              <h3 class="segment-title">활동 고객</h3>
+              <p class="segment-subtitle">방문 4-9회</p>
+            </div>
+          </div>
+          <div class="segment-stat">
+            <span class="stat-number">56</span>
+            <span class="stat-label">명</span>
+          </div>
+          <div class="segment-metrics">
+            <div class="metric-item">
+              <span class="metric-label">평균 방문</span>
+              <span class="metric-value">6회</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">쿠폰 보유</span>
+              <span class="metric-value">평균 3장</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segment Card 4: New -->
+        <div class="segment-card segment-new">
+          <div class="segment-card-header">
+            <div class="segment-icon">🎯</div>
+            <div class="segment-title-group">
+              <h3 class="segment-title">신규 고객</h3>
+              <p class="segment-subtitle">방문 1-3회</p>
+            </div>
+          </div>
+          <div class="segment-stat">
+            <span class="stat-number">45</span>
+            <span class="stat-label">명</span>
+          </div>
+          <div class="segment-metrics">
+            <div class="metric-item">
+              <span class="metric-label">평균 방문</span>
+              <span class="metric-value">2회</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">쿠폰 보유</span>
+              <span class="metric-value">평균 2장</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message Sending Section -->
+      <div class="push-notification-section">
+        <div class="push-section-header">
+          <h2 class="push-section-title">메시지 발송</h2>
+          <p class="push-section-subtitle">고객 세그먼트를 선택하여 문자 또는 카카오톡 메시지를 전송하세요.</p>
+        </div>
+
+        <div class="push-form-apple">
+          <!-- Message Type Selection -->
+          <div class="push-form-group">
+            <label class="push-label">발송 방식</label>
+            <div class="message-type-selector">
+              <button
+                type="button"
+                @click="messageType = 'sms'"
+                :class="['message-type-btn', { active: messageType === 'sms' }]"
+              >
+                <span class="type-icon">💬</span>
+                <span class="type-label">문자 메시지 (SMS)</span>
+              </button>
+              <button
+                type="button"
+                @click="messageType = 'kakao'"
+                :class="['message-type-btn', { active: messageType === 'kakao' }]"
+              >
+                <span class="type-icon">💛</span>
+                <span class="type-label">카카오톡 플러스친구</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Target Customer Selection -->
+          <div class="push-form-group">
+            <label class="push-label">대상 고객 세그먼트</label>
+            <div class="segment-filter-container">
+              <!-- Basic Segments -->
+              <div class="filter-section">
+                <label class="filter-section-label">기본 세그먼트</label>
+                <select class="push-select-apple" v-model="selectedCustomerSegment">
+                  <option value="all">전체 고객 (141명)</option>
+                  <option value="vip">VIP 고객 (12명)</option>
+                  <option value="regular">단골 고객 (28명)</option>
+                  <option value="active">활동 고객 (56명)</option>
+                  <option value="new">신규 고객 (45명)</option>
+                  <option value="inactive">미방문 고객 7일 이상 (30명)</option>
+                </select>
+              </div>
+
+              <!-- Advanced Filters -->
+              <div class="filter-section">
+                <label class="filter-section-label">상세 필터</label>
+                <div class="advanced-filters">
+                  <!-- Month Filter -->
+                  <div class="filter-item">
+                    <label class="filter-label">
+                      <input type="checkbox" v-model="filters.byMonth.enabled" class="filter-checkbox" />
+                      <span>특정 월 웨이팅 고객</span>
+                    </label>
+                    <select
+                      v-if="filters.byMonth.enabled"
+                      v-model="filters.byMonth.month"
+                      class="filter-select"
+                    >
+                      <option value="1">1월</option>
+                      <option value="2">2월</option>
+                      <option value="3">3월</option>
+                      <option value="4">4월</option>
+                      <option value="5">5월</option>
+                      <option value="6">6월</option>
+                      <option value="7">7월</option>
+                      <option value="8">8월</option>
+                      <option value="9">9월</option>
+                      <option value="10">10월</option>
+                      <option value="11">11월</option>
+                      <option value="12">12월</option>
+                    </select>
+                  </div>
+
+                  <!-- Visit Count Filter -->
+                  <div class="filter-item">
+                    <label class="filter-label">
+                      <input type="checkbox" v-model="filters.byVisitCount.enabled" class="filter-checkbox" />
+                      <span>방문 횟수</span>
+                    </label>
+                    <div v-if="filters.byVisitCount.enabled" class="filter-range">
+                      <input
+                        type="number"
+                        v-model.number="filters.byVisitCount.min"
+                        placeholder="최소"
+                        class="filter-input"
+                        min="0"
+                      />
+                      <span class="range-separator">~</span>
+                      <input
+                        type="number"
+                        v-model.number="filters.byVisitCount.max"
+                        placeholder="최대"
+                        class="filter-input"
+                        min="0"
+                      />
+                      <span class="range-unit">회</span>
+                    </div>
+                  </div>
+
+                  <!-- Game Participation Filter -->
+                  <div class="filter-item">
+                    <label class="filter-label">
+                      <input type="checkbox" v-model="filters.byGameParticipation.enabled" class="filter-checkbox" />
+                      <span>게임 참여 여부</span>
+                    </label>
+                    <select
+                      v-if="filters.byGameParticipation.enabled"
+                      v-model="filters.byGameParticipation.status"
+                      class="filter-select"
+                    >
+                      <option value="participated">참여함</option>
+                      <option value="not_participated">참여 안 함</option>
+                      <option value="won">우승 경험 있음</option>
+                    </select>
+                  </div>
+
+                  <!-- Last Visit Filter -->
+                  <div class="filter-item">
+                    <label class="filter-label">
+                      <input type="checkbox" v-model="filters.byLastVisit.enabled" class="filter-checkbox" />
+                      <span>마지막 방문</span>
+                    </label>
+                    <select
+                      v-if="filters.byLastVisit.enabled"
+                      v-model="filters.byLastVisit.period"
+                      class="filter-select"
+                    >
+                      <option value="7">7일 이내</option>
+                      <option value="14">14일 이내</option>
+                      <option value="30">30일 이내</option>
+                      <option value="60">60일 이내</option>
+                      <option value="90">90일 이상</option>
+                    </select>
+                  </div>
+
+                  <!-- Reward Status Filter -->
+                  <div class="filter-item">
+                    <label class="filter-label">
+                      <input type="checkbox" v-model="filters.byRewardStatus.enabled" class="filter-checkbox" />
+                      <span>리워드 사용 여부</span>
+                    </label>
+                    <select
+                      v-if="filters.byRewardStatus.enabled"
+                      v-model="filters.byRewardStatus.status"
+                      class="filter-select"
+                    >
+                      <option value="used">사용함</option>
+                      <option value="not_used">미사용</option>
+                      <option value="expired">만료됨</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Filter Summary -->
+                <div v-if="hasActiveFilters" class="filter-summary">
+                  <span class="summary-icon">🎯</span>
+                  <span class="summary-text">{{ getFilterSummary }}</span>
+                  <button type="button" @click="clearFilters" class="btn-clear-filters">
+                    <span>✕</span>
+                    <span>필터 초기화</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Template Selection & Management -->
+          <div class="push-form-group">
+            <label class="push-label">메시지 템플릿</label>
+            <div class="template-controls">
+              <select class="push-select-apple template-select" v-model="selectedTemplate" @change="loadTemplate">
+                <option value="">직접 입력</option>
+                <optgroup v-if="messageType === 'sms'" label="SMS 기본 템플릿">
+                  <option value="sms_welcome">신규 고객 환영</option>
+                  <option value="sms_coupon">쿠폰 발송</option>
+                  <option value="sms_event">이벤트 안내</option>
+                  <option value="sms_reminder">방문 유도</option>
+                </optgroup>
+                <optgroup v-if="messageType === 'kakao'" label="카카오톡 기본 템플릿">
+                  <option value="kakao_welcome">신규 고객 환영</option>
+                  <option value="kakao_coupon">쿠폰 발송</option>
+                  <option value="kakao_event">이벤트 안내</option>
+                  <option value="kakao_reward">리워드 지급</option>
+                </optgroup>
+                <optgroup v-if="customTemplates.length > 0" label="내 템플릿">
+                  <option v-for="template in customTemplates" :key="template.id" :value="`custom_${template.id}`">
+                    {{ template.name }}
+                  </option>
+                </optgroup>
+              </select>
+              <button type="button" class="btn-template-action" @click="showTemplateSaveModal = true" :disabled="!pushMessage.trim()">
+                <span>💾</span>
+                <span>템플릿 저장</span>
+              </button>
+              <button type="button" class="btn-template-action" @click="showTemplateManageModal = true">
+                <span>⚙️</span>
+                <span>템플릿 관리</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Message Input -->
+          <div class="push-form-group">
+            <label class="push-label">
+              메시지
+              <span v-if="messageType === 'sms'" class="char-count">
+                {{ pushMessage.length }} / {{ smsMaxLength }}자
+              </span>
+            </label>
+            <textarea
+              class="push-textarea-apple"
+              v-model="pushMessage"
+              :placeholder="messageType === 'sms' ? 'SMS 메시지를 입력하세요...' : '카카오톡 메시지를 입력하세요...'"
+              :maxlength="messageType === 'sms' ? smsMaxLength : undefined"
+              rows="6"
+            ></textarea>
+            <div v-if="messageType === 'sms'" class="sms-info">
+              <span class="info-icon">ℹ️</span>
+              <span class="info-text">
+                {{ calculateSmsCount }}건의 SMS로 발송됩니다
+                ({{ calculateSmsCount > 1 ? '장문' : '단문' }}, {{ estimatedSmsCost }}원)
+              </span>
+            </div>
+          </div>
+
+          <!-- Plus Friend Push Section (Kakao only) -->
+          <div v-if="messageType === 'kakao'" class="plus-friend-section">
+            <div class="plus-friend-header">
+              <span class="plus-friend-icon">💛</span>
+              <div class="plus-friend-info">
+                <h4 class="plus-friend-title">카카오톡 플러스친구 연동</h4>
+                <p class="plus-friend-desc">고객들이 플러스친구를 추가하면 메시지를 받을 수 있습니다.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn-plus-friend-push"
+              @click="sendPlusFriendPush"
+              :disabled="!pushMessage.trim()"
+            >
+              <span class="btn-icon">📢</span>
+              <span class="btn-text">플러스친구 메시지 푸시하기</span>
+              <span class="btn-badge">{{ getTargetCount }}명</span>
+            </button>
+          </div>
+
+          <!-- Send Actions -->
+          <div class="push-form-actions">
+            <button
+              type="button"
+              class="btn-push-preview"
+              @click="showMessagePreview"
+            >
+              <span>👁️</span>
+              <span>미리보기</span>
+            </button>
+            <button
+              type="button"
+              class="btn-push-send"
+              @click="sendMessage"
+              :disabled="!pushMessage.trim()"
+            >
+              <span>{{ messageType === 'sms' ? '💬' : '💛' }}</span>
+              <span>{{ messageType === 'sms' ? 'SMS 발송' : '카카오톡 발송' }}</span>
+            </button>
+          </div>
+
+          <!-- Sending Stats -->
+          <div class="sending-stats">
+            <div class="stat-item-send">
+              <span class="stat-label-send">예상 발송 건수</span>
+              <span class="stat-value-send">{{ getTargetCount }}건</span>
+            </div>
+            <div class="stat-item-send">
+              <span class="stat-label-send">예상 비용</span>
+              <span class="stat-value-send">{{ estimateTotalCost }}원</span>
+            </div>
+            <div class="stat-item-send">
+              <span class="stat-label-send">발송 방식</span>
+              <span class="stat-value-send">{{ messageType === 'sms' ? 'SMS' : '카카오톡' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>

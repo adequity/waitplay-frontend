@@ -1,0 +1,304 @@
+<!-- Apple-Style Greeting -->
+      <div class="apple-greeting">
+        <h1 class="greeting-title">혜택 설정</h1>
+        <p class="greeting-subtitle">게임별 리워드를 설정하고 고객 만족도를 높이세요.</p>
+      </div>
+
+      <!-- Template Info Banner -->
+      <div class="template-info-banner-global">
+        <div class="info-icon">💡</div>
+        <div class="info-text">
+          <strong>기본 설정:</strong> 동메달(6-7점), 은메달(8-9점), 금메달(10점) 3단계 구조입니다.
+          메달명, 점수 범위, 리워드를 자유롭게 수정하거나 단계를 추가/삭제할 수 있습니다.
+        </div>
+      </div>
+
+      <!-- PC Layout: Games Grid -->
+      <div class="benefits-pc-layout">
+        <!-- Game 1: 브랜드 퀴즈 -->
+        <div class="benefit-game-card">
+          <div class="game-card-header">
+            <div class="game-info">
+              <div class="game-icon-benefit">🎯</div>
+              <h3 class="game-title-benefit">브랜드 퀴즈</h3>
+            </div>
+            <button class="btn-toggle-benefit" @click="toggleBenefit('game1')">
+              {{ expandedGames.game1 ? '▲ 접기' : '▼ 더보기' }}
+            </button>
+          </div>
+
+          <!-- Preview (Always Visible) -->
+          <div class="benefit-preview">
+            <div class="preview-tier">
+              <span class="preview-icon">🥉</span>
+              <span class="preview-name">동메달</span>
+              <span class="preview-score">6-7점</span>
+            </div>
+            <div class="preview-tier">
+              <span class="preview-icon">🥈</span>
+              <span class="preview-name">은메달</span>
+              <span class="preview-score">8-9점</span>
+            </div>
+            <div class="preview-tier">
+              <span class="preview-icon">🥇</span>
+              <span class="preview-name">금메달</span>
+              <span class="preview-score">10점</span>
+            </div>
+          </div>
+
+          <!-- Expanded Content (Collapsible) -->
+          <div v-show="expandedGames.game1" class="benefit-expanded">
+            <div class="expanded-actions">
+              <button class="btn-template-sm">📋 템플릿 적용</button>
+            </div>
+
+            <!-- Reward Tiers (Horizontal Cards) -->
+            <div class="reward-tiers-horizontal">
+              <!-- Tier 1 -->
+              <div class="tier-card-compact">
+                <div class="tier-card-header-compact">
+                  <span class="tier-badge">1</span>
+                  <button class="btn-remove-compact" @click="showToastNotification('단계가 삭제되었습니다', '🗑️')">✕</button>
+                </div>
+                <div class="tier-form-compact">
+                  <input type="text" class="input-emoji" value="🥉" placeholder="🥉" title="아이콘" />
+                  <input type="text" class="input-name" value="동메달" placeholder="이름" />
+                  <input type="number" class="input-score" value="6" placeholder="최소" />
+                  <span class="score-separator">~</span>
+                  <input type="number" class="input-score" value="7" placeholder="최대" />
+                  <input type="text" class="input-reward" value="아메리카노 1잔" placeholder="리워드 내용" />
+                </div>
+              </div>
+
+              <!-- Tier 2 -->
+              <div class="tier-card-compact">
+                <div class="tier-card-header-compact">
+                  <span class="tier-badge">2</span>
+                  <button class="btn-remove-compact" @click="showToastNotification('단계가 삭제되었습니다', '🗑️')">✕</button>
+                </div>
+                <div class="tier-form-compact">
+                  <input type="text" class="input-emoji" value="🥈" placeholder="🥈" title="아이콘" />
+                  <input type="text" class="input-name" value="은메달" placeholder="이름" />
+                  <input type="number" class="input-score" value="8" placeholder="최소" />
+                  <span class="score-separator">~</span>
+                  <input type="number" class="input-score" value="9" placeholder="최대" />
+                  <input type="text" class="input-reward" value="음료 2잔" placeholder="리워드 내용" />
+                </div>
+              </div>
+
+              <!-- Tier 3 -->
+              <div class="tier-card-compact">
+                <div class="tier-card-header-compact">
+                  <span class="tier-badge">3</span>
+                  <button class="btn-remove-compact" @click="showToastNotification('단계가 삭제되었습니다', '🗑️')">✕</button>
+                </div>
+                <div class="tier-form-compact">
+                  <input type="text" class="input-emoji" value="🥇" placeholder="🥇" title="아이콘" />
+                  <input type="text" class="input-name" value="금메달" placeholder="이름" />
+                  <input type="number" class="input-score" value="10" placeholder="최소" />
+                  <span class="score-separator">~</span>
+                  <input type="number" class="input-score" value="10" placeholder="최대" />
+                  <input type="text" class="input-reward" value="디저트 세트" placeholder="리워드 내용" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Add Tier & Save -->
+            <div class="game-card-footer">
+              <button class="btn-add-tier-sm">➕ 단계 추가</button>
+              <button class="btn-save-benefit" @click="showToastNotification('혜택 설정이 저장되었습니다', '✓')">저장</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game 2: 메뉴 픽 맞추기 -->
+        <div class="benefit-game-card">
+          <div class="game-card-header">
+            <div class="game-info">
+              <div class="game-icon-benefit">🃏</div>
+              <h3 class="game-title-benefit">메뉴 픽 맞추기</h3>
+            </div>
+            <button class="btn-toggle-benefit" @click="toggleBenefit('game2')">
+              {{ expandedGames.game2 ? '▲ 접기' : '▼ 더보기' }}
+            </button>
+          </div>
+
+          <!-- Preview (Always Visible) -->
+          <div class="benefit-preview">
+            <div class="preview-tier">
+              <span class="preview-icon">🥉</span>
+              <span class="preview-name">동메달</span>
+              <span class="preview-score">6-7점</span>
+            </div>
+            <div class="preview-tier">
+              <span class="preview-icon">🥈</span>
+              <span class="preview-name">은메달</span>
+              <span class="preview-score">8-9점</span>
+            </div>
+            <div class="preview-tier">
+              <span class="preview-icon">🥇</span>
+              <span class="preview-name">금메달</span>
+              <span class="preview-score">10점</span>
+            </div>
+          </div>
+
+          <!-- Expanded Content (Collapsible) -->
+          <div v-show="expandedGames.game2" class="benefit-expanded">
+            <div class="expanded-actions">
+              <button class="btn-template-sm">📋 템플릿 적용</button>
+            </div>
+
+            <div class="reward-tiers-horizontal">
+              <div class="tier-card-compact">
+                <div class="tier-card-header-compact">
+                  <span class="tier-badge">1</span>
+                  <button class="btn-remove-compact" @click="showToastNotification('단계가 삭제되었습니다', '🗑️')">✕</button>
+                </div>
+                <div class="tier-form-compact">
+                  <input type="text" class="input-emoji" value="🥉" placeholder="🥉" />
+                  <input type="text" class="input-name" value="동메달" placeholder="이름" />
+                  <input type="number" class="input-score" value="6" placeholder="최소" />
+                  <span class="score-separator">~</span>
+                  <input type="number" class="input-score" value="7" placeholder="최대" />
+                  <input type="text" class="input-reward" value="쿠키 1개" placeholder="리워드 내용" />
+                </div>
+              </div>
+
+              <div class="tier-card-compact">
+                <div class="tier-card-header-compact">
+                  <span class="tier-badge">2</span>
+                  <button class="btn-remove-compact" @click="showToastNotification('단계가 삭제되었습니다', '🗑️')">✕</button>
+                </div>
+                <div class="tier-form-compact">
+                  <input type="text" class="input-emoji" value="🥈" placeholder="🥈" />
+                  <input type="text" class="input-name" value="은메달" placeholder="이름" />
+                  <input type="number" class="input-score" value="8" placeholder="최소" />
+                  <span class="score-separator">~</span>
+                  <input type="number" class="input-score" value="9" placeholder="최대" />
+                  <input type="text" class="input-reward" value="케이크 조각" placeholder="리워드 내용" />
+                </div>
+              </div>
+
+              <div class="tier-card-compact">
+                <div class="tier-card-header-compact">
+                  <span class="tier-badge">3</span>
+                  <button class="btn-remove-compact" @click="showToastNotification('단계가 삭제되었습니다', '🗑️')">✕</button>
+                </div>
+                <div class="tier-form-compact">
+                  <input type="text" class="input-emoji" value="🥇" placeholder="🥇" />
+                  <input type="text" class="input-name" value="금메달" placeholder="이름" />
+                  <input type="number" class="input-score" value="10" placeholder="최소" />
+                  <span class="score-separator">~</span>
+                  <input type="number" class="input-score" value="10" placeholder="최대" />
+                  <input type="text" class="input-reward" value="전 메뉴 10% 할인" placeholder="리워드 내용" />
+                </div>
+              </div>
+            </div>
+
+            <div class="game-card-footer">
+              <button class="btn-add-tier-sm">➕ 단계 추가</button>
+              <button class="btn-save-benefit" @click="showToastNotification('혜택 설정이 저장되었습니다', '✓')">저장</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game 3: 틀린 그림 찾기 -->
+        <div class="benefit-game-card">
+          <div class="game-card-header">
+            <div class="game-info">
+              <div class="game-icon-benefit">🔍</div>
+              <h3 class="game-title-benefit">틀린 그림 찾기</h3>
+            </div>
+            <button class="btn-toggle-benefit" @click="toggleBenefit('game3')">
+              {{ expandedGames.game3 ? '▲ 접기' : '▼ 더보기' }}
+            </button>
+          </div>
+
+          <!-- Preview (Always Visible) -->
+          <div class="benefit-preview">
+            <div class="preview-tier">
+              <span class="preview-icon">🥉</span>
+              <span class="preview-name">동메달</span>
+              <span class="preview-score">6-7점</span>
+            </div>
+            <div class="preview-tier">
+              <span class="preview-icon">🥈</span>
+              <span class="preview-name">은메달</span>
+              <span class="preview-score">8-9점</span>
+            </div>
+            <div class="preview-tier">
+              <span class="preview-icon">🥇</span>
+              <span class="preview-name">금메달</span>
+              <span class="preview-score">10점</span>
+            </div>
+          </div>
+
+          <!-- Expanded Content (Collapsible) -->
+          <div v-show="expandedGames.game3" class="benefit-expanded">
+            <div class="expanded-actions">
+              <button class="btn-template-sm">📋 템플릿 적용</button>
+            </div>
+
+            <div class="reward-tiers-horizontal">
+              <div class="tier-card-compact">
+                <div class="tier-card-header-compact">
+                  <span class="tier-badge">1</span>
+                  <button class="btn-remove-compact" @click="showToastNotification('단계가 삭제되었습니다', '🗑️')">✕</button>
+                </div>
+                <div class="tier-form-compact">
+                  <input type="text" class="input-emoji" value="🥉" placeholder="🥉" />
+                  <input type="text" class="input-name" value="동메달" placeholder="이름" />
+                  <input type="number" class="input-score" value="6" placeholder="최소" />
+                  <span class="score-separator">~</span>
+                  <input type="number" class="input-score" value="7" placeholder="최대" />
+                  <input type="text" class="input-reward" value="" placeholder="리워드 내용" />
+                </div>
+              </div>
+
+              <div class="tier-card-compact">
+                <div class="tier-card-header-compact">
+                  <span class="tier-badge">2</span>
+                  <button class="btn-remove-compact" @click="showToastNotification('단계가 삭제되었습니다', '🗑️')">✕</button>
+                </div>
+                <div class="tier-form-compact">
+                  <input type="text" class="input-emoji" value="🥈" placeholder="🥈" />
+                  <input type="text" class="input-name" value="은메달" placeholder="이름" />
+                  <input type="number" class="input-score" value="8" placeholder="최소" />
+                  <span class="score-separator">~</span>
+                  <input type="number" class="input-score" value="9" placeholder="최대" />
+                  <input type="text" class="input-reward" value="" placeholder="리워드 내용" />
+                </div>
+              </div>
+
+              <div class="tier-card-compact">
+                <div class="tier-card-header-compact">
+                  <span class="tier-badge">3</span>
+                  <button class="btn-remove-compact" @click="showToastNotification('단계가 삭제되었습니다', '🗑️')">✕</button>
+                </div>
+                <div class="tier-form-compact">
+                  <input type="text" class="input-emoji" value="🥇" placeholder="🥇" />
+                  <input type="text" class="input-name" value="금메달" placeholder="이름" />
+                  <input type="number" class="input-score" value="10" placeholder="최소" />
+                  <span class="score-separator">~</span>
+                  <input type="number" class="input-score" value="10" placeholder="최대" />
+                  <input type="text" class="input-reward" value="" placeholder="리워드 내용" />
+                </div>
+              </div>
+            </div>
+
+            <div class="game-card-footer">
+              <button class="btn-add-tier-sm">➕ 단계 추가</button>
+              <button class="btn-save-benefit" @click="showToastNotification('혜택 설정이 저장되었습니다', '✓')">저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Notification -->
+      <div v-if="showToast" class="toast-notification" :class="{ 'toast-show': showToast }">
+        <span class="toast-icon">{{ toastIcon }}</span>
+        <span class="toast-message">{{ toastMessage }}</span>
+      </div>
+    </div>
+
+    <!-- Customers Tab -->
