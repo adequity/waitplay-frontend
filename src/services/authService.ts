@@ -1,6 +1,11 @@
 import apiClient from './api'
 import type { TokenResponse } from '@/stores/auth'
 
+export interface StandardLoginRequest {
+  username: string
+  password: string
+}
+
 export interface SocialLoginRequest {
   accessToken: string
   provider: 0 | 1 // 0 = Kakao, 1 = Naver
@@ -20,6 +25,14 @@ export interface UserProfile {
 }
 
 class AuthService {
+  /**
+   * Standard username/password login
+   */
+  async standardLogin(request: StandardLoginRequest): Promise<TokenResponse> {
+    const response = await apiClient.post<TokenResponse>('/api/auth/standard-login', request)
+    return response.data
+  }
+
   /**
    * Social login with Kakao or Naver
    */

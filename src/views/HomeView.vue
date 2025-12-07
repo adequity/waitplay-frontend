@@ -1,493 +1,409 @@
 <template>
-  <div class="login-page">
-    <div class="login-container">
-      <div class="logo-section">
-        <div class="logo-circle">
-          <span class="logo-icon">🎮</span>
+  <div class="login-view">
+    <div class="login-container-apple">
+      <!-- Logo Section -->
+      <div class="logo-section-apple">
+        <div class="logo-apple">
+          <svg class="logo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
         </div>
+        <h1 class="app-name-apple">WaitPlay</h1>
+        <p class="app-subtitle-apple">고객의 경험을 브랜드의 가치로</p>
       </div>
-      <h1 class="title">
-        <span class="title-wait">Wait</span><span class="title-play">Play</span>
-      </h1>
-      <p class="subtitle">스마트 대기열 관리 시스템</p>
 
-      <form @submit.prevent="handleLogin" class="login-form">
-        <div class="input-group">
-          <div class="input-wrapper">
-            <span class="input-icon">👤</span>
+      <!-- Login Form -->
+      <form @submit.prevent="handleLogin" class="login-form-apple">
+        <!-- Username Input -->
+        <div class="input-group-apple">
+          <label class="input-label-apple">아이디</label>
+          <div class="input-wrapper-apple">
+            <svg class="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
             <input
               v-model="loginForm.username"
               type="text"
-              placeholder="아이디"
-              class="login-input"
+              placeholder="아이디를 입력하세요"
+              class="input-apple"
               required
             />
           </div>
         </div>
 
-        <div class="input-group">
-          <div class="input-wrapper">
-            <span class="input-icon">🔒</span>
+        <!-- Password Input -->
+        <div class="input-group-apple">
+          <label class="input-label-apple">비밀번호</label>
+          <div class="input-wrapper-apple">
+            <svg class="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
             <input
               v-model="loginForm.password"
               type="password"
-              placeholder="비밀번호"
-              class="login-input"
+              placeholder="비밀번호를 입력하세요"
+              class="input-apple"
               required
             />
           </div>
         </div>
 
-        <div class="role-selector">
-          <label class="role-option">
-            <input type="radio" name="role" value="customer" v-model="loginForm.role" />
-            <span class="role-label">
-              <span class="role-icon">👤</span>
-              <span class="role-text">고객</span>
-            </span>
-          </label>
-          <label class="role-option">
-            <input type="radio" name="role" value="admin" v-model="loginForm.role" />
-            <span class="role-label">
-              <span class="role-icon">⚙️</span>
-              <span class="role-text">관리자</span>
-            </span>
+        <!-- Remember Username Checkbox -->
+        <div class="remember-section-apple">
+          <label class="remember-label-apple">
+            <input
+              type="checkbox"
+              v-model="rememberUsername"
+              class="remember-checkbox-apple"
+            />
+            <span class="remember-text-apple">아이디 저장</span>
           </label>
         </div>
 
-        <button type="submit" class="login-submit-btn">
-          <span class="btn-text">로그인</span>
-          <span class="btn-arrow">→</span>
+        <!-- Error Message -->
+        <div v-if="loginError" class="error-message-apple">
+          {{ loginError }}
+        </div>
+
+        <!-- Login Button -->
+        <button type="submit" class="login-btn-apple" :disabled="isLoading">
+          <span v-if="!isLoading">로그인</span>
+          <span v-else>로그인 중...</span>
         </button>
 
-        <div class="login-footer">
-          <a href="#" class="footer-link">비밀번호 찾기</a>
-          <span class="footer-divider">|</span>
-          <a href="#" class="footer-link">회원가입</a>
+        <!-- Footer Links -->
+        <div class="login-footer-apple">
+          <a href="#" class="footer-link-apple">비밀번호 찾기</a>
+          <span class="footer-divider-apple">·</span>
+          <a href="#" class="footer-link-apple">회원가입</a>
         </div>
       </form>
-    </div>
-
-    <div class="background-gradient">
-      <div class="gradient-blob gradient-blob-1"></div>
-      <div class="gradient-blob gradient-blob-2"></div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const loginForm = ref({
   username: '',
-  password: '',
-  role: 'customer'
+  password: ''
 })
 
-const handleLogin = () => {
-  // TODO: Add actual authentication logic here
-  console.log('Login attempt:', loginForm.value)
+const rememberUsername = ref(false)
+const loginError = ref('')
+const isLoading = ref(false)
 
-  // Navigate based on role
-  if (loginForm.value.role === 'admin') {
-    router.push('/admin')
-  } else {
-    router.push('/customer')
+// Load saved username on component mount
+onMounted(() => {
+  const savedUsername = localStorage.getItem('waitplay_saved_username')
+  if (savedUsername) {
+    loginForm.value.username = savedUsername
+    rememberUsername.value = true
+  }
+})
+
+const handleLogin = async () => {
+  loginError.value = ''
+  isLoading.value = true
+
+  try {
+    // Save or remove username from localStorage
+    if (rememberUsername.value) {
+      localStorage.setItem('waitplay_saved_username', loginForm.value.username)
+    } else {
+      localStorage.removeItem('waitplay_saved_username')
+    }
+
+    // Call backend login API
+    const response = await authStore.standardLogin(
+      loginForm.value.username,
+      loginForm.value.password
+    )
+
+    // Navigate based on user_role from backend response
+    // Possible roles: admin, superadmin, company, user
+    switch (response.userRole) {
+      case 'admin':
+      case 'superadmin':
+        router.push('/admin')
+        break
+      case 'company':
+        router.push('/admin') // or specific company dashboard
+        break
+      case 'user':
+      default:
+        router.push('/customer')
+        break
+    }
+  } catch (error: any) {
+    console.error('Login failed:', error)
+    loginError.value = error.response?.data?.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.'
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
 
 <style scoped>
-/* Login Page - Dark Mode Style */
-.login-page {
-  position: relative;
+/* Login View - Apple Design System */
+.login-view {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  overflow: hidden;
-  padding: 2rem;
+  background: #f5f7fa;
+  padding: 20px;
 }
 
-.login-container {
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  max-width: 500px;
+.login-container-apple {
   width: 100%;
-  animation: fadeInScale 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 48px 40px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 /* Logo Section */
-.logo-section {
-  margin-bottom: 2rem;
+.logo-section-apple {
+  text-align: center;
+  margin-bottom: 40px;
 }
 
-.logo-circle {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
+.logo-apple {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 20px 50px rgba(102, 126, 234, 0.5);
-  animation: floatPulse 3s ease-in-out infinite;
+  background: linear-gradient(135deg, #007aff 0%, #005ecb 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
 }
 
-.logo-icon {
-  font-size: 4rem;
+.logo-icon-svg {
+  width: 48px;
+  height: 48px;
+  color: white;
 }
 
-/* Title */
-.title {
-  font-size: 4rem;
-  font-weight: 900;
-  margin-bottom: 0.5rem;
-  letter-spacing: -2px;
+.app-name-apple {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
 }
 
-.title-wait {
-  background: linear-gradient(135deg, #667eea 0%, #9198e5 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.title-play {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.subtitle {
-  font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 3rem;
-  font-weight: 300;
-  letter-spacing: 0.5px;
+.app-subtitle-apple {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 15px;
+  color: #8e8e93;
+  margin: 0;
+  font-weight: 400;
 }
 
 /* Login Form */
-.login-form {
+.login-form-apple {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
+  gap: 24px;
 }
 
-.input-group {
-  width: 100%;
+.input-group-apple {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.input-wrapper {
+.input-label-apple {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  letter-spacing: -0.01em;
+}
+
+.input-wrapper-apple {
   position: relative;
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #ffffff;
+  border: 1px solid #d1d1d6;
+  border-radius: 10px;
+  padding: 12px 16px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.input-wrapper:focus-within {
-  border-color: rgba(102, 126, 234, 0.5);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
-  transform: translateY(-2px);
+.input-wrapper-apple:focus-within {
+  background: #ffffff;
+  border-color: #007aff;
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
 }
 
-.input-icon {
-  font-size: 1.5rem;
-  margin-right: 1rem;
+.input-icon-svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  color: #8e8e93;
   flex-shrink: 0;
 }
 
-.login-input {
+.input-apple {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
-  color: #ffffff;
-  font-size: 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 16px;
+  color: #1d1d1f;
   font-weight: 400;
-  letter-spacing: 0.5px;
 }
 
-.login-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+.input-apple::placeholder {
+  color: #c7c7cc;
 }
 
-/* Role Selector */
-.role-selector {
-  display: flex;
-  gap: 1rem;
-  width: 100%;
-}
-
-.role-option {
-  flex: 1;
-  cursor: pointer;
-}
-
-.role-option input[type="radio"] {
-  display: none;
-}
-
-.role-label {
+/* Remember Username Section */
+.remember-section-apple {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: -8px;
 }
 
-.role-option input[type="radio"]:checked + .role-label {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
-  border-color: rgba(102, 126, 234, 0.5);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+.remember-label-apple {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
 }
 
-.role-label:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.2);
+.remember-checkbox-apple {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #007aff;
 }
 
-.role-icon {
-  font-size: 1.5rem;
-}
-
-.role-text {
-  color: #ffffff;
-  font-size: 1rem;
+.remember-text-apple {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 14px;
+  color: #8e8e93;
   font-weight: 500;
 }
 
-/* Submit Button */
-.login-submit-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1.25rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 12px;
-  color: #ffffff;
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-  position: relative;
-  overflow: hidden;
+/* Error Message */
+.error-message-apple {
+  padding: 12px 16px;
+  background: #fff1f0;
+  border: 1px solid #ffccc7;
+  border-radius: 10px;
+  color: #ff4d4f;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
 }
 
-.login-submit-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
+/* Login Button */
+.login-btn-apple {
   width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #007aff 0%, #005ecb 100%);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
-.login-submit-btn:hover::before {
-  left: 100%;
+.login-btn-apple:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 122, 255, 0.4);
 }
 
-.login-submit-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
+.login-btn-apple:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
 }
 
-.login-submit-btn:active {
-  transform: translateY(-1px) scale(0.98);
-}
-
-.btn-arrow {
-  font-size: 1.5rem;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.login-submit-btn:hover .btn-arrow {
-  transform: translateX(4px);
+.login-btn-apple:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Footer */
-.login-footer {
+.login-footer-apple {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 0.5rem;
+  gap: 12px;
+  margin-top: 8px;
 }
 
-.footer-link {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.875rem;
+.footer-link-apple {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 14px;
+  color: #007aff;
   text-decoration: none;
-  transition: color 0.3s;
+  font-weight: 500;
+  transition: color 0.2s;
 }
 
-.footer-link:hover {
-  color: rgba(255, 255, 255, 0.9);
+.footer-link-apple:hover {
+  color: #005ecb;
+  text-decoration: underline;
 }
 
-.footer-divider {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 0.875rem;
-}
-
-/* Background Gradient */
-.background-gradient {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.gradient-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.4;
-  animation: floatRotate 25s ease-in-out infinite;
-}
-
-.gradient-blob-1 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(102, 126, 234, 0.6) 0%, rgba(102, 126, 234, 0) 70%);
-  top: -200px;
-  right: -200px;
-  animation-delay: 0s;
-}
-
-.gradient-blob-2 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(240, 147, 251, 0.5) 0%, rgba(240, 147, 251, 0) 70%);
-  bottom: -150px;
-  left: -150px;
-  animation-delay: -12s;
-}
-
-/* Animations */
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes floatPulse {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-10px) scale(1.05);
-  }
-}
-
-@keyframes floatRotate {
-  0%, 100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  33% {
-    transform: translate(50px, -50px) rotate(120deg);
-  }
-  66% {
-    transform: translate(-30px, 30px) rotate(240deg);
-  }
+.footer-divider-apple {
+  font-size: 14px;
+  color: #d1d1d6;
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .login-page {
-    padding: 1.5rem;
+@media (max-width: 480px) {
+  .login-container-apple {
+    padding: 36px 28px;
   }
 
-  .logo-circle {
-    width: 100px;
-    height: 100px;
+  .logo-apple {
+    width: 70px;
+    height: 70px;
   }
 
-  .logo-icon {
-    font-size: 3rem;
+  .app-name-apple {
+    font-size: 28px;
   }
 
-  .title {
-    font-size: 3rem;
+  .app-subtitle-apple {
+    font-size: 14px;
   }
 
-  .subtitle {
-    font-size: 1rem;
-    margin-bottom: 2rem;
+  .input-wrapper-apple {
+    padding: 10px 14px;
   }
 
-  .login-form {
-    gap: 1.25rem;
-  }
-
-  .input-wrapper {
-    padding: 0.875rem 1rem;
-  }
-
-  .input-icon {
-    font-size: 1.25rem;
-    margin-right: 0.75rem;
-  }
-
-  .login-input {
-    font-size: 0.9375rem;
-  }
-
-  .role-label {
-    padding: 0.875rem;
-  }
-
-  .role-icon {
-    font-size: 1.25rem;
-  }
-
-  .role-text {
-    font-size: 0.9375rem;
-  }
-
-  .login-submit-btn {
-    padding: 1.125rem 1.75rem;
-    font-size: 1rem;
-  }
-
-  .btn-arrow {
-    font-size: 1.25rem;
-  }
-
-  .footer-link {
-    font-size: 0.8125rem;
+  .login-btn-apple {
+    padding: 12px 20px;
+    font-size: 15px;
   }
 }
 </style>

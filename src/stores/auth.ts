@@ -8,15 +8,39 @@ export interface TokenResponse {
   refreshToken: string
   userId: string
   nickname: string
+  userRole: string
   profileImage?: string
 }
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(localStorage.getItem('accessToken'))
   const refreshToken = ref<string | null>(localStorage.getItem('refreshToken'))
+  const userRole = ref<string | null>(localStorage.getItem('userRole'))
   const user = ref<UserProfile | null>(null)
 
   const isAuthenticated = computed(() => !!accessToken.value)
+
+  async function standardLogin(username: string, password: string) {
+    try {
+      const data = await authService.standardLogin({
+        username,
+        password
+      })
+
+      accessToken.value = data.accessToken
+      refreshToken.value = data.refreshToken
+      userRole.value = data.userRole
+
+      localStorage.setItem('accessToken', data.accessToken)
+      localStorage.setItem('refreshToken', data.refreshToken)
+      localStorage.setItem('userRole', data.userRole)
+
+      return data
+    } catch (error) {
+      console.error('Login failed:', error)
+      throw error
+    }
+  }
 
   async function login(provider: 'kakao' | 'naver', socialAccessToken: string) {
     try {
@@ -27,9 +51,11 @@ export const useAuthStore = defineStore('auth', () => {
 
       accessToken.value = data.accessToken
       refreshToken.value = data.refreshToken
+      userRole.value = data.userRole
 
       localStorage.setItem('accessToken', data.accessToken)
       localStorage.setItem('refreshToken', data.refreshToken)
+      localStorage.setItem('userRole', data.userRole)
 
       await fetchUser()
 
@@ -64,9 +90,11 @@ export const useAuthStore = defineStore('auth', () => {
 
       accessToken.value = data.accessToken
       refreshToken.value = data.refreshToken
+      userRole.value = data.userRole
 
       localStorage.setItem('accessToken', data.accessToken)
       localStorage.setItem('refreshToken', data.refreshToken)
+      localStorage.setItem('userRole', data.userRole)
 
       return true
     } catch (error) {
@@ -79,10 +107,12 @@ export const useAuthStore = defineStore('auth', () => {
   function logout() {
     accessToken.value = null
     refreshToken.value = null
+    userRole.value = null
     user.value = null
 
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
+    localStorage.removeItem('userRole')
   }
 
   // Initialize user on store creation
@@ -93,8 +123,10 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     accessToken,
     refreshToken,
+    userRole,
     user,
     isAuthenticated,
+    standardLogin,
     login,
     logout,
     fetchUser,
