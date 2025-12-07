@@ -3,6 +3,7 @@
     <!-- Left Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-header">
+        <div class="logo">⚙️</div>
         <h2>WaitPlay</h2>
       </div>
 
@@ -13,7 +14,6 @@
           @click="activeTab = tab.id"
           :class="['nav-item', { active: activeTab === tab.id }]"
         >
-          <span class="nav-icon">{{ tab.icon }}</span>
           <span class="nav-label">{{ tab.label }}</span>
         </button>
       </nav>
