@@ -83,8 +83,20 @@ onMounted(async () => {
   try {
     const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
-    // If QR code is provided, fetch settings by QR code
-    // Otherwise fetch global settings
+    // If QR code is provided, call QR code API to log scan
+    if (qrCode) {
+      try {
+        // Call QR code API to increment scan count and log analytics
+        const qrResponse = await fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCode)}`)
+        if (qrResponse.ok) {
+          console.log('QR scan logged successfully')
+        }
+      } catch (err) {
+        console.warn('Failed to log QR scan:', err)
+      }
+    }
+
+    // Fetch landing page settings
     const endpoint = qrCode
       ? `${API_URL}/api/landingpage/settings/qr/${encodeURIComponent(qrCode)}`
       : `${API_URL}/api/landingpage/settings`
