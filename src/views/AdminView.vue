@@ -3,7 +3,6 @@
     <!-- Left Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="logo">⚙️</div>
         <h2>WaitPlay</h2>
       </div>
 
