@@ -129,7 +129,7 @@
         <!-- QR Code Preview -->
         <div class="qr-code-display">
           <div class="qr-placeholder">
-            <div v-if="selectedQR" class="qr-code-text">{{ selectedQR.code }}</div>
+            <img v-if="selectedQR && qrImageUrl" :src="qrImageUrl" alt="QR Code" class="qr-image" />
             <svg v-else viewBox="0 0 200 200" class="qr-svg">
               <!-- Simple QR code representation -->
               <rect width="200" height="200" fill="#ffffff" />
@@ -190,12 +190,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
+import QRCode from 'qrcode'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
-interface QRCode {
+interface QRCodeData {
   id: string
   code: string
   name: string
@@ -211,8 +212,9 @@ interface QRCode {
   qrCodeUrl: string
 }
 
-const qrCodes = ref<QRCode[]>([])
-const selectedQR = ref<QRCode | null>(null)
+const qrCodes = ref<QRCodeData[]>([])
+const selectedQR = ref<QRCodeData | null>(null)
+const qrImageUrl = ref<string>('')
 const isLoading = ref(false)
 const isCreating = ref(false)
 
@@ -280,9 +282,35 @@ const createQRCode = async () => {
   }
 }
 
-const selectQRCode = (qr: QRCode) => {
+const selectQRCode = (qr: QRCodeData) => {
   selectedQR.value = qr
 }
+
+// Generate QR code image when selectedQR changes
+const generateQRImage = async (url: string) => {
+  try {
+    const dataUrl = await QRCode.toDataURL(url, {
+      width: 300,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    })
+    qrImageUrl.value = dataUrl
+  } catch (error) {
+    console.error('Failed to generate QR code:', error)
+  }
+}
+
+// Watch for selectedQR changes
+watch(selectedQR, (newQR) => {
+  if (newQR && newQR.qrCodeUrl) {
+    generateQRImage(newQR.qrCodeUrl)
+  } else {
+    qrImageUrl.value = ''
+  }
+}, { immediate: true })
 
 const deleteQRCode = async (id: string) => {
   if (!confirm('이 QR 코드를 삭제하시겠습니까?')) return
@@ -308,12 +336,83 @@ const copyToClipboard = (text: string) => {
   alert('링크가 복사되었습니다!')
 }
 
-const downloadQR = (qr: QRCode) => {
-  alert(`QR 코드 다운로드 기능은 곧 추가됩니다.\n코드: ${qr.code}`)
+const downloadQR = (qr: QRCodeData) => {
+  if (!qrImageUrl.value) {
+    alert('QR 코드 이미지를 생성 중입니다. 잠시 후 다시 시도해주세요.')
+    return
+  }
+
+  const link = document.createElement('a')
+  link.download = `QR_${qr.name}_${qr.code}.png`
+  link.href = qrImageUrl.value
+  link.click()
 }
 
-const printQR = (qr: QRCode) => {
-  alert(`QR 코드 인쇄 기능은 곧 추가됩니다.\n코드: ${qr.code}`)
+const printQR = (qr: QRCodeData) => {
+  if (!qrImageUrl.value) {
+    alert('QR 코드 이미지를 생성 중입니다. 잠시 후 다시 시도해주세요.')
+    return
+  }
+
+  const printWindow = window.open('', '_blank')
+  if (printWindow) {
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>QR 코드 - ${qr.name}</title>
+          <style>
+            body {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              margin: 0;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            }
+            .qr-container {
+              text-align: center;
+              padding: 40px;
+            }
+            h1 {
+              font-size: 24px;
+              margin-bottom: 10px;
+              color: #1d1d1f;
+            }
+            p {
+              font-size: 14px;
+              color: #6e6e73;
+              margin: 5px 0;
+            }
+            img {
+              margin: 20px 0;
+              border: 2px solid #e1e4e8;
+              border-radius: 12px;
+              padding: 20px;
+            }
+            .code {
+              font-family: 'Courier New', monospace;
+              font-size: 18px;
+              color: #007aff;
+              margin-top: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="qr-container">
+            <h1>${qr.name}</h1>
+            ${qr.description ? `<p>${qr.description}</p>` : ''}
+            <img src="${qrImageUrl.value}" alt="QR Code" />
+            <p class="code">코드: ${qr.code}</p>
+            ${qr.storeId ? `<p>매장: ${qr.storeId}</p>` : ''}
+            ${qr.tableId ? `<p>테이블: ${qr.tableId}</p>` : ''}
+          </div>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.print()
+  }
 }
 
 const formatDate = (dateString: string) => {
@@ -334,6 +433,15 @@ onMounted(() => {
 @import '../assets/admin-styles.css';
 
 /* Additional QR-specific styles */
+.qr-image {
+  width: 300px;
+  height: 300px;
+  border-radius: 12px;
+  border: 2px solid #e1e4e8;
+  padding: 10px;
+  background: white;
+}
+
 .qr-list-container {
   margin-top: 30px;
 }
