@@ -251,6 +251,10 @@ const createQRCode = async () => {
       description: newQR.value.description || null,
       storeId: newQR.value.storeId || null,
       tableId: newQR.value.tableId || null
+    }, {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      }
     })
 
     qrCodes.value.unshift(response.data)
@@ -265,9 +269,12 @@ const createQRCode = async () => {
     }
 
     alert('QR 코드가 생성되었습니다!')
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create QR code:', error)
-    alert('QR 코드 생성에 실패했습니다')
+    const errorMsg = error.response?.data?.errors
+      ? JSON.stringify(error.response.data.errors)
+      : error.message
+    alert(`QR 코드 생성에 실패했습니다: ${errorMsg}`)
   } finally {
     isCreating.value = false
   }
