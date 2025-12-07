@@ -76,16 +76,6 @@
             <p class="settings-hint">게임 관리 탭에서 활성화/비활성화 할 수 있습니다.</p>
           </div>
 
-          <div class="settings-form-group">
-            <label class="settings-label">랜딩페이지 URL</label>
-            <div class="url-display-box">
-              <span class="url-text">{{ landingPageUrl }}</span>
-              <button class="btn-url-copy" @click="copyToClipboard(landingPageUrl)">
-                <span>복사</span>
-              </button>
-            </div>
-          </div>
-
           <div class="settings-form-actions">
             <button class="btn-settings-save" @click="saveSettings">
               <span>설정 저장</span>
@@ -141,7 +131,9 @@
           </div>
           <div class="info-item-qr">
             <span class="info-label-qr">URL</span>
-            <span class="info-value-qr url-truncate">{{ selectedQR.qrCodeUrl }}</span>
+            <a :href="selectedQR.qrCodeUrl" target="_blank" class="info-value-qr qr-url-link">
+              {{ selectedQR.qrCodeUrl }}
+            </a>
           </div>
           <div class="info-item-qr">
             <span class="info-label-qr">스캔 횟수</span>
@@ -645,10 +637,16 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
 }
 
-.url-truncate {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.qr-url-link {
+  color: #007aff;
+  text-decoration: none;
+  word-break: break-all;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.qr-url-link:hover {
+  color: #0051d5;
+  text-decoration: underline;
 }
 </style>
