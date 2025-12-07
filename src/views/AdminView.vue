@@ -14,6 +14,7 @@
           @click="activeTab = tab.id"
           :class="['nav-item', { active: activeTab === tab.id }]"
         >
+          <span class="nav-dot"></span>
           <span class="nav-label">{{ tab.label }}</span>
         </button>
       </nav>
