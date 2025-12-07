@@ -434,12 +434,15 @@ onMounted(() => {
 
 /* Additional QR-specific styles */
 .qr-image {
-  width: 300px;
-  height: 300px;
+  width: 100%;
+  max-width: 280px;
+  height: auto;
   border-radius: 12px;
   border: 2px solid #e1e4e8;
   padding: 10px;
   background: white;
+  display: block;
+  margin: 0 auto;
 }
 
 .qr-list-container {
