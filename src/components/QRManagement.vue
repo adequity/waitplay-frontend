@@ -8,59 +8,87 @@
 
     <!-- Main QR Management Grid (Horizontal Layout) -->
     <div class="qr-management-grid">
-      <!-- Left: QR Code Creation Form -->
+      <!-- Left: Landing Page Settings -->
       <div class="landing-settings-section">
-        <h2 class="settings-section-title">새 QR 코드 생성</h2>
+        <h2 class="settings-section-title">랜딩페이지 설정</h2>
 
         <div class="settings-form-apple">
           <div class="settings-form-group">
-            <label class="settings-label">QR 이름</label>
+            <label class="settings-label">매장 이름</label>
             <input
               type="text"
               class="settings-input-apple"
-              v-model="newQR.name"
-              placeholder="예: 1층 테이블 1"
+              v-model="storeName"
+              placeholder="예: 스타벅스 강남점"
             />
           </div>
 
+          <!-- Logo Upload Section -->
           <div class="settings-form-group">
-            <label class="settings-label">설명 (선택)</label>
-            <input
-              type="text"
-              class="settings-input-apple"
-              v-model="newQR.description"
-              placeholder="예: 창가 자리"
-            />
+            <label class="settings-label">매장 로고</label>
+            <div class="logo-upload-container">
+              <div v-if="logoUrl" class="logo-preview-wrapper">
+                <div class="logo-preview">
+                  <img :src="logoUrl" alt="매장 로고" class="logo-image" />
+                </div>
+                <div class="logo-actions">
+                  <button type="button" class="btn-logo-change" @click="triggerLogoUpload">
+                    <span>변경</span>
+                  </button>
+                  <button type="button" class="btn-logo-remove" @click="removeLogo">
+                    <span>삭제</span>
+                  </button>
+                </div>
+              </div>
+              <div v-else class="logo-upload-box" @click="triggerLogoUpload">
+                <div class="upload-icon">+</div>
+                <p class="upload-text">로고 이미지를 업로드하세요</p>
+                <p class="upload-hint">PNG, JPG, SVG (최대 2MB)</p>
+              </div>
+              <input
+                ref="logoFileInput"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                @change="handleLogoUpload"
+                class="logo-file-input"
+                hidden
+              />
+            </div>
           </div>
 
           <div class="settings-form-group">
-            <label class="settings-label">매장 ID (선택)</label>
-            <input
-              type="text"
-              class="settings-input-apple"
-              v-model="newQR.storeId"
-              placeholder="예: store-01"
-            />
+            <label class="settings-label">환영 메시지</label>
+            <textarea
+              class="settings-textarea-apple"
+              v-model="welcomeMessage"
+              placeholder="고객에게 표시될 환영 메시지를 입력하세요..."
+              rows="3"
+            ></textarea>
           </div>
 
           <div class="settings-form-group">
-            <label class="settings-label">테이블 ID (선택)</label>
-            <input
-              type="text"
-              class="settings-input-apple"
-              v-model="newQR.tableId"
-              placeholder="예: T01"
-            />
+            <label class="settings-label">활성화된 게임</label>
+            <div class="active-games-summary">
+              <span class="game-chip">브랜드 퀴즈</span>
+              <span class="game-chip">메뉴 픽 맞추기</span>
+              <span class="game-chip game-chip-disabled">틀린 그림 찾기 (비활성)</span>
+            </div>
+            <p class="settings-hint">게임 관리 탭에서 활성화/비활성화 할 수 있습니다.</p>
+          </div>
+
+          <div class="settings-form-group">
+            <label class="settings-label">랜딩페이지 URL</label>
+            <div class="url-display-box">
+              <span class="url-text">{{ landingPageUrl }}</span>
+              <button class="btn-url-copy" @click="copyToClipboard(landingPageUrl)">
+                <span>복사</span>
+              </button>
+            </div>
           </div>
 
           <div class="settings-form-actions">
-            <button
-              class="btn-settings-save"
-              @click="createQRCode"
-              :disabled="!newQR.name || isCreating"
-            >
-              <span v-if="isCreating">생성 중...</span>
-              <span v-else>QR 코드 생성</span>
+            <button class="btn-settings-save" @click="saveSettings">
+              <span>설정 저장</span>
             </button>
           </div>
         </div>
@@ -208,14 +236,13 @@ const qrCodes = ref<QRCodeData[]>([])
 const selectedQR = ref<QRCodeData | null>(null)
 const qrImageUrl = ref<string>('')
 const isLoading = ref(false)
-const isCreating = ref(false)
 
-const newQR = ref({
-  name: '',
-  description: '',
-  storeId: '',
-  tableId: ''
-})
+// Landing page settings
+const storeName = ref('WaitPlay 데모 매장')
+const logoUrl = ref<string>('')
+const logoFileInput = ref<HTMLInputElement | null>(null)
+const welcomeMessage = ref('환영합니다! QR 코드를 스캔하여 대기열에 참여하세요.')
+const landingPageUrl = ref('waitplay.io/store/demo123')
 
 const fetchQRCodes = async () => {
   isLoading.value = true
@@ -235,42 +262,40 @@ const fetchQRCodes = async () => {
   }
 }
 
-const createQRCode = async () => {
-  if (!newQR.value.name) return
+// Landing page settings functions
+const saveSettings = () => {
+  // TODO: Implement save settings API call
+  alert('설정이 저장되었습니다!')
+}
 
-  isCreating.value = true
-  try {
-    const response = await axios.post(`${API_URL}/api/qrcode`, {
-      name: newQR.value.name,
-      description: newQR.value.description || null,
-      storeId: newQR.value.storeId || null,
-      tableId: newQR.value.tableId || null
-    }, {
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8'
-      }
-    })
+const triggerLogoUpload = () => {
+  logoFileInput.value?.click()
+}
 
-    qrCodes.value.unshift(response.data)
-    selectedQR.value = response.data
+const handleLogoUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
 
-    // Reset form
-    newQR.value = {
-      name: '',
-      description: '',
-      storeId: '',
-      tableId: ''
+  if (file) {
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('파일 크기는 2MB 이하여야 합니다.')
+      return
     }
 
-    alert('QR 코드가 생성되었습니다!')
-  } catch (error: any) {
-    console.error('Failed to create QR code:', error)
-    const errorMsg = error.response?.data?.errors
-      ? JSON.stringify(error.response.data.errors)
-      : error.message
-    alert(`QR 코드 생성에 실패했습니다: ${errorMsg}`)
-  } finally {
-    isCreating.value = false
+    // Create preview URL
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      logoUrl.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const removeLogo = () => {
+  logoUrl.value = ''
+  if (logoFileInput.value) {
+    logoFileInput.value.value = ''
   }
 }
 
