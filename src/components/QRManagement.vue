@@ -166,7 +166,10 @@ interface QRCodeData {
   code: string
   name: string
   description: string | null
-  storeId: string | null
+  userId: string
+  ownerUsername: string | null
+  ownerNickname: string | null
+  company: string | null
   tableId: string | null
   isActive: boolean
   scanCount: number
@@ -445,7 +448,7 @@ const printQR = (qr: QRCodeData) => {
             ${qr.description ? `<p>${qr.description}</p>` : ''}
             <img src="${qrImageUrl.value}" alt="QR Code" />
             <p class="code">코드: ${qr.code}</p>
-            ${qr.storeId ? `<p>매장: ${qr.storeId}</p>` : ''}
+            ${qr.company ? `<p>업체: ${qr.company}</p>` : ''}
             ${qr.tableId ? `<p>테이블: ${qr.tableId}</p>` : ''}
           </div>
         </body>
