@@ -12,6 +12,11 @@
     </div>
 
     <div class="header-content">
+      <!-- Logo (if provided) -->
+      <div v-if="data.logoUrl" class="store-logo-container">
+        <img :src="data.logoUrl" alt="매장 로고" class="store-logo" />
+      </div>
+
       <h1 class="store-name">{{ data.storeName }}</h1>
       <div class="store-info-text">
         <p v-for="(line, index) in welcomeLines" :key="index" class="info-line">
@@ -99,6 +104,28 @@ const gradientStyle = computed(() => {
 .header-content {
   position: relative;
   z-index: 10;
+}
+
+.store-logo-container {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.store-logo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .store-name {

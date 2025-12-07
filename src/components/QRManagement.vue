@@ -244,8 +244,26 @@ const logoFileInput = ref<HTMLInputElement | null>(null)
 const welcomeMessage = ref('')
 const landingPageUrl = ref('waitplay.io/store/demo123')
 
-// Load settings from localStorage on mount
-const loadSettings = () => {
+// Load settings from backend API
+const loadSettings = async () => {
+  try {
+    // Try to load from backend first
+    const response = await axios.get(`${API_URL}/api/landingpage/settings`)
+    if (response.data && response.data.storeName) {
+      storeName.value = response.data.storeName
+      logoUrl.value = response.data.logoUrl || ''
+      welcomeMessage.value = response.data.welcomeMessage || ''
+      landingPageUrl.value = response.data.landingPageUrl || 'waitplay.io/store/demo123'
+
+      // Also update localStorage for offline access
+      localStorage.setItem('waitplay_landing_settings', JSON.stringify(response.data))
+      return
+    }
+  } catch (error) {
+    console.warn('Failed to load settings from backend, trying localStorage:', error)
+  }
+
+  // Fallback to localStorage if backend fails
   const savedSettings = localStorage.getItem('waitplay_landing_settings')
   if (savedSettings) {
     try {
@@ -255,7 +273,7 @@ const loadSettings = () => {
       welcomeMessage.value = settings.welcomeMessage || '환영합니다! QR 코드를 스캔하여 대기열에 참여하세요.'
       landingPageUrl.value = settings.landingPageUrl || 'waitplay.io/store/demo123'
     } catch (error) {
-      console.error('Failed to load settings:', error)
+      console.error('Failed to load settings from localStorage:', error)
     }
   } else {
     // Set defaults if no saved settings
@@ -283,15 +301,26 @@ const fetchQRCodes = async () => {
 }
 
 // Landing page settings functions
-const saveSettings = () => {
+const saveSettings = async () => {
   try {
-    const settings = {
+    const settingsData = {
       storeName: storeName.value,
       logoUrl: logoUrl.value,
-      welcomeMessage: welcomeMessage.value,
-      landingPageUrl: landingPageUrl.value
+      welcomeMessage: welcomeMessage.value
     }
-    localStorage.setItem('waitplay_landing_settings', JSON.stringify(settings))
+
+    const response = await axios.post(`${API_URL}/api/landingpage/settings`, settingsData)
+
+    if (response.data.landingPageUrl) {
+      landingPageUrl.value = response.data.landingPageUrl
+    }
+
+    // Also save to localStorage for backward compatibility
+    localStorage.setItem('waitplay_landing_settings', JSON.stringify({
+      ...settingsData,
+      landingPageUrl: landingPageUrl.value
+    }))
+
     alert('설정이 저장되었습니다!')
   } catch (error) {
     console.error('Failed to save settings:', error)
@@ -303,7 +332,7 @@ const triggerLogoUpload = () => {
   logoFileInput.value?.click()
 }
 
-const handleLogoUpload = (event: Event) => {
+const handleLogoUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
 
@@ -314,12 +343,29 @@ const handleLogoUpload = (event: Event) => {
       return
     }
 
-    // Create preview URL
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      logoUrl.value = e.target?.result as string
+    try {
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('file', file)
+
+      // Upload file to backend
+      const response = await axios.post(`${API_URL}/api/fileupload/logo`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      if (response.data.success) {
+        // Set the logo URL from the response
+        logoUrl.value = response.data.fileUrl
+        alert('로고가 업로드되었습니다!')
+      } else {
+        alert(response.data.message || '파일 업로드에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('Failed to upload logo:', error)
+      alert('파일 업로드 중 오류가 발생했습니다.')
     }
-    reader.readAsDataURL(file)
   }
 }
 

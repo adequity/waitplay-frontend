@@ -71,21 +71,49 @@ function getBlockComponent(type: string): Component | string {
 }
 
 onMounted(async () => {
-  // Get storeId from route query (QR code parameter)
+  // Get storeId and QR code from route query
   const storeId = route.query.storeId as string
+  const qrCode = route.query.qr as string
 
-  // TODO: Fetch layout from API
-  // const response = await fetch(`/api/landing-page/${storeId}`)
-  // const data = await response.json()
-  // blocks.value = data.blocks
-  // pageTheme.value = data.theme
+  // Fetch landing page settings from API
+  let logoUrl = ''
+  let storeName = '테라스 레스토랑'
+  let welcomeMessage = '📶 테라스_Guest / terrace1234\n🕐 매일 10:00 - 22:00\n📞 02-1234-5678'
+
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
+    // If QR code is provided, fetch settings by QR code
+    // Otherwise fetch global settings
+    const endpoint = qrCode
+      ? `${API_URL}/api/landingpage/settings/qr/${encodeURIComponent(qrCode)}`
+      : `${API_URL}/api/landingpage/settings`
+
+    const response = await fetch(endpoint)
+    const settings = await response.json()
+
+    if (settings && settings.storeName) {
+      logoUrl = settings.logoUrl || ''
+      storeName = settings.storeName
+      welcomeMessage = settings.welcomeMessage || welcomeMessage
+    }
+  } catch (error) {
+    console.warn('Failed to load landing page settings from API, using defaults:', error)
+  }
 
   // Load blocks from localStorage or use demo data
   const savedBlocks = localStorage.getItem('waitplay-blocks')
   if (savedBlocks) {
     blocks.value = JSON.parse(savedBlocks)
+    // Update header block with API data
+    const headerBlock = blocks.value.find(b => b.type === 'header')
+    if (headerBlock && headerBlock.data) {
+      headerBlock.data.logoUrl = logoUrl
+      headerBlock.data.storeName = storeName
+      headerBlock.data.welcomeMessage = welcomeMessage
+    }
   } else {
-    // 임시 데이터 (데모용)
+    // 임시 데이터 (데모용) - now includes logoUrl
     blocks.value = [
     {
       id: 'header-001',
@@ -94,9 +122,10 @@ onMounted(async () => {
       isVisible: true,
       fixed: true,
       data: {
-        storeName: '테라스 레스토랑',
+        logoUrl: logoUrl,
+        storeName: storeName,
         backgroundImage: 'https://search.pstatic.net/common/?src=https%3A%2F%2Fnaverbooking-phinf.pstatic.net%2F20230917_255%2F16949402169637M5tc_JPEG%2F%25C5%25D7%25B6%25F3%25BD%25BA.jpg',
-        welcomeMessage: '📶 테라스_Guest / terrace1234\n🕐 매일 10:00 - 22:00\n📞 02-1234-5678',
+        welcomeMessage: welcomeMessage,
         gradientOverlay: {
           enabled: true,
           startOpacity: 0,
