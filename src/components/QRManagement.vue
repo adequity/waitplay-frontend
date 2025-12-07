@@ -59,7 +59,6 @@
               @click="createQRCode"
               :disabled="!newQR.name || isCreating"
             >
-              <span>💾</span>
               <span v-if="isCreating">생성 중...</span>
               <span v-else>QR 코드 생성</span>
             </button>
@@ -71,7 +70,6 @@
           <div class="qr-list-header">
             <h3 class="qr-list-title">생성된 QR 코드 ({{ qrCodes.length }})</h3>
             <button @click="fetchQRCodes" class="btn-url-copy">
-              <span>🔄</span>
               <span>새로고침</span>
             </button>
           </div>
@@ -95,22 +93,19 @@
               </div>
               <p v-if="qr.description" class="qr-item-description">{{ qr.description }}</p>
               <div class="qr-item-meta">
-                <span v-if="qr.storeId">📍 {{ qr.storeId }}</span>
-                <span v-if="qr.tableId">🪑 {{ qr.tableId }}</span>
-                <span>📊 {{ qr.scanCount }}회 스캔</span>
+                <span v-if="qr.storeId">매장: {{ qr.storeId }}</span>
+                <span v-if="qr.tableId">테이블: {{ qr.tableId }}</span>
+                <span>스캔: {{ qr.scanCount }}회</span>
               </div>
               <div class="qr-item-code">코드: {{ qr.code }}</div>
               <div class="qr-item-actions">
                 <button @click="selectQRCode(qr)" class="btn-qr-select">
-                  <span>👁️</span>
-                  <span>보기</span>
+                  <span>미리보기</span>
                 </button>
                 <button @click="copyToClipboard(qr.qrCodeUrl)" class="btn-qr-copy">
-                  <span>🔗</span>
-                  <span>복사</span>
+                  <span>링크 복사</span>
                 </button>
                 <button @click="deleteQRCode(qr.id)" class="btn-qr-delete">
-                  <span>🗑️</span>
                   <span>삭제</span>
                 </button>
               </div>
@@ -150,11 +145,9 @@
 
         <div v-if="selectedQR" class="qr-actions">
           <button class="btn-qr-download" @click="downloadQR(selectedQR)">
-            <span>⬇️</span>
             <span>이미지 다운로드</span>
           </button>
           <button class="btn-qr-print" @click="printQR(selectedQR)">
-            <span>🖨️</span>
             <span>인쇄하기</span>
           </button>
         </div>
@@ -162,15 +155,15 @@
         <!-- QR Info -->
         <div v-if="selectedQR" class="qr-info-box">
           <div class="info-item-qr">
-            <span class="info-label-qr">📅 생성일</span>
+            <span class="info-label-qr">생성일</span>
             <span class="info-value-qr">{{ formatDate(selectedQR.createdAt) }}</span>
           </div>
           <div class="info-item-qr">
-            <span class="info-label-qr">🔗 URL</span>
+            <span class="info-label-qr">URL</span>
             <span class="info-value-qr url-truncate">{{ selectedQR.qrCodeUrl }}</span>
           </div>
           <div class="info-item-qr">
-            <span class="info-label-qr">📊 스캔 횟수</span>
+            <span class="info-label-qr">스캔 횟수</span>
             <span class="info-value-qr">{{ selectedQR.scanCount }}회</span>
           </div>
         </div>
@@ -178,7 +171,6 @@
         <!-- Advanced Settings Section -->
         <div class="advanced-settings-section">
           <button class="btn-layout-manager" disabled>
-            <span class="btn-icon">⚙️</span>
             <span class="btn-text">고급 설정</span>
             <span class="btn-badge">곧 추가</span>
           </button>
