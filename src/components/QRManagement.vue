@@ -231,7 +231,7 @@ const fetchQRCodes = async () => {
 
     // Auto-select first QR code if available
     if (qrCodes.value.length > 0 && !selectedQR.value) {
-      selectedQR.value = qrCodes.value[0]
+      selectedQR.value = qrCodes.value[0] || null
     }
   } catch (error) {
     console.error('Failed to fetch QR codes:', error)
@@ -293,7 +293,7 @@ const deleteQRCode = async (id: string) => {
 
     // Clear selection if deleted QR was selected
     if (selectedQR.value?.id === id) {
-      selectedQR.value = qrCodes.value.length > 0 ? qrCodes.value[0] : null
+      selectedQR.value = qrCodes.value.length > 0 ? (qrCodes.value[0] || null) : null
     }
 
     alert('QR 코드가 삭제되었습니다')
