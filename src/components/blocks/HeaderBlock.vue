@@ -120,7 +120,7 @@ const gradientStyle = computed(() => {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   padding: 8px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
     0 4px 16px rgba(0, 0, 0, 0.2),
