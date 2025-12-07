@@ -12,6 +12,7 @@ export type BlockType =
 
 // Header Block
 export interface HeaderBlockData {
+  logoUrl?: string
   storeName: string
   backgroundImage: string
   welcomeMessage: string // WiFi, 영업시간, 연락처 등
