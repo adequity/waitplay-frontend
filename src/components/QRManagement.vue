@@ -93,53 +93,6 @@
           </div>
         </div>
 
-        <!-- QR Code List -->
-        <div class="qr-list-container">
-          <div class="qr-list-header">
-            <h3 class="qr-list-title">생성된 QR 코드 ({{ qrCodes.length }})</h3>
-            <button @click="fetchQRCodes" class="btn-url-copy">
-              <span>새로고침</span>
-            </button>
-          </div>
-
-          <div v-if="isLoading" class="loading-state">
-            <p>로딩 중...</p>
-          </div>
-
-          <div v-else-if="qrCodes.length === 0" class="empty-state-qr">
-            <p>생성된 QR 코드가 없습니다</p>
-            <p class="settings-hint">위에서 새 QR 코드를 생성해보세요</p>
-          </div>
-
-          <div v-else class="qr-list-items">
-            <div v-for="qr in qrCodes" :key="qr.id" class="qr-list-item">
-              <div class="qr-item-header">
-                <div class="qr-item-title">{{ qr.name }}</div>
-                <span :class="['qr-item-status', { active: qr.isActive }]">
-                  {{ qr.isActive ? '활성' : '비활성' }}
-                </span>
-              </div>
-              <p v-if="qr.description" class="qr-item-description">{{ qr.description }}</p>
-              <div class="qr-item-meta">
-                <span v-if="qr.storeId">매장: {{ qr.storeId }}</span>
-                <span v-if="qr.tableId">테이블: {{ qr.tableId }}</span>
-                <span>스캔: {{ qr.scanCount }}회</span>
-              </div>
-              <div class="qr-item-code">코드: {{ qr.code }}</div>
-              <div class="qr-item-actions">
-                <button @click="selectQRCode(qr)" class="btn-qr-select">
-                  <span>미리보기</span>
-                </button>
-                <button @click="copyToClipboard(qr.qrCodeUrl)" class="btn-qr-copy">
-                  <span>링크 복사</span>
-                </button>
-                <button @click="deleteQRCode(qr.id)" class="btn-qr-delete">
-                  <span>삭제</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Right: QR Code Preview Card -->
