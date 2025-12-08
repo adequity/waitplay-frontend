@@ -41,16 +41,11 @@ const route = useRoute()
 // Blocks data (실제로는 API에서 가져와야 함)
 const blocks = ref<Block[]>([])
 
-// Page theme - Load from localStorage or use defaults
-const savedTheme = localStorage.getItem('waitplay-page-theme')
-const pageTheme = ref<PageTheme>(
-  savedTheme
-    ? JSON.parse(savedTheme)
-    : {
-        backgroundColor: '#121212',
-        textColor: '#ffffff'
-      }
-)
+// Page theme - Default values (will be loaded from API)
+const pageTheme = ref<PageTheme>({
+  backgroundColor: '#121212',
+  textColor: '#ffffff'
+})
 
 const visibleBlocks = computed(() => {
   return blocks.value
@@ -113,143 +108,55 @@ onMounted(async () => {
     console.warn('Failed to load landing page settings from API, using defaults:', error)
   }
 
-  // Try to load layout from API first, then localStorage, then use demo data
-  let layoutLoaded = false
-
-  // 1. Try loading from API if we have a QR code
-  if (qrCode) {
-    try {
-      // Extract QR code ID from the QR code
-      const qrResponse = await fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCode)}`)
-      if (qrResponse.ok) {
-        const qrData = await qrResponse.json()
-        const qrCodeId = qrData.id
-
-        // Fetch layout from API
-        const layoutResponse = await fetch(`${API_URL}/api/landingpage/layout/${qrCodeId}`)
-        if (layoutResponse.ok) {
-          const layoutData = await layoutResponse.json()
-          if (layoutData.blocksJson) {
-            blocks.value = JSON.parse(layoutData.blocksJson)
-            if (layoutData.themeJson) {
-              pageTheme.value = JSON.parse(layoutData.themeJson)
-            }
-            layoutLoaded = true
-            console.log('Layout loaded from API')
-
-            // Update header block with latest API data
-            const headerBlock = blocks.value.find(b => b.type === 'header')
-            if (headerBlock && headerBlock.data) {
-              headerBlock.data.logoUrl = logoUrl
-              headerBlock.data.storeName = storeName
-              headerBlock.data.welcomeMessage = welcomeMessage
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to load layout from API:', error)
-    }
+  // Load layout from API only - QR code is required
+  if (!qrCode) {
+    console.error('QR code is required to view landing page')
+    return
   }
 
-  // 2. Fall back to localStorage if API load failed
-  if (!layoutLoaded) {
-    const savedBlocks = localStorage.getItem('waitplay-blocks')
-    if (savedBlocks) {
-      blocks.value = JSON.parse(savedBlocks)
-      // Update header block with API data
-      const headerBlock = blocks.value.find(b => b.type === 'header')
-      if (headerBlock && headerBlock.data) {
-        headerBlock.data.logoUrl = logoUrl
-        headerBlock.data.storeName = storeName
-        headerBlock.data.welcomeMessage = welcomeMessage
-      }
-      layoutLoaded = true
+  try {
+    // Extract QR code ID from the QR code
+    const qrResponse = await fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCode)}`)
+    if (!qrResponse.ok) {
+      console.error('Failed to fetch QR code data')
+      return
     }
-  }
 
-  // 3. Use demo data as last resort
-  if (!layoutLoaded) {
-    // 임시 데이터 (데모용) - now includes logoUrl
-    blocks.value = [
-    {
-      id: 'header-001',
-      type: 'header',
-      order: 0,
-      isVisible: true,
-      fixed: true,
-      data: {
-        logoUrl: logoUrl,
-        storeName: storeName,
-        backgroundImage: 'https://search.pstatic.net/common/?src=https%3A%2F%2Fnaverbooking-phinf.pstatic.net%2F20230917_255%2F16949402169637M5tc_JPEG%2F%25C5%25D7%25B6%25F3%25BD%25BA.jpg',
-        welcomeMessage: welcomeMessage,
-        gradientOverlay: {
-          enabled: true,
-          startOpacity: 0,
-          endOpacity: 100,
-          color: '#121212'
-        }
-      }
-    },
-    {
-      id: 'social-001',
-      type: 'social_links',
-      order: 1,
-      isVisible: true,
-      data: {
-        links: [
-          { platform: 'instagram', url: 'https://instagram.com/terrace' },
-          { platform: 'youtube', url: 'https://youtube.com/@terrace' },
-          { platform: 'naver', url: 'https://blog.naver.com/terrace' }
-        ]
-      }
-    },
-    {
-      id: 'video-001',
-      type: 'video_grid',
-      order: 2,
-      isVisible: true,
-      data: {
-        videos: [
-          {
-            url: 'https://youtube.com/shorts/abc123',
-            thumbnail: 'https://img.youtube.com/vi/abc123/maxresdefault.jpg'
-          },
-          {
-            url: 'https://youtube.com/shorts/def456',
-            thumbnail: 'https://img.youtube.com/vi/def456/maxresdefault.jpg'
-          }
-        ],
-        layout: 'grid-2'
-      }
-    },
-    {
-      id: 'games-001',
-      type: 'games_carousel',
-      order: 3,
-      isVisible: true,
-      data: {
-        enabledGames: ['pinball', 'memory', 'spot-difference'],
-        showLeaderboard: true,
-        gamesOrder: ['pinball', 'memory', 'spot-difference']
-      }
-    },
-    {
-      id: 'menu-001',
-      type: 'popular_menu',
-      order: 4,
-      isVisible: true,
-      data: {
-        title: '인기 메뉴',
-        subtitle: '사람들이 많이 받아간 메뉴',
-        items: [
-          { rank: 1, name: '알페로 파스타', price: 18000 },
-          { rank: 2, name: '립아이 스테이크', price: 32000 },
-          { rank: 3, name: '트러플 리조또', price: 24000 }
-        ]
-      }
+    const qrData = await qrResponse.json()
+    const qrCodeId = qrData.id
+
+    // Fetch layout from API
+    const layoutResponse = await fetch(`${API_URL}/api/landingpage/layout/${qrCodeId}`)
+    if (!layoutResponse.ok) {
+      console.error('Failed to fetch layout data')
+      return
     }
-  ]
+
+    const layoutData = await layoutResponse.json()
+
+    // Parse blocks from API response
+    if (layoutData.blocksJson) {
+      blocks.value = JSON.parse(layoutData.blocksJson)
+      console.log('Layout loaded from API')
+    } else {
+      console.warn('No layout data found')
+      blocks.value = []
+    }
+
+    // Parse theme from API response
+    if (layoutData.themeJson) {
+      pageTheme.value = JSON.parse(layoutData.themeJson)
+    }
+
+    // Update header block with latest API data
+    const headerBlock = blocks.value.find(b => b.type === 'header')
+    if (headerBlock && headerBlock.data) {
+      headerBlock.data.logoUrl = logoUrl
+      headerBlock.data.storeName = storeName
+      headerBlock.data.welcomeMessage = welcomeMessage
+    }
+  } catch (error) {
+    console.error('Error loading layout from API:', error)
   }
 })
 </script>
