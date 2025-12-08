@@ -674,14 +674,15 @@ async function loadLayout() {
       // Parse blocks from JSON
       if (layout.blocksJson) {
         const parsedBlocks = JSON.parse(layout.blocksJson)
-        // Only use loaded blocks if they exist and have content
+        // If blocks exist and have content, use them; otherwise use default blocks with header
         if (parsedBlocks && parsedBlocks.length > 0) {
           blocks.value = parsedBlocks
         } else {
-          // Use default blocks if empty
+          // Empty layout - add default header block
           blocks.value = getDefaultBlocks()
         }
       } else {
+        // Use default blocks if no blocksJson
         blocks.value = getDefaultBlocks()
       }
 
