@@ -24,12 +24,17 @@
           <div class="game-icon-large">{{ game.icon }}</div>
           <h3 class="game-title-large">{{ game.name }}</h3>
           <p class="game-desc-large">{{ game.description }}</p>
-          <div v-if="data.showLeaderboard && game.rankings && game.rankings.length > 0" class="game-leaderboard">
+          <div v-if="data.showLeaderboard" class="game-leaderboard">
             <div class="leaderboard-title">🏆 리더보드</div>
-            <div class="leaderboard-item" v-for="(rank, index) in game.rankings.slice(0, 3)" :key="index">
-              <span class="leaderboard-rank">{{ index + 1 }}위</span>
-              <span class="leaderboard-name">{{ rank.playerName }}</span>
-              <span class="leaderboard-score">{{ rank.score.toLocaleString() }}점</span>
+            <div v-if="game.rankings && game.rankings.length > 0">
+              <div class="leaderboard-item" v-for="(rank, index) in game.rankings.slice(0, 3)" :key="index">
+                <span class="leaderboard-rank">{{ index + 1 }}위</span>
+                <span class="leaderboard-name">{{ rank.playerName }}</span>
+                <span class="leaderboard-score">{{ rank.score.toLocaleString() }}점</span>
+              </div>
+            </div>
+            <div v-else class="leaderboard-empty">
+              아직 기록이 없습니다
             </div>
           </div>
         </div>
@@ -45,6 +50,20 @@ import type { GamesCarouselBlockData } from '@/types/blocks'
 
 interface Props {
   data: GamesCarouselBlockData
+  qrCodeId?: string
+}
+
+interface LeaderboardEntry {
+  playerName: string
+  score: number
+}
+
+interface GameData {
+  type: string
+  name: string
+  icon: string
+  description: string
+  rankings: LeaderboardEntry[]
 }
 
 const props = defineProps<Props>()
@@ -52,52 +71,82 @@ const router = useRouter()
 
 const currentGameIndex = ref(0)
 const gamesSliderRef = ref<HTMLElement | null>(null)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
-// 전체 게임 데이터 (실제로는 API에서 가져와야 함)
-const allGames = [
+// 게임 기본 정보
+const gameDefinitions = [
   {
     type: 'pinball',
     name: '핀볼게임',
     icon: '🎯',
-    description: '공을 튕겨서 점수를 획득하세요',
-    rankings: [
-      { playerName: '김민수', score: 15420 },
-      { playerName: '이지은', score: 14230 },
-      { playerName: '박준혁', score: 13150 }
-    ]
+    description: '공을 튕겨서 점수를 획득하세요'
   },
   {
     type: 'memory',
     name: '같은 카드 찾기',
     icon: '🃏',
-    description: '같은 그림의 카드를 찾아보세요',
-    rankings: [
-      { playerName: '정수진', score: 12580 },
-      { playerName: '최동욱', score: 11940 },
-      { playerName: '강혜원', score: 10230 }
-    ]
+    description: '같은 그림의 카드를 찾아보세요'
   },
   {
     type: 'spot-difference',
     name: '틀린 그림 찾기',
     icon: '🔍',
-    description: '두 그림의 다른 부분을 찾아보세요',
-    rankings: [
-      { playerName: '윤성민', score: 9540 },
-      { playerName: '한예진', score: 8990 },
-      { playerName: '임준호', score: 7430 }
-    ]
+    description: '두 그림의 다른 부분을 찾아보세요'
   }
 ]
 
+const allGames = ref<GameData[]>(gameDefinitions.map(game => ({
+  ...game,
+  rankings: []
+})))
+
+// API에서 리더보드 데이터 가져오기
+async function fetchLeaderboard(gameType: string) {
+  try {
+    let url = `${API_BASE_URL}/api/game/score/leaderboard/${gameType}?limit=3`
+    if (props.qrCodeId) {
+      url += `&qrCodeId=${props.qrCodeId}`
+    }
+
+    const response = await fetch(url)
+    if (!response.ok) {
+      console.error(`Failed to fetch leaderboard for ${gameType}`)
+      return []
+    }
+
+    const data = await response.json()
+    return data.leaderboard || []
+  } catch (error) {
+    console.error(`Error fetching leaderboard for ${gameType}:`, error)
+    return []
+  }
+}
+
+// 모든 게임의 리더보드 데이터 로드
+async function loadAllLeaderboards() {
+  const promises = gameDefinitions.map(async (game) => {
+    const rankings = await fetchLeaderboard(game.type)
+    return {
+      ...game,
+      rankings
+    }
+  })
+
+  allGames.value = await Promise.all(promises)
+}
+
+onMounted(() => {
+  loadAllLeaderboards()
+})
+
 const allowedGames = computed(() => {
   const orderedGames = props.data.gamesOrder.map(type =>
-    allGames.find(game => game.type === type)
+    allGames.value.find(game => game.type === type)
   ).filter(Boolean)
 
   return orderedGames.filter(game =>
     props.data.enabledGames.includes(game!.type)
-  ) as typeof allGames
+  ) as GameData[]
 })
 
 function scrollToGame(index: number) {
@@ -276,5 +325,13 @@ function goToGame(type: string) {
   font-size: 13px;
   font-weight: 600;
   color: #007aff;
+}
+
+.leaderboard-empty {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  padding: 20px 0;
 }
 </style>
