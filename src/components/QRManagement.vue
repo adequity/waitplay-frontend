@@ -143,11 +143,11 @@
 
         <!-- Advanced Settings Section -->
         <div class="advanced-settings-section">
-          <button class="btn-layout-manager" disabled>
-            <span class="btn-text">고급 설정</span>
-            <span class="btn-badge">곧 추가</span>
+          <button class="btn-layout-manager" @click="openLayoutEditor">
+            <span class="btn-text">고급 설정 (레이아웃 편집기)</span>
+            <span class="btn-icon">→</span>
           </button>
-          <p class="advanced-hint">QR 코드 디자인 커스터마이징 기능이 추가될 예정입니다</p>
+          <p class="advanced-hint">랜딩페이지를 블록 단위로 편집하고 커스터마이징할 수 있습니다</p>
         </div>
       </div>
     </div>
@@ -191,6 +191,12 @@ const logoUrl = ref<string>('')
 const logoFileInput = ref<HTMLInputElement | null>(null)
 const welcomeMessage = ref('')
 const landingPageUrl = ref('waitplay.io/store/demo123')
+
+// Open Layout Editor
+const openLayoutEditor = () => {
+  // Open the layout editor in a new tab/window or navigate to it
+  window.open('/admin/layout-editor', '_blank')
+}
 
 // Load settings from backend API
 const loadSettings = async () => {
@@ -334,17 +340,37 @@ const selectQRCode = (qr: QRCodeData) => {
 const generateQRImage = async (url: string) => {
   try {
     const dataUrl = await QRCode.toDataURL(url, {
-      width: 300,
-      margin: 2,
+      width: qrSettings.value.size,
+      margin: qrSettings.value.margin,
+      errorCorrectionLevel: qrSettings.value.errorCorrectionLevel,
       color: {
-        dark: '#000000',
-        light: '#FFFFFF'
+        dark: qrSettings.value.foregroundColor,
+        light: qrSettings.value.backgroundColor
       }
     })
     qrImageUrl.value = dataUrl
   } catch (error) {
     console.error('Failed to generate QR code:', error)
   }
+}
+
+// Apply QR settings
+const applyQRSettings = () => {
+  if (selectedQR.value && selectedQR.value.qrCodeUrl) {
+    generateQRImage(selectedQR.value.qrCodeUrl)
+  }
+}
+
+// Reset QR settings to default
+const resetQRSettings = () => {
+  qrSettings.value = {
+    foregroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
+    errorCorrectionLevel: 'M',
+    size: 400,
+    margin: 4
+  }
+  applyQRSettings()
 }
 
 // Watch for selectedQR changes
@@ -651,5 +677,238 @@ onMounted(() => {
 .qr-url-link:hover {
   color: #0051d5;
   text-decoration: underline;
+}
+
+/* Advanced Settings Section */
+.advanced-settings-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-layout-manager {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+}
+
+.btn-layout-manager:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35);
+}
+
+.btn-layout-manager:active {
+  transform: translateY(0);
+}
+
+.btn-icon {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+/* Advanced Settings Panel */
+.advanced-settings-panel {
+  margin-top: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+}
+
+.settings-group {
+  margin-bottom: 20px;
+}
+
+.settings-group:last-child {
+  margin-bottom: 0;
+}
+
+.settings-label-small {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.color-picker-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.color-input {
+  width: 60px;
+  height: 40px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.color-input:hover {
+  border-color: #667eea;
+}
+
+.color-text-input {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 13px;
+  color: #1f2937;
+  transition: all 0.2s ease;
+}
+
+.color-text-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.settings-select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.settings-hint-small {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.size-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #e5e7eb 0%, #667eea 100%);
+  outline: none;
+  -webkit-appearance: none;
+  margin: 8px 0;
+}
+
+.size-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.size-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.size-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.size-display {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #667eea;
+  margin-top: 4px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-apply-settings,
+.btn-reset-settings {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-apply-settings {
+  background: #667eea;
+  color: white;
+}
+
+.btn-apply-settings:hover {
+  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.25);
+}
+
+.btn-reset-settings {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.btn-reset-settings:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Slide Down Transition */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.3s ease;
+  max-height: 1000px;
+  overflow: hidden;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
