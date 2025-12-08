@@ -679,7 +679,15 @@ async function loadLayout() {
         const parsedBlocks = JSON.parse(layout.blocksJson)
         // If blocks exist and have content, use them; otherwise use default blocks with header
         if (parsedBlocks && parsedBlocks.length > 0) {
-          blocks.value = parsedBlocks
+          // Ensure header block exists (some old layouts might not have it)
+          const hasHeader = parsedBlocks.some((block: Block) => block.type === 'header')
+          if (!hasHeader) {
+            // Add header block at the beginning
+            const defaultBlocks = getDefaultBlocks()
+            blocks.value = [...defaultBlocks, ...parsedBlocks]
+          } else {
+            blocks.value = parsedBlocks
+          }
         } else {
           // Empty layout - add default header block
           blocks.value = getDefaultBlocks()
