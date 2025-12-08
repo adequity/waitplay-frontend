@@ -396,16 +396,19 @@
                     type="url"
                     class="form-input"
                     v-model="video.url"
+                    @input="updateVideoThumbnail(video)"
                     placeholder="YouTube Shorts URL"
                   />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">썸네일 URL</label>
+                  <label class="form-label">썸네일 URL (자동 생성)</label>
                   <input
                     type="url"
                     class="form-input"
                     v-model="video.thumbnail"
-                    placeholder="썸네일 이미지 URL"
+                    readonly
+                    placeholder="YouTube URL 입력 시 자동으로 생성됩니다"
+                    style="background-color: #f3f4f6; cursor: not-allowed;"
                   />
                 </div>
                 <button class="btn-remove-item" @click="removeVideo(index)">
@@ -931,6 +934,42 @@ function addSocialLink() {
 
 function removeSocialLink(index: number) {
   editForm.value.links.splice(index, 1)
+}
+
+// YouTube helper functions
+function extractYoutubeVideoId(url: string): string | null {
+  if (!url) return null
+
+  // Handle various YouTube URL formats
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match && match[1]) {
+      return match[1]
+    }
+  }
+
+  return null
+}
+
+function getYoutubeThumbnail(videoId: string): string {
+  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+}
+
+function updateVideoThumbnail(video: any) {
+  if (!video.url) {
+    video.thumbnail = ''
+    return
+  }
+
+  const videoId = extractYoutubeVideoId(video.url)
+  if (videoId) {
+    video.thumbnail = getYoutubeThumbnail(videoId)
+  }
 }
 
 // Video helpers
