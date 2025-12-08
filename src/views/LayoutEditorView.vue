@@ -940,9 +940,9 @@ function removeSocialLink(index: number) {
 function extractYoutubeVideoId(url: string): string | null {
   if (!url) return null
 
-  // Handle various YouTube URL formats
+  // Handle various YouTube URL formats including Shorts
   const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
     /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
   ]
 
