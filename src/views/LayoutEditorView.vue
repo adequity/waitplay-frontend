@@ -576,6 +576,9 @@ const qrCodeId = ref<string>(route.params.qrCodeId as string)
 const isLoading = ref(true)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
+// Landing page settings (from QR management)
+const landingPageSettings = ref<any>(null)
+
 // Blocks data - will be loaded from API
 const blocks = ref<Block[]>([])
 
@@ -603,8 +606,51 @@ const availableBlockTypes = [
 
 // Load layout from API on mount
 onMounted(async () => {
+  await loadLandingPageSettings()
   await loadLayout()
 })
+
+// Load landing page settings first
+async function loadLandingPageSettings() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/landingpage/settings`)
+    if (response.ok) {
+      landingPageSettings.value = await response.json()
+      console.log('Loaded landing page settings:', landingPageSettings.value)
+    }
+  } catch (error) {
+    console.error('Error loading landing page settings:', error)
+  }
+}
+
+// Get default blocks for new layouts
+function getDefaultBlocks(): Block[] {
+  // Use landing page settings if available
+  const storeName = landingPageSettings.value?.storeName || '매장명을 입력하세요'
+  const welcomeMessage = landingPageSettings.value?.welcomeMessage || '환영합니다!\n\n📶 WiFi 정보\n🕐 영업시간\n📞 연락처'
+  const logoUrl = landingPageSettings.value?.logoUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4'
+
+  return [
+    {
+      id: 'header-001',
+      type: 'header',
+      order: 0,
+      isVisible: true,
+      fixed: true,
+      data: {
+        storeName: storeName,
+        backgroundImage: logoUrl,
+        welcomeMessage: welcomeMessage,
+        gradientOverlay: {
+          enabled: true,
+          startOpacity: 0,
+          endOpacity: 100,
+          color: pageTheme.value.backgroundColor
+        }
+      }
+    }
+  ]
+}
 
 // Load layout from API
 async function loadLayout() {
@@ -619,24 +665,39 @@ async function loadLayout() {
     isLoading.value = true
     const response = await fetch(`${API_BASE_URL}/api/landingpage/layout/${qrCodeId.value}`)
 
-    if (!response.ok) {
+    if (response.ok) {
+      const layout = await response.json()
+
+      // Parse blocks from JSON
+      if (layout.blocksJson) {
+        const parsedBlocks = JSON.parse(layout.blocksJson)
+        // Only use loaded blocks if they exist and have content
+        if (parsedBlocks && parsedBlocks.length > 0) {
+          blocks.value = parsedBlocks
+        } else {
+          // Use default blocks if empty
+          blocks.value = getDefaultBlocks()
+        }
+      } else {
+        blocks.value = getDefaultBlocks()
+      }
+
+      // Parse theme from JSON if exists
+      if (layout.themeJson) {
+        pageTheme.value = JSON.parse(layout.themeJson)
+      }
+    } else if (response.status === 404) {
+      // Layout doesn't exist yet, use default blocks
+      console.log('No layout found for this QR code, using default blocks')
+      blocks.value = getDefaultBlocks()
+    } else {
       throw new Error('Failed to load layout')
-    }
-
-    const layout = await response.json()
-
-    // Parse blocks from JSON
-    if (layout.blocksJson) {
-      blocks.value = JSON.parse(layout.blocksJson)
-    }
-
-    // Parse theme from JSON if exists
-    if (layout.themeJson) {
-      pageTheme.value = JSON.parse(layout.themeJson)
     }
   } catch (error) {
     console.error('Error loading layout:', error)
-    alert('레이아웃 로드 중 오류가 발생했습니다')
+    // On error, use default blocks instead of showing alert
+    console.log('Using default blocks due to error')
+    blocks.value = getDefaultBlocks()
   } finally {
     isLoading.value = false
   }
