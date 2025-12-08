@@ -401,6 +401,7 @@
               <select class="form-select" v-model="editForm.layout">
                 <option value="grid-1">1열 (가로 영상)</option>
                 <option value="grid-2">2열 (Shorts)</option>
+                <option value="carousel">캐러셀 (가로 스크롤)</option>
               </select>
             </div>
 
