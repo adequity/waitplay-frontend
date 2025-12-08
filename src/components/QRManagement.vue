@@ -194,8 +194,12 @@ const landingPageUrl = ref('waitplay.io/store/demo123')
 
 // Open Layout Editor
 const openLayoutEditor = () => {
-  // Open the layout editor in a new tab/window or navigate to it
-  window.open('/admin/layout-editor', '_blank')
+  if (!selectedQR.value) {
+    alert('QR 코드를 먼저 선택해주세요')
+    return
+  }
+  // Open the layout editor with the selected QR code ID
+  window.open(`/admin/layout-editor/${selectedQR.value.id}`, '_blank')
 }
 
 // Load settings from backend API

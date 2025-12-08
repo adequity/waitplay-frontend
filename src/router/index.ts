@@ -18,9 +18,10 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/AdminView.vue')
   },
   {
-    path: '/admin/layout-editor',
+    path: '/admin/layout-editor/:qrCodeId',
     name: 'layout-editor',
-    component: () => import('../views/LayoutEditorView.vue')
+    component: () => import('../views/LayoutEditorView.vue'),
+    props: true
   },
   {
     path: '/superadmin',

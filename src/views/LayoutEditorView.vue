@@ -555,8 +555,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, type Component } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted, type Component } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import draggable from 'vuedraggable'
 import type { Block, BlockType } from '@/types/blocks'
 
@@ -569,66 +569,26 @@ import GamesCarouselBlock from '@/components/blocks/GamesCarouselBlock.vue'
 import PopularMenuBlock from '@/components/blocks/PopularMenuBlock.vue'
 
 const router = useRouter()
+const route = useRoute()
 
-// Demo blocks data
-const blocks = ref<Block[]>([
-  {
-    id: 'header-001',
-    type: 'header',
-    order: 0,
-    isVisible: true,
-    fixed: true,
-    data: {
-      storeName: '테라스 레스토랑',
-      backgroundImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
-      welcomeMessage: '📶 테라스_Guest / terrace1234\n🕐 매일 10:00 - 22:00\n📞 02-1234-5678',
-      gradientOverlay: {
-        enabled: true,
-        startOpacity: 0,
-        endOpacity: 100,
-        color: '#121212'
-      }
-    }
-  },
-  {
-    id: 'button-001',
-    type: 'button',
-    order: 1,
-    isVisible: true,
-    data: {
-      text: '메뉴 보기',
-      url: 'https://example.com/menu',
-      style: 'primary'
-    }
-  },
-  {
-    id: 'games-001',
-    type: 'games_carousel',
-    order: 2,
-    isVisible: true,
-    data: {
-      enabledGames: ['pinball', 'memory', 'spot-difference'],
-      showLeaderboard: true,
-      gamesOrder: ['pinball', 'memory', 'spot-difference']
-    }
-  }
-])
+// Get QR Code ID from route parameter
+const qrCodeId = ref<string>(route.params.qrCodeId as string)
+const isLoading = ref(true)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+
+// Blocks data - will be loaded from API
+const blocks = ref<Block[]>([])
 
 const showAddBlockModal = ref(false)
 const editingBlock = ref<Block | null>(null)
 const editForm = ref<any>({})
 const previewDevice = ref<'mobile' | 'desktop'>('mobile')
 
-// Page theme settings - Load from localStorage or use defaults
-const savedTheme = localStorage.getItem('waitplay-page-theme')
-const pageTheme = ref(
-  savedTheme
-    ? JSON.parse(savedTheme)
-    : {
-        backgroundColor: '#121212',
-        textColor: '#ffffff'
-      }
-)
+// Page theme settings - will be loaded from API
+const pageTheme = ref({
+  backgroundColor: '#121212',
+  textColor: '#ffffff'
+})
 
 // Available block types
 const availableBlockTypes = [
@@ -641,23 +601,46 @@ const availableBlockTypes = [
   { type: 'image', icon: 'I', name: '이미지', description: '이미지 추가' }
 ]
 
-// Watch pageTheme and save to localStorage
-watch(
-  pageTheme,
-  (newTheme) => {
-    localStorage.setItem('waitplay-page-theme', JSON.stringify(newTheme))
-  },
-  { deep: true }
-)
+// Load layout from API on mount
+onMounted(async () => {
+  await loadLayout()
+})
 
-// Watch blocks and save to localStorage
-watch(
-  blocks,
-  (newBlocks) => {
-    localStorage.setItem('waitplay-blocks', JSON.stringify(newBlocks))
-  },
-  { deep: true }
-)
+// Load layout from API
+async function loadLayout() {
+  if (!qrCodeId.value) {
+    console.error('QR Code ID is required')
+    alert('QR 코드 ID가 필요합니다')
+    router.back()
+    return
+  }
+
+  try {
+    isLoading.value = true
+    const response = await fetch(`${API_BASE_URL}/api/landingpage/layout/${qrCodeId.value}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load layout')
+    }
+
+    const layout = await response.json()
+
+    // Parse blocks from JSON
+    if (layout.blocksJson) {
+      blocks.value = JSON.parse(layout.blocksJson)
+    }
+
+    // Parse theme from JSON if exists
+    if (layout.themeJson) {
+      pageTheme.value = JSON.parse(layout.themeJson)
+    }
+  } catch (error) {
+    console.error('Error loading layout:', error)
+    alert('레이아웃 로드 중 오류가 발생했습니다')
+  } finally {
+    isLoading.value = false
+  }
+}
 
 // Computed
 const visibleBlocks = computed(() => {
@@ -839,9 +822,40 @@ function goBack() {
   router.back()
 }
 
-function saveLayout() {
-  console.log('Saving layout:', blocks.value)
-  alert('레이아웃이 저장되었습니다!')
+async function saveLayout() {
+  if (!qrCodeId.value) {
+    alert('QR 코드 ID가 필요합니다')
+    return
+  }
+
+  try {
+    isLoading.value = true
+
+    const payload = {
+      qrCodeId: qrCodeId.value,
+      blocksJson: JSON.stringify(blocks.value),
+      themeJson: JSON.stringify(pageTheme.value)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/landingpage/layout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to save layout')
+    }
+
+    alert('레이아웃이 저장되었습니다!')
+  } catch (error) {
+    console.error('Error saving layout:', error)
+    alert('레이아웃 저장 중 오류가 발생했습니다')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 // Social Links helpers
