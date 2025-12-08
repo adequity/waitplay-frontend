@@ -113,18 +113,63 @@ onMounted(async () => {
     console.warn('Failed to load landing page settings from API, using defaults:', error)
   }
 
-  // Load blocks from localStorage or use demo data
-  const savedBlocks = localStorage.getItem('waitplay-blocks')
-  if (savedBlocks) {
-    blocks.value = JSON.parse(savedBlocks)
-    // Update header block with API data
-    const headerBlock = blocks.value.find(b => b.type === 'header')
-    if (headerBlock && headerBlock.data) {
-      headerBlock.data.logoUrl = logoUrl
-      headerBlock.data.storeName = storeName
-      headerBlock.data.welcomeMessage = welcomeMessage
+  // Try to load layout from API first, then localStorage, then use demo data
+  let layoutLoaded = false
+
+  // 1. Try loading from API if we have a QR code
+  if (qrCode) {
+    try {
+      // Extract QR code ID from the QR code
+      const qrResponse = await fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCode)}`)
+      if (qrResponse.ok) {
+        const qrData = await qrResponse.json()
+        const qrCodeId = qrData.id
+
+        // Fetch layout from API
+        const layoutResponse = await fetch(`${API_URL}/api/landingpage/layout/${qrCodeId}`)
+        if (layoutResponse.ok) {
+          const layoutData = await layoutResponse.json()
+          if (layoutData.blocksJson) {
+            blocks.value = JSON.parse(layoutData.blocksJson)
+            if (layoutData.themeJson) {
+              pageTheme.value = JSON.parse(layoutData.themeJson)
+            }
+            layoutLoaded = true
+            console.log('Layout loaded from API')
+
+            // Update header block with latest API data
+            const headerBlock = blocks.value.find(b => b.type === 'header')
+            if (headerBlock && headerBlock.data) {
+              headerBlock.data.logoUrl = logoUrl
+              headerBlock.data.storeName = storeName
+              headerBlock.data.welcomeMessage = welcomeMessage
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load layout from API:', error)
     }
-  } else {
+  }
+
+  // 2. Fall back to localStorage if API load failed
+  if (!layoutLoaded) {
+    const savedBlocks = localStorage.getItem('waitplay-blocks')
+    if (savedBlocks) {
+      blocks.value = JSON.parse(savedBlocks)
+      // Update header block with API data
+      const headerBlock = blocks.value.find(b => b.type === 'header')
+      if (headerBlock && headerBlock.data) {
+        headerBlock.data.logoUrl = logoUrl
+        headerBlock.data.storeName = storeName
+        headerBlock.data.welcomeMessage = welcomeMessage
+      }
+      layoutLoaded = true
+    }
+  }
+
+  // 3. Use demo data as last resort
+  if (!layoutLoaded) {
     // 임시 데이터 (데모용) - now includes logoUrl
     blocks.value = [
     {
