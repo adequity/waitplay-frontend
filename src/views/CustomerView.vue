@@ -110,13 +110,9 @@ onMounted(async () => {
     console.warn('Failed to load landing page settings from API, using defaults:', error)
   }
 
-  // Load layout from API only - QR code is required
-  if (!qrCode) {
-    console.error('QR code is required to view landing page')
-    return
-  }
-
-  try {
+  // Load layout from API if QR code is provided
+  if (qrCode) {
+    try {
     // Extract QR code ID from the QR code
     const qrResponse = await fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCode)}`)
     if (!qrResponse.ok) {
@@ -157,8 +153,9 @@ onMounted(async () => {
       headerBlock.data.storeName = storeName
       headerBlock.data.welcomeMessage = welcomeMessage
     }
-  } catch (error) {
-    console.error('Error loading layout from API:', error)
+    } catch (error) {
+      console.error('Error loading layout from API:', error)
+    }
   }
 })
 </script>
