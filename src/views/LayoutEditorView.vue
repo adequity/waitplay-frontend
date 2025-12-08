@@ -415,7 +415,7 @@
                     class="form-input"
                     v-model="video.url"
                     @input="updateVideoThumbnail(video)"
-                    placeholder="YouTube Shorts URL"
+                    placeholder="YouTube Shorts 공유 링크 (공유하기 버튼 사용)"
                   />
                 </div>
                 <div class="form-group">
