@@ -424,21 +424,32 @@
           <!-- Games Carousel Block Edit Form -->
           <template v-if="editingBlock.type === 'games_carousel'">
             <div class="form-group">
-              <label class="form-label">활성화된 게임</label>
-              <div class="checkbox-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" value="pinball" v-model="editForm.enabledGames" />
-                  <span>🎯 핀볼 게임</span>
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" value="memory" v-model="editForm.enabledGames" />
-                  <span>🃏 기억력 게임</span>
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" value="spot-difference" v-model="editForm.enabledGames" />
-                  <span>🔍 틀린그림찾기</span>
-                </label>
-              </div>
+              <label class="form-label">게임 선택 및 순서</label>
+              <p class="form-hint">체크한 게임만 표시되며, 드래그하여 순서를 변경할 수 있습니다</p>
+              <draggable
+                v-model="editForm.gamesOrder"
+                item-key="type"
+                handle=".game-drag-handle"
+                animation="200"
+                class="games-order-list"
+              >
+                <template #item="{ element }">
+                  <div class="game-order-item">
+                    <div class="game-drag-handle">
+                      <span>⋮⋮</span>
+                    </div>
+                    <label class="checkbox-label-inline">
+                      <input
+                        type="checkbox"
+                        :value="element.type"
+                        v-model="editForm.enabledGames"
+                      />
+                      <span class="game-icon">{{ element.icon }}</span>
+                      <span class="game-name">{{ element.name }}</span>
+                    </label>
+                  </div>
+                </template>
+              </draggable>
             </div>
 
             <div class="form-group">
@@ -824,7 +835,15 @@ function getDefaultBlockData(type: BlockType): any {
     case 'video_grid':
       return { videos: [], layout: 'grid-2' }
     case 'games_carousel':
-      return { enabledGames: [], showLeaderboard: true, gamesOrder: [] }
+      return {
+        enabledGames: ['pinball', 'memory', 'spot-difference'],
+        showLeaderboard: true,
+        gamesOrder: [
+          { type: 'pinball', name: '핀볼게임', icon: '🎯' },
+          { type: 'memory', name: '같은 카드 찾기', icon: '🃏' },
+          { type: 'spot-difference', name: '틀린 그림 찾기', icon: '🔍' }
+        ]
+      }
     case 'popular_menu':
       return { title: '인기 메뉴', subtitle: '', items: [] }
     case 'text':
@@ -847,6 +866,19 @@ function editBlock(block: Block) {
       startOpacity: 0,
       endOpacity: 100,
       color: pageTheme.value.backgroundColor
+    }
+  }
+
+  // Ensure gamesOrder exists for games_carousel blocks
+  if (block.type === 'games_carousel' && (!editForm.value.gamesOrder || editForm.value.gamesOrder.length === 0)) {
+    editForm.value.gamesOrder = [
+      { type: 'pinball', name: '핀볼게임', icon: '🎯' },
+      { type: 'memory', name: '같은 카드 찾기', icon: '🃏' },
+      { type: 'spot-difference', name: '틀린 그림 찾기', icon: '🔍' }
+    ]
+    // Initialize enabledGames if not set
+    if (!editForm.value.enabledGames || editForm.value.enabledGames.length === 0) {
+      editForm.value.enabledGames = ['pinball', 'memory', 'spot-difference']
     }
   }
 }
@@ -1934,6 +1966,80 @@ function removeMenuItem(index: number) {
   height: 120px;
   border-radius: 8px;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Games Order List */
+.games-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.game-order-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s;
+}
+
+.game-order-item:hover {
+  border-color: #6366f1;
+  background: #f5f7ff;
+}
+
+.game-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  cursor: grab;
+  color: #9ca3af;
+  font-size: 16px;
+  user-select: none;
+}
+
+.game-drag-handle:active {
+  cursor: grabbing;
+}
+
+.checkbox-label-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex: 1;
+  font-size: 15px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.checkbox-label-inline input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.game-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.game-name {
+  flex: 1;
+}
+
+.form-hint {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 4px 0 0 0;
+  line-height: 1.5;
 }
 
 /* Toggle Switch */
