@@ -340,37 +340,18 @@ const selectQRCode = (qr: QRCodeData) => {
 const generateQRImage = async (url: string) => {
   try {
     const dataUrl = await QRCode.toDataURL(url, {
-      width: qrSettings.value.size,
-      margin: qrSettings.value.margin,
-      errorCorrectionLevel: qrSettings.value.errorCorrectionLevel,
+      width: 400,
+      margin: 4,
+      errorCorrectionLevel: 'M',
       color: {
-        dark: qrSettings.value.foregroundColor,
-        light: qrSettings.value.backgroundColor
+        dark: '#000000',
+        light: '#FFFFFF'
       }
     })
     qrImageUrl.value = dataUrl
   } catch (error) {
     console.error('Failed to generate QR code:', error)
   }
-}
-
-// Apply QR settings
-const applyQRSettings = () => {
-  if (selectedQR.value && selectedQR.value.qrCodeUrl) {
-    generateQRImage(selectedQR.value.qrCodeUrl)
-  }
-}
-
-// Reset QR settings to default
-const resetQRSettings = () => {
-  qrSettings.value = {
-    foregroundColor: '#000000',
-    backgroundColor: '#FFFFFF',
-    errorCorrectionLevel: 'M',
-    size: 400,
-    margin: 4
-  }
-  applyQRSettings()
 }
 
 // Watch for selectedQR changes
