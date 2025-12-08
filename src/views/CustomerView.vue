@@ -70,13 +70,15 @@ onMounted(async () => {
   const storeId = route.query.storeId as string
   const qrCode = route.query.qr as string
 
+  // API URL
+  const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
+
   // Fetch landing page settings from API
   let logoUrl = ''
   let storeName = '테라스 레스토랑'
   let welcomeMessage = '📶 테라스_Guest / terrace1234\n🕐 매일 10:00 - 22:00\n📞 02-1234-5678'
 
   try {
-    const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
     // If QR code is provided, call QR code API to log scan
     if (qrCode) {
