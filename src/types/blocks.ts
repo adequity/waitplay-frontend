@@ -51,7 +51,7 @@ export interface VideoItem {
 export interface VideoGridBlockData {
   title?: string
   videos: VideoItem[]
-  layout: 'grid-2' | 'grid-3' | 'carousel'
+  layout: 'grid-1' | 'grid-2'
 }
 
 // Games Carousel Block

@@ -399,9 +399,8 @@
             <div class="form-group">
               <label class="form-label">레이아웃</label>
               <select class="form-select" v-model="editForm.layout">
-                <option value="grid-1">1열 (세로)</option>
-                <option value="grid-2">2열</option>
-                <option value="grid-3">3열</option>
+                <option value="grid-1">1열 (가로 영상)</option>
+                <option value="grid-2">2열 (Shorts)</option>
               </select>
             </div>
 
