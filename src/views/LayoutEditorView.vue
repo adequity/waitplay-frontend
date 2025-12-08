@@ -220,13 +220,31 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">배경 이미지 URL</label>
-              <input
-                type="text"
-                class="form-input"
-                v-model="editForm.backgroundImage"
-                placeholder="https://example.com/image.jpg"
-              />
+              <label class="form-label">배경 이미지</label>
+              <div v-if="editForm.backgroundImage" class="image-preview-container">
+                <img :src="editForm.backgroundImage" alt="배경 이미지 미리보기" class="image-preview" />
+                <button type="button" class="btn-remove-image" @click="removeBackgroundImage">
+                  ✕ 삭제
+                </button>
+              </div>
+              <div v-else class="upload-placeholder">
+                <input
+                  type="file"
+                  ref="backgroundImageInput"
+                  @change="handleBackgroundImageUpload"
+                  accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                  class="file-input"
+                  id="background-image-upload"
+                />
+                <label for="background-image-upload" class="upload-label">
+                  <span class="upload-icon">📷</span>
+                  <span class="upload-text">배경 이미지 업로드</span>
+                  <span class="upload-hint">PNG, JPG, SVG (최대 2MB)</span>
+                </label>
+              </div>
+              <div v-if="backgroundImageUploading" class="upload-progress">
+                업로드 중...
+              </div>
             </div>
 
             <div class="form-group">
@@ -604,6 +622,10 @@ const editingBlock = ref<Block | null>(null)
 const editForm = ref<any>({})
 const previewDevice = ref<'mobile' | 'desktop'>('mobile')
 
+// File upload state
+const backgroundImageInput = ref<HTMLInputElement | null>(null)
+const backgroundImageUploading = ref(false)
+
 // Page theme settings - will be loaded from API
 const pageTheme = ref({
   backgroundColor: '#121212',
@@ -974,6 +996,68 @@ function addSocialLink() {
 
 function removeSocialLink(index: number) {
   editForm.value.links.splice(index, 1)
+}
+
+// Background image upload functions
+async function handleBackgroundImageUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (!file) return
+
+  // Validate file size (2MB max)
+  const maxSize = 2 * 1024 * 1024 // 2MB
+  if (file.size > maxSize) {
+    alert('파일 크기는 2MB 이하여야 합니다.')
+    return
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml']
+  if (!allowedTypes.includes(file.type)) {
+    alert('PNG, JPG, SVG 파일만 업로드 가능합니다.')
+    return
+  }
+
+  try {
+    backgroundImageUploading.value = true
+
+    // Create FormData and upload
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE_URL}/api/fileupload/background`, {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to upload image')
+    }
+
+    const data = await response.json()
+
+    if (data.success && data.fileUrl) {
+      editForm.value.backgroundImage = data.fileUrl
+    } else {
+      throw new Error(data.message || 'Upload failed')
+    }
+  } catch (error) {
+    console.error('Error uploading background image:', error)
+    alert('이미지 업로드 중 오류가 발생했습니다.')
+  } finally {
+    backgroundImageUploading.value = false
+    // Reset file input
+    if (backgroundImageInput.value) {
+      backgroundImageInput.value.value = ''
+    }
+  }
+}
+
+function removeBackgroundImage() {
+  if (confirm('배경 이미지를 삭제하시겠습니까?')) {
+    editForm.value.backgroundImage = ''
+  }
 }
 
 // YouTube helper functions
@@ -2040,6 +2124,99 @@ function removeMenuItem(index: number) {
   color: #6b7280;
   margin: 4px 0 0 0;
   line-height: 1.5;
+}
+
+/* Image Upload Styles */
+.image-preview-container {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+}
+
+.image-preview {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+.btn-remove-image {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.btn-remove-image:hover {
+  background: rgba(220, 38, 38, 0.95);
+  transform: scale(1.05);
+}
+
+.upload-placeholder {
+  width: 100%;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 8px;
+}
+
+.upload-label:hover {
+  border-color: #6366f1;
+  background: #f5f7ff;
+}
+
+.upload-icon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.upload-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.upload-hint {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.upload-progress {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  color: #1e40af;
+  font-size: 14px;
+  text-align: center;
 }
 
 /* Toggle Switch */
