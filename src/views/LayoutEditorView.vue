@@ -159,14 +159,17 @@
               color: pageTheme.textColor
             }"
           >
+            <!-- Dynamic Block Rendering (same as CustomerView) -->
             <component
               v-for="block in visibleBlocks"
               :key="block.id"
               :is="getBlockComponent(block.type)"
               :data="block.data"
             />
-            <div class="preview-footer">
-              <p :style="{ color: pageTheme.textColor, opacity: 0.4 }">
+
+            <!-- Footer (same as CustomerView) -->
+            <div class="footer">
+              <p class="footer-text" :style="{ color: pageTheme.textColor, opacity: 0.4 }">
                 Powered by WaitPlay
               </p>
             </div>
@@ -1381,11 +1384,16 @@ function removeMenuItem(index: number) {
   transition: background-color 0.3s ease;
 }
 
-.preview-footer {
-  padding: 32px;
+/* Footer (same as CustomerView) */
+.footer {
+  padding: 2rem 1.5rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+}
+
+.footer-text {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 12px;
+  transition: color 0.3s ease;
 }
 
 /* Modals */
