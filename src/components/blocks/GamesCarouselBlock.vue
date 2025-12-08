@@ -71,7 +71,7 @@ const router = useRouter()
 
 const currentGameIndex = ref(0)
 const gamesSliderRef = ref<HTMLElement | null>(null)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 // 게임 기본 정보
 const gameDefinitions = [
