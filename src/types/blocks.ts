@@ -109,7 +109,8 @@ export interface GuestbookMessage {
   id: string
   userId: string
   userName: string
-  message: string
+  message?: string // Optional for text messages
+  imageUrl?: string // For canvas drawing images
   createdAt: string
   rotation: number // -5 to 5 degrees for post-it rotation effect
   color: 'yellow' | 'pink' | 'blue' | 'green'

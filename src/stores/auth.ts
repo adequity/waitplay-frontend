@@ -20,11 +20,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!accessToken.value)
 
-  async function standardLogin(username: string, password: string) {
+  async function standardLogin(username: string, password: string, qrCodeId?: string) {
     try {
       const data = await authService.standardLogin({
         username,
-        password
+        password,
+        qrCodeId
       })
 
       accessToken.value = data.accessToken

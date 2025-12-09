@@ -91,16 +91,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const username = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const isLoading = ref(false)
+const qrCodeId = ref<string | null>(null)
+
+// URL에서 QR 코드 ID 추출
+onMounted(() => {
+  const qrParam = route.query.qr as string
+  if (qrParam) {
+    qrCodeId.value = qrParam
+    console.log('QR Code ID detected for login:', qrCodeId.value)
+  }
+})
 
 const handleLogin = async () => {
   if (!username.value || !password.value) {
@@ -111,7 +122,11 @@ const handleLogin = async () => {
   isLoading.value = true
 
   try {
-    await authStore.standardLogin(username.value, password.value)
+    await authStore.standardLogin(
+      username.value,
+      password.value,
+      qrCodeId.value || undefined
+    )
 
     alert('로그인 성공!')
     router.push('/')

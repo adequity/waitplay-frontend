@@ -4,6 +4,7 @@ import type { TokenResponse } from '@/stores/auth'
 export interface StandardLoginRequest {
   username: string
   password: string
+  qrCodeId?: string
 }
 
 export interface SocialLoginRequest {
