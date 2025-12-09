@@ -119,12 +119,12 @@ export class RealPinballScene extends Phaser.Scene {
     // 플리퍼 생성
     this.createFlippers();
 
-    // 공 생성
-    this.ball = this.physics.add.image(187.5, 150, 'ball');
-    this.ball.setBounce(0.9);
+    // 공 생성 - 발사 구역에 배치
+    this.ball = this.physics.add.image(337, 430, 'ball');
+    this.ball.setBounce(0.8); // 적절한 바운스
     this.ball.setCollideWorldBounds(true);
     if (this.ball.body) {
-      (this.ball.body as Phaser.Physics.Arcade.Body).setGravity(0, 800);
+      (this.ball.body as Phaser.Physics.Arcade.Body).setGravity(0, 600); // 조금 느린 중력
     }
 
     // 충돌 설정
@@ -309,76 +309,125 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   private createWalls() {
-    // 왼쪽 벽 - 3D 금속 테두리
-    // 그림자
-    const leftWallShadow = this.add.rectangle(24, 400, 10, 490, 0x000000, 0.3);
-    // 베이스
-    const leftWall = this.add.rectangle(22, 400, 12, 490, 0x334155);
-    // 하이라이트
-    const leftWallHighlight = this.add.rectangle(20, 400, 4, 490, 0x64748b);
+    // ===== 핀볼 테이블 외벽 (메인 테두리) =====
+
+    // 왼쪽 외벽 (전체 높이)
+    const leftWallShadow = this.add.rectangle(24, 410, 10, 505, 0x000000, 0.3);
+    const leftWall = this.add.rectangle(22, 410, 12, 505, 0x334155);
+    const leftWallHighlight = this.add.rectangle(20, 410, 4, 505, 0x64748b);
     leftWall.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(leftWall, true);
 
-    // 오른쪽 벽 - 3D 금속 테두리
-    // 그림자
-    const rightWallShadow = this.add.rectangle(355, 400, 10, 490, 0x000000, 0.3);
-    // 베이스
-    const rightWall = this.add.rectangle(353, 400, 12, 490, 0x334155);
-    // 하이라이트
-    const rightWallHighlight = this.add.rectangle(351, 400, 4, 490, 0x64748b);
+    // 오른쪽 외벽 (전체 높이)
+    const rightWallShadow = this.add.rectangle(355, 410, 10, 505, 0x000000, 0.3);
+    const rightWall = this.add.rectangle(353, 410, 12, 505, 0x334155);
+    const rightWallHighlight = this.add.rectangle(351, 410, 4, 505, 0x64748b);
     rightWall.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(rightWall, true);
 
-    // 위쪽 벽 - 3D 금속 테두리
-    // 그림자
-    const topWallShadow = this.add.rectangle(187.5, 167, 325, 10, 0x000000, 0.3);
-    // 베이스
-    const topWall = this.add.rectangle(187.5, 165, 325, 12, 0x334155);
-    // 하이라이트
-    const topWallHighlight = this.add.rectangle(187.5, 163, 325, 4, 0x64748b);
+    // 상단 외벽
+    const topWallShadow = this.add.rectangle(187.5, 167, 310, 10, 0x000000, 0.3);
+    const topWall = this.add.rectangle(187.5, 165, 310, 12, 0x334155);
+    const topWallHighlight = this.add.rectangle(187.5, 163, 310, 4, 0x64748b);
     topWall.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(topWall, true);
 
-    // 사선 가이드 (공을 아래로 유도) - 3D 금속
-    // 왼쪽 가이드
-    const leftGuideShadow = this.add.rectangle(81, 572, 110, 10, 0x000000, 0.3);
-    leftGuideShadow.rotation = -0.35;
-    const leftGuide = this.add.rectangle(80, 570, 110, 12, 0x334155);
-    const leftGuideHighlight = this.add.rectangle(79, 568, 110, 4, 0x64748b);
-    leftGuideHighlight.rotation = -0.35;
-    leftGuide.setStrokeStyle(2, 0x1e293b);
-    leftGuide.rotation = -0.35;
-    this.physics.add.existing(leftGuide, true);
+    // ===== 공 발사 구역 벽 =====
 
-    // 오른쪽 가이드
-    const rightGuideShadow = this.add.rectangle(296, 572, 110, 10, 0x000000, 0.3);
-    rightGuideShadow.rotation = 0.35;
-    const rightGuide = this.add.rectangle(295, 570, 110, 12, 0x334155);
-    const rightGuideHighlight = this.add.rectangle(294, 568, 110, 4, 0x64748b);
-    rightGuideHighlight.rotation = 0.35;
-    rightGuide.setStrokeStyle(2, 0x1e293b);
-    rightGuide.rotation = 0.35;
-    this.physics.add.existing(rightGuide, true);
+    // 발사 구역 오른쪽 세로 벽 (공이 대기하는 공간)
+    const launchLaneShadow = this.add.rectangle(322, 350, 10, 230, 0x000000, 0.3);
+    const launchLane = this.add.rectangle(320, 350, 12, 230, 0x334155);
+    const launchLaneHighlight = this.add.rectangle(318, 350, 4, 230, 0x64748b);
+    launchLane.setStrokeStyle(2, 0x1e293b);
+    this.physics.add.existing(launchLane, true);
+
+    // 발사 구역 하단 가로 벽 (발사대 상단)
+    const launchBottomShadow = this.add.rectangle(337, 467, 40, 10, 0x000000, 0.3);
+    const launchBottom = this.add.rectangle(337, 465, 40, 12, 0x334155);
+    const launchBottomHighlight = this.add.rectangle(337, 463, 40, 4, 0x64748b);
+    launchBottom.setStrokeStyle(2, 0x1e293b);
+    this.physics.add.existing(launchBottom, true);
+
+    // ===== 플레이 구역 하단 각진 벽 (공을 플리퍼로 유도) =====
+
+    // 왼쪽 하단 각진 벽 (플리퍼 위쪽)
+    const leftSlopeShadow = this.add.rectangle(75, 545, 105, 10, 0x000000, 0.3);
+    leftSlopeShadow.rotation = -0.52; // 약 30도
+    const leftSlope = this.add.rectangle(73, 543, 105, 12, 0x334155);
+    const leftSlopeHighlight = this.add.rectangle(71, 541, 105, 4, 0x64748b);
+    leftSlopeHighlight.rotation = -0.52;
+    leftSlope.setStrokeStyle(2, 0x1e293b);
+    leftSlope.rotation = -0.52;
+    this.physics.add.existing(leftSlope, true);
+
+    // 오른쪽 하단 각진 벽 (플리퍼 위쪽)
+    const rightSlopeShadow = this.add.rectangle(300, 545, 105, 10, 0x000000, 0.3);
+    rightSlopeShadow.rotation = 0.52; // 약 30도
+    const rightSlope = this.add.rectangle(302, 543, 105, 12, 0x334155);
+    const rightSlopeHighlight = this.add.rectangle(304, 541, 105, 4, 0x64748b);
+    rightSlopeHighlight.rotation = 0.52;
+    rightSlope.setStrokeStyle(2, 0x1e293b);
+    rightSlope.rotation = 0.52;
+    this.physics.add.existing(rightSlope, true);
+
+    // ===== 중앙 하단 구분 벽 (플리퍼 사이) =====
+
+    // 플리퍼 사이의 작은 벽 (공이 중앙으로 떨어지는 것 유도)
+    const centerDividerShadow = this.add.rectangle(187.5, 612, 40, 10, 0x000000, 0.3);
+    const centerDivider = this.add.rectangle(187.5, 610, 40, 12, 0x334155);
+    const centerDividerHighlight = this.add.rectangle(187.5, 608, 40, 4, 0x64748b);
+    centerDivider.setStrokeStyle(2, 0x1e293b);
+    this.physics.add.existing(centerDivider, true);
+
+    // ===== 상단 곡선 벽 (범퍼 구역 경계) =====
+
+    // 왼쪽 상단 곡선 가이드
+    const topLeftCurveShadow = this.add.rectangle(65, 215, 80, 10, 0x000000, 0.3);
+    topLeftCurveShadow.rotation = -0.35;
+    const topLeftCurve = this.add.rectangle(63, 213, 80, 12, 0x334155);
+    const topLeftCurveHighlight = this.add.rectangle(61, 211, 80, 4, 0x64748b);
+    topLeftCurveHighlight.rotation = -0.35;
+    topLeftCurve.setStrokeStyle(2, 0x1e293b);
+    topLeftCurve.rotation = -0.35;
+    this.physics.add.existing(topLeftCurve, true);
+
+    // 오른쪽 상단 곡선 가이드
+    const topRightCurveShadow = this.add.rectangle(310, 215, 80, 10, 0x000000, 0.3);
+    topRightCurveShadow.rotation = 0.35;
+    const topRightCurve = this.add.rectangle(312, 213, 80, 12, 0x334155);
+    const topRightCurveHighlight = this.add.rectangle(314, 211, 80, 4, 0x64748b);
+    topRightCurveHighlight.rotation = 0.35;
+    topRightCurve.setStrokeStyle(2, 0x1e293b);
+    topRightCurve.rotation = 0.35;
+    this.physics.add.existing(topRightCurve, true);
   }
 
   private createBumpers() {
     this.bumpers = this.physics.add.staticGroup();
 
-    // 상단 범퍼들 (삼각형 배치)
+    // 핀볼 테이블 중앙 범퍼 배치 (클래식 핀볼 스타일)
     const bumperPositions = [
-      { x: 187.5, y: 200, points: 100 },
-      { x: 130, y: 250, points: 50 },
-      { x: 245, y: 250, points: 50 },
-      { x: 100, y: 320, points: 30 },
-      { x: 187.5, y: 320, points: 30 },
-      { x: 275, y: 320, points: 30 }
+      // 상단 중앙 (높은 점수)
+      { x: 187.5, y: 260, points: 100 },
+
+      // 중앙 좌우
+      { x: 120, y: 320, points: 50 },
+      { x: 255, y: 320, points: 50 },
+
+      // 중앙 아래 좌우
+      { x: 90, y: 390, points: 30 },
+      { x: 285, y: 390, points: 30 },
+
+      // 하단 좌우 (플리퍼 위쪽)
+      { x: 110, y: 470, points: 20 },
+      { x: 265, y: 470, points: 20 }
     ];
 
     bumperPositions.forEach(pos => {
       const bumper = this.bumpers!.create(pos.x, pos.y, 'bumper') as Phaser.Physics.Arcade.Sprite;
       bumper.setData('points', pos.points);
       bumper.setCircle(20);
-      bumper.setScale(1.1);
+      bumper.setScale(1.0);
     });
   }
 
