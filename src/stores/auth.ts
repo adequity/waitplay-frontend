@@ -104,6 +104,18 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  function setTokens(data: TokenResponse) {
+    accessToken.value = data.accessToken
+    refreshToken.value = data.refreshToken
+    userRole.value = data.userRole
+
+    localStorage.setItem('accessToken', data.accessToken)
+    localStorage.setItem('refreshToken', data.refreshToken)
+    localStorage.setItem('userRole', data.userRole)
+
+    fetchUser()
+  }
+
   function logout() {
     accessToken.value = null
     refreshToken.value = null
@@ -130,6 +142,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     fetchUser,
-    refreshAccessToken
+    refreshAccessToken,
+    setTokens
   }
 })
