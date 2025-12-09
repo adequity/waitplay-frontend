@@ -56,19 +56,47 @@ function getSocialIcon(platform: string): string {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   -webkit-tap-highlight-color: transparent;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.social-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .social-link:active {
   transform: scale(0.95);
-  background: rgba(255, 255, 255, 0.25);
+}
+
+/* 각 플랫폼별 브랜드 컬러 */
+.social-link--instagram {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+
+.social-link--youtube {
+  background: #FF0000;
+}
+
+.social-link--naver {
+  background: #03C75A;
+}
+
+.social-link--threads {
+  background: #000000;
+}
+
+.social-link--facebook {
+  background: #1877F2;
+}
+
+.social-link--twitter {
+  background: #1DA1F2;
 }
 </style>
