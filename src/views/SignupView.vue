@@ -107,11 +107,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import authService from '@/services/authService'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
 const isLoading = ref(false)
+const qrCodeId = ref<string | null>(null)
 
 const formData = ref({
   name: '',
@@ -120,6 +125,15 @@ const formData = ref({
   passwordConfirm: '',
   agreeTerms: false,
   agreeMarketing: false
+})
+
+// URL에서 QR 코드 ID 추출
+onMounted(() => {
+  const qrParam = route.query.qr as string
+  if (qrParam) {
+    qrCodeId.value = qrParam
+    console.log('QR Code ID detected:', qrCodeId.value)
+  }
 })
 
 const isFormValid = computed(() => {
@@ -162,20 +176,26 @@ const handleEmailSignup = async () => {
   isLoading.value = true
 
   try {
-    // TODO: API 호출하여 회원가입 처리
-    console.log('Email signup with:', {
+    // 회원가입 API 호출
+    const response = await authService.emailSignup({
       name: formData.value.name,
       email: formData.value.email,
+      password: formData.value.password,
+      qrCodeId: qrCodeId.value || undefined,
       agreeMarketing: formData.value.agreeMarketing
     })
 
-    // 임시: 회원가입 성공 후 로그인 페이지로 이동
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    alert('회원가입이 완료되었습니다! 로그인해주세요.')
-    router.push('/login')
-  } catch (error) {
+    // 자동 로그인 (토큰 저장)
+    authStore.setTokens(response)
+
+    alert('회원가입이 완료되었습니다!')
+
+    // 홈으로 이동
+    router.push('/')
+  } catch (error: any) {
     console.error('Signup failed:', error)
-    alert('회원가입에 실패했습니다. 다시 시도해주세요.')
+    const errorMessage = error.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해주세요.'
+    alert(errorMessage)
   } finally {
     isLoading.value = false
   }

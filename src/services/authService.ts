@@ -15,12 +15,29 @@ export interface RefreshTokenRequest {
   refreshToken: string
 }
 
+export interface EmailSignupRequest {
+  name: string
+  email: string
+  password: string
+  qrCodeId?: string
+  agreeMarketing?: boolean
+}
+
+export interface SocialSignupRequest {
+  provider: 0 | 1 // 0 = Kakao, 1 = Naver
+  accessToken: string
+  qrCodeId?: string
+  agreeMarketing?: boolean
+}
+
 export interface UserProfile {
   id: string
   nickname: string
   profileImage?: string
   kakaoId?: string
   naverId?: string
+  company?: string
+  userRole: string
   createdAt: string
 }
 
@@ -54,6 +71,22 @@ class AuthService {
    */
   async getCurrentUser(): Promise<UserProfile> {
     const response = await apiClient.get<UserProfile>('/api/auth/me')
+    return response.data
+  }
+
+  /**
+   * Email/Password 회원가입
+   */
+  async emailSignup(request: EmailSignupRequest): Promise<TokenResponse> {
+    const response = await apiClient.post<TokenResponse>('/api/auth/signup/email', request)
+    return response.data
+  }
+
+  /**
+   * SNS 회원가입 (Kakao, Naver)
+   */
+  async socialSignup(request: SocialSignupRequest): Promise<TokenResponse> {
+    const response = await apiClient.post<TokenResponse>('/api/auth/signup/social', request)
     return response.data
   }
 }
