@@ -6,6 +6,7 @@
 import * as Phaser from 'phaser';
 import { COLORS } from '../config';
 import { submitGameScore } from '../../services/gameScoreService';
+import { gameManager } from '../GameManager';
 
 export class PinballScene extends Phaser.Scene {
   private ball?: Phaser.Physics.Arcade.Image;
@@ -347,11 +348,13 @@ export class PinballScene extends Phaser.Scene {
     const submitScore = async () => {
       const playerName = inputElement.value.trim() || '익명';
 
-      // 점수 제출
+      // 점수 제출 (QR 코드 포함)
+      const qrCode = gameManager.getQrCode();
       const success = await submitGameScore({
         gameType: 'brick-breaker',
         playerName,
-        score: this.score
+        score: this.score,
+        qrCode: qrCode
       });
 
       // 입력 요소 제거

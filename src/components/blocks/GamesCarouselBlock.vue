@@ -210,8 +210,14 @@ function goToGame(type: string) {
   }
 
   const mappedType = typeMap[type] || type
-  console.log('Navigating to game:', mappedType)
-  router.push({ name: 'game', params: { type: mappedType } })
+  console.log('Navigating to game:', mappedType, 'with QR:', props.qrCodeId)
+
+  // QR 코드를 query parameter로 전달
+  router.push({
+    name: 'game',
+    params: { type: mappedType },
+    query: props.qrCodeId ? { qr: props.qrCodeId } : {}
+  })
 }
 </script>
 

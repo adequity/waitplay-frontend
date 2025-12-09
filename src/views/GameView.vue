@@ -32,7 +32,9 @@ const gameTitle = computed(() => {
 onMounted(() => {
   if (gameContainer.value) {
     try {
-      gameManager.initGame(gameType.value, 'game-container')
+      const qrCode = route.query.qr as string | undefined
+      console.log('GameView QR Code:', qrCode)
+      gameManager.initGame(gameType.value, 'game-container', qrCode)
     } catch (error) {
       console.error('게임 초기화 실패:', error)
     }

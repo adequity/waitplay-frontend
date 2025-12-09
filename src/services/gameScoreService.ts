@@ -9,7 +9,7 @@ export interface ScoreSubmission {
   gameType: string
   playerName: string
   score: number
-  qrCodeId?: string
+  qrCode?: string  // QR Code 문자열 (예: "5YWF8V2X")
 }
 
 export interface LeaderboardEntry {

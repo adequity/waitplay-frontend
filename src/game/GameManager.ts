@@ -12,19 +12,22 @@ import { SpotScene } from './scenes/SpotScene';
 export class GameManager {
   private game: Phaser.Game | null = null;
   private currentGameType: GameType | null = null;
+  private qrCode: string | undefined = undefined;
 
   /**
    * 게임 초기화
    * @param gameType 게임 타입 (PINBALL, BRICK_BREAKER, MATCH, SPOT)
    * @param containerId HTML 컨테이너 ID
+   * @param qrCode QR 코드 문자열 (선택)
    */
-  public initGame(gameType: GameType, containerId: string = 'game-container'): Phaser.Game {
+  public initGame(gameType: GameType, containerId: string = 'game-container', qrCode?: string): Phaser.Game {
     // 기존 게임 인스턴스가 있으면 제거
     if (this.game) {
       this.destroyGame();
     }
 
     this.currentGameType = gameType;
+    this.qrCode = qrCode;
 
     // 게임 타입에 따른 Scene 선택
     const scene = this.getSceneByType(gameType);
@@ -62,6 +65,13 @@ export class GameManager {
    */
   public getCurrentGameType(): GameType | null {
     return this.currentGameType;
+  }
+
+  /**
+   * QR 코드 반환
+   */
+  public getQrCode(): string | undefined {
+    return this.qrCode;
   }
 
   /**
