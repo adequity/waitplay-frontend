@@ -35,6 +35,8 @@ import SocialLinksBlock from '@/components/blocks/SocialLinksBlock.vue'
 import VideoGridBlock from '@/components/blocks/VideoGridBlock.vue'
 import GamesCarouselBlock from '@/components/blocks/GamesCarouselBlock.vue'
 import PopularMenuBlock from '@/components/blocks/PopularMenuBlock.vue'
+import TextBlock from '@/components/blocks/TextBlock.vue'
+import ImageBlock from '@/components/blocks/ImageBlock.vue'
 
 const route = useRoute()
 
@@ -60,7 +62,9 @@ function getBlockComponent(type: string): Component | string {
     social_links: SocialLinksBlock,
     video_grid: VideoGridBlock,
     games_carousel: GamesCarouselBlock,
-    popular_menu: PopularMenuBlock
+    popular_menu: PopularMenuBlock,
+    text: TextBlock,
+    image: ImageBlock
   }
   return components[type] || 'div'
 }

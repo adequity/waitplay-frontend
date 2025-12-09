@@ -606,6 +606,8 @@ import SocialLinksBlock from '@/components/blocks/SocialLinksBlock.vue'
 import VideoGridBlock from '@/components/blocks/VideoGridBlock.vue'
 import GamesCarouselBlock from '@/components/blocks/GamesCarouselBlock.vue'
 import PopularMenuBlock from '@/components/blocks/PopularMenuBlock.vue'
+import TextBlock from '@/components/blocks/TextBlock.vue'
+import ImageBlock from '@/components/blocks/ImageBlock.vue'
 
 const router = useRouter()
 const route = useRoute()
