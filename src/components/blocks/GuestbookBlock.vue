@@ -69,9 +69,13 @@
     </div>
 
     <!-- 방명록 그리드 -->
-    <div class="drawings-grid">
+    <div v-if="isLoadingMessages" class="loading-state">
+      <p>방명록을 불러오는 중...</p>
+    </div>
+
+    <div v-else class="drawings-grid">
       <div
-        v-for="message in data.messages"
+        v-for="message in messages"
         :key="message.id"
         class="post-it"
         :class="`post-it--${message.color}`"
@@ -90,10 +94,10 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <div v-if="data.messages.length === 0" class="empty-state">
-      <p>아직 남겨진 메시지가 없습니다. 첫 메시지를 남겨보세요!</p>
+      <div v-if="messages.length === 0" class="empty-state">
+        <p>아직 남겨진 메시지가 없습니다. 첫 메시지를 남겨보세요!</p>
+      </div>
     </div>
   </div>
 </template>
@@ -102,10 +106,12 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import guestbookService from '@/services/guestbookService'
 import type { GuestbookBlockData } from '@/types/blocks'
 
 interface Props {
   data: GuestbookBlockData
+  qrCodeId: string
 }
 
 const props = defineProps<Props>()
@@ -130,11 +136,33 @@ const brushSize = ref(4)
 let lastX = 0
 let lastY = 0
 
-onMounted(() => {
+// 방명록 메시지 목록
+const messages = ref<any[]>([])
+const isLoadingMessages = ref(false)
+
+onMounted(async () => {
   if (canvasRef.value && isAuthenticated.value) {
     initCanvas()
   }
+
+  // 기존 방명록 데이터 로드
+  await loadMessages()
 })
+
+// 방명록 메시지 로드
+const loadMessages = async () => {
+  if (!props.qrCodeId) return
+
+  isLoadingMessages.value = true
+  try {
+    const response = await guestbookService.getMessages(props.qrCodeId)
+    messages.value = response
+  } catch (error) {
+    console.error('Failed to load guestbook messages:', error)
+  } finally {
+    isLoadingMessages.value = false
+  }
+}
 
 const initCanvas = () => {
   if (!canvasRef.value) return
@@ -252,19 +280,64 @@ const submitDrawing = async () => {
   if (!canvasRef.value || !hasDrawing.value) return
 
   try {
-    // Canvas를 Base64 이미지로 변환
-    const imageData = canvasRef.value.toDataURL('image/png')
+    // 이미지 리사이징 및 압축
+    const resizedImageData = await resizeAndCompressImage(canvasRef.value)
 
-    // TODO: API 호출하여 이미지 저장
-    console.log('Submitting drawing:', imageData.substring(0, 50) + '...')
+    // API 호출하여 이미지 저장
+    await guestbookService.createMessage({
+      qrCodeId: props.qrCodeId,
+      imageData: resizedImageData,
+      color: 'yellow' // 기본 색상
+    })
 
     // 성공 후 캔버스 초기화
     clearCanvas()
     alert('방명록이 등록되었습니다!')
+
+    // 방명록 목록 새로고침
+    await loadMessages()
   } catch (error) {
     console.error('Failed to submit drawing:', error)
     alert('방명록 등록에 실패했습니다.')
   }
+}
+
+// 이미지 리사이징 및 압축 함수
+const resizeAndCompressImage = async (canvas: HTMLCanvasElement): Promise<string> => {
+  // 최대 크기 설정 (방명록 카드 크기에 맞춤)
+  const MAX_WIDTH = 400
+  const MAX_HEIGHT = 400
+  const QUALITY = 0.75 // JPEG 품질 (0.0 - 1.0)
+
+  let width = canvas.width
+  let height = canvas.height
+
+  // 비율 유지하면서 리사이징
+  if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+    const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height)
+    width = Math.floor(width * ratio)
+    height = Math.floor(height * ratio)
+  }
+
+  // 새 캔버스 생성
+  const resizedCanvas = document.createElement('canvas')
+  resizedCanvas.width = width
+  resizedCanvas.height = height
+
+  const ctx = resizedCanvas.getContext('2d')
+  if (!ctx) throw new Error('Failed to get canvas context')
+
+  // 흰색 배경 추가 (투명 배경 방지)
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, width, height)
+
+  // 이미지 리사이징 (부드러운 스케일링)
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(canvas, 0, 0, width, height)
+
+  // JPEG로 압축 (PNG보다 파일 크기 훨씬 작음)
+  return resizedCanvas.toDataURL('image/jpeg', QUALITY)
 }
 
 const goToLogin = () => {
