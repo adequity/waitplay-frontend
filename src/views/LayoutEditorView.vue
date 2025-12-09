@@ -1632,19 +1632,19 @@ function removeMenuItem(index: number) {
 .block-types-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .block-type-card {
-  padding: 14px 16px;
+  padding: 10px 12px;
   border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
 }
 
@@ -1656,34 +1656,34 @@ function removeMenuItem(index: number) {
 }
 
 .block-type-icon {
-  font-size: 28px;
+  font-size: 24px;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
 }
 
 .block-type-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   flex: 1;
 }
 
 .block-type-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #111827;
   text-align: left;
 }
 
 .block-type-desc {
-  font-size: 12px;
+  font-size: 11px;
   color: #6b7280;
   font-weight: 500;
   text-align: left;
