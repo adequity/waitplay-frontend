@@ -34,7 +34,7 @@ export interface ButtonBlockData {
 
 // Social Links Block
 export interface SocialLink {
-  platform: 'instagram' | 'youtube' | 'naver' | 'threads'
+  platform: 'instagram' | 'youtube' | 'naver' | 'threads' | 'facebook' | 'twitter'
   url: string
 }
 

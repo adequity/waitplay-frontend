@@ -7,8 +7,9 @@
         :href="social.url"
         target="_blank"
         class="social-link"
+        :class="`social-link--${social.platform}`"
       >
-        {{ getSocialIcon(social.platform) }}
+        <component :is="getSocialIcon(social.platform)" />
       </a>
     </div>
   </div>
@@ -16,6 +17,8 @@
 
 <script setup lang="ts">
 import type { SocialLinksBlockData } from '@/types/blocks'
+import { FaInstagram, FaYoutube, FaFacebookF, FaTwitter } from 'react-icons/fa'
+import { SiNaver, SiThreads } from 'react-icons/si'
 
 interface Props {
   data: SocialLinksBlockData
@@ -23,14 +26,16 @@ interface Props {
 
 defineProps<Props>()
 
-function getSocialIcon(platform: string): string {
-  const icons: Record<string, string> = {
-    instagram: '📷',
-    youtube: '▶️',
-    naver: 'N',
-    threads: '🧵'
+function getSocialIcon(platform: string) {
+  const icons: Record<string, any> = {
+    instagram: FaInstagram,
+    youtube: FaYoutube,
+    naver: SiNaver,
+    threads: SiThreads,
+    facebook: FaFacebookF,
+    twitter: FaTwitter
   }
-  return icons[platform] || '🔗'
+  return icons[platform] || null
 }
 </script>
 
