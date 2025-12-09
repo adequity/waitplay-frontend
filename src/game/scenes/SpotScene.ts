@@ -31,29 +31,32 @@ export class SpotScene extends Phaser.Scene {
   }
 
   create() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 배경
-    this.add.rectangle(400, 300, 800, 600, 0x0f0f23);
+    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x0f0f23);
 
     // UI 텍스트
-    this.foundText = this.add.text(16, 16, `찾은 개수: 0/${this.TOTAL_DIFFERENCES}`, {
-      fontSize: '24px',
+    this.foundText = this.add.text(W * 0.02, H * 0.027, `찾은 개수: 0/${this.TOTAL_DIFFERENCES}`, {
+      fontSize: Math.floor(H * 0.04) + 'px',
       color: COLORS.white
     });
 
-    this.timeText = this.add.text(650, 16, '시간: 0초', {
-      fontSize: '24px',
+    this.timeText = this.add.text(W * 0.8125, H * 0.027, '시간: 0초', {
+      fontSize: Math.floor(H * 0.04) + 'px',
       color: COLORS.white
     });
 
     // 타이틀
-    const title = this.add.text(400, 80, '틀린 그림 찾기', {
-      fontSize: '36px',
+    const title = this.add.text(W * 0.5, H * 0.133, '틀린 그림 찾기', {
+      fontSize: Math.floor(H * 0.06) + 'px',
       color: COLORS.primary,
       align: 'center'
     }).setOrigin(0.5);
 
-    const instructions = this.add.text(400, 130, '두 그림에서 다른 부분 5개를 찾으세요!', {
-      fontSize: '18px',
+    const instructions = this.add.text(W * 0.5, H * 0.217, '두 그림에서 다른 부분 5개를 찾으세요!', {
+      fontSize: Math.floor(H * 0.03) + 'px',
       color: COLORS.white,
       align: 'center'
     }).setOrigin(0.5);
@@ -65,8 +68,8 @@ export class SpotScene extends Phaser.Scene {
     this.createRightPicture();
 
     // 시작 버튼
-    const startButton = this.add.text(400, 540, '게임 시작', {
-      fontSize: '28px',
+    const startButton = this.add.text(W * 0.5, H * 0.9, '게임 시작', {
+      fontSize: Math.floor(H * 0.047) + 'px',
       color: COLORS.white,
       backgroundColor: COLORS.primary,
       padding: { x: 30, y: 15 }
@@ -81,19 +84,25 @@ export class SpotScene extends Phaser.Scene {
   }
 
   private createLeftPicture() {
-    const leftContainer = this.add.rectangle(200, 330, 320, 360, 0xffffff);
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
+    const leftContainer = this.add.rectangle(W * 0.25, H * 0.55, 320, 360, 0xffffff);
     leftContainer.setStrokeStyle(4, 0x6366f1);
 
     // 왼쪽 그림에 요소들 추가 (원본)
-    this.addPictureElements(200, 330, false);
+    this.addPictureElements(W * 0.25, H * 0.55, false);
   }
 
   private createRightPicture() {
-    const rightContainer = this.add.rectangle(600, 330, 320, 360, 0xffffff);
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
+    const rightContainer = this.add.rectangle(W * 0.75, H * 0.55, 320, 360, 0xffffff);
     rightContainer.setStrokeStyle(4, 0x8b5cf6);
 
     // 오른쪽 그림에 요소들 추가 (차이점 포함)
-    this.addPictureElements(600, 330, true);
+    this.addPictureElements(W * 0.75, H * 0.55, true);
   }
 
   private addPictureElements(baseX: number, baseY: number, withDifferences: boolean) {
@@ -210,6 +219,9 @@ export class SpotScene extends Phaser.Scene {
     if (this.gameOver) return;
     this.gameOver = true;
 
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 타이머 중지
     this.timerEvent?.remove();
 
@@ -219,20 +231,20 @@ export class SpotScene extends Phaser.Scene {
     const finalScore = Math.max(100, baseScore - timePenalty);
 
     // 결과 화면
-    const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.8);
+    const overlay = this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x000000, 0.8);
 
-    const resultText = this.add.text(400, 200, '완료!', {
-      fontSize: '48px',
+    const resultText = this.add.text(W * 0.5, H * 0.333, '완료!', {
+      fontSize: Math.floor(H * 0.08) + 'px',
       color: COLORS.success,
       align: 'center'
     }).setOrigin(0.5);
 
     const statsText = this.add.text(
-      400,
-      270,
+      W * 0.5,
+      H * 0.45,
       `완료 시간: ${this.elapsedTime}초\n점수: ${finalScore}`,
       {
-        fontSize: '28px',
+        fontSize: Math.floor(H * 0.047) + 'px',
         color: COLORS.white,
         align: 'center',
         lineSpacing: 15
@@ -240,8 +252,8 @@ export class SpotScene extends Phaser.Scene {
     ).setOrigin(0.5);
 
     // 이름 입력
-    const namePrompt = this.add.text(400, 360, '이름을 입력하세요:', {
-      fontSize: '22px',
+    const namePrompt = this.add.text(W * 0.5, H * 0.6, '이름을 입력하세요:', {
+      fontSize: Math.floor(H * 0.037) + 'px',
       color: COLORS.white
     }).setOrigin(0.5);
 
@@ -253,7 +265,7 @@ export class SpotScene extends Phaser.Scene {
     inputElement.style.cssText = `
       position: absolute;
       left: 50%;
-      top: 400px;
+      top: ${H * 0.667}px;
       transform: translateX(-50%);
       width: 300px;
       padding: 10px;
@@ -270,7 +282,7 @@ export class SpotScene extends Phaser.Scene {
     submitButton.style.cssText = `
       position: absolute;
       left: 50%;
-      top: 450px;
+      top: ${H * 0.75}px;
       transform: translateX(-50%);
       padding: 10px 30px;
       font-size: 18px;
@@ -306,8 +318,8 @@ export class SpotScene extends Phaser.Scene {
 
       // 재시작 버튼
       this.time.delayedCall(2000, () => {
-        const restartButton = this.add.text(400, 480, '다시 시작', {
-          fontSize: '24px',
+        const restartButton = this.add.text(W * 0.5, H * 0.8, '다시 시작', {
+          fontSize: Math.floor(H * 0.04) + 'px',
           color: COLORS.white,
           backgroundColor: COLORS.primary,
           padding: { x: 20, y: 10 }

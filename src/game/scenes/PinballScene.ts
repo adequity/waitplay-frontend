@@ -33,18 +33,21 @@ export class PinballScene extends Phaser.Scene {
   }
 
   create() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 배경
-    this.add.rectangle(400, 300, 800, 600, 0x0f0f23);
+    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x0f0f23);
 
     // 점수 텍스트
-    this.scoreText = this.add.text(16, 16, '점수: 0', {
-      fontSize: '24px',
+    this.scoreText = this.add.text(W * 0.02, H * 0.027, '점수: 0', {
+      fontSize: Math.floor(H * 0.04) + 'px',
       color: COLORS.white
     });
 
     // 생명 텍스트
-    this.livesText = this.add.text(680, 16, '❤️ ' + this.lives, {
-      fontSize: '24px',
+    this.livesText = this.add.text(W * 0.85, H * 0.027, '❤️ ' + this.lives, {
+      fontSize: Math.floor(H * 0.04) + 'px',
       color: COLORS.white
     });
 
@@ -52,13 +55,13 @@ export class PinballScene extends Phaser.Scene {
     this.createBricks();
 
     // 패들 생성
-    this.paddle = this.physics.add.image(400, 550, 'paddle').setImmovable();
+    this.paddle = this.physics.add.image(W * 0.5, H * 0.917, 'paddle').setImmovable();
     if (this.paddle.body) {
       (this.paddle.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     }
 
     // 공 생성
-    this.ball = this.physics.add.image(400, 500, 'ball');
+    this.ball = this.physics.add.image(W * 0.5, H * 0.833, 'ball');
     this.ball.setCollideWorldBounds(true);
     this.ball.setBounce(1, 1);
     if (this.ball.body) {
@@ -74,7 +77,7 @@ export class PinballScene extends Phaser.Scene {
     // 마우스/터치 입력
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (this.paddle) {
-        this.paddle.x = Phaser.Math.Clamp(pointer.x, 52, 748);
+        this.paddle.x = Phaser.Math.Clamp(pointer.x, W * 0.065, W * 0.935);
 
         // 게임 시작 전에는 공도 함께 이동
         if (!this.gameStarted && this.ball) {
@@ -89,8 +92,8 @@ export class PinballScene extends Phaser.Scene {
     });
 
     // 시작 안내 텍스트
-    const startText = this.add.text(400, 300, '클릭하여 시작', {
-      fontSize: '32px',
+    const startText = this.add.text(W * 0.5, H * 0.5, '클릭하여 시작', {
+      fontSize: Math.floor(H * 0.053) + 'px',
       color: COLORS.primary,
       align: 'center'
     }).setOrigin(0.5);
@@ -105,8 +108,10 @@ export class PinballScene extends Phaser.Scene {
   update() {
     if (!this.ball || !this.gameStarted || this.gameOver) return;
 
+    const H = this.sys.game.config.height as number;
+
     // 공이 아래로 떨어졌는지 확인
-    if (this.ball.y > 600) {
+    if (this.ball.y > H) {
       this.loseLife();
       return;
     }
@@ -167,6 +172,9 @@ export class PinballScene extends Phaser.Scene {
   private createBricks() {
     this.bricks = this.physics.add.staticGroup();
 
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     const colors = [0xef4444, 0xf59e0b, 0x10b981, 0x3b82f6, 0x8b5cf6];
 
     for (let row = 0; row < 5; row++) {
@@ -178,8 +186,8 @@ export class PinballScene extends Phaser.Scene {
         graphics.destroy();
 
         const brick = this.bricks.create(
-          70 + col * 70,
-          50 + row * 30,
+          W * (0.0875 + col * 0.0875),
+          H * (0.083 + row * 0.05),
           `brick_${row}_${col}`
         ) as Phaser.Physics.Arcade.Sprite;
         if (brick) {
@@ -237,6 +245,9 @@ export class PinballScene extends Phaser.Scene {
     this.lives--;
     this.livesText?.setText('❤️ ' + this.lives);
 
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     if (this.lives === 0) {
       this.endGame(false);
     } else {
@@ -244,11 +255,11 @@ export class PinballScene extends Phaser.Scene {
       this.gameStarted = false;
       this.stuckTimer = 0;
       if (this.ball && this.paddle) {
-        this.ball.setPosition(400, 500);
+        this.ball.setPosition(W * 0.5, H * 0.833);
         this.ball.setVelocity(0, 0);
-        this.paddle.setPosition(400, 550);
-        this.lastBallX = 400;
-        this.lastBallY = 500;
+        this.paddle.setPosition(W * 0.5, H * 0.917);
+        this.lastBallX = W * 0.5;
+        this.lastBallY = H * 0.833;
       }
 
       // 다시 시작
@@ -272,6 +283,9 @@ export class PinballScene extends Phaser.Scene {
     if (this.gameOver) return;
     this.gameOver = true;
 
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 공 멈추기
     if (this.ball) {
       this.ball.setVelocity(0, 0);
@@ -279,15 +293,15 @@ export class PinballScene extends Phaser.Scene {
 
     // 게임 오버 텍스트
     const message = won ? '승리!' : '게임 오버';
-    const resultText = this.add.text(400, 250, message + '\n최종 점수: ' + this.score, {
-      fontSize: '48px',
+    const resultText = this.add.text(W * 0.5, H * 0.417, message + '\n최종 점수: ' + this.score, {
+      fontSize: Math.floor(H * 0.08) + 'px',
       color: won ? COLORS.success : COLORS.danger,
       align: 'center'
     }).setOrigin(0.5);
 
     // 이름 입력 받기
-    const nameText = this.add.text(400, 350, '이름을 입력하세요:', {
-      fontSize: '24px',
+    const nameText = this.add.text(W * 0.5, H * 0.583, '이름을 입력하세요:', {
+      fontSize: Math.floor(H * 0.04) + 'px',
       color: COLORS.white,
       align: 'center'
     }).setOrigin(0.5);
@@ -300,7 +314,7 @@ export class PinballScene extends Phaser.Scene {
     inputElement.style.cssText = `
       position: absolute;
       left: 50%;
-      top: 400px;
+      top: ${H * 0.667}px;
       transform: translateX(-50%);
       width: 300px;
       padding: 10px;
@@ -318,7 +332,7 @@ export class PinballScene extends Phaser.Scene {
     submitButton.style.cssText = `
       position: absolute;
       left: 50%;
-      top: 450px;
+      top: ${H * 0.75}px;
       transform: translateX(-50%);
       padding: 10px 30px;
       font-size: 18px;
@@ -355,8 +369,8 @@ export class PinballScene extends Phaser.Scene {
 
       // 재시작 버튼
       this.time.delayedCall(2000, () => {
-        const restartText = this.add.text(400, 450, '클릭하여 다시 시작', {
-          fontSize: '24px',
+        const restartText = this.add.text(W * 0.5, H * 0.75, '클릭하여 다시 시작', {
+          fontSize: Math.floor(H * 0.04) + 'px',
           color: COLORS.primary,
           align: 'center'
         }).setOrigin(0.5).setInteractive();

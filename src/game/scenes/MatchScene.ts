@@ -32,29 +32,32 @@ export class MatchScene extends Phaser.Scene {
   }
 
   create() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 배경
-    this.add.rectangle(400, 300, 800, 600, 0x0f0f23);
+    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x0f0f23);
 
     // UI 텍스트
-    this.movesText = this.add.text(16, 16, '이동: 0', {
-      fontSize: '24px',
+    this.movesText = this.add.text(W * 0.02, H * 0.027, '이동: 0', {
+      fontSize: Math.floor(H * 0.04) + 'px',
       color: COLORS.white
     });
 
-    this.matchesText = this.add.text(16, 50, '매치: 0/' + this.TOTAL_PAIRS, {
-      fontSize: '24px',
+    this.matchesText = this.add.text(W * 0.02, H * 0.083, '매치: 0/' + this.TOTAL_PAIRS, {
+      fontSize: Math.floor(H * 0.04) + 'px',
       color: COLORS.white
     });
 
     // 타이틀
-    const title = this.add.text(400, 100, '같은 카드 찾기', {
-      fontSize: '36px',
+    const title = this.add.text(W * 0.5, H * 0.167, '같은 카드 찾기', {
+      fontSize: Math.floor(H * 0.06) + 'px',
       color: COLORS.primary,
       align: 'center'
     }).setOrigin(0.5);
 
-    const instructions = this.add.text(400, 150, '같은 이모지를 찾으세요!', {
-      fontSize: '20px',
+    const instructions = this.add.text(W * 0.5, H * 0.25, '같은 이모지를 찾으세요!', {
+      fontSize: Math.floor(H * 0.033) + 'px',
       color: COLORS.white,
       align: 'center'
     }).setOrigin(0.5);
@@ -63,8 +66,8 @@ export class MatchScene extends Phaser.Scene {
     this.createCards();
 
     // 시작 버튼
-    const startButton = this.add.text(400, 520, '게임 시작', {
-      fontSize: '28px',
+    const startButton = this.add.text(W * 0.5, H * 0.867, '게임 시작', {
+      fontSize: Math.floor(H * 0.047) + 'px',
       color: COLORS.white,
       backgroundColor: COLORS.primary,
       padding: { x: 30, y: 15 }
@@ -79,6 +82,9 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createCards() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 8쌍의 이모지 (16장의 카드)
     const emojis = ['🎮', '🎯', '🎨', '🎭', '🎪', '🎸', '🎲', '🎺'];
     const cardValues = [...emojis, ...emojis]; // 중복 생성
@@ -91,10 +97,10 @@ export class MatchScene extends Phaser.Scene {
     const rows = 4;
     const cardWidth = 90;
     const cardHeight = 110;
-    const startX = 190;
-    const startY = 220;
-    const spacingX = 110;
-    const spacingY = 130;
+    const startX = W * 0.2375;
+    const startY = H * 0.367;
+    const spacingX = W * 0.1375;
+    const spacingY = H * 0.217;
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
@@ -108,7 +114,7 @@ export class MatchScene extends Phaser.Scene {
 
         // 카드 앞면 (이모지)
         const cardFront = this.add.text(x, y, cardValues[index] || '?', {
-          fontSize: '48px'
+          fontSize: Math.floor(H * 0.08) + 'px'
         }).setOrigin(0.5).setVisible(false);
 
         const card: Card = {
@@ -214,6 +220,9 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private async endGame() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     const elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
 
     // 점수 계산 (이동 수가 적을수록, 시간이 짧을수록 높은 점수)
@@ -223,20 +232,20 @@ export class MatchScene extends Phaser.Scene {
     const finalScore = Math.max(100, baseScore - movePenalty - timePenalty);
 
     // 결과 화면
-    const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
+    const overlay = this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x000000, 0.7);
 
-    const resultText = this.add.text(400, 200, '완료!', {
-      fontSize: '48px',
+    const resultText = this.add.text(W * 0.5, H * 0.333, '완료!', {
+      fontSize: Math.floor(H * 0.08) + 'px',
       color: COLORS.success,
       align: 'center'
     }).setOrigin(0.5);
 
     const statsText = this.add.text(
-      400,
-      270,
+      W * 0.5,
+      H * 0.45,
       `이동 수: ${this.moves}\n시간: ${elapsedTime}초\n점수: ${finalScore}`,
       {
-        fontSize: '24px',
+        fontSize: Math.floor(H * 0.04) + 'px',
         color: COLORS.white,
         align: 'center',
         lineSpacing: 10
@@ -244,8 +253,8 @@ export class MatchScene extends Phaser.Scene {
     ).setOrigin(0.5);
 
     // 이름 입력
-    const namePrompt = this.add.text(400, 360, '이름을 입력하세요:', {
-      fontSize: '20px',
+    const namePrompt = this.add.text(W * 0.5, H * 0.6, '이름을 입력하세요:', {
+      fontSize: Math.floor(H * 0.033) + 'px',
       color: COLORS.white
     }).setOrigin(0.5);
 
@@ -257,7 +266,7 @@ export class MatchScene extends Phaser.Scene {
     inputElement.style.cssText = `
       position: absolute;
       left: 50%;
-      top: 400px;
+      top: ${H * 0.667}px;
       transform: translateX(-50%);
       width: 300px;
       padding: 10px;
@@ -274,7 +283,7 @@ export class MatchScene extends Phaser.Scene {
     submitButton.style.cssText = `
       position: absolute;
       left: 50%;
-      top: 450px;
+      top: ${H * 0.75}px;
       transform: translateX(-50%);
       padding: 10px 30px;
       font-size: 18px;
@@ -310,8 +319,8 @@ export class MatchScene extends Phaser.Scene {
 
       // 재시작 버튼
       this.time.delayedCall(2000, () => {
-        const restartButton = this.add.text(400, 480, '다시 시작', {
-          fontSize: '24px',
+        const restartButton = this.add.text(W * 0.5, H * 0.8, '다시 시작', {
+          fontSize: Math.floor(H * 0.04) + 'px',
           color: COLORS.white,
           backgroundColor: COLORS.primary,
           padding: { x: 20, y: 10 }
