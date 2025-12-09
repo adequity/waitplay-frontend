@@ -10,6 +10,7 @@ export interface TokenResponse {
   nickname: string
   userRole: string
   profileImage?: string
+  redirectUrl?: string
 }
 
 export const useAuthStore = defineStore('auth', () => {
