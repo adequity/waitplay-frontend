@@ -350,6 +350,29 @@ export class RealPinballScene extends Phaser.Scene {
 
     // ===== 공 발사 구역 벽 =====
 
+    // 발사 구역 배경 (어두운 그라디언트)
+    const launchZoneBg1 = this.add.rectangle(337, 350, 35, 100, 0x1e3a8a, 0.8);
+    const launchZoneBg2 = this.add.rectangle(337, 415, 35, 100, 0x1e40af, 0.8);
+
+    // 발사 구역 바닥 패턴 (스프링이 있는 공간)
+    const launchFloor = this.add.rectangle(337, 465, 35, 10, 0x475569);
+    launchFloor.setStrokeStyle(1, 0x64748b);
+
+    // 스프링/플런저 비주얼
+    const plungerBase = this.add.rectangle(337, 550, 20, 150, 0x1e293b);
+    plungerBase.setStrokeStyle(2, 0x334155);
+
+    // 스프링 코일 표시 (여러 개의 수평선)
+    for (let i = 0; i < 8; i++) {
+      const springLine = this.add.rectangle(337, 485 + i * 15, 18, 2, 0xfbbf24);
+      springLine.setAlpha(0.6);
+    }
+
+    // 플런저 손잡이 (상단)
+    const plungerHandle = this.add.rectangle(337, 620, 25, 30, 0xef4444);
+    plungerHandle.setStrokeStyle(2, 0xdc2626);
+    const plungerHandleHighlight = this.add.rectangle(337, 615, 20, 10, 0xfca5a5, 0.6);
+
     // 발사 구역 오른쪽 세로 벽 (공이 대기하는 공간)
     const launchLaneShadow = this.add.rectangle(322, 350, 10, 230, 0x000000, 0.3);
     const launchLane = this.add.rectangle(320, 350, 12, 230, 0x334155);
@@ -363,6 +386,26 @@ export class RealPinballScene extends Phaser.Scene {
     const launchBottomHighlight = this.add.rectangle(337, 463, 40, 4, 0x64748b);
     launchBottom.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(launchBottom, true);
+
+    // 발사 방향 안내 화살표 (위쪽)
+    const arrowGraphics = this.add.graphics();
+    arrowGraphics.fillStyle(0xfbbf24, 0.7);
+    arrowGraphics.fillTriangle(
+      337, 380,     // 상단 꼭지점
+      330, 395,     // 좌측 하단
+      344, 395      // 우측 하단
+    );
+    arrowGraphics.setAlpha(0.8);
+
+    // 화살표 깜빡임 애니메이션
+    this.tweens.add({
+      targets: arrowGraphics,
+      alpha: 0.3,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
 
     // ===== 플레이 구역 하단 각진 벽 (공을 플리퍼로 유도) =====
 
