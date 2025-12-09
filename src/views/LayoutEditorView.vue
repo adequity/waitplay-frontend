@@ -191,8 +191,10 @@
             @click="addBlock(blockType.type as BlockType)"
           >
             <div class="block-type-icon">{{ blockType.icon }}</div>
-            <div class="block-type-name">{{ blockType.name }}</div>
-            <div class="block-type-desc">{{ blockType.description }}</div>
+            <div class="block-type-info">
+              <div class="block-type-name">{{ blockType.name }}</div>
+              <div class="block-type-desc">{{ blockType.description }}</div>
+            </div>
           </div>
         </div>
         <button class="btn-close" @click="showAddBlockModal = false">닫기</button>
@@ -1630,42 +1632,61 @@ function removeMenuItem(index: number) {
 .block-types-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .block-type-card {
-  padding: 20px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
 }
 
 .block-type-card:hover {
   border-color: #6366f1;
-  background: #f9fafb;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  background: linear-gradient(135deg, #f5f7ff 0%, #eef2ff 100%);
+  transform: translateX(4px);
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.15);
 }
 
 .block-type-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+.block-type-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
 }
 
 .block-type-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #111827;
-  margin-bottom: 4px;
+  text-align: left;
 }
 
 .block-type-desc {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
   font-weight: 500;
+  text-align: left;
 }
 
 .btn-close {
