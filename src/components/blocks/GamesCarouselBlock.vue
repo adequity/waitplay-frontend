@@ -140,8 +140,8 @@ onMounted(() => {
 })
 
 const allowedGames = computed(() => {
-  const orderedGames = props.data.gamesOrder.map(type =>
-    allGames.value.find(game => game.type === type)
+  const orderedGames = props.data.gamesOrder.map(gameOrder =>
+    allGames.value.find(game => game.type === gameOrder.type)
   ).filter(Boolean)
 
   return orderedGames.filter(game =>

@@ -55,10 +55,16 @@ export interface VideoGridBlockData {
 }
 
 // Games Carousel Block
+export interface GameOrderItem {
+  type: string
+  name: string
+  icon: string
+}
+
 export interface GamesCarouselBlockData {
   enabledGames: string[] // ['pinball', 'memory', 'spot-difference']
   showLeaderboard: boolean
-  gamesOrder: string[]
+  gamesOrder: GameOrderItem[]
 }
 
 // Popular Menu Block

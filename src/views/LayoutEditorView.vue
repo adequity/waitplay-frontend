@@ -165,6 +165,7 @@
               :key="block.id"
               :is="getBlockComponent(block.type)"
               :data="block.data"
+              :qrCodeId="qrCodeId"
             />
 
             <!-- Footer (same as CustomerView) -->
