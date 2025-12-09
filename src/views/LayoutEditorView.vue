@@ -1072,6 +1072,10 @@ function saveBlockEdit() {
 function deleteBlock(index: number) {
   if (confirm('이 블록을 삭제하시겠습니까?')) {
     blocks.value.splice(index, 1)
+    // 삭제 후 order 재정렬
+    blocks.value.forEach((block, idx) => {
+      block.order = idx
+    })
   }
 }
 
@@ -1091,6 +1095,11 @@ async function saveLayout() {
 
   try {
     isLoading.value = true
+
+    // 저장하기 전에 블록 순서 재정렬
+    blocks.value.forEach((block, index) => {
+      block.order = index
+    })
 
     const payload = {
       qrCodeId: qrCodeId.value,
