@@ -582,6 +582,73 @@
               />
             </div>
           </template>
+
+          <!-- Countdown Block Edit Form -->
+          <template v-if="editingBlock.type === 'countdown'">
+            <div class="form-group">
+              <label class="form-label">제목</label>
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.title"
+                placeholder="이벤트 카운트다운"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">설명 (선택사항)</label>
+              <textarea
+                class="form-textarea"
+                v-model="editForm.description"
+                placeholder="이벤트 설명을 입력하세요"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">목표 날짜</label>
+              <input
+                type="datetime-local"
+                class="form-input"
+                v-model="editForm.targetDate"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">스타일</label>
+              <select class="form-select" v-model="editForm.style">
+                <option value="card">카드</option>
+                <option value="minimal">미니멀</option>
+                <option value="banner">배너</option>
+              </select>
+            </div>
+          </template>
+
+          <!-- Guestbook Block Edit Form -->
+          <template v-if="editingBlock.type === 'guestbook'">
+            <div class="form-group">
+              <label class="form-label">제목</label>
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.title"
+                placeholder="방명록"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">최대 메시지 길이</label>
+              <input
+                type="number"
+                class="form-input"
+                v-model.number="editForm.maxMessageLength"
+                min="50"
+                max="500"
+                placeholder="200"
+              />
+              <small class="form-hint">손글씨로 작성할 메시지의 최대 글자 수 (50-500자)</small>
+            </div>
+          </template>
         </div>
 
         <div class="modal-actions">
@@ -648,7 +715,9 @@ const availableBlockTypes = [
   { type: 'games_carousel', icon: 'G', name: '게임', description: '게임 캐러셀' },
   { type: 'popular_menu', icon: 'M', name: '메뉴', description: '인기 메뉴' },
   { type: 'text', icon: 'T', name: '텍스트', description: '자유 텍스트' },
-  { type: 'image', icon: 'I', name: '이미지', description: '이미지 추가' }
+  { type: 'image', icon: 'I', name: '이미지', description: '이미지 추가' },
+  { type: 'countdown', icon: '⏱', name: '카운트다운', description: '이벤트 타이머' },
+  { type: 'guestbook', icon: '✍', name: '방명록', description: '손글씨 방명록' }
 ]
 
 // Load layout from API on mount
@@ -877,9 +946,22 @@ function getDefaultBlockData(type: BlockType): any {
     case 'popular_menu':
       return { title: '인기 메뉴', subtitle: '', items: [] }
     case 'text':
-      return { content: '' }
+      return { content: '', style: 'normal' }
     case 'image':
-      return { imageUrl: '', alt: '', link: '' }
+      return { imageUrl: '', caption: '', aspectRatio: '16:9' }
+    case 'countdown':
+      return {
+        title: '이벤트 카운트다운',
+        description: '곧 특별한 이벤트가 시작됩니다!',
+        targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        style: 'card'
+      }
+    case 'guestbook':
+      return {
+        title: '방명록',
+        messages: [],
+        maxMessageLength: 200
+      }
     default:
       return {}
   }
