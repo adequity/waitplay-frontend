@@ -648,6 +648,16 @@
               />
               <small class="form-hint">손글씨로 작성할 메시지의 최대 글자 수 (50-500자)</small>
             </div>
+
+            <div class="form-group">
+              <label class="form-label">텍스트 색상</label>
+              <input
+                type="color"
+                class="form-input-color"
+                v-model="editForm.textColor"
+              />
+              <small class="form-hint">방명록 텍스트의 색상을 선택하세요</small>
+            </div>
           </template>
         </div>
 
@@ -968,7 +978,8 @@ function getDefaultBlockData(type: BlockType): any {
       return {
         title: '방명록',
         messages: [],
-        maxMessageLength: 200
+        maxMessageLength: 200,
+        textColor: '#374151'
       }
     default:
       return {}

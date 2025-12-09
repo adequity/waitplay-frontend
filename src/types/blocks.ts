@@ -119,6 +119,7 @@ export interface GuestbookBlockData {
   title: string
   messages: GuestbookMessage[]
   maxMessageLength: number // default 200
+  textColor?: string // hex color for guestbook text
 }
 
 // Base Block Interface

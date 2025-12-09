@@ -1,5 +1,5 @@
 <template>
-  <div class="guestbook-block">
+  <div class="guestbook-block" :style="{ '--text-color': data.textColor || '#374151' }">
     <h2 class="guestbook-title">{{ data.title }}</h2>
 
     <!-- 메시지 작성 폼 (로그인한 사용자만) -->
@@ -20,7 +20,11 @@
     </div>
 
     <div v-else class="login-prompt">
-      <p>waitplay에 가입한 고객만 메시지를 남길 수 있습니다</p>
+      <p>로그인하고 방명록을 남겨보세요!</p>
+      <div class="auth-buttons">
+        <button class="btn-login" @click="goToLogin">로그인</button>
+        <button class="btn-signup" @click="goToSignup">회원가입</button>
+      </div>
     </div>
 
     <!-- 메시지 목록 -->
@@ -78,6 +82,16 @@ const submitMessage = () => {
   charCount.value = 0
 }
 
+const goToLogin = () => {
+  // TODO: 실제 로그인 페이지로 라우팅
+  console.log('Navigate to login page')
+}
+
+const goToSignup = () => {
+  // TODO: 실제 회원가입 페이지로 라우팅
+  console.log('Navigate to signup page')
+}
+
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   const now = new Date()
@@ -105,7 +119,7 @@ const formatDate = (dateString: string): string => {
 .guestbook-title {
   font-size: 24px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-color, #1f2937);
   margin-bottom: 2rem;
   text-align: center;
 }
@@ -186,7 +200,48 @@ const formatDate = (dateString: string): string => {
 .login-prompt p {
   color: #6b7280;
   font-size: 14px;
-  margin: 0;
+  margin: 0 0 1rem 0;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.btn-login,
+.btn-signup {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-login {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-login:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-signup {
+  background: white;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+}
+
+.btn-signup:hover {
+  background: #eff6ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* 포스트잇 그리드 */
@@ -259,7 +314,7 @@ const formatDate = (dateString: string): string => {
   font-family: 'Nanum Pen Script', cursive, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 18px;
   line-height: 1.8;
-  color: #374151;
+  color: var(--text-color, #374151);
   margin: 0 0 1rem 0;
   word-break: keep-all;
   overflow-wrap: break-word;
