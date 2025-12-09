@@ -55,7 +55,7 @@
               <input type="checkbox" v-model="rememberMe" class="checkbox-input" />
               <span>아이디 저장</span>
             </label>
-            <a href="#" class="link-text">회원가입</a>
+            <router-link to="/signup" class="link-text">회원가입</router-link>
           </div>
 
           <button type="submit" class="btn-primary" :disabled="isLoading">
@@ -82,8 +82,7 @@
 
         <!-- Footer Links -->
         <div class="auth-footer">
-          <a href="#" class="footer-link">비밀번호 찾기</a>
-          <span class="footer-divider">·</span>
+          <span>계정이 없으신가요?</span>
           <router-link to="/signup" class="footer-link">회원가입</router-link>
         </div>
       </div>
@@ -94,26 +93,32 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const username = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const isLoading = ref(false)
 
 const handleLogin = async () => {
+  if (!username.value || !password.value) {
+    alert('아이디와 비밀번호를 입력해주세요.')
+    return
+  }
+
   isLoading.value = true
 
   try {
-    // TODO: API 호출하여 로그인 처리
-    console.log('Login with:', { username: username.value, password: password.value, rememberMe: rememberMe.value })
+    await authStore.standardLogin(username.value, password.value)
 
-    // 임시: 로그인 성공 후 홈으로 이동
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    alert('로그인 성공!')
     router.push('/')
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login failed:', error)
-    alert('로그인에 실패했습니다. 다시 시도해주세요.')
+    const errorMessage = error.response?.data?.message || '로그인에 실패했습니다. 다시 시도해주세요.'
+    alert(errorMessage)
   } finally {
     isLoading.value = false
   }

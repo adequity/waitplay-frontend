@@ -54,6 +54,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import type { GuestbookBlockData } from '@/types/blocks'
 
 interface Props {
@@ -61,9 +63,10 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const router = useRouter()
+const authStore = useAuthStore()
 
-// TODO: 실제 인증 상태는 store나 composable에서 가져와야 함
-const isAuthenticated = ref(false)
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 const newMessage = ref('')
 const charCount = ref(0)
 
@@ -83,11 +86,11 @@ const submitMessage = () => {
 }
 
 const goToLogin = () => {
-  window.location.href = '/login'
+  router.push('/login')
 }
 
 const goToSignup = () => {
-  window.location.href = '/signup'
+  router.push('/signup')
 }
 
 const formatDate = (dateString: string): string => {
