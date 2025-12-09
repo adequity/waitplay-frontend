@@ -349,8 +349,8 @@ onMounted(async () => {
     const qrData = await qrResponse.json()
     const fetchedQrCodeId = qrData.id
 
-    // Store QR code ID for guestbook
-    qrCodeId.value = fetchedQrCodeId
+    // Store QR code (Code 문자열) for guestbook
+    qrCodeId.value = qrCode  // QR Code 문자열 저장 (예: "5YWF8V2X")
 
     // Fetch layout from API
     const layoutResponse = await fetch(`${API_URL}/api/landingpage/layout/${fetchedQrCodeId}`)

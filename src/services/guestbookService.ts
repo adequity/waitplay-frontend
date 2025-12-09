@@ -1,7 +1,7 @@
 import apiClient from './api'
 
 export interface CreateGuestbookMessageRequest {
-  qrCodeId: string
+  qrCode: string  // QR Code 문자열 (예: "5YWF8V2X")
   message?: string
   imageData?: string
   color: string

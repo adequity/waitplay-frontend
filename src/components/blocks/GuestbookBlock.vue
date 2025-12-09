@@ -285,7 +285,7 @@ const submitDrawing = async () => {
 
     // API 호출하여 이미지 저장
     await guestbookService.createMessage({
-      qrCodeId: props.qrCodeId,
+      qrCode: props.qrCodeId,  // QR Code 문자열 전달
       imageData: resizedImageData,
       color: 'yellow' // 기본 색상
     })
