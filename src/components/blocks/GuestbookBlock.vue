@@ -83,13 +83,11 @@ const submitMessage = () => {
 }
 
 const goToLogin = () => {
-  // TODO: 실제 로그인 페이지로 라우팅
-  console.log('Navigate to login page')
+  window.location.href = '/login'
 }
 
 const goToSignup = () => {
-  // TODO: 실제 회원가입 페이지로 라우팅
-  console.log('Navigate to signup page')
+  window.location.href = '/signup'
 }
 
 const formatDate = (dateString: string): string => {

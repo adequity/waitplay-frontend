@@ -33,6 +33,16 @@ const routes: RouteRecordRaw[] = [
     name: 'game',
     component: () => import('../views/GameView.vue'),
     props: true
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('../views/LoginView.vue')
+  },
+  {
+    path: '/signup',
+    name: 'signup',
+    component: () => import('../views/SignupView.vue')
   }
 ]
 
