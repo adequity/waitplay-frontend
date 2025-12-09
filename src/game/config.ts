@@ -13,7 +13,7 @@ export const GAME_CONFIG = {
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 300, x: 0 },
+      gravity: { y: 180, x: 0 },
       debug: import.meta.env.DEV
     }
   },

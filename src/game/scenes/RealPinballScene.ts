@@ -694,9 +694,9 @@ export class RealPinballScene extends Phaser.Scene {
     if (this.gameStarted) return;
     this.gameStarted = true;
 
-    // 공에 초기 속도
+    // 공에 초기 속도 (속도 감소)
     if (this.ball) {
-      this.ball.setVelocity(Phaser.Math.Between(-50, 50), 200);
+      this.ball.setVelocity(Phaser.Math.Between(-30, 30), 120);
     }
   }
 
@@ -720,10 +720,10 @@ export class RealPinballScene extends Phaser.Scene {
       ease: 'Power2'
     });
 
-    // 플리퍼에 맞았을 때 공에 강한 힘 가하기
+    // 플리퍼에 맞았을 때 공에 힘 가하기 (속도 감소)
     if (this.ball && this.physics.overlap(this.ball, flipper)) {
-      const velocityY = -600;
-      const velocityX = side === 'left' ? -300 : 300;
+      const velocityY = -450;
+      const velocityX = side === 'left' ? -220 : 220;
       this.ball.setVelocity(velocityX, velocityY);
     }
   }
