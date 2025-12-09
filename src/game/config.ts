@@ -8,7 +8,7 @@ import * as Phaser from 'phaser';
 export const GAME_CONFIG = {
   width: 800,
   height: 600,
-  backgroundColor: '#282c34',
+  backgroundColor: '#0f0f23',
   parent: 'game-container',
   physics: {
     default: 'arcade',
@@ -30,17 +30,21 @@ export const GAME_CONFIG = {
 };
 
 export const COLORS = {
-  primary: '#6366f1',
-  secondary: '#8b5cf6',
+  primary: '#667eea',
+  secondary: '#764ba2',
+  accent: '#4facfe',
   success: '#10b981',
   danger: '#ef4444',
-  warning: '#f59e0b',
+  warning: '#fbbf24',
   white: '#ffffff',
-  black: '#000000'
+  black: '#000000',
+  bg: '#0f0f23',
+  bgSecondary: '#1a1a2e',
+  bgTertiary: '#2d2d44'
 };
 
 export const GAME_TYPES = {
-  PINBALL: 'PINBALL',
+  BRICK_BREAKER: 'BRICK_BREAKER',
   MATCH: 'MATCH',
   SPOT: 'SPOT'
 } as const;

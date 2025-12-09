@@ -62,7 +62,7 @@ export interface GameOrderItem {
 }
 
 export interface GamesCarouselBlockData {
-  enabledGames: string[] // ['pinball', 'memory', 'spot-difference']
+  enabledGames: string[] // ['brick-breaker', 'memory', 'spot-difference']
   showLeaderboard: boolean
   gamesOrder: GameOrderItem[]
 }

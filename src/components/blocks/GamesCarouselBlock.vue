@@ -76,10 +76,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 // 게임 기본 정보
 const gameDefinitions = [
   {
-    type: 'pinball',
-    name: '핀볼게임',
-    icon: '🎯',
-    description: '공을 튕겨서 점수를 획득하세요'
+    type: 'brick-breaker',
+    name: '벽돌깨기',
+    icon: '🧱',
+    description: '공을 튕겨서 벽돌을 깨세요'
   },
   {
     type: 'memory',

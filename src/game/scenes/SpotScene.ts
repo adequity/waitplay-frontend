@@ -32,7 +32,7 @@ export class SpotScene extends Phaser.Scene {
 
   create() {
     // 배경
-    this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
+    this.add.rectangle(400, 300, 800, 600, 0x0f0f23);
 
     // UI 텍스트
     this.foundText = this.add.text(16, 16, `찾은 개수: 0/${this.TOTAL_DIFFERENCES}`, {

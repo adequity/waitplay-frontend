@@ -33,7 +33,7 @@ export class MatchScene extends Phaser.Scene {
 
   create() {
     // 배경
-    this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
+    this.add.rectangle(400, 300, 800, 600, 0x0f0f23);
 
     // UI 텍스트
     this.movesText = this.add.text(16, 16, '이동: 0', {
@@ -103,8 +103,8 @@ export class MatchScene extends Phaser.Scene {
         const y = startY + row * spacingY;
 
         // 카드 뒷면
-        const cardBack = this.add.rectangle(x, y, cardWidth, cardHeight, 0x6366f1, 1);
-        cardBack.setStrokeStyle(3, 0x8b5cf6);
+        const cardBack = this.add.rectangle(x, y, cardWidth, cardHeight, 0x667eea, 1);
+        cardBack.setStrokeStyle(3, 0x764ba2);
 
         // 카드 앞면 (이모지)
         const cardFront = this.add.text(x, y, cardValues[index] || '?', {
@@ -188,11 +188,11 @@ export class MatchScene extends Phaser.Scene {
       // 매치 실패 - 1초 후 다시 뒤집기
       this.time.delayedCall(1000, () => {
         card1.isFlipped = false;
-        card1.sprite.setFillStyle(0x6366f1);
+        card1.sprite.setFillStyle(0x667eea);
         card1.text.setVisible(false);
 
         card2.isFlipped = false;
-        card2.sprite.setFillStyle(0x6366f1);
+        card2.sprite.setFillStyle(0x667eea);
         card2.text.setVisible(false);
 
         this.flippedCards = [];

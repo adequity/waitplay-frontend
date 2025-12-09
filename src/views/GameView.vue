@@ -21,7 +21,7 @@ const gameContainer = ref<HTMLElement>()
 const gameType = computed(() => (route.params.type as string).toUpperCase() as GameType)
 const gameTitle = computed(() => {
   const titles: Record<GameType, string> = {
-    PINBALL: '핀볼 게임',
+    BRICK_BREAKER: '벽돌깨기 게임',
     MATCH: '카드 매치 게임',
     SPOT: '틀린그림찾기'
   }

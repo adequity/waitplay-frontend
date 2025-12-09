@@ -14,7 +14,7 @@ export class GameManager {
 
   /**
    * 게임 초기화
-   * @param gameType 게임 타입 (PINBALL, MATCH, SPOT)
+   * @param gameType 게임 타입 (BRICK_BREAKER, MATCH, SPOT)
    * @param containerId HTML 컨테이너 ID
    */
   public initGame(gameType: GameType, containerId: string = 'game-container'): Phaser.Game {
@@ -43,7 +43,7 @@ export class GameManager {
    */
   private getSceneByType(gameType: GameType): any {
     switch (gameType) {
-      case 'PINBALL':
+      case 'BRICK_BREAKER':
         return PinballScene;
       case 'MATCH':
         return MatchScene;
