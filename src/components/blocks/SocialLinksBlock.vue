@@ -9,7 +9,7 @@
         class="social-link"
         :class="`social-link--${social.platform}`"
       >
-        <component :is="getSocialIcon(social.platform)" />
+        <Icon :icon="getSocialIcon(social.platform)" width="24" height="24" />
       </a>
     </div>
   </div>
@@ -17,8 +17,7 @@
 
 <script setup lang="ts">
 import type { SocialLinksBlockData } from '@/types/blocks'
-import { FaInstagram, FaYoutube, FaFacebookF, FaTwitter } from 'react-icons/fa'
-import { SiNaver, SiThreads } from 'react-icons/si'
+import { Icon } from '@iconify/vue'
 
 interface Props {
   data: SocialLinksBlockData
@@ -26,16 +25,16 @@ interface Props {
 
 defineProps<Props>()
 
-function getSocialIcon(platform: string) {
-  const icons: Record<string, any> = {
-    instagram: FaInstagram,
-    youtube: FaYoutube,
-    naver: SiNaver,
-    threads: SiThreads,
-    facebook: FaFacebookF,
-    twitter: FaTwitter
+function getSocialIcon(platform: string): string {
+  const icons: Record<string, string> = {
+    instagram: 'mdi:instagram',
+    youtube: 'mdi:youtube',
+    naver: 'simple-icons:naver',
+    threads: 'ri:threads-fill',
+    facebook: 'mdi:facebook',
+    twitter: 'mdi:twitter'
   }
-  return icons[platform] || null
+  return icons[platform] || 'mdi:link-variant'
 }
 </script>
 
