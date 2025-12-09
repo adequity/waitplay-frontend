@@ -1,21 +1,28 @@
 <template>
-  <div class="signup-view">
-    <div class="signup-container">
-      <div class="signup-card">
-        <div class="signup-header">
-          <h1 class="signup-title">회원가입</h1>
-          <p class="signup-subtitle">WaitPlay와 함께 시작하세요</p>
+  <div class="auth-view">
+    <div class="auth-container">
+      <div class="auth-card">
+        <!-- Logo & Title -->
+        <div class="auth-header">
+          <div class="logo-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h1 class="auth-title">WaitPlay</h1>
+          <p class="auth-subtitle">고객의 경험을 브랜드의 가치로</p>
         </div>
 
-        <!-- SNS 간편 회원가입 -->
+        <!-- SNS 간편 가입 -->
         <div class="social-signup">
           <p class="section-title">SNS 간편 가입</p>
           <div class="social-buttons">
-            <button @click="handleSocialSignup('naver')" class="btn-social btn-naver">
+            <button @click="handleSocialSignup('naver')" type="button" class="btn-social btn-naver">
               <span class="social-icon">N</span>
               네이버로 가입하기
             </button>
-            <button @click="handleSocialSignup('kakao')" class="btn-social btn-kakao">
+            <button @click="handleSocialSignup('kakao')" type="button" class="btn-social btn-kakao">
               <span class="social-icon">K</span>
               카카오로 가입하기
             </button>
@@ -27,7 +34,7 @@
         </div>
 
         <!-- 이메일 회원가입 폼 -->
-        <form @submit.prevent="handleEmailSignup" class="signup-form">
+        <form @submit.prevent="handleEmailSignup" class="auth-form">
           <div class="form-group">
             <label class="form-label">이름</label>
             <input
@@ -75,23 +82,24 @@
 
           <div class="terms-section">
             <label class="checkbox-label">
-              <input type="checkbox" v-model="formData.agreeTerms" required />
-              <span><a href="#" class="terms-link">이용약관</a> 및 <a href="#" class="terms-link">개인정보처리방침</a>에 동의합니다</span>
+              <input type="checkbox" v-model="formData.agreeTerms" required class="checkbox-input" />
+              <span><a href="#" class="terms-link">이용약관</a> 및 <a href="#" class="terms-link">개인정보처리방침</a>에 동의합니다 (필수)</span>
             </label>
             <label class="checkbox-label">
-              <input type="checkbox" v-model="formData.agreeMarketing" />
+              <input type="checkbox" v-model="formData.agreeMarketing" class="checkbox-input" />
               <span>마케팅 정보 수신에 동의합니다 (선택)</span>
             </label>
           </div>
 
-          <button type="submit" class="btn-signup" :disabled="isLoading || !isFormValid">
+          <button type="submit" class="btn-primary" :disabled="isLoading || !isFormValid">
             {{ isLoading ? '가입 중...' : '가입하기' }}
           </button>
         </form>
 
-        <div class="login-prompt">
-          <p>이미 계정이 있으신가요?</p>
-          <router-link to="/login" class="login-link">로그인</router-link>
+        <!-- Footer Links -->
+        <div class="auth-footer">
+          <span>이미 계정이 있으신가요?</span>
+          <router-link to="/login" class="footer-link">로그인</router-link>
         </div>
       </div>
     </div>
@@ -130,10 +138,8 @@ const handleSocialSignup = async (provider: 'naver' | 'kakao') => {
     console.log('Social signup with:', provider)
 
     if (provider === 'naver') {
-      // 네이버 회원가입 처리
       alert('네이버 간편 가입 기능은 준비 중입니다.')
     } else if (provider === 'kakao') {
-      // 카카오 회원가입 처리
       alert('카카오 간편 가입 기능은 준비 중입니다.')
     }
   } catch (error) {
@@ -177,53 +183,69 @@ const handleEmailSignup = async () => {
 </script>
 
 <style scoped>
-.signup-view {
+.auth-view {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f5f7fa;
   padding: 2rem 1rem;
 }
 
-.signup-container {
+.auth-container {
   width: 100%;
   max-width: 480px;
 }
 
-.signup-card {
+.auth-card {
   background: white;
   border-radius: 16px;
-  padding: 2.5rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 3rem 2.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
-.signup-header {
+/* Header */
+.auth-header {
   text-align: center;
   margin-bottom: 2rem;
 }
 
-.signup-title {
+.logo-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(30, 136, 229, 0.3);
+}
+
+.auth-title {
   font-size: 28px;
   font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
 }
 
-.signup-subtitle {
+.auth-subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: #757575;
   margin: 0;
+  font-weight: 400;
 }
 
+/* Section Title */
 .section-title {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: #1a1a1a;
   margin-bottom: 1rem;
   text-align: center;
 }
 
+/* Social Signup */
 .social-signup {
   margin-bottom: 1.5rem;
 }
@@ -242,21 +264,21 @@ const handleEmailSignup = async () => {
   padding: 0.875rem;
   border: none;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .social-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 4px;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .btn-naver {
@@ -266,8 +288,6 @@ const handleEmailSignup = async () => {
 
 .btn-naver:hover {
   background: #02b351;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
 }
 
 .btn-naver .social-icon {
@@ -282,8 +302,6 @@ const handleEmailSignup = async () => {
 
 .btn-kakao:hover {
   background: #fdd835;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(254, 229, 0, 0.3);
 }
 
 .btn-kakao .social-icon {
@@ -291,6 +309,7 @@ const handleEmailSignup = async () => {
   color: #fee500;
 }
 
+/* Divider */
 .divider {
   position: relative;
   text-align: center;
@@ -304,7 +323,7 @@ const handleEmailSignup = async () => {
   left: 0;
   right: 0;
   height: 1px;
-  background: #e5e7eb;
+  background: #e0e0e0;
 }
 
 .divider span {
@@ -312,11 +331,12 @@ const handleEmailSignup = async () => {
   display: inline-block;
   padding: 0 1rem;
   background: white;
-  color: #9ca3af;
-  font-size: 14px;
+  color: #9e9e9e;
+  font-size: 13px;
 }
 
-.signup-form {
+/* Form */
+.auth-form {
   margin-bottom: 1.5rem;
 }
 
@@ -328,25 +348,30 @@ const handleEmailSignup = async () => {
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: #1a1a1a;
   margin-bottom: 0.5rem;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
+  padding: 0.875rem 1rem;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 14px;
-  color: #1f2937;
+  color: #1a1a1a;
   transition: all 0.2s;
   box-sizing: border-box;
+  background: white;
+}
+
+.form-input::placeholder {
+  color: #bdbdbd;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #1e88e5;
+  box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
 }
 
 .terms-section {
@@ -357,6 +382,7 @@ const handleEmailSignup = async () => {
   padding: 1rem;
   background: #f9fafb;
   border-radius: 8px;
+  border: 1px solid #e0e0e0;
 }
 
 .checkbox-label {
@@ -364,19 +390,23 @@ const handleEmailSignup = async () => {
   align-items: flex-start;
   gap: 0.5rem;
   font-size: 13px;
-  color: #6b7280;
+  color: #616161;
   cursor: pointer;
   line-height: 1.5;
+  user-select: none;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-input {
   margin-top: 2px;
   cursor: pointer;
   flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: #1e88e5;
 }
 
 .terms-link {
-  color: #667eea;
+  color: #1e88e5;
   text-decoration: none;
   font-weight: 500;
 }
@@ -385,57 +415,52 @@ const handleEmailSignup = async () => {
   text-decoration: underline;
 }
 
-.btn-signup {
+.btn-primary {
   width: 100%;
   padding: 0.875rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1e88e5;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transition: all 0.2s;
 }
 
-.btn-signup:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.btn-primary:hover:not(:disabled) {
+  background: #1976d2;
 }
 
-.btn-signup:disabled {
+.btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
-.login-prompt {
+/* Footer */
+.auth-footer {
   text-align: center;
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 13px;
+  color: #757575;
 }
 
-.login-prompt p {
-  margin: 0 0 0.5rem 0;
-}
-
-.login-link {
-  color: #667eea;
+.footer-link {
+  color: #1e88e5;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
+  margin-left: 0.5rem;
 }
 
-.login-link:hover {
+.footer-link:hover {
   text-decoration: underline;
 }
 
 @media (max-width: 640px) {
-  .signup-card {
-    padding: 2rem 1.5rem;
+  .auth-card {
+    padding: 2.5rem 2rem;
   }
 
-  .signup-title {
+  .auth-title {
     font-size: 24px;
   }
 }

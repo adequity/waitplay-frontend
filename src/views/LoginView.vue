@@ -1,66 +1,90 @@
 <template>
-  <div class="login-view">
-    <div class="login-container">
-      <div class="login-card">
-        <div class="login-header">
-          <h1 class="login-title">로그인</h1>
-          <p class="login-subtitle">WaitPlay에 오신 것을 환영합니다</p>
+  <div class="auth-view">
+    <div class="auth-container">
+      <div class="auth-card">
+        <!-- Logo & Title -->
+        <div class="auth-header">
+          <div class="logo-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h1 class="auth-title">WaitPlay</h1>
+          <p class="auth-subtitle">고객의 경험을 브랜드의 가치로</p>
         </div>
 
-        <form @submit.prevent="handleLogin" class="login-form">
+        <!-- Login Form -->
+        <form @submit.prevent="handleLogin" class="auth-form">
           <div class="form-group">
-            <label class="form-label">이메일</label>
-            <input
-              type="email"
-              v-model="email"
-              class="form-input"
-              placeholder="your@email.com"
-              required
-            />
+            <label class="form-label">아이디</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <input
+                type="text"
+                v-model="username"
+                class="form-input"
+                placeholder="admin"
+                required
+              />
+            </div>
           </div>
 
           <div class="form-group">
             <label class="form-label">비밀번호</label>
-            <input
-              type="password"
-              v-model="password"
-              class="form-input"
-              placeholder="••••••••"
-              required
-            />
+            <div class="input-wrapper">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <input
+                type="password"
+                v-model="password"
+                class="form-input"
+                placeholder="비밀번호를 입력하세요"
+                required
+              />
+            </div>
           </div>
 
           <div class="form-actions">
             <label class="checkbox-label">
-              <input type="checkbox" v-model="rememberMe" />
-              <span>로그인 상태 유지</span>
+              <input type="checkbox" v-model="rememberMe" class="checkbox-input" />
+              <span>아이디 저장</span>
             </label>
-            <a href="#" class="forgot-link">비밀번호 찾기</a>
+            <a href="#" class="link-text">회원가입</a>
           </div>
 
-          <button type="submit" class="btn-login" :disabled="isLoading">
+          <button type="submit" class="btn-primary" :disabled="isLoading">
             {{ isLoading ? '로그인 중...' : '로그인' }}
           </button>
         </form>
 
+        <!-- Divider -->
         <div class="divider">
           <span>또는</span>
         </div>
 
+        <!-- Social Login -->
         <div class="social-login">
-          <button @click="handleSocialLogin('naver')" class="btn-social btn-naver">
+          <button @click="handleSocialLogin('naver')" type="button" class="btn-social btn-naver">
             <span class="social-icon">N</span>
             네이버로 로그인
           </button>
-          <button @click="handleSocialLogin('kakao')" class="btn-social btn-kakao">
+          <button @click="handleSocialLogin('kakao')" type="button" class="btn-social btn-kakao">
             <span class="social-icon">K</span>
             카카오로 로그인
           </button>
         </div>
 
-        <div class="signup-prompt">
-          <p>아직 계정이 없으신가요?</p>
-          <router-link to="/signup" class="signup-link">회원가입</router-link>
+        <!-- Footer Links -->
+        <div class="auth-footer">
+          <a href="#" class="footer-link">비밀번호 찾기</a>
+          <span class="footer-divider">·</span>
+          <router-link to="/signup" class="footer-link">회원가입</router-link>
         </div>
       </div>
     </div>
@@ -72,7 +96,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const email = ref('')
+const username = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const isLoading = ref(false)
@@ -82,7 +106,7 @@ const handleLogin = async () => {
 
   try {
     // TODO: API 호출하여 로그인 처리
-    console.log('Login with:', { email: email.value, password: password.value, rememberMe: rememberMe.value })
+    console.log('Login with:', { username: username.value, password: password.value, rememberMe: rememberMe.value })
 
     // 임시: 로그인 성공 후 홈으로 이동
     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -101,10 +125,8 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
     console.log('Social login with:', provider)
 
     if (provider === 'naver') {
-      // 네이버 로그인 처리
       alert('네이버 로그인 기능은 준비 중입니다.')
     } else if (provider === 'kakao') {
-      // 카카오 로그인 처리
       alert('카카오 로그인 기능은 준비 중입니다.')
     }
   } catch (error) {
@@ -115,46 +137,61 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
 </script>
 
 <style scoped>
-.login-view {
+.auth-view {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f5f7fa;
   padding: 2rem 1rem;
 }
 
-.login-container {
+.auth-container {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
 }
 
-.login-card {
+.auth-card {
   background: white;
   border-radius: 16px;
-  padding: 2.5rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 3rem 2.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
-.login-header {
+/* Header */
+.auth-header {
   text-align: center;
   margin-bottom: 2rem;
 }
 
-.login-title {
+.logo-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(30, 136, 229, 0.3);
+}
+
+.auth-title {
   font-size: 28px;
   font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
 }
 
-.login-subtitle {
+.auth-subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: #757575;
   margin: 0;
+  font-weight: 400;
 }
 
-.login-form {
+/* Form */
+.auth-form {
   margin-bottom: 1.5rem;
 }
 
@@ -166,25 +203,43 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: #1a1a1a;
   margin-bottom: 0.5rem;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #9e9e9e;
+  pointer-events: none;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
+  padding: 0.875rem 1rem 0.875rem 3rem;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 14px;
-  color: #1f2937;
+  color: #1a1a1a;
   transition: all 0.2s;
   box-sizing: border-box;
+  background: white;
+}
+
+.form-input::placeholder {
+  color: #bdbdbd;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #1e88e5;
+  box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
 }
 
 .form-actions {
@@ -192,56 +247,59 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
-  font-size: 14px;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #6b7280;
+  font-size: 14px;
+  color: #616161;
   cursor: pointer;
+  user-select: none;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-input {
+  width: 16px;
+  height: 16px;
   cursor: pointer;
+  accent-color: #1e88e5;
 }
 
-.forgot-link {
-  color: #667eea;
+.link-text {
+  font-size: 14px;
+  color: #1e88e5;
   text-decoration: none;
   font-weight: 500;
 }
 
-.forgot-link:hover {
+.link-text:hover {
   text-decoration: underline;
 }
 
-.btn-login {
+.btn-primary {
   width: 100%;
   padding: 0.875rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1e88e5;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transition: all 0.2s;
 }
 
-.btn-login:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.btn-primary:hover:not(:disabled) {
+  background: #1976d2;
 }
 
-.btn-login:disabled {
+.btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
+/* Divider */
 .divider {
   position: relative;
   text-align: center;
@@ -255,7 +313,7 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
   left: 0;
   right: 0;
   height: 1px;
-  background: #e5e7eb;
+  background: #e0e0e0;
 }
 
 .divider span {
@@ -263,10 +321,11 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
   display: inline-block;
   padding: 0 1rem;
   background: white;
-  color: #9ca3af;
-  font-size: 14px;
+  color: #9e9e9e;
+  font-size: 13px;
 }
 
+/* Social Login */
 .social-login {
   display: flex;
   flex-direction: column;
@@ -282,21 +341,21 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
   padding: 0.875rem;
   border: none;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .social-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 4px;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .btn-naver {
@@ -306,8 +365,6 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
 
 .btn-naver:hover {
   background: #02b351;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
 }
 
 .btn-naver .social-icon {
@@ -322,8 +379,6 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
 
 .btn-kakao:hover {
   background: #fdd835;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(254, 229, 0, 0.3);
 }
 
 .btn-kakao .social-icon {
@@ -331,32 +386,34 @@ const handleSocialLogin = async (provider: 'naver' | 'kakao') => {
   color: #fee500;
 }
 
-.signup-prompt {
+/* Footer */
+.auth-footer {
   text-align: center;
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 13px;
+  color: #757575;
 }
 
-.signup-prompt p {
-  margin: 0 0 0.5rem 0;
-}
-
-.signup-link {
-  color: #667eea;
+.footer-link {
+  color: #1e88e5;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
 }
 
-.signup-link:hover {
+.footer-link:hover {
   text-decoration: underline;
 }
 
+.footer-divider {
+  margin: 0 0.5rem;
+  color: #bdbdbd;
+}
+
 @media (max-width: 640px) {
-  .login-card {
-    padding: 2rem 1.5rem;
+  .auth-card {
+    padding: 2.5rem 2rem;
   }
 
-  .login-title {
+  .auth-title {
     font-size: 24px;
   }
 }
