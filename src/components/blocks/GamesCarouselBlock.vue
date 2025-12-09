@@ -111,10 +111,10 @@ const allGames = ref<GameData[]>(gameDefinitions.map(game => ({
 // API에서 리더보드 데이터 가져오기
 async function fetchLeaderboard(gameType: string) {
   try {
-    let url = `${API_BASE_URL}/api/game/score/leaderboard/${gameType}?limit=3`
-    if (props.qrCodeId) {
-      url += `&qrCodeId=${props.qrCodeId}`
-    }
+    // QR 코드가 있으면 company별 리더보드, 없으면 전체 리더보드
+    const url = props.qrCodeId
+      ? `${API_BASE_URL}/api/game/score/leaderboard/${gameType}/qr/${props.qrCodeId}?limit=3`
+      : `${API_BASE_URL}/api/game/score/leaderboard/${gameType}?limit=3`
 
     const response = await fetch(url)
     if (!response.ok) {
