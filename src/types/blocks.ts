@@ -9,6 +9,8 @@ export type BlockType =
   | 'popular_menu'
   | 'text'
   | 'image'
+  | 'countdown'
+  | 'guestbook'
 
 // Header Block
 export interface HeaderBlockData {
@@ -94,6 +96,31 @@ export interface ImageBlockData {
   aspectRatio: '16:9' | '1:1' | '4:3'
 }
 
+// Countdown Block
+export interface CountdownBlockData {
+  title: string
+  targetDate: string // ISO 8601 format
+  description?: string
+  style: 'card' | 'minimal' | 'banner'
+}
+
+// Guestbook Block
+export interface GuestbookMessage {
+  id: string
+  userId: string
+  userName: string
+  message: string
+  createdAt: string
+  rotation: number // -5 to 5 degrees for post-it rotation effect
+  color: 'yellow' | 'pink' | 'blue' | 'green'
+}
+
+export interface GuestbookBlockData {
+  title: string
+  messages: GuestbookMessage[]
+  maxMessageLength: number // default 200
+}
+
 // Base Block Interface
 export interface BaseBlock {
   id: string
@@ -144,6 +171,16 @@ export interface ImageBlock extends BaseBlock {
   data: ImageBlockData
 }
 
+export interface CountdownBlock extends BaseBlock {
+  type: 'countdown'
+  data: CountdownBlockData
+}
+
+export interface GuestbookBlock extends BaseBlock {
+  type: 'guestbook'
+  data: GuestbookBlockData
+}
+
 // Union type for all blocks
 export type Block =
   | HeaderBlock
@@ -154,6 +191,8 @@ export type Block =
   | PopularMenuBlock
   | TextBlock
   | ImageBlock
+  | CountdownBlock
+  | GuestbookBlock
 
 // Landing Page Theme
 export interface PageTheme {

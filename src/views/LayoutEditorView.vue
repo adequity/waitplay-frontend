@@ -608,6 +608,8 @@ import GamesCarouselBlock from '@/components/blocks/GamesCarouselBlock.vue'
 import PopularMenuBlock from '@/components/blocks/PopularMenuBlock.vue'
 import TextBlock from '@/components/blocks/TextBlock.vue'
 import ImageBlock from '@/components/blocks/ImageBlock.vue'
+import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
+import GuestbookBlock from '@/components/blocks/GuestbookBlock.vue'
 
 const router = useRouter()
 const route = useRoute()
