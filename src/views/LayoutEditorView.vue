@@ -371,22 +371,23 @@
           <template v-if="editingBlock.type === 'social_links'">
             <div class="form-section">
               <h3 class="section-title">소셜 미디어 링크</h3>
-              <div v-for="(link, index) in editForm.links" :key="index" class="link-item">
-                <div class="link-row">
-                  <select class="form-select" v-model="link.platform">
+              <div v-for="(link, index) in editForm.links" :key="index" class="social-link-item">
+                <div class="social-link-row">
+                  <select class="form-select-compact" v-model="link.platform">
                     <option value="instagram">Instagram</option>
                     <option value="youtube">YouTube</option>
                     <option value="facebook">Facebook</option>
                     <option value="twitter">Twitter</option>
-                    <option value="naver">Naver Blog</option>
+                    <option value="naver">Naver</option>
+                    <option value="threads">Threads</option>
                   </select>
                   <input
                     type="url"
-                    class="form-input flex-1"
+                    class="form-input-compact"
                     v-model="link.url"
-                    placeholder="https://"
+                    placeholder="https://..."
                   />
-                  <button class="btn-icon danger" @click="removeSocialLink(index)">
+                  <button class="btn-icon-small danger" @click="removeSocialLink(index)" title="삭제">
                     🗑️
                   </button>
                 </div>
@@ -2305,5 +2306,73 @@ function removeMenuItem(index: number) {
   font-size: 14px;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+/* Compact Social Link Edit Styles */
+.social-link-item {
+  margin-bottom: 8px;
+}
+
+.social-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.form-select-compact {
+  width: 120px;
+  padding: 8px 10px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #111827;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: white;
+  flex-shrink: 0;
+}
+
+.form-select-compact:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-input-compact {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #111827;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: white;
+}
+
+.form-input-compact:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.btn-icon-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.btn-icon-small.danger:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
 }
 </style>
