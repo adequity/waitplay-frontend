@@ -55,7 +55,7 @@
               <input type="checkbox" v-model="rememberMe" class="checkbox-input" />
               <span>아이디 저장</span>
             </label>
-            <router-link to="/signup" class="link-text">회원가입</router-link>
+            <router-link :to="qrCodeId ? `/signup?qr=${qrCodeId}` : '/signup'" class="link-text">회원가입</router-link>
           </div>
 
           <button type="submit" class="btn-primary" :disabled="isLoading">
@@ -83,7 +83,7 @@
         <!-- Footer Links -->
         <div class="auth-footer">
           <span>계정이 없으신가요?</span>
-          <router-link to="/signup" class="footer-link">회원가입</router-link>
+          <router-link :to="qrCodeId ? `/signup?qr=${qrCodeId}` : '/signup'" class="footer-link">회원가입</router-link>
         </div>
       </div>
     </div>

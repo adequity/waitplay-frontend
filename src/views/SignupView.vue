@@ -99,7 +99,7 @@
         <!-- Footer Links -->
         <div class="auth-footer">
           <span>이미 계정이 있으신가요?</span>
-          <router-link to="/login" class="footer-link">로그인</router-link>
+          <router-link :to="qrCodeId ? `/login?qr=${qrCodeId}` : '/login'" class="footer-link">로그인</router-link>
         </div>
       </div>
     </div>
