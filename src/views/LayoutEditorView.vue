@@ -843,7 +843,11 @@ function getBlockComponent(type: string): Component | string {
     social_links: SocialLinksBlock,
     video_grid: VideoGridBlock,
     games_carousel: GamesCarouselBlock,
-    popular_menu: PopularMenuBlock
+    popular_menu: PopularMenuBlock,
+    text: TextBlock,
+    image: ImageBlock,
+    countdown: CountdownBlock,
+    guestbook: GuestbookBlock
   }
   return components[type] || 'div'
 }
@@ -857,7 +861,9 @@ function getBlockIcon(type: string): string {
     games_carousel: 'G',
     popular_menu: 'M',
     text: 'T',
-    image: 'I'
+    image: 'I',
+    countdown: '⏱',
+    guestbook: '✍'
   }
   return icons[type] || '□'
 }
@@ -871,7 +877,9 @@ function getBlockTitle(type: string): string {
     games_carousel: '게임 캐러셀',
     popular_menu: '인기 메뉴',
     text: '텍스트',
-    image: '이미지'
+    image: '이미지',
+    countdown: '카운트다운',
+    guestbook: '방명록'
   }
   return titles[type] || '블록'
 }
@@ -993,6 +1001,19 @@ function editBlock(block: Block) {
       editForm.value.enabledGames = ['pinball', 'memory', 'spot-difference']
     }
   }
+
+  // Convert ISO date to datetime-local format for countdown blocks
+  if (block.type === 'countdown' && editForm.value.targetDate) {
+    // ISO format: 2024-12-17T12:00:00.000Z
+    // datetime-local format: 2024-12-17T12:00
+    const date = new Date(editForm.value.targetDate)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    editForm.value.targetDate = `${year}-${month}-${day}T${hours}:${minutes}`
+  }
 }
 
 function getGradientPreview(overlay: any): string {
@@ -1022,7 +1043,16 @@ function cancelEdit() {
 
 function saveBlockEdit() {
   if (editingBlock.value) {
-    editingBlock.value.data = JSON.parse(JSON.stringify(editForm.value))
+    const formData = JSON.parse(JSON.stringify(editForm.value))
+
+    // Convert datetime-local back to ISO format for countdown blocks
+    if (editingBlock.value.type === 'countdown' && formData.targetDate) {
+      // datetime-local format: 2024-12-17T12:00
+      // ISO format: 2024-12-17T12:00:00.000Z
+      formData.targetDate = new Date(formData.targetDate).toISOString()
+    }
+
+    editingBlock.value.data = formData
     editingBlock.value = null
     editForm.value = {}
   }
