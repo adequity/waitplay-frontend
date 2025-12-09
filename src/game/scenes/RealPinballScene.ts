@@ -32,6 +32,18 @@ export class RealPinballScene extends Phaser.Scene {
   private laneBonus: number = 500;
   private laneMultiplier: number = 1;
 
+  // 트레일 효과 시스템
+  private ballTrail: Phaser.GameObjects.Graphics[] = [];
+  private readonly MAX_TRAIL_LENGTH = 8;
+  private trailUpdateCounter: number = 0;
+
+  // 슬로우 모션 시스템
+  private isSlowMotion: boolean = false;
+  private slowMotionDuration: number = 0;
+
+  // 사운드 시스템
+  private audioContext?: AudioContext;
+
   constructor() {
     super({ key: 'RealPinballScene' });
   }
@@ -44,6 +56,13 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   create() {
+    // 사운드 시스템 초기화
+    try {
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch (e) {
+      console.log('Web Audio API not supported');
+    }
+
     // 배경 - 네온 그라디언트 (화려한 깊이감)
     const bgGradient1 = this.add.rectangle(187.5, 150, 375, 300, 0x1e1b4b); // 깊은 보라
     const bgGradient2 = this.add.rectangle(187.5, 400, 375, 300, 0x312e81); // 중간 보라
@@ -225,6 +244,30 @@ export class RealPinballScene extends Phaser.Scene {
 
   update() {
     if (!this.ball || !this.gameStarted || this.gameOver) return;
+
+    // 슬로우 모션 업데이트
+    if (this.isSlowMotion) {
+      this.slowMotionDuration -= this.game.loop.delta;
+      if (this.slowMotionDuration <= 0) {
+        this.physics.world.timeScale = 1;
+        this.isSlowMotion = false;
+      }
+    }
+
+    // 트레일 효과 업데이트 (2프레임마다)
+    this.trailUpdateCounter++;
+    if (this.trailUpdateCounter >= 2) {
+      this.trailUpdateCounter = 0;
+      this.updateBallTrail();
+    }
+
+    // 공이 아래로 떨어지려 할 때 슬로우 모션
+    if (this.ball.y > 580 && this.ball.y < 650 && !this.isSlowMotion) {
+      const velocity = this.ball.body as Phaser.Physics.Arcade.Body;
+      if (velocity.velocity.y > 200) {
+        this.activateSlowMotion(600); // 0.6초 슬로우 모션
+      }
+    }
 
     // 공이 아래로 떨어졌는지 확인
     if (this.ball.y > 650) {
@@ -663,6 +706,9 @@ export class RealPinballScene extends Phaser.Scene {
     const flipper = side === 'left' ? this.leftFlipper : this.rightFlipper;
     if (!flipper) return;
 
+    // 플리퍼 작동 사운드 재생
+    this.playSound('flipper');
+
     // 플리퍼 회전 애니메이션
     const targetRotation = side === 'left' ? -0.5 : 0.5;
 
@@ -722,6 +768,9 @@ export class RealPinballScene extends Phaser.Scene {
     this.score += totalPoints;
     this.scoreText?.setText(this.score.toString());
 
+    // 범퍼 충돌 사운드 재생
+    this.playSound('bumper');
+
     // ===== 점수 팝업 애니메이션 =====
     const scorePopup = this.add.text(bumperSprite.x, bumperSprite.y - 30, `+${totalPoints}`, {
       fontSize: '32px',
@@ -748,6 +797,9 @@ export class RealPinballScene extends Phaser.Scene {
     if (this.comboCount >= 2 && this.comboText) {
       this.comboText.setText(`${this.comboCount}x COMBO!`);
       this.comboText.setAlpha(1);
+
+      // 콤보 사운드 재생
+      this.playSound('combo');
 
       // 콤보 텍스트 펄스 애니메이션
       this.tweens.add({
@@ -891,6 +943,9 @@ export class RealPinballScene extends Phaser.Scene {
   private loseBall() {
     this.ballsLeft--;
     this.ballsText?.setText(this.ballsLeft.toString());
+
+    // 공 잃음 사운드 재생
+    this.playSound('lose');
 
     if (this.ballsLeft === 0) {
       this.endGame();
@@ -1043,5 +1098,113 @@ export class RealPinballScene extends Phaser.Scene {
         submitScore();
       }
     };
+  }
+
+  // ===== 트레일 효과 시스템 =====
+  private updateBallTrail() {
+    if (!this.ball) return;
+
+    // 새 트레일 포인트 생성
+    const trail = this.add.graphics();
+    trail.fillStyle(0x60a5fa, 0.6);
+    trail.fillCircle(this.ball.x, this.ball.y, 8);
+    trail.setDepth(-1);
+
+    // 트레일 페이드 아웃 애니메이션
+    this.tweens.add({
+      targets: trail,
+      alpha: 0,
+      scale: 0.5,
+      duration: 300,
+      ease: 'Power2',
+      onComplete: () => {
+        trail.destroy();
+      }
+    });
+
+    this.ballTrail.push(trail);
+
+    // 트레일 길이 제한
+    if (this.ballTrail.length > this.MAX_TRAIL_LENGTH) {
+      const oldTrail = this.ballTrail.shift();
+      if (oldTrail) {
+        oldTrail.destroy();
+      }
+    }
+  }
+
+  // ===== 슬로우 모션 시스템 =====
+  private activateSlowMotion(duration: number) {
+    this.isSlowMotion = true;
+    this.slowMotionDuration = duration;
+    this.physics.world.timeScale = 0.5; // 시간을 절반으로 느리게
+
+    // 슬로우 모션 비주얼 효과
+    const slowMotionOverlay = this.add.rectangle(187.5, 333.5, 375, 667, 0x4facfe, 0.1);
+    slowMotionOverlay.setDepth(999);
+
+    this.tweens.add({
+      targets: slowMotionOverlay,
+      alpha: 0,
+      duration: duration,
+      ease: 'Power2',
+      onComplete: () => {
+        slowMotionOverlay.destroy();
+      }
+    });
+  }
+
+  // ===== 사운드 효과 시스템 =====
+  private playSound(type: 'bumper' | 'flipper' | 'combo' | 'lose') {
+    if (!this.audioContext) return;
+
+    const ctx = this.audioContext;
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    switch (type) {
+      case 'bumper':
+        // 범퍼 충돌 - 짧고 높은 톤
+        oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.1);
+        break;
+
+      case 'flipper':
+        // 플리퍼 작동 - 빠른 클릭 소리
+        oscillator.frequency.setValueAtTime(200, ctx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.05);
+        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.05);
+        break;
+
+      case 'combo':
+        // 콤보 달성 - 상승하는 톤
+        oscillator.frequency.setValueAtTime(400, ctx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.25, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.2);
+        break;
+
+      case 'lose':
+        // 공 잃음 - 하강하는 톤
+        oscillator.frequency.setValueAtTime(600, ctx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.5);
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.5);
+        break;
+    }
   }
 }
