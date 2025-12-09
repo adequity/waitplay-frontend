@@ -44,6 +44,7 @@ export const COLORS = {
 };
 
 export const GAME_TYPES = {
+  PINBALL: 'PINBALL',
   BRICK_BREAKER: 'BRICK_BREAKER',
   MATCH: 'MATCH',
   SPOT: 'SPOT'

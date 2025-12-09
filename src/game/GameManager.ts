@@ -4,6 +4,7 @@
 
 import * as Phaser from 'phaser';
 import { GAME_CONFIG, type GameType } from './config';
+import { RealPinballScene } from './scenes/RealPinballScene';
 import { PinballScene } from './scenes/PinballScene';
 import { MatchScene } from './scenes/MatchScene';
 import { SpotScene } from './scenes/SpotScene';
@@ -14,7 +15,7 @@ export class GameManager {
 
   /**
    * 게임 초기화
-   * @param gameType 게임 타입 (BRICK_BREAKER, MATCH, SPOT)
+   * @param gameType 게임 타입 (PINBALL, BRICK_BREAKER, MATCH, SPOT)
    * @param containerId HTML 컨테이너 ID
    */
   public initGame(gameType: GameType, containerId: string = 'game-container'): Phaser.Game {
@@ -43,6 +44,8 @@ export class GameManager {
    */
   private getSceneByType(gameType: GameType): any {
     switch (gameType) {
+      case 'PINBALL':
+        return RealPinballScene;
       case 'BRICK_BREAKER':
         return PinballScene;
       case 'MATCH':

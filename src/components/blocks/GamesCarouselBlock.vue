@@ -76,6 +76,12 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 // 게임 기본 정보
 const gameDefinitions = [
   {
+    type: 'pinball',
+    name: '핀볼',
+    icon: '🎯',
+    description: '플리퍼로 공을 튕겨서 점수를 획득하세요'
+  },
+  {
     type: 'brick-breaker',
     name: '벽돌깨기',
     icon: '🧱',
@@ -140,20 +146,12 @@ onMounted(() => {
 })
 
 const allowedGames = computed(() => {
-  // 하위 호환성: 'pinball'을 'brick-breaker'로 매핑
-  const normalizeGameType = (type: string) => {
-    return type === 'pinball' ? 'brick-breaker' : type
-  }
-
   const orderedGames = props.data.gamesOrder.map(gameOrder =>
-    allGames.value.find(game => game.type === normalizeGameType(gameOrder.type))
+    allGames.value.find(game => game.type === gameOrder.type)
   ).filter(Boolean)
 
-  // enabledGames 배열의 타입도 정규화하여 비교
-  const normalizedEnabledGames = props.data.enabledGames.map(normalizeGameType)
-
   return orderedGames.filter(game =>
-    normalizedEnabledGames.includes(game!.type)
+    props.data.enabledGames.includes(game!.type)
   ) as GameData[]
 })
 
