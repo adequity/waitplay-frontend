@@ -20,8 +20,9 @@ export const GAME_CONFIG = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 375,
-    height: 667
+    width: window.innerWidth,
+    height: window.innerHeight,
+    parent: 'game-container'
   },
   render: {
     antialias: true,

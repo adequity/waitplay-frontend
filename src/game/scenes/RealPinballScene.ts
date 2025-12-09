@@ -603,15 +603,21 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   private createFlippers() {
-    // 왼쪽 플리퍼
-    this.leftFlipper = this.physics.add.image(120, 600, 'flipper');
+    // 화면 너비 기준으로 플리퍼 위치 계산 (반응형)
+    const gameWidth = this.sys.game.config.width as number;
+    const leftFlipperX = gameWidth * 0.2; // 화면의 20% 지점
+    const rightFlipperX = gameWidth * 0.8; // 화면의 80% 지점
+    const flipperY = 600;
+
+    // 왼쪽 플리퍼 (반응형)
+    this.leftFlipper = this.physics.add.image(leftFlipperX, flipperY, 'flipper');
     this.leftFlipper.setImmovable(true);
     if (this.leftFlipper.body) {
       (this.leftFlipper.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     }
 
-    // 오른쪽 플리퍼
-    this.rightFlipper = this.physics.add.image(255, 600, 'flipper');
+    // 오른쪽 플리퍼 (반응형)
+    this.rightFlipper = this.physics.add.image(rightFlipperX, flipperY, 'flipper');
     this.rightFlipper.setImmovable(true);
     if (this.rightFlipper.body) {
       (this.rightFlipper.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
