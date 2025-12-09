@@ -122,14 +122,22 @@ const handleLogin = async () => {
   isLoading.value = true
 
   try {
-    await authStore.standardLogin(
+    const response = await authStore.standardLogin(
       username.value,
       password.value,
       qrCodeId.value || undefined
     )
 
     alert('로그인 성공!')
-    router.push('/')
+
+    // QR 코드가 있으면 해당 매장 페이지로, 없으면 홈으로 이동
+    if (response.redirectUrl) {
+      router.push(response.redirectUrl)
+    } else if (qrCodeId.value) {
+      router.push(`/customer?qr=${qrCodeId.value}`)
+    } else {
+      router.push('/')
+    }
   } catch (error: any) {
     console.error('Login failed:', error)
     const errorMessage = error.response?.data?.message || '로그인에 실패했습니다. 다시 시도해주세요.'

@@ -190,8 +190,14 @@ const handleEmailSignup = async () => {
 
     alert('회원가입이 완료되었습니다!')
 
-    // 홈으로 이동
-    router.push('/')
+    // QR 코드가 있으면 해당 매장 페이지로, 없으면 홈으로 이동
+    if (response.redirectUrl) {
+      router.push(response.redirectUrl)
+    } else if (qrCodeId.value) {
+      router.push(`/customer?qr=${qrCodeId.value}`)
+    } else {
+      router.push('/')
+    }
   } catch (error: any) {
     console.error('Signup failed:', error)
     const errorMessage = error.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해주세요.'
