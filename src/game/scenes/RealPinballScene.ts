@@ -63,25 +63,29 @@ export class RealPinballScene extends Phaser.Scene {
       console.log('Web Audio API not supported');
     }
 
+    // 화면 크기 가져오기 (반응형)
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 배경 - 네온 그라디언트 (화려한 깊이감)
-    const bgGradient1 = this.add.rectangle(187.5, 150, 375, 300, 0x1e1b4b); // 깊은 보라
-    const bgGradient2 = this.add.rectangle(187.5, 400, 375, 300, 0x312e81); // 중간 보라
-    const bgGradient3 = this.add.rectangle(187.5, 600, 375, 134, 0x4c1d95); // 밝은 보라
+    const bgGradient1 = this.add.rectangle(W * 0.5, H * 0.225, W * 1.0, H * 0.450, 0x1e1b4b); // 깊은 보라
+    const bgGradient2 = this.add.rectangle(W * 0.5, H * 0.600, W * 1.0, H * 0.450, 0x312e81); // 중간 보라
+    const bgGradient3 = this.add.rectangle(W * 0.5, H * 0.900, W * 1.0, H * 0.201, 0x4c1d95); // 밝은 보라
 
     // 네온 글로우 효과 (배경에 빛나는 레이어)
-    const neonGlow1 = this.add.rectangle(187.5, 333.5, 340, 550, 0x7c3aed, 0.1);
-    const neonGlow2 = this.add.rectangle(187.5, 333.5, 320, 530, 0xa855f7, 0.05);
+    const neonGlow1 = this.add.rectangle(W * 0.5, H * 0.500, W * 0.907, H * 0.825, 0x7c3aed, 0.1);
+    const neonGlow2 = this.add.rectangle(W * 0.5, H * 0.500, W * 0.853, H * 0.795, 0xa855f7, 0.05);
 
     // 상단 로고 영역 - 네온 스타일
-    const logoBg = this.add.rectangle(187.5, 50, 320, 60, 0x60a5fa);
+    const logoBg = this.add.rectangle(W * 0.5, H * 0.075, W * 0.853, H * 0.090, 0x60a5fa);
     logoBg.setStrokeStyle(4, 0x93c5fd);
 
     // 로고 내부 테두리
-    const logoInner = this.add.rectangle(187.5, 50, 310, 50, 0x3b82f6);
+    const logoInner = this.add.rectangle(W * 0.5, H * 0.075, W * 0.827, H * 0.075, 0x3b82f6);
     logoInner.setStrokeStyle(2, 0x2563eb);
 
-    const logoText = this.add.text(187.5, 50, 'PINBALL', {
-      fontSize: '32px',
+    const logoText = this.add.text(W * 0.5, H * 0.075, 'PINBALL', {
+      fontSize: Math.floor(H * 0.048) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
@@ -90,16 +94,16 @@ export class RealPinballScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // 점수 표시 - 네온 스타일 (좌측 상단으로 이동)
-    const scoreBox = this.add.rectangle(80, 105, 120, 50, 0x7c3aed);
+    const scoreBox = this.add.rectangle(W * 0.213, H * 0.157, W * 0.320, H * 0.075, 0x7c3aed);
     scoreBox.setStrokeStyle(3, 0xa855f7);
 
-    const scoreInner = this.add.rectangle(80, 105, 114, 44, 0x5b21b6);
+    const scoreInner = this.add.rectangle(W * 0.213, H * 0.157, W * 0.304, H * 0.066, 0x5b21b6);
 
     // 네온 글로우 효과
-    const scoreGlow = this.add.circle(80, 105, 35, 0xc084fc, 0.2);
+    const scoreGlow = this.add.circle(W * 0.213, H * 0.157, 35, 0xc084fc, 0.2);
 
-    this.scoreText = this.add.text(80, 97, '0', {
-      fontSize: '26px',
+    this.scoreText = this.add.text(W * 0.213, H * 0.145, '0', {
+      fontSize: Math.floor(H * 0.039) + 'px',
       color: '#fbbf24',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
@@ -107,24 +111,24 @@ export class RealPinballScene extends Phaser.Scene {
       strokeThickness: 2
     }).setOrigin(0.5);
 
-    const scoreLabel = this.add.text(80, 118, 'SCORE', {
-      fontSize: '11px',
+    const scoreLabel = this.add.text(W * 0.213, H * 0.177, 'SCORE', {
+      fontSize: Math.floor(H * 0.016) + 'px',
       color: '#fde68a',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
     // 공 개수 표시 - 네온 스타일 (우측 상단으로 이동)
-    const ballsCircle = this.add.circle(295, 105, 28, 0xef4444);
+    const ballsCircle = this.add.circle(W * 0.787, H * 0.157, 28, 0xef4444);
     ballsCircle.setStrokeStyle(3, 0xfca5a5);
 
-    const ballsInner = this.add.circle(295, 105, 23, 0xdc2626);
+    const ballsInner = this.add.circle(W * 0.787, H * 0.157, 23, 0xdc2626);
 
     // 네온 글로우 효과
-    const ballsGlow = this.add.circle(295, 105, 35, 0xfca5a5, 0.2);
+    const ballsGlow = this.add.circle(W * 0.787, H * 0.157, 35, 0xfca5a5, 0.2);
 
-    this.ballsText = this.add.text(295, 105, this.ballsLeft.toString(), {
-      fontSize: '28px',
+    this.ballsText = this.add.text(W * 0.787, H * 0.157, this.ballsLeft.toString(), {
+      fontSize: Math.floor(H * 0.042) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
@@ -133,14 +137,14 @@ export class RealPinballScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // 공 아이콘 레이블
-    const ballsLabel = this.add.text(295, 130, '⚪', {
-      fontSize: '16px',
+    const ballsLabel = this.add.text(W * 0.787, H * 0.195, '⚪', {
+      fontSize: Math.floor(H * 0.024) + 'px',
       color: '#ffffff'
     }).setOrigin(0.5);
 
     // 콤보 카운터 (화면 중앙 상단, 처음엔 숨김)
-    this.comboText = this.add.text(187.5, 200, '', {
-      fontSize: '48px',
+    this.comboText = this.add.text(W * 0.5, H * 0.300, '', {
+      fontSize: Math.floor(H * 0.072) + 'px',
       color: '#fbbf24',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
@@ -150,23 +154,23 @@ export class RealPinballScene extends Phaser.Scene {
 
     // 핀볼 테이블 - 3D 원근감
     // 외곽 그림자 (깊이감)
-    const tableShadow = this.add.rectangle(187.5, 413, 365, 520, 0x000000, 0.5);
+    const tableShadow = this.add.rectangle(W * 0.5, H * 0.619, W * 0.973, H * 0.780, 0x000000, 0.5);
 
     // 테이블 테두리 (금속 프레임)
-    const tableBorder = this.add.rectangle(187.5, 410, 360, 515, 0x8b7355);
+    const tableBorder = this.add.rectangle(W * 0.5, H * 0.615, W * 0.960, H * 0.772, 0x8b7355);
     tableBorder.setStrokeStyle(3, 0x654321);
 
     // 내부 테두리 (입체감)
-    const tableInnerBorder = this.add.rectangle(187.5, 410, 350, 505, 0xa0826d);
+    const tableInnerBorder = this.add.rectangle(W * 0.5, H * 0.615, W * 0.933, H * 0.757, 0xa0826d);
     tableInnerBorder.setStrokeStyle(2, 0x8b7355);
 
     // 테이블 표면 - 다크 블루 그라디언트 (원근감)
-    const tableBg1 = this.add.rectangle(187.5, 280, 340, 200, 0x1e3a8a);
-    const tableBg2 = this.add.rectangle(187.5, 430, 340, 200, 0x1e40af);
-    const tableBg3 = this.add.rectangle(187.5, 580, 340, 150, 0x2563eb);
+    const tableBg1 = this.add.rectangle(W * 0.5, H * 0.420, W * 0.907, H * 0.300, 0x1e3a8a);
+    const tableBg2 = this.add.rectangle(W * 0.5, H * 0.645, W * 0.907, H * 0.300, 0x1e40af);
+    const tableBg3 = this.add.rectangle(W * 0.5, H * 0.870, W * 0.907, H * 0.225, 0x2563eb);
 
     // 테이블 하이라이트 (유리 반사)
-    const tableHighlight = this.add.rectangle(187.5, 250, 320, 80, 0xffffff, 0.1);
+    const tableHighlight = this.add.rectangle(W * 0.5, H * 0.375, W * 0.853, H * 0.120, 0xffffff, 0.1);
 
     // 핀볼 테이블 테두리
     this.createWalls();
@@ -181,7 +185,7 @@ export class RealPinballScene extends Phaser.Scene {
     this.createFlippers();
 
     // 공 생성 - 발사 구역에 배치
-    this.ball = this.physics.add.image(337, 430, 'ball');
+    this.ball = this.physics.add.image(W * 0.899, H * 0.645, 'ball');
     this.ball.setBounce(0.8); // 적절한 바운스
     this.ball.setCollideWorldBounds(true);
     if (this.ball.body) {
@@ -206,27 +210,27 @@ export class RealPinballScene extends Phaser.Scene {
     this.createTouchControls();
 
     // 시작 안내
-    const startOverlay = this.add.rectangle(187.5, 333.5, 375, 667, 0x000000, 0.7);
-    const startText = this.add.text(187.5, 280, '핀볼 게임', {
-      fontSize: '32px',
+    const startOverlay = this.add.rectangle(W * 0.5, H * 0.5, W * 1.0, H * 1.0, 0x000000, 0.7);
+    const startText = this.add.text(W * 0.5, H * 0.420, '핀볼 게임', {
+      fontSize: Math.floor(H * 0.048) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    const instructionText = this.add.text(187.5, 340, '왼쪽/오른쪽 버튼으로\n플리퍼를 조작하세요', {
-      fontSize: '16px',
+    const instructionText = this.add.text(W * 0.5, H * 0.510, '왼쪽/오른쪽 버튼으로\n플리퍼를 조작하세요', {
+      fontSize: Math.floor(H * 0.024) + 'px',
       color: '#e2e8f0',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
       align: 'center',
       lineSpacing: 8
     }).setOrigin(0.5);
 
-    const startButton = this.add.rectangle(187.5, 420, 200, 50, 0x3b82f6);
+    const startButton = this.add.rectangle(W * 0.5, H * 0.630, W * 0.533, H * 0.075, 0x3b82f6);
     startButton.setInteractive();
 
-    const buttonText = this.add.text(187.5, 420, '게임 시작', {
-      fontSize: '18px',
+    const buttonText = this.add.text(W * 0.5, H * 0.630, '게임 시작', {
+      fontSize: Math.floor(H * 0.027) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold'
@@ -245,6 +249,8 @@ export class RealPinballScene extends Phaser.Scene {
   update() {
     if (!this.ball || !this.gameStarted || this.gameOver) return;
 
+    const H = this.sys.game.config.height as number;
+
     // 슬로우 모션 업데이트
     if (this.isSlowMotion) {
       this.slowMotionDuration -= this.game.loop.delta;
@@ -262,7 +268,7 @@ export class RealPinballScene extends Phaser.Scene {
     }
 
     // 공이 아래로 떨어지려 할 때 슬로우 모션
-    if (this.ball.y > 580 && this.ball.y < 650 && !this.isSlowMotion) {
+    if (this.ball.y > H * 0.870 && this.ball.y < H * 0.975 && !this.isSlowMotion) {
       const velocity = this.ball.body as Phaser.Physics.Arcade.Body;
       if (velocity.velocity.y > 200) {
         this.activateSlowMotion(600); // 0.6초 슬로우 모션
@@ -270,7 +276,7 @@ export class RealPinballScene extends Phaser.Scene {
     }
 
     // 공이 아래로 떨어졌는지 확인
-    if (this.ball.y > 650) {
+    if (this.ball.y > H * 0.975) {
       this.loseBall();
     }
   }
@@ -397,65 +403,68 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   private createWalls() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // ===== 핀볼 테이블 외벽 (메인 테두리) =====
 
     // 왼쪽 외벽 (전체 높이)
-    const leftWallShadow = this.add.rectangle(24, 410, 10, 505, 0x000000, 0.3);
-    const leftWall = this.add.rectangle(22, 410, 12, 505, 0x334155);
-    const leftWallHighlight = this.add.rectangle(20, 410, 4, 505, 0x64748b);
+    const leftWallShadow = this.add.rectangle(W * 0.064, H * 0.615, W * 0.027, H * 0.757, 0x000000, 0.3);
+    const leftWall = this.add.rectangle(W * 0.059, H * 0.615, W * 0.032, H * 0.757, 0x334155);
+    const leftWallHighlight = this.add.rectangle(W * 0.053, H * 0.615, W * 0.011, H * 0.757, 0x64748b);
     leftWall.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(leftWall, true);
 
     // 오른쪽 외벽 (전체 높이)
-    const rightWallShadow = this.add.rectangle(355, 410, 10, 505, 0x000000, 0.3);
-    const rightWall = this.add.rectangle(353, 410, 12, 505, 0x334155);
-    const rightWallHighlight = this.add.rectangle(351, 410, 4, 505, 0x64748b);
+    const rightWallShadow = this.add.rectangle(W * 0.947, H * 0.615, W * 0.027, H * 0.757, 0x000000, 0.3);
+    const rightWall = this.add.rectangle(W * 0.941, H * 0.615, W * 0.032, H * 0.757, 0x334155);
+    const rightWallHighlight = this.add.rectangle(W * 0.936, H * 0.615, W * 0.011, H * 0.757, 0x64748b);
     rightWall.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(rightWall, true);
 
     // 상단 외벽
-    const topWallShadow = this.add.rectangle(187.5, 167, 310, 10, 0x000000, 0.3);
-    const topWall = this.add.rectangle(187.5, 165, 310, 12, 0x334155);
-    const topWallHighlight = this.add.rectangle(187.5, 163, 310, 4, 0x64748b);
+    const topWallShadow = this.add.rectangle(W * 0.5, H * 0.250, W * 0.827, H * 0.015, 0x000000, 0.3);
+    const topWall = this.add.rectangle(W * 0.5, H * 0.247, W * 0.827, H * 0.018, 0x334155);
+    const topWallHighlight = this.add.rectangle(W * 0.5, H * 0.244, W * 0.827, H * 0.006, 0x64748b);
     topWall.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(topWall, true);
 
     // ===== 공 발사 구역 벽 =====
 
     // 발사 구역 배경 (어두운 그라디언트)
-    const launchZoneBg1 = this.add.rectangle(337, 350, 35, 100, 0x1e3a8a, 0.8);
-    const launchZoneBg2 = this.add.rectangle(337, 415, 35, 100, 0x1e40af, 0.8);
+    const launchZoneBg1 = this.add.rectangle(W * 0.899, H * 0.525, W * 0.093, H * 0.150, 0x1e3a8a, 0.8);
+    const launchZoneBg2 = this.add.rectangle(W * 0.899, H * 0.622, W * 0.093, H * 0.150, 0x1e40af, 0.8);
 
     // 발사 구역 바닥 패턴 (스프링이 있는 공간)
-    const launchFloor = this.add.rectangle(337, 465, 35, 10, 0x475569);
+    const launchFloor = this.add.rectangle(W * 0.899, H * 0.697, W * 0.093, H * 0.015, 0x475569);
     launchFloor.setStrokeStyle(1, 0x64748b);
 
     // 스프링/플런저 비주얼
-    const plungerBase = this.add.rectangle(337, 550, 20, 150, 0x1e293b);
+    const plungerBase = this.add.rectangle(W * 0.899, H * 0.825, W * 0.053, H * 0.225, 0x1e293b);
     plungerBase.setStrokeStyle(2, 0x334155);
 
     // 스프링 코일 표시 (여러 개의 수평선)
     for (let i = 0; i < 8; i++) {
-      const springLine = this.add.rectangle(337, 485 + i * 15, 18, 2, 0xfbbf24);
+      const springLine = this.add.rectangle(W * 0.899, H * 0.727 + i * (H * 0.0225), W * 0.048, H * 0.003, 0xfbbf24);
       springLine.setAlpha(0.6);
     }
 
     // 플런저 손잡이 (상단)
-    const plungerHandle = this.add.rectangle(337, 620, 25, 30, 0xef4444);
+    const plungerHandle = this.add.rectangle(W * 0.899, H * 0.930, W * 0.067, H * 0.045, 0xef4444);
     plungerHandle.setStrokeStyle(2, 0xdc2626);
-    const plungerHandleHighlight = this.add.rectangle(337, 615, 20, 10, 0xfca5a5, 0.6);
+    const plungerHandleHighlight = this.add.rectangle(W * 0.899, H * 0.922, W * 0.053, H * 0.015, 0xfca5a5, 0.6);
 
     // 발사 구역 오른쪽 세로 벽 (공이 대기하는 공간)
-    const launchLaneShadow = this.add.rectangle(322, 350, 10, 230, 0x000000, 0.3);
-    const launchLane = this.add.rectangle(320, 350, 12, 230, 0x334155);
-    const launchLaneHighlight = this.add.rectangle(318, 350, 4, 230, 0x64748b);
+    const launchLaneShadow = this.add.rectangle(W * 0.859, H * 0.525, W * 0.027, H * 0.345, 0x000000, 0.3);
+    const launchLane = this.add.rectangle(W * 0.853, H * 0.525, W * 0.032, H * 0.345, 0x334155);
+    const launchLaneHighlight = this.add.rectangle(W * 0.848, H * 0.525, W * 0.011, H * 0.345, 0x64748b);
     launchLane.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(launchLane, true);
 
     // 발사 구역 하단 가로 벽 (발사대 상단)
-    const launchBottomShadow = this.add.rectangle(337, 467, 40, 10, 0x000000, 0.3);
-    const launchBottom = this.add.rectangle(337, 465, 40, 12, 0x334155);
-    const launchBottomHighlight = this.add.rectangle(337, 463, 40, 4, 0x64748b);
+    const launchBottomShadow = this.add.rectangle(W * 0.899, H * 0.700, W * 0.107, H * 0.015, 0x000000, 0.3);
+    const launchBottom = this.add.rectangle(W * 0.899, H * 0.697, W * 0.107, H * 0.018, 0x334155);
+    const launchBottomHighlight = this.add.rectangle(W * 0.899, H * 0.694, W * 0.107, H * 0.006, 0x64748b);
     launchBottom.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(launchBottom, true);
 
@@ -463,9 +472,9 @@ export class RealPinballScene extends Phaser.Scene {
     const arrowGraphics = this.add.graphics();
     arrowGraphics.fillStyle(0xfbbf24, 0.7);
     arrowGraphics.fillTriangle(
-      337, 380,     // 상단 꼭지점
-      330, 395,     // 좌측 하단
-      344, 395      // 우측 하단
+      W * 0.899, H * 0.570,     // 상단 꼭지점
+      W * 0.880, H * 0.592,     // 좌측 하단
+      W * 0.917, H * 0.592      // 우측 하단
     );
     arrowGraphics.setAlpha(0.8);
 
@@ -482,20 +491,20 @@ export class RealPinballScene extends Phaser.Scene {
     // ===== 플레이 구역 하단 각진 벽 (공을 플리퍼로 유도) =====
 
     // 왼쪽 하단 각진 벽 (플리퍼 위쪽)
-    const leftSlopeShadow = this.add.rectangle(75, 545, 105, 10, 0x000000, 0.3);
+    const leftSlopeShadow = this.add.rectangle(W * 0.200, H * 0.817, W * 0.280, H * 0.015, 0x000000, 0.3);
     leftSlopeShadow.rotation = -0.52; // 약 30도
-    const leftSlope = this.add.rectangle(73, 543, 105, 12, 0x334155);
-    const leftSlopeHighlight = this.add.rectangle(71, 541, 105, 4, 0x64748b);
+    const leftSlope = this.add.rectangle(W * 0.195, H * 0.814, W * 0.280, H * 0.018, 0x334155);
+    const leftSlopeHighlight = this.add.rectangle(W * 0.189, H * 0.811, W * 0.280, H * 0.006, 0x64748b);
     leftSlopeHighlight.rotation = -0.52;
     leftSlope.setStrokeStyle(2, 0x1e293b);
     leftSlope.rotation = -0.52;
     this.physics.add.existing(leftSlope, true);
 
     // 오른쪽 하단 각진 벽 (플리퍼 위쪽)
-    const rightSlopeShadow = this.add.rectangle(300, 545, 105, 10, 0x000000, 0.3);
+    const rightSlopeShadow = this.add.rectangle(W * 0.800, H * 0.817, W * 0.280, H * 0.015, 0x000000, 0.3);
     rightSlopeShadow.rotation = 0.52; // 약 30도
-    const rightSlope = this.add.rectangle(302, 543, 105, 12, 0x334155);
-    const rightSlopeHighlight = this.add.rectangle(304, 541, 105, 4, 0x64748b);
+    const rightSlope = this.add.rectangle(W * 0.805, H * 0.814, W * 0.280, H * 0.018, 0x334155);
+    const rightSlopeHighlight = this.add.rectangle(W * 0.811, H * 0.811, W * 0.280, H * 0.006, 0x64748b);
     rightSlopeHighlight.rotation = 0.52;
     rightSlope.setStrokeStyle(2, 0x1e293b);
     rightSlope.rotation = 0.52;
@@ -504,29 +513,29 @@ export class RealPinballScene extends Phaser.Scene {
     // ===== 중앙 하단 구분 벽 (플리퍼 사이) =====
 
     // 플리퍼 사이의 작은 벽 (공이 중앙으로 떨어지는 것 유도)
-    const centerDividerShadow = this.add.rectangle(187.5, 612, 40, 10, 0x000000, 0.3);
-    const centerDivider = this.add.rectangle(187.5, 610, 40, 12, 0x334155);
-    const centerDividerHighlight = this.add.rectangle(187.5, 608, 40, 4, 0x64748b);
+    const centerDividerShadow = this.add.rectangle(W * 0.5, H * 0.918, W * 0.107, H * 0.015, 0x000000, 0.3);
+    const centerDivider = this.add.rectangle(W * 0.5, H * 0.915, W * 0.107, H * 0.018, 0x334155);
+    const centerDividerHighlight = this.add.rectangle(W * 0.5, H * 0.912, W * 0.107, H * 0.006, 0x64748b);
     centerDivider.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(centerDivider, true);
 
     // ===== 상단 곡선 벽 (범퍼 구역 경계) =====
 
     // 왼쪽 상단 곡선 가이드
-    const topLeftCurveShadow = this.add.rectangle(65, 215, 80, 10, 0x000000, 0.3);
+    const topLeftCurveShadow = this.add.rectangle(W * 0.173, H * 0.322, W * 0.213, H * 0.015, 0x000000, 0.3);
     topLeftCurveShadow.rotation = -0.35;
-    const topLeftCurve = this.add.rectangle(63, 213, 80, 12, 0x334155);
-    const topLeftCurveHighlight = this.add.rectangle(61, 211, 80, 4, 0x64748b);
+    const topLeftCurve = this.add.rectangle(W * 0.168, H * 0.319, W * 0.213, H * 0.018, 0x334155);
+    const topLeftCurveHighlight = this.add.rectangle(W * 0.163, H * 0.316, W * 0.213, H * 0.006, 0x64748b);
     topLeftCurveHighlight.rotation = -0.35;
     topLeftCurve.setStrokeStyle(2, 0x1e293b);
     topLeftCurve.rotation = -0.35;
     this.physics.add.existing(topLeftCurve, true);
 
     // 오른쪽 상단 곡선 가이드
-    const topRightCurveShadow = this.add.rectangle(310, 215, 80, 10, 0x000000, 0.3);
+    const topRightCurveShadow = this.add.rectangle(W * 0.827, H * 0.322, W * 0.213, H * 0.015, 0x000000, 0.3);
     topRightCurveShadow.rotation = 0.35;
-    const topRightCurve = this.add.rectangle(312, 213, 80, 12, 0x334155);
-    const topRightCurveHighlight = this.add.rectangle(314, 211, 80, 4, 0x64748b);
+    const topRightCurve = this.add.rectangle(W * 0.832, H * 0.319, W * 0.213, H * 0.018, 0x334155);
+    const topRightCurveHighlight = this.add.rectangle(W * 0.837, H * 0.316, W * 0.213, H * 0.006, 0x64748b);
     topRightCurveHighlight.rotation = 0.35;
     topRightCurve.setStrokeStyle(2, 0x1e293b);
     topRightCurve.rotation = 0.35;
@@ -534,24 +543,27 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   private createBumpers() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     this.bumpers = this.physics.add.staticGroup();
 
     // 핀볼 테이블 중앙 범퍼 배치 (클래식 핀볼 스타일)
     const bumperPositions = [
       // 상단 중앙 (높은 점수)
-      { x: 187.5, y: 260, points: 100 },
+      { x: W * 0.5, y: H * 0.390, points: 100 },
 
       // 중앙 좌우
-      { x: 120, y: 320, points: 50 },
-      { x: 255, y: 320, points: 50 },
+      { x: W * 0.320, y: H * 0.480, points: 50 },
+      { x: W * 0.680, y: H * 0.480, points: 50 },
 
       // 중앙 아래 좌우
-      { x: 90, y: 390, points: 30 },
-      { x: 285, y: 390, points: 30 },
+      { x: W * 0.240, y: H * 0.585, points: 30 },
+      { x: W * 0.760, y: H * 0.585, points: 30 },
 
       // 하단 좌우 (플리퍼 위쪽)
-      { x: 110, y: 470, points: 20 },
-      { x: 265, y: 470, points: 20 }
+      { x: W * 0.293, y: H * 0.705, points: 20 },
+      { x: W * 0.707, y: H * 0.705, points: 20 }
     ];
 
     bumperPositions.forEach(pos => {
@@ -563,39 +575,42 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   private createLanes() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     this.lanes = this.physics.add.staticGroup();
 
     // 왼쪽 레인 (좁은 통로)
-    const leftLaneBg = this.add.rectangle(50, 450, 20, 200, 0x10b981, 0.5);
+    const leftLaneBg = this.add.rectangle(W * 0.133, H * 0.675, W * 0.053, H * 0.300, 0x10b981, 0.5);
     leftLaneBg.setDepth(-1);
 
-    const leftLane = this.add.rectangle(50, 450, 20, 200, 0x10b981, 0);
+    const leftLane = this.add.rectangle(W * 0.133, H * 0.675, W * 0.053, H * 0.300, 0x10b981, 0);
     this.physics.add.existing(leftLane, true);
     this.lanes.add(leftLane);
     leftLane.setData('type', 'lane');
     leftLane.setData('side', 'left');
 
     // 왼쪽 레인 텍스트 (세로)
-    const leftLaneText = this.add.text(50, 450, 'LANE', {
-      fontSize: '12px',
+    const leftLaneText = this.add.text(W * 0.133, H * 0.675, 'LANE', {
+      fontSize: Math.floor(H * 0.018) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5).setRotation(-Math.PI / 2);
 
     // 오른쪽 레인 (좁은 통로) - 발사 레인 왼쪽에 배치
-    const rightLaneBg = this.add.rectangle(300, 350, 15, 150, 0xfbbf24, 0.5);
+    const rightLaneBg = this.add.rectangle(W * 0.800, H * 0.525, W * 0.040, H * 0.225, 0xfbbf24, 0.5);
     rightLaneBg.setDepth(-1);
 
-    const rightLane = this.add.rectangle(300, 350, 15, 150, 0xfbbf24, 0);
+    const rightLane = this.add.rectangle(W * 0.800, H * 0.525, W * 0.040, H * 0.225, 0xfbbf24, 0);
     this.physics.add.existing(rightLane, true);
     this.lanes.add(rightLane);
     rightLane.setData('type', 'lane');
     rightLane.setData('side', 'right');
 
     // 오른쪽 레인 텍스트 (세로)
-    const rightLaneText = this.add.text(300, 350, 'BONUS', {
-      fontSize: '11px',
+    const rightLaneText = this.add.text(W * 0.800, H * 0.525, 'BONUS', {
+      fontSize: Math.floor(H * 0.016) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
       fontStyle: 'bold'
@@ -625,19 +640,22 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   private createTouchControls() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 왼쪽 플리퍼 버튼 - 귀여운 통통한 스타일
-    const leftButtonBg = this.add.rectangle(90, 647, 155, 58, 0xc084fc);
+    const leftButtonBg = this.add.rectangle(W * 0.240, H * 0.970, W * 0.413, H * 0.087, 0xc084fc);
     leftButtonBg.setDepth(-1);
 
-    this.leftFlipperButton = this.add.rectangle(90, 643, 155, 58, 0xa855f7);
+    this.leftFlipperButton = this.add.rectangle(W * 0.240, H * 0.964, W * 0.413, H * 0.087, 0xa855f7);
     this.leftFlipperButton.setInteractive();
     this.leftFlipperButton.setStrokeStyle(4, 0x9333ea);
 
     // 내부 하이라이트
-    const leftInner = this.add.rectangle(90, 638, 145, 40, 0xd8b4fe, 0.3);
+    const leftInner = this.add.rectangle(W * 0.240, H * 0.956, W * 0.387, H * 0.060, 0xd8b4fe, 0.3);
 
-    const leftText = this.add.text(90, 643, '◀ LEFT', {
-      fontSize: '20px',
+    const leftText = this.add.text(W * 0.240, H * 0.964, '◀ LEFT', {
+      fontSize: Math.floor(H * 0.030) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
@@ -661,18 +679,18 @@ export class RealPinballScene extends Phaser.Scene {
     });
 
     // 오른쪽 플리퍼 버튼
-    const rightButtonBg = this.add.rectangle(285, 647, 155, 58, 0x34d399);
+    const rightButtonBg = this.add.rectangle(W * 0.760, H * 0.970, W * 0.413, H * 0.087, 0x34d399);
     rightButtonBg.setDepth(-1);
 
-    this.rightFlipperButton = this.add.rectangle(285, 643, 155, 58, 0x10b981);
+    this.rightFlipperButton = this.add.rectangle(W * 0.760, H * 0.964, W * 0.413, H * 0.087, 0x10b981);
     this.rightFlipperButton.setInteractive();
     this.rightFlipperButton.setStrokeStyle(4, 0x059669);
 
     // 내부 하이라이트
-    const rightInner = this.add.rectangle(285, 638, 145, 40, 0xa7f3d0, 0.3);
+    const rightInner = this.add.rectangle(W * 0.760, H * 0.956, W * 0.387, H * 0.060, 0xa7f3d0, 0.3);
 
-    const rightText = this.add.text(285, 643, 'RIGHT ▶', {
-      fontSize: '20px',
+    const rightText = this.add.text(W * 0.760, H * 0.964, 'RIGHT ▶', {
+      fontSize: Math.floor(H * 0.030) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
@@ -778,8 +796,9 @@ export class RealPinballScene extends Phaser.Scene {
     this.playSound('bumper');
 
     // ===== 점수 팝업 애니메이션 =====
-    const scorePopup = this.add.text(bumperSprite.x, bumperSprite.y - 30, `+${totalPoints}`, {
-      fontSize: '32px',
+    const H = this.sys.game.config.height as number;
+    const scorePopup = this.add.text(bumperSprite.x, bumperSprite.y - H * 0.045, `+${totalPoints}`, {
+      fontSize: Math.floor(H * 0.048) + 'px',
       color: '#fbbf24',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
@@ -790,7 +809,7 @@ export class RealPinballScene extends Phaser.Scene {
     // 팝업 애니메이션 (위로 올라가며 사라짐)
     this.tweens.add({
       targets: scorePopup,
-      y: bumperSprite.y - 80,
+      y: bumperSprite.y - H * 0.120,
       alpha: 0,
       duration: 800,
       ease: 'Power2',
@@ -894,8 +913,9 @@ export class RealPinballScene extends Phaser.Scene {
     this.laneMultiplier++;
 
     // 레인 통과 팝업
-    const lanePopup = this.add.text(laneSprite.x, laneSprite.y - 40, `LANE BONUS!\n+${bonusPoints}`, {
-      fontSize: '24px',
+    const H = this.sys.game.config.height as number;
+    const lanePopup = this.add.text(laneSprite.x, laneSprite.y - H * 0.060, `LANE BONUS!\n+${bonusPoints}`, {
+      fontSize: Math.floor(H * 0.036) + 'px',
       color: '#10b981',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
@@ -907,7 +927,7 @@ export class RealPinballScene extends Phaser.Scene {
     // 팝업 애니메이션
     this.tweens.add({
       targets: lanePopup,
-      y: laneSprite.y - 80,
+      y: laneSprite.y - H * 0.120,
       alpha: 0,
       duration: 1200,
       ease: 'Power2',
@@ -947,6 +967,9 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   private loseBall() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     this.ballsLeft--;
     this.ballsText?.setText(this.ballsLeft.toString());
 
@@ -959,13 +982,13 @@ export class RealPinballScene extends Phaser.Scene {
       // 공 리셋
       this.gameStarted = false;
       if (this.ball) {
-        this.ball.setPosition(187.5, 150);
+        this.ball.setPosition(W * 0.5, H * 0.225);
         this.ball.setVelocity(0, 0);
       }
 
       // 재시작
-      const continueText = this.add.text(187.5, 333.5, '터치하여 계속', {
-        fontSize: '20px',
+      const continueText = this.add.text(W * 0.5, H * 0.5, '터치하여 계속', {
+        fontSize: Math.floor(H * 0.030) + 'px',
         color: '#3b82f6',
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
         fontStyle: 'bold'
@@ -984,6 +1007,9 @@ export class RealPinballScene extends Phaser.Scene {
     if (this.gameOver) return;
     this.gameOver = true;
 
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 공 멈추기
     if (this.ball) {
       this.ball.setVelocity(0, 0);
@@ -993,26 +1019,26 @@ export class RealPinballScene extends Phaser.Scene {
     }
 
     // 결과 화면
-    const overlay = this.add.rectangle(187.5, 333.5, 375, 667, 0x000000, 0.8);
+    const overlay = this.add.rectangle(W * 0.5, H * 0.5, W * 1.0, H * 1.0, 0x000000, 0.8);
 
-    const resultText = this.add.text(187.5, 220, '게임 종료', {
-      fontSize: '32px',
+    const resultText = this.add.text(W * 0.5, H * 0.330, '게임 종료', {
+      fontSize: Math.floor(H * 0.048) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
       align: 'center'
     }).setOrigin(0.5);
 
-    const scoreText = this.add.text(187.5, 280, `최종 점수: ${this.score}`, {
-      fontSize: '24px',
+    const scoreText = this.add.text(W * 0.5, H * 0.420, `최종 점수: ${this.score}`, {
+      fontSize: Math.floor(H * 0.036) + 'px',
       color: '#e2e8f0',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
       align: 'center'
     }).setOrigin(0.5);
 
     // 이름 입력
-    const namePrompt = this.add.text(187.5, 350, '이름을 입력하세요:', {
-      fontSize: '16px',
+    const namePrompt = this.add.text(W * 0.5, H * 0.525, '이름을 입력하세요:', {
+      fontSize: Math.floor(H * 0.024) + 'px',
       color: '#e2e8f0',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
     }).setOrigin(0.5);
@@ -1082,11 +1108,11 @@ export class RealPinballScene extends Phaser.Scene {
 
       // 재시작 버튼
       this.time.delayedCall(2000, () => {
-        const restartButton = this.add.rectangle(187.5, 520, 200, 50, 0x3b82f6);
+        const restartButton = this.add.rectangle(W * 0.5, H * 0.780, W * 0.533, H * 0.075, 0x3b82f6);
         restartButton.setInteractive();
 
-        const restartText = this.add.text(187.5, 520, '다시 시작', {
-          fontSize: '18px',
+        const restartText = this.add.text(W * 0.5, H * 0.780, '다시 시작', {
+          fontSize: Math.floor(H * 0.027) + 'px',
           color: '#ffffff',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
           fontStyle: 'bold'
@@ -1141,12 +1167,15 @@ export class RealPinballScene extends Phaser.Scene {
 
   // ===== 슬로우 모션 시스템 =====
   private activateSlowMotion(duration: number) {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     this.isSlowMotion = true;
     this.slowMotionDuration = duration;
     this.physics.world.timeScale = 0.5; // 시간을 절반으로 느리게
 
     // 슬로우 모션 비주얼 효과
-    const slowMotionOverlay = this.add.rectangle(187.5, 333.5, 375, 667, 0x4facfe, 0.1);
+    const slowMotionOverlay = this.add.rectangle(W * 0.5, H * 0.5, W * 1.0, H * 1.0, 0x4facfe, 0.1);
     slowMotionOverlay.setDepth(999);
 
     this.tweens.add({
