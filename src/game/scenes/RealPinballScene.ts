@@ -33,30 +33,55 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   create() {
-    // 배경 (화이트)
-    this.add.rectangle(187.5, 333.5, 375, 667, 0xffffff);
+    // 배경 - 그라디언트 느낌의 파란색
+    this.add.rectangle(187.5, 333.5, 375, 667, 0xdbeafe);
 
-    // 상단 헤더 영역
-    const headerBg = this.add.rectangle(187.5, 40, 375, 80, 0xf8fafc);
+    // 상단 헤더 영역 - 흰색 카드 스타일
+    const headerBg = this.add.rectangle(187.5, 50, 355, 80, 0xffffff);
+    headerBg.setStrokeStyle(1, 0xe2e8f0);
 
-    // 점수 텍스트
-    this.scoreText = this.add.text(20, 20, '점수: 0', {
-      fontSize: '18px',
-      color: '#1e293b',
+    // 그림자 효과
+    const headerShadow = this.add.rectangle(187.5, 51, 355, 80, 0x000000, 0.05);
+
+    // 점수 텍스트 - 더 큰 폰트와 강조
+    this.scoreText = this.add.text(30, 25, '0', {
+      fontSize: '32px',
+      color: '#3b82f6',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold'
     });
 
-    // 공 개수 텍스트
-    this.ballsText = this.add.text(315, 20, '🔴 ' + this.ballsLeft, {
-      fontSize: '18px',
-      color: '#1e293b',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-      fontStyle: 'bold'
+    const scoreLabel = this.add.text(30, 60, 'SCORE', {
+      fontSize: '12px',
+      color: '#94a3b8',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+      fontStyle: '600'
     });
 
-    // 핀볼 테이블 영역 (블루 그라디언트 느낌)
-    const tableBg = this.add.rectangle(187.5, 380, 335, 507, 0xe0f2fe);
+    // 공 개수 텍스트 - 아이콘 스타일
+    const ballsContainer = this.add.rectangle(320, 50, 80, 50, 0xfef3c7, 0.3);
+    ballsContainer.setStrokeStyle(2, 0xfbbf24);
+
+    this.ballsText = this.add.text(320, 50, this.ballsLeft.toString(), {
+      fontSize: '28px',
+      color: '#f59e0b',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    const ballsLabel = this.add.text(320, 73, 'BALLS', {
+      fontSize: '10px',
+      color: '#92400e',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+      fontStyle: '600'
+    }).setOrigin(0.5, 0);
+
+    // 핀볼 테이블 영역 - 어두운 파란색 카드
+    const tableBg = this.add.rectangle(187.5, 400, 345, 490, 0x1e3a8a);
+    tableBg.setStrokeStyle(3, 0x3b82f6);
+
+    // 테이블 내부 그라데이션 효과
+    const innerTable = this.add.rectangle(187.5, 400, 335, 480, 0x1e40af, 0.5);
 
     // 핀볼 테이블 테두리
     this.createWalls();
@@ -137,54 +162,77 @@ export class RealPinballScene extends Phaser.Scene {
 
   private createBallTexture() {
     const graphics = this.add.graphics();
-    graphics.fillStyle(0xef4444, 1);
+    // 공 - 밝은 실버/크롬 느낌
+    graphics.fillStyle(0xf1f5f9, 1);
     graphics.fillCircle(8, 8, 8);
-    graphics.lineStyle(2, 0xfca5a5, 1);
+    // 테두리 - 은색
+    graphics.lineStyle(3, 0x94a3b8, 1);
     graphics.strokeCircle(8, 8, 8);
+    // 하이라이트 효과
+    graphics.fillStyle(0xffffff, 0.6);
+    graphics.fillCircle(6, 6, 3);
     graphics.generateTexture('ball', 16, 16);
     graphics.destroy();
   }
 
   private createFlipperTexture() {
     const graphics = this.add.graphics();
-    graphics.fillStyle(0x3b82f6, 1);
-    graphics.fillRoundedRect(0, 0, 60, 15, 7);
-    graphics.lineStyle(2, 0x60a5fa, 1);
-    graphics.strokeRoundedRect(0, 0, 60, 15, 7);
-    graphics.generateTexture('flipper', 60, 15);
+    // 플리퍼 - 밝은 파란색에 그라디언트 느낌
+    graphics.fillStyle(0x60a5fa, 1);
+    graphics.fillRoundedRect(0, 0, 70, 18, 9);
+    // 테두리 - 진한 파란색
+    graphics.lineStyle(3, 0x2563eb, 1);
+    graphics.strokeRoundedRect(0, 0, 70, 18, 9);
+    // 하이라이트
+    graphics.fillStyle(0xdbeafe, 0.5);
+    graphics.fillRoundedRect(5, 3, 60, 6, 3);
+    graphics.generateTexture('flipper', 70, 18);
     graphics.destroy();
   }
 
   private createBumperTexture() {
     const graphics = this.add.graphics();
-    graphics.fillStyle(0xfbbf24, 1);
-    graphics.fillCircle(15, 15, 15);
-    graphics.lineStyle(2, 0xfcd34d, 1);
-    graphics.strokeCircle(15, 15, 15);
-    graphics.generateTexture('bumper', 30, 30);
+    // 범퍼 - 노란색/금색 느낌
+    graphics.fillStyle(0xfde047, 1);
+    graphics.fillCircle(18, 18, 18);
+    // 외곽 링
+    graphics.lineStyle(4, 0xeab308, 1);
+    graphics.strokeCircle(18, 18, 18);
+    // 내부 원
+    graphics.lineStyle(2, 0xfef08a, 1);
+    graphics.strokeCircle(18, 18, 12);
+    // 중앙 점
+    graphics.fillStyle(0xfef3c7, 1);
+    graphics.fillCircle(18, 18, 6);
+    graphics.generateTexture('bumper', 36, 36);
     graphics.destroy();
   }
 
   private createWalls() {
-    // 왼쪽 벽
-    const leftWall = this.add.rectangle(25, 380, 5, 507, 0x94a3b8);
+    // 왼쪽 벽 - 더 두껍게, 밝은 색상
+    const leftWall = this.add.rectangle(22, 400, 8, 490, 0x93c5fd);
+    leftWall.setStrokeStyle(2, 0x3b82f6);
     this.physics.add.existing(leftWall, true);
 
     // 오른쪽 벽
-    const rightWall = this.add.rectangle(350, 380, 5, 507, 0x94a3b8);
+    const rightWall = this.add.rectangle(353, 400, 8, 490, 0x93c5fd);
+    rightWall.setStrokeStyle(2, 0x3b82f6);
     this.physics.add.existing(rightWall, true);
 
     // 위쪽 벽
-    const topWall = this.add.rectangle(187.5, 130, 325, 5, 0x94a3b8);
+    const topWall = this.add.rectangle(187.5, 160, 325, 8, 0x93c5fd);
+    topWall.setStrokeStyle(2, 0x3b82f6);
     this.physics.add.existing(topWall, true);
 
-    // 사선 가이드 (공을 아래로 유도)
-    const leftGuide = this.add.rectangle(80, 550, 100, 5, 0x94a3b8);
-    leftGuide.rotation = -0.3;
+    // 사선 가이드 (공을 아래로 유도) - 더 두껍고 밝게
+    const leftGuide = this.add.rectangle(80, 570, 110, 8, 0x93c5fd);
+    leftGuide.setStrokeStyle(2, 0x3b82f6);
+    leftGuide.rotation = -0.35;
     this.physics.add.existing(leftGuide, true);
 
-    const rightGuide = this.add.rectangle(295, 550, 100, 5, 0x94a3b8);
-    rightGuide.rotation = 0.3;
+    const rightGuide = this.add.rectangle(295, 570, 110, 8, 0x93c5fd);
+    rightGuide.setStrokeStyle(2, 0x3b82f6);
+    rightGuide.rotation = 0.35;
     this.physics.add.existing(rightGuide, true);
   }
 
@@ -204,7 +252,8 @@ export class RealPinballScene extends Phaser.Scene {
     bumperPositions.forEach(pos => {
       const bumper = this.bumpers!.create(pos.x, pos.y, 'bumper') as Phaser.Physics.Arcade.Sprite;
       bumper.setData('points', pos.points);
-      bumper.setCircle(15);
+      bumper.setCircle(18);
+      bumper.setScale(1.2);
     });
   }
 
@@ -225,46 +274,58 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   private createTouchControls() {
-    // 왼쪽 플리퍼 버튼
-    this.leftFlipperButton = this.add.rectangle(90, 640, 140, 50, 0x3b82f6, 0.3);
+    // 왼쪽 플리퍼 버튼 - 더 세련된 디자인
+    this.leftFlipperButton = this.add.rectangle(90, 645, 150, 55, 0x3b82f6);
     this.leftFlipperButton.setInteractive();
-    this.leftFlipperButton.setStrokeStyle(2, 0x3b82f6);
+    this.leftFlipperButton.setStrokeStyle(3, 0x2563eb);
 
-    const leftText = this.add.text(90, 640, 'L', {
-      fontSize: '20px',
-      color: '#3b82f6',
+    // 버튼 그림자 효과
+    const leftShadow = this.add.rectangle(90, 647, 150, 55, 0x000000, 0.15);
+    leftShadow.setDepth(-1);
+
+    const leftText = this.add.text(90, 645, '◀ LEFT', {
+      fontSize: '18px',
+      color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
     this.leftFlipperButton.on('pointerdown', () => {
       this.activateFlipper('left');
-      this.leftFlipperButton!.setFillStyle(0x3b82f6, 0.6);
+      this.leftFlipperButton!.setFillStyle(0x1e40af);
+      this.leftFlipperButton!.setScale(0.95);
     });
 
     this.leftFlipperButton.on('pointerup', () => {
-      this.leftFlipperButton!.setFillStyle(0x3b82f6, 0.3);
+      this.leftFlipperButton!.setFillStyle(0x3b82f6);
+      this.leftFlipperButton!.setScale(1);
     });
 
     // 오른쪽 플리퍼 버튼
-    this.rightFlipperButton = this.add.rectangle(285, 640, 140, 50, 0x3b82f6, 0.3);
+    this.rightFlipperButton = this.add.rectangle(285, 645, 150, 55, 0x3b82f6);
     this.rightFlipperButton.setInteractive();
-    this.rightFlipperButton.setStrokeStyle(2, 0x3b82f6);
+    this.rightFlipperButton.setStrokeStyle(3, 0x2563eb);
 
-    const rightText = this.add.text(285, 640, 'R', {
-      fontSize: '20px',
-      color: '#3b82f6',
+    // 버튼 그림자 효과
+    const rightShadow = this.add.rectangle(285, 647, 150, 55, 0x000000, 0.15);
+    rightShadow.setDepth(-1);
+
+    const rightText = this.add.text(285, 645, 'RIGHT ▶', {
+      fontSize: '18px',
+      color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
     this.rightFlipperButton.on('pointerdown', () => {
       this.activateFlipper('right');
-      this.rightFlipperButton!.setFillStyle(0x3b82f6, 0.6);
+      this.rightFlipperButton!.setFillStyle(0x1e40af);
+      this.rightFlipperButton!.setScale(0.95);
     });
 
     this.rightFlipperButton.on('pointerup', () => {
-      this.rightFlipperButton!.setFillStyle(0x3b82f6, 0.3);
+      this.rightFlipperButton!.setFillStyle(0x3b82f6);
+      this.rightFlipperButton!.setScale(1);
     });
   }
 
@@ -313,7 +374,7 @@ export class RealPinballScene extends Phaser.Scene {
     // 점수 추가
     const points = bumperObj.getData('points') || 10;
     this.score += points;
-    this.scoreText?.setText('점수: ' + this.score);
+    this.scoreText?.setText(this.score.toString());
 
     // 범퍼 깜빡임 효과
     const bumperSprite = bumper as Phaser.GameObjects.Image;
@@ -341,7 +402,7 @@ export class RealPinballScene extends Phaser.Scene {
 
   private loseBall() {
     this.ballsLeft--;
-    this.ballsText?.setText('🔴 ' + this.ballsLeft);
+    this.ballsText?.setText(this.ballsLeft.toString());
 
     if (this.ballsLeft === 0) {
       this.endGame();
