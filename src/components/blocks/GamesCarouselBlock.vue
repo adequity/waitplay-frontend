@@ -140,12 +140,20 @@ onMounted(() => {
 })
 
 const allowedGames = computed(() => {
+  // 하위 호환성: 'pinball'을 'brick-breaker'로 매핑
+  const normalizeGameType = (type: string) => {
+    return type === 'pinball' ? 'brick-breaker' : type
+  }
+
   const orderedGames = props.data.gamesOrder.map(gameOrder =>
-    allGames.value.find(game => game.type === gameOrder.type)
+    allGames.value.find(game => game.type === normalizeGameType(gameOrder.type))
   ).filter(Boolean)
 
+  // enabledGames 배열의 타입도 정규화하여 비교
+  const normalizedEnabledGames = props.data.enabledGames.map(normalizeGameType)
+
   return orderedGames.filter(game =>
-    props.data.enabledGames.includes(game!.type)
+    normalizedEnabledGames.includes(game!.type)
   ) as GameData[]
 })
 
