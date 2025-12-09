@@ -320,39 +320,40 @@ export class RealPinballScene extends Phaser.Scene {
   private createFlipperTexture() {
     const graphics = this.add.graphics();
 
+    // 플리퍼 크기 50% 증가 (75 → 110, 20 → 28)
     // 플리퍼 그림자 (3D 깊이)
     graphics.fillStyle(0x000000, 0.4);
-    graphics.fillRoundedRect(1, 3, 75, 20, 10);
+    graphics.fillRoundedRect(1, 3, 110, 28, 14);
 
     // 플리퍼 베이스 - 다크 실버 (금속)
     graphics.fillStyle(0x475569, 1);
-    graphics.fillRoundedRect(0, 0, 75, 20, 10);
+    graphics.fillRoundedRect(0, 0, 110, 28, 14);
 
     // 중간 레이어 - 실버
     graphics.fillStyle(0x64748b, 1);
-    graphics.fillRoundedRect(2, 2, 71, 16, 8);
+    graphics.fillRoundedRect(2, 2, 106, 24, 12);
 
     // 밝은 레이어 - 밝은 실버
     graphics.fillStyle(0x94a3b8, 1);
-    graphics.fillRoundedRect(4, 4, 67, 12, 6);
+    graphics.fillRoundedRect(4, 4, 102, 20, 10);
 
     // 하이라이트 (금속 반사)
     graphics.fillStyle(0xcbd5e1, 1);
-    graphics.fillRoundedRect(6, 5, 63, 6, 3);
+    graphics.fillRoundedRect(6, 6, 98, 10, 6);
 
     // 반사광 (빛나는 부분)
     graphics.fillStyle(0xffffff, 0.6);
-    graphics.fillRoundedRect(10, 6, 40, 4, 2);
+    graphics.fillRoundedRect(12, 8, 60, 8, 4);
 
     // 외곽 테두리 (다크 메탈)
     graphics.lineStyle(2, 0x1e293b, 1);
-    graphics.strokeRoundedRect(0, 0, 75, 20, 10);
+    graphics.strokeRoundedRect(0, 0, 110, 28, 14);
 
     // 내부 테두리 (입체감)
     graphics.lineStyle(1, 0xe2e8f0, 0.5);
-    graphics.strokeRoundedRect(3, 3, 69, 14, 7);
+    graphics.strokeRoundedRect(3, 3, 104, 22, 11);
 
-    graphics.generateTexture('flipper', 77, 24);
+    graphics.generateTexture('flipper', 112, 30);
     graphics.destroy();
   }
 
@@ -625,15 +626,17 @@ export class RealPinballScene extends Phaser.Scene {
     const rightFlipperX = gameWidth * 0.8; // 화면의 80% 지점
     const flipperY = 600;
 
-    // 왼쪽 플리퍼 (반응형)
+    // 왼쪽 플리퍼 (크기 1.3배 증가)
     this.leftFlipper = this.physics.add.image(leftFlipperX, flipperY, 'flipper');
+    this.leftFlipper.setScale(1.3); // 30% 더 크게
     this.leftFlipper.setImmovable(true);
     if (this.leftFlipper.body) {
       (this.leftFlipper.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     }
 
-    // 오른쪽 플리퍼 (반응형)
+    // 오른쪽 플리퍼 (크기 1.3배 증가)
     this.rightFlipper = this.physics.add.image(rightFlipperX, flipperY, 'flipper');
+    this.rightFlipper.setScale(1.3); // 30% 더 크게
     this.rightFlipper.setImmovable(true);
     if (this.rightFlipper.body) {
       (this.rightFlipper.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
