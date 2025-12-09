@@ -27,6 +27,11 @@ export class RealPinballScene extends Phaser.Scene {
   private comboText?: Phaser.GameObjects.Text;
   private lastHitTime: number = 0;
 
+  // 레인 시스템
+  private lanes?: Phaser.Physics.Arcade.StaticGroup;
+  private laneBonus: number = 500;
+  private laneMultiplier: number = 1;
+
   constructor() {
     super({ key: 'RealPinballScene' });
   }
@@ -132,6 +137,9 @@ export class RealPinballScene extends Phaser.Scene {
     // 범퍼 생성
     this.createBumpers();
 
+    // 레인 생성
+    this.createLanes();
+
     // 플리퍼 생성
     this.createFlippers();
 
@@ -146,6 +154,9 @@ export class RealPinballScene extends Phaser.Scene {
     // 충돌 설정
     if (this.bumpers && this.ball) {
       this.physics.add.collider(this.ball, this.bumpers, this.hitBumper as any, undefined, this);
+    }
+    if (this.lanes && this.ball) {
+      this.physics.add.overlap(this.ball, this.lanes, this.hitLane as any, undefined, this);
     }
     if (this.leftFlipper && this.ball) {
       this.physics.add.collider(this.ball, this.leftFlipper);
@@ -490,6 +501,46 @@ export class RealPinballScene extends Phaser.Scene {
     });
   }
 
+  private createLanes() {
+    this.lanes = this.physics.add.staticGroup();
+
+    // 왼쪽 레인 (좁은 통로)
+    const leftLaneBg = this.add.rectangle(50, 450, 20, 200, 0x10b981, 0.5);
+    leftLaneBg.setDepth(-1);
+
+    const leftLane = this.add.rectangle(50, 450, 20, 200, 0x10b981, 0);
+    this.physics.add.existing(leftLane, true);
+    this.lanes.add(leftLane);
+    leftLane.setData('type', 'lane');
+    leftLane.setData('side', 'left');
+
+    // 왼쪽 레인 텍스트 (세로)
+    const leftLaneText = this.add.text(50, 450, 'LANE', {
+      fontSize: '12px',
+      color: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setRotation(-Math.PI / 2);
+
+    // 오른쪽 레인 (좁은 통로) - 발사 레인 왼쪽에 배치
+    const rightLaneBg = this.add.rectangle(300, 350, 15, 150, 0xfbbf24, 0.5);
+    rightLaneBg.setDepth(-1);
+
+    const rightLane = this.add.rectangle(300, 350, 15, 150, 0xfbbf24, 0);
+    this.physics.add.existing(rightLane, true);
+    this.lanes.add(rightLane);
+    rightLane.setData('type', 'lane');
+    rightLane.setData('side', 'right');
+
+    // 오른쪽 레인 텍스트 (세로)
+    const rightLaneText = this.add.text(300, 350, 'BONUS', {
+      fontSize: '11px',
+      color: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setRotation(-Math.PI / 2);
+  }
+
   private createFlippers() {
     // 왼쪽 플리퍼
     this.leftFlipper = this.physics.add.image(120, 600, 'flipper');
@@ -727,6 +778,80 @@ export class RealPinballScene extends Phaser.Scene {
       Math.cos(angle) * force,
       Math.sin(angle) * force
     );
+  }
+
+  private hitLane(
+    ball: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+    lane: Phaser.Types.Physics.Arcade.GameObjectWithBody
+  ) {
+    const laneObj = lane as Phaser.GameObjects.GameObject;
+    const laneSprite = lane as Phaser.GameObjects.Rectangle;
+
+    // 중복 히트 방지 (레인은 한 번만 점수 획득)
+    if (laneObj.getData('hit')) {
+      return;
+    }
+    laneObj.setData('hit', true);
+
+    // 레인 보너스 점수
+    const bonusPoints = this.laneBonus * this.laneMultiplier;
+    this.score += bonusPoints;
+    this.scoreText?.setText(this.score.toString());
+
+    // 레인 배율 증가 (다음번 레인 히트 시 더 높은 점수)
+    this.laneMultiplier++;
+
+    // 레인 통과 팝업
+    const lanePopup = this.add.text(laneSprite.x, laneSprite.y - 40, `LANE BONUS!\n+${bonusPoints}`, {
+      fontSize: '24px',
+      color: '#10b981',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+      fontStyle: 'bold',
+      stroke: '#047857',
+      strokeThickness: 3,
+      align: 'center'
+    }).setOrigin(0.5).setDepth(1000);
+
+    // 팝업 애니메이션
+    this.tweens.add({
+      targets: lanePopup,
+      y: laneSprite.y - 80,
+      alpha: 0,
+      duration: 1200,
+      ease: 'Power2',
+      onComplete: () => {
+        lanePopup.destroy();
+      }
+    });
+
+    // 레인 깜빡임 효과
+    this.tweens.add({
+      targets: laneSprite,
+      alpha: 1,
+      duration: 200,
+      yoyo: true,
+      repeat: 3
+    });
+
+    // 파티클 효과
+    const particles = this.add.particles(laneSprite.x, laneSprite.y, 'ball', {
+      speed: { min: 100, max: 200 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 0.4, end: 0 },
+      alpha: { start: 1, end: 0 },
+      lifespan: 500,
+      quantity: 12,
+      tint: [0x10b981, 0xfbbf24, 0xffffff]
+    });
+
+    this.time.delayedCall(500, () => {
+      particles.destroy();
+    });
+
+    // 일정 시간 후 다시 히트 가능하게 설정
+    this.time.delayedCall(2000, () => {
+      laneObj.setData('hit', false);
+    });
   }
 
   private loseBall() {
