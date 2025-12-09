@@ -6,9 +6,9 @@
 import * as Phaser from 'phaser';
 
 export const GAME_CONFIG = {
-  width: 800,
-  height: 600,
-  backgroundColor: '#0f0f23',
+  width: 375,
+  height: 667,
+  backgroundColor: '#ffffff',
   parent: 'game-container',
   physics: {
     default: 'arcade',
@@ -20,8 +20,8 @@ export const GAME_CONFIG = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 800,
-    height: 600
+    width: 375,
+    height: 667
   },
   render: {
     antialias: true,
