@@ -44,10 +44,14 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   create() {
-    // 배경 - 다크 그라디언트 (깊이감)
-    const bgGradient1 = this.add.rectangle(187.5, 150, 375, 300, 0x1a1a2e);
-    const bgGradient2 = this.add.rectangle(187.5, 400, 375, 300, 0x16213e);
-    const bgGradient3 = this.add.rectangle(187.5, 600, 375, 134, 0x0f0f23);
+    // 배경 - 네온 그라디언트 (화려한 깊이감)
+    const bgGradient1 = this.add.rectangle(187.5, 150, 375, 300, 0x1e1b4b); // 깊은 보라
+    const bgGradient2 = this.add.rectangle(187.5, 400, 375, 300, 0x312e81); // 중간 보라
+    const bgGradient3 = this.add.rectangle(187.5, 600, 375, 134, 0x4c1d95); // 밝은 보라
+
+    // 네온 글로우 효과 (배경에 빛나는 레이어)
+    const neonGlow1 = this.add.rectangle(187.5, 333.5, 340, 550, 0x7c3aed, 0.1);
+    const neonGlow2 = this.add.rectangle(187.5, 333.5, 320, 530, 0xa855f7, 0.05);
 
     // 상단 로고 영역 - 네온 스타일
     const logoBg = this.add.rectangle(187.5, 50, 320, 60, 0x60a5fa);
@@ -66,39 +70,53 @@ export class RealPinballScene extends Phaser.Scene {
       strokeThickness: 4
     }).setOrigin(0.5);
 
-    // 점수 표시 - 귀여운 박스 스타일
-    const scoreBox = this.add.rectangle(60, 120, 100, 45, 0xfbbf24);
-    scoreBox.setStrokeStyle(3, 0xf59e0b);
+    // 점수 표시 - 네온 스타일 (좌측 상단으로 이동)
+    const scoreBox = this.add.rectangle(80, 105, 120, 50, 0x7c3aed);
+    scoreBox.setStrokeStyle(3, 0xa855f7);
 
-    const scoreInner = this.add.rectangle(60, 120, 94, 39, 0xfef3c7);
+    const scoreInner = this.add.rectangle(80, 105, 114, 44, 0x5b21b6);
 
-    this.scoreText = this.add.text(60, 112, '0', {
-      fontSize: '22px',
-      color: '#f59e0b',
+    // 네온 글로우 효과
+    const scoreGlow = this.add.circle(80, 105, 35, 0xc084fc, 0.2);
+
+    this.scoreText = this.add.text(80, 97, '0', {
+      fontSize: '26px',
+      color: '#fbbf24',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      stroke: '#f59e0b',
+      strokeThickness: 2
     }).setOrigin(0.5);
 
-    const scoreLabel = this.add.text(60, 132, 'SCORE', {
-      fontSize: '10px',
-      color: '#92400e',
+    const scoreLabel = this.add.text(80, 118, 'SCORE', {
+      fontSize: '11px',
+      color: '#fde68a',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    // 공 개수 표시 - 동그란 귀여운 스타일
-    const ballsCircle = this.add.circle(315, 120, 25, 0xf87171);
-    ballsCircle.setStrokeStyle(3, 0xef4444);
+    // 공 개수 표시 - 네온 스타일 (우측 상단으로 이동)
+    const ballsCircle = this.add.circle(295, 105, 28, 0xef4444);
+    ballsCircle.setStrokeStyle(3, 0xfca5a5);
 
-    const ballsInner = this.add.circle(315, 120, 20, 0xfecaca);
+    const ballsInner = this.add.circle(295, 105, 23, 0xdc2626);
 
-    this.ballsText = this.add.text(315, 120, this.ballsLeft.toString(), {
-      fontSize: '24px',
+    // 네온 글로우 효과
+    const ballsGlow = this.add.circle(295, 105, 35, 0xfca5a5, 0.2);
+
+    this.ballsText = this.add.text(295, 105, this.ballsLeft.toString(), {
+      fontSize: '28px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
       fontStyle: 'bold',
-      stroke: '#dc2626',
-      strokeThickness: 2
+      stroke: '#7f1d1d',
+      strokeThickness: 3
+    }).setOrigin(0.5);
+
+    // 공 아이콘 레이블
+    const ballsLabel = this.add.text(295, 130, '⚪', {
+      fontSize: '16px',
+      color: '#ffffff'
     }).setOrigin(0.5);
 
     // 콤보 카운터 (화면 중앙 상단, 처음엔 숨김)
@@ -748,6 +766,22 @@ export class RealPinballScene extends Phaser.Scene {
       scaleY: 1.3,
       duration: 100,
       yoyo: true
+    });
+
+    // ===== 범퍼 네온 글로우 효과 =====
+    const glowCircle = this.add.circle(bumperSprite.x, bumperSprite.y, 30, 0xfbbf24, 0.8);
+    glowCircle.setDepth(100);
+
+    // 글로우 펄스 애니메이션 (커지며 사라짐)
+    this.tweens.add({
+      targets: glowCircle,
+      scale: 2.5,
+      alpha: 0,
+      duration: 400,
+      ease: 'Power2',
+      onComplete: () => {
+        glowCircle.destroy();
+      }
     });
 
     // ===== 파티클 효과 (충돌 시 반짝임) =====
