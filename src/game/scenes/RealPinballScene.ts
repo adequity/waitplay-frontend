@@ -33,10 +33,10 @@ export class RealPinballScene extends Phaser.Scene {
   }
 
   create() {
-    // 배경 - 파스텔 그라디언트 (핑크-옐로우-블루)
-    const bgGradient1 = this.add.rectangle(187.5, 150, 375, 300, 0xfce7f3);
-    const bgGradient2 = this.add.rectangle(187.5, 400, 375, 300, 0xfef3c7);
-    const bgGradient3 = this.add.rectangle(187.5, 600, 375, 134, 0xdbeafe);
+    // 배경 - 다크 그라디언트 (깊이감)
+    const bgGradient1 = this.add.rectangle(187.5, 150, 375, 300, 0x1a1a2e);
+    const bgGradient2 = this.add.rectangle(187.5, 400, 375, 300, 0x16213e);
+    const bgGradient3 = this.add.rectangle(187.5, 600, 375, 134, 0x0f0f23);
 
     // 상단 로고 영역 - 네온 스타일
     const logoBg = this.add.rectangle(187.5, 50, 320, 60, 0x60a5fa);
@@ -90,14 +90,25 @@ export class RealPinballScene extends Phaser.Scene {
       strokeThickness: 2
     }).setOrigin(0.5);
 
-    // 핀볼 테이블 - 화려한 파스텔 테이블
-    const tableBorder = this.add.rectangle(187.5, 410, 355, 510, 0xfbbf24);
-    tableBorder.setStrokeStyle(5, 0xf59e0b);
+    // 핀볼 테이블 - 3D 원근감
+    // 외곽 그림자 (깊이감)
+    const tableShadow = this.add.rectangle(187.5, 413, 365, 520, 0x000000, 0.5);
 
-    // 테이블 내부 - 파스텔 핑크+블루+옐로우
-    const tableBg1 = this.add.rectangle(187.5, 280, 345, 200, 0xfce7f3);
-    const tableBg2 = this.add.rectangle(187.5, 430, 345, 200, 0xfef3c7);
-    const tableBg3 = this.add.rectangle(187.5, 580, 345, 150, 0xbfdbfe);
+    // 테이블 테두리 (금속 프레임)
+    const tableBorder = this.add.rectangle(187.5, 410, 360, 515, 0x8b7355);
+    tableBorder.setStrokeStyle(3, 0x654321);
+
+    // 내부 테두리 (입체감)
+    const tableInnerBorder = this.add.rectangle(187.5, 410, 350, 505, 0xa0826d);
+    tableInnerBorder.setStrokeStyle(2, 0x8b7355);
+
+    // 테이블 표면 - 다크 블루 그라디언트 (원근감)
+    const tableBg1 = this.add.rectangle(187.5, 280, 340, 200, 0x1e3a8a);
+    const tableBg2 = this.add.rectangle(187.5, 430, 340, 200, 0x1e40af);
+    const tableBg3 = this.add.rectangle(187.5, 580, 340, 150, 0x2563eb);
+
+    // 테이블 하이라이트 (유리 반사)
+    const tableHighlight = this.add.rectangle(187.5, 250, 320, 80, 0xffffff, 0.1);
 
     // 핀볼 테이블 테두리
     this.createWalls();
@@ -178,80 +189,174 @@ export class RealPinballScene extends Phaser.Scene {
 
   private createBallTexture() {
     const graphics = this.add.graphics();
-    // 공 - 반짝이는 실버 펄
-    graphics.fillStyle(0xe0e7ff, 1);
+
+    // 공 그림자 (3D 깊이감)
+    graphics.fillStyle(0x000000, 0.3);
+    graphics.fillCircle(11, 12, 9);
+
+    // 공 베이스 - 다크 그라디언트
+    graphics.fillStyle(0x1e3a8a, 1);
     graphics.fillCircle(10, 10, 10);
-    // 외곽 테두리 - 진한 회색
-    graphics.lineStyle(3, 0x6366f1, 1);
-    graphics.strokeCircle(10, 10, 10);
-    // 하이라이트 - 크고 밝게
+
+    // 중간 레이어 (입체감)
+    graphics.fillStyle(0x3b82f6, 1);
+    graphics.fillCircle(10, 10, 8);
+
+    // 밝은 레이어
+    graphics.fillStyle(0x60a5fa, 1);
+    graphics.fillCircle(9, 9, 6);
+
+    // 하이라이트 1 (큰 반사광)
     graphics.fillStyle(0xffffff, 0.8);
     graphics.fillCircle(7, 7, 4);
-    graphics.generateTexture('ball', 20, 20);
+
+    // 하이라이트 2 (작은 반짝임)
+    graphics.fillStyle(0xffffff, 0.6);
+    graphics.fillCircle(6, 6, 2);
+
+    // 외곽 테두리 (윤곽)
+    graphics.lineStyle(1, 0x1e40af, 0.8);
+    graphics.strokeCircle(10, 10, 10);
+
+    graphics.generateTexture('ball', 22, 22);
     graphics.destroy();
   }
 
   private createFlipperTexture() {
     const graphics = this.add.graphics();
-    // 플리퍼 - 오렌지+옐로우 그라디언트
-    graphics.fillStyle(0xfb923c, 1);
+
+    // 플리퍼 그림자 (3D 깊이)
+    graphics.fillStyle(0x000000, 0.4);
+    graphics.fillRoundedRect(1, 3, 75, 20, 10);
+
+    // 플리퍼 베이스 - 다크 실버 (금속)
+    graphics.fillStyle(0x475569, 1);
     graphics.fillRoundedRect(0, 0, 75, 20, 10);
-    // 외곽 테두리 - 진한 오렌지
-    graphics.lineStyle(4, 0xea580c, 1);
+
+    // 중간 레이어 - 실버
+    graphics.fillStyle(0x64748b, 1);
+    graphics.fillRoundedRect(2, 2, 71, 16, 8);
+
+    // 밝은 레이어 - 밝은 실버
+    graphics.fillStyle(0x94a3b8, 1);
+    graphics.fillRoundedRect(4, 4, 67, 12, 6);
+
+    // 하이라이트 (금속 반사)
+    graphics.fillStyle(0xcbd5e1, 1);
+    graphics.fillRoundedRect(6, 5, 63, 6, 3);
+
+    // 반사광 (빛나는 부분)
+    graphics.fillStyle(0xffffff, 0.6);
+    graphics.fillRoundedRect(10, 6, 40, 4, 2);
+
+    // 외곽 테두리 (다크 메탈)
+    graphics.lineStyle(2, 0x1e293b, 1);
     graphics.strokeRoundedRect(0, 0, 75, 20, 10);
-    // 내부 하이라이트 - 밝은 옐로우
-    graphics.fillStyle(0xfef3c7, 0.7);
-    graphics.fillRoundedRect(8, 4, 59, 8, 4);
-    graphics.generateTexture('flipper', 75, 20);
+
+    // 내부 테두리 (입체감)
+    graphics.lineStyle(1, 0xe2e8f0, 0.5);
+    graphics.strokeRoundedRect(3, 3, 69, 14, 7);
+
+    graphics.generateTexture('flipper', 77, 24);
     graphics.destroy();
   }
 
   private createBumperTexture() {
     const graphics = this.add.graphics();
-    // 범퍼 - 레인보우 스타일
-    // 외곽 - 핑크
-    graphics.fillStyle(0xfda4af, 1);
+
+    // 범퍼 그림자 (3D 깊이)
+    graphics.fillStyle(0x000000, 0.4);
+    graphics.fillCircle(22, 23, 19);
+
+    // 범퍼 베이스 - 다크 레드
+    graphics.fillStyle(0x991b1b, 1);
     graphics.fillCircle(20, 20, 20);
-    // 중간 - 옐로우
-    graphics.fillStyle(0xfde047, 1);
-    graphics.fillCircle(20, 20, 16);
-    // 내부 - 민트
-    graphics.fillStyle(0xa7f3d0, 1);
-    graphics.fillCircle(20, 20, 12);
-    // 중앙 - 화이트
-    graphics.fillStyle(0xffffff, 1);
-    graphics.fillCircle(20, 20, 8);
-    // 외곽 테두리
-    graphics.lineStyle(4, 0xf43f5e, 1);
+
+    // 중간 레이어 - 레드
+    graphics.fillStyle(0xdc2626, 1);
+    graphics.fillCircle(20, 20, 17);
+
+    // 밝은 레이어 - 밝은 레드
+    graphics.fillStyle(0xef4444, 1);
+    graphics.fillCircle(19, 19, 14);
+
+    // 하이라이트 레이어
+    graphics.fillStyle(0xfca5a5, 1);
+    graphics.fillCircle(18, 18, 10);
+
+    // 중앙 밝은 부분
+    graphics.fillStyle(0xfecaca, 1);
+    graphics.fillCircle(17, 17, 6);
+
+    // 반사광 1
+    graphics.fillStyle(0xffffff, 0.7);
+    graphics.fillCircle(15, 15, 4);
+
+    // 반사광 2 (작은 반짝임)
+    graphics.fillStyle(0xffffff, 0.5);
+    graphics.fillCircle(14, 14, 2);
+
+    // 외곽 테두리 (금속 링)
+    graphics.lineStyle(3, 0x7f1d1d, 1);
     graphics.strokeCircle(20, 20, 20);
-    graphics.generateTexture('bumper', 40, 40);
+
+    // 내부 링 (입체감)
+    graphics.lineStyle(1, 0xfee2e2, 0.5);
+    graphics.strokeCircle(20, 20, 15);
+
+    graphics.generateTexture('bumper', 44, 44);
     graphics.destroy();
   }
 
   private createWalls() {
-    // 왼쪽 벽 - 형광 핑크 네온
-    const leftWall = this.add.rectangle(22, 400, 10, 490, 0xfda4af);
-    leftWall.setStrokeStyle(3, 0xf43f5e);
+    // 왼쪽 벽 - 3D 금속 테두리
+    // 그림자
+    const leftWallShadow = this.add.rectangle(24, 400, 10, 490, 0x000000, 0.3);
+    // 베이스
+    const leftWall = this.add.rectangle(22, 400, 12, 490, 0x334155);
+    // 하이라이트
+    const leftWallHighlight = this.add.rectangle(20, 400, 4, 490, 0x64748b);
+    leftWall.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(leftWall, true);
 
-    // 오른쪽 벽 - 형광 핑크 네온
-    const rightWall = this.add.rectangle(353, 400, 10, 490, 0xfda4af);
-    rightWall.setStrokeStyle(3, 0xf43f5e);
+    // 오른쪽 벽 - 3D 금속 테두리
+    // 그림자
+    const rightWallShadow = this.add.rectangle(355, 400, 10, 490, 0x000000, 0.3);
+    // 베이스
+    const rightWall = this.add.rectangle(353, 400, 12, 490, 0x334155);
+    // 하이라이트
+    const rightWallHighlight = this.add.rectangle(351, 400, 4, 490, 0x64748b);
+    rightWall.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(rightWall, true);
 
-    // 위쪽 벽 - 민트 네온
-    const topWall = this.add.rectangle(187.5, 165, 325, 10, 0xa7f3d0);
-    topWall.setStrokeStyle(3, 0x34d399);
+    // 위쪽 벽 - 3D 금속 테두리
+    // 그림자
+    const topWallShadow = this.add.rectangle(187.5, 167, 325, 10, 0x000000, 0.3);
+    // 베이스
+    const topWall = this.add.rectangle(187.5, 165, 325, 12, 0x334155);
+    // 하이라이트
+    const topWallHighlight = this.add.rectangle(187.5, 163, 325, 4, 0x64748b);
+    topWall.setStrokeStyle(2, 0x1e293b);
     this.physics.add.existing(topWall, true);
 
-    // 사선 가이드 (공을 아래로 유도) - 오렌지 네온
-    const leftGuide = this.add.rectangle(80, 570, 110, 10, 0xfed7aa);
-    leftGuide.setStrokeStyle(3, 0xfb923c);
+    // 사선 가이드 (공을 아래로 유도) - 3D 금속
+    // 왼쪽 가이드
+    const leftGuideShadow = this.add.rectangle(81, 572, 110, 10, 0x000000, 0.3);
+    leftGuideShadow.rotation = -0.35;
+    const leftGuide = this.add.rectangle(80, 570, 110, 12, 0x334155);
+    const leftGuideHighlight = this.add.rectangle(79, 568, 110, 4, 0x64748b);
+    leftGuideHighlight.rotation = -0.35;
+    leftGuide.setStrokeStyle(2, 0x1e293b);
     leftGuide.rotation = -0.35;
     this.physics.add.existing(leftGuide, true);
 
-    const rightGuide = this.add.rectangle(295, 570, 110, 10, 0xfed7aa);
-    rightGuide.setStrokeStyle(3, 0xfb923c);
+    // 오른쪽 가이드
+    const rightGuideShadow = this.add.rectangle(296, 572, 110, 10, 0x000000, 0.3);
+    rightGuideShadow.rotation = 0.35;
+    const rightGuide = this.add.rectangle(295, 570, 110, 12, 0x334155);
+    const rightGuideHighlight = this.add.rectangle(294, 568, 110, 4, 0x64748b);
+    rightGuideHighlight.rotation = 0.35;
+    rightGuide.setStrokeStyle(2, 0x1e293b);
     rightGuide.rotation = 0.35;
     this.physics.add.existing(rightGuide, true);
   }
@@ -420,6 +525,22 @@ export class RealPinballScene extends Phaser.Scene {
       scaleY: 1.3,
       duration: 100,
       yoyo: true
+    });
+
+    // 파티클 효과 (충돌 시 반짝임)
+    const particles = this.add.particles(bumperSprite.x, bumperSprite.y, 'ball', {
+      speed: { min: 50, max: 150 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 0.3, end: 0 },
+      alpha: { start: 1, end: 0 },
+      lifespan: 300,
+      quantity: 8,
+      tint: [0xffffff, 0x60a5fa, 0xef4444]
+    });
+
+    // 파티클 자동 제거
+    this.time.delayedCall(300, () => {
+      particles.destroy();
     });
 
     // 공에 추가 속도
