@@ -21,6 +21,12 @@ export class RealPinballScene extends Phaser.Scene {
   private leftFlipperButton?: Phaser.GameObjects.Rectangle;
   private rightFlipperButton?: Phaser.GameObjects.Rectangle;
 
+  // 콤보 시스템
+  private comboCount: number = 0;
+  private comboTimer?: Phaser.Time.TimerEvent;
+  private comboText?: Phaser.GameObjects.Text;
+  private lastHitTime: number = 0;
+
   constructor() {
     super({ key: 'RealPinballScene' });
   }
@@ -89,6 +95,16 @@ export class RealPinballScene extends Phaser.Scene {
       stroke: '#dc2626',
       strokeThickness: 2
     }).setOrigin(0.5);
+
+    // 콤보 카운터 (화면 중앙 상단, 처음엔 숨김)
+    this.comboText = this.add.text(187.5, 200, '', {
+      fontSize: '48px',
+      color: '#fbbf24',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+      fontStyle: 'bold',
+      stroke: '#f59e0b',
+      strokeThickness: 4
+    }).setOrigin(0.5).setAlpha(0).setDepth(1000);
 
     // 핀볼 테이블 - 3D 원근감
     // 외곽 그림자 (깊이감)
@@ -560,14 +576,78 @@ export class RealPinballScene extends Phaser.Scene {
   ) {
     const bumperObj = bumper as Phaser.GameObjects.GameObject;
     const ballObj = ball as Phaser.Physics.Arcade.Image;
+    const bumperSprite = bumper as Phaser.GameObjects.Image;
 
-    // 점수 추가
-    const points = bumperObj.getData('points') || 10;
-    this.score += points;
+    // ===== 콤보 시스템 =====
+    const currentTime = this.time.now;
+    const timeSinceLastHit = currentTime - this.lastHitTime;
+
+    // 1초 이내에 연속 히트하면 콤보 증가
+    if (timeSinceLastHit < 1000 && this.lastHitTime > 0) {
+      this.comboCount++;
+    } else {
+      this.comboCount = 1; // 콤보 리셋
+    }
+
+    this.lastHitTime = currentTime;
+
+    // 콤보 타이머 리셋
+    if (this.comboTimer) {
+      this.comboTimer.destroy();
+    }
+
+    // 1초 후 콤보 리셋
+    this.comboTimer = this.time.delayedCall(1000, () => {
+      this.comboCount = 0;
+      this.comboText?.setAlpha(0);
+    });
+
+    // ===== 점수 계산 (콤보 보너스) =====
+    const basePoints = bumperObj.getData('points') || 10;
+    const comboMultiplier = this.comboCount;
+    const totalPoints = basePoints * comboMultiplier;
+
+    this.score += totalPoints;
     this.scoreText?.setText(this.score.toString());
 
-    // 범퍼 깜빡임 효과
-    const bumperSprite = bumper as Phaser.GameObjects.Image;
+    // ===== 점수 팝업 애니메이션 =====
+    const scorePopup = this.add.text(bumperSprite.x, bumperSprite.y - 30, `+${totalPoints}`, {
+      fontSize: '32px',
+      color: '#fbbf24',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+      fontStyle: 'bold',
+      stroke: '#f59e0b',
+      strokeThickness: 3
+    }).setOrigin(0.5).setDepth(1000);
+
+    // 팝업 애니메이션 (위로 올라가며 사라짐)
+    this.tweens.add({
+      targets: scorePopup,
+      y: bumperSprite.y - 80,
+      alpha: 0,
+      duration: 800,
+      ease: 'Power2',
+      onComplete: () => {
+        scorePopup.destroy();
+      }
+    });
+
+    // ===== 콤보 표시 (2콤보 이상일 때만) =====
+    if (this.comboCount >= 2 && this.comboText) {
+      this.comboText.setText(`${this.comboCount}x COMBO!`);
+      this.comboText.setAlpha(1);
+
+      // 콤보 텍스트 펄스 애니메이션
+      this.tweens.add({
+        targets: this.comboText,
+        scale: 1.2,
+        duration: 100,
+        yoyo: true,
+        ease: 'Power2'
+      });
+    }
+
+    // ===== 범퍼 깜빡임 효과 =====
     this.tweens.add({
       targets: bumperSprite,
       scaleX: 1.3,
@@ -576,7 +656,7 @@ export class RealPinballScene extends Phaser.Scene {
       yoyo: true
     });
 
-    // 파티클 효과 (충돌 시 반짝임)
+    // ===== 파티클 효과 (충돌 시 반짝임) =====
     const particles = this.add.particles(bumperSprite.x, bumperSprite.y, 'ball', {
       speed: { min: 50, max: 150 },
       angle: { min: 0, max: 360 },
@@ -592,7 +672,7 @@ export class RealPinballScene extends Phaser.Scene {
       particles.destroy();
     });
 
-    // 공에 추가 속도
+    // ===== 공에 추가 속도 =====
     const angle = Phaser.Math.Angle.Between(
       bumperSprite.x,
       bumperSprite.y,
