@@ -31,6 +31,7 @@ export class RealPinballScene extends Phaser.Scene {
   private lanes?: Phaser.Physics.Arcade.StaticGroup;
   private laneBonus: number = 500;
   private laneMultiplier: number = 1;
+  private readonly MAX_LANE_MULTIPLIER = 5; // 최대 5배까지만
 
   // 트레일 효과 시스템
   private ballTrail: Phaser.GameObjects.Graphics[] = [];
@@ -186,10 +187,10 @@ export class RealPinballScene extends Phaser.Scene {
 
     // 공 생성 - 발사 구역에 배치
     this.ball = this.physics.add.image(W * 0.899, H * 0.645, 'ball');
-    this.ball.setBounce(0.8); // 적절한 바운스
+    this.ball.setBounce(0.95); // 높은 바운스로 더 활발한 움직임
     this.ball.setCollideWorldBounds(true);
     if (this.ball.body) {
-      (this.ball.body as Phaser.Physics.Arcade.Body).setGravity(0, 600); // 조금 느린 중력
+      (this.ball.body as Phaser.Physics.Arcade.Body).setGravity(0, 800); // 더 강한 중력으로 다이나믹한 플레이
     }
 
     // 충돌 설정
@@ -270,8 +271,8 @@ export class RealPinballScene extends Phaser.Scene {
     // 공이 아래로 떨어지려 할 때 슬로우 모션
     if (this.ball.y > H * 0.870 && this.ball.y < H * 0.975 && !this.isSlowMotion) {
       const velocity = this.ball.body as Phaser.Physics.Arcade.Body;
-      if (velocity.velocity.y > 200) {
-        this.activateSlowMotion(600); // 0.6초 슬로우 모션
+      if (velocity.velocity.y > 250) {
+        this.activateSlowMotion(500); // 0.5초 슬로우 모션 (더 짧게)
       }
     }
 
@@ -718,9 +719,9 @@ export class RealPinballScene extends Phaser.Scene {
     if (this.gameStarted) return;
     this.gameStarted = true;
 
-    // 공에 초기 속도 (속도 감소)
+    // 공에 초기 속도 (더 강한 발사)
     if (this.ball) {
-      this.ball.setVelocity(Phaser.Math.Between(-30, 30), 120);
+      this.ball.setVelocity(Phaser.Math.Between(-80, 80), 250);
     }
   }
 
@@ -744,10 +745,10 @@ export class RealPinballScene extends Phaser.Scene {
       ease: 'Power2'
     });
 
-    // 플리퍼에 맞았을 때 공에 힘 가하기 (속도 감소)
+    // 플리퍼에 맞았을 때 공에 힘 가하기 (더 강한 타격)
     if (this.ball && this.physics.overlap(this.ball, flipper)) {
-      const velocityY = -450;
-      const velocityX = side === 'left' ? -220 : 220;
+      const velocityY = -600; // 더 높이 튀어오름
+      const velocityX = side === 'left' ? -280 : 280; // 더 강한 좌우 움직임
       this.ball.setVelocity(velocityX, velocityY);
     }
   }
@@ -784,10 +785,16 @@ export class RealPinballScene extends Phaser.Scene {
       this.comboText?.setAlpha(0);
     });
 
-    // ===== 점수 계산 (콤보 보너스) =====
+    // ===== 점수 계산 (개선된 콤보 보너스) =====
     const basePoints = bumperObj.getData('points') || 10;
-    const comboMultiplier = this.comboCount;
-    const totalPoints = basePoints * comboMultiplier;
+    // 콤보 배수: 1x, 2x, 3x, 5x, 8x, 13x... (피보나치식 증가)
+    const comboBonus = this.comboCount <= 1 ? 1 :
+                       this.comboCount === 2 ? 2 :
+                       this.comboCount === 3 ? 3 :
+                       this.comboCount === 4 ? 5 :
+                       this.comboCount === 5 ? 8 :
+                       this.comboCount >= 6 ? 13 : 1;
+    const totalPoints = basePoints * comboBonus;
 
     this.score += totalPoints;
     this.scoreText?.setText(this.score.toString());
@@ -820,16 +827,21 @@ export class RealPinballScene extends Phaser.Scene {
 
     // ===== 콤보 표시 (2콤보 이상일 때만) =====
     if (this.comboCount >= 2 && this.comboText) {
-      this.comboText.setText(`${this.comboCount}x COMBO!`);
+      // 콤보 배수 표시 (예: "3x COMBO!" → "3x (5배)")
+      const displayText = comboBonus > this.comboCount ?
+        `${this.comboCount}x COMBO! (${comboBonus}배)` :
+        `${this.comboCount}x COMBO!`;
+      this.comboText.setText(displayText);
       this.comboText.setAlpha(1);
 
       // 콤보 사운드 재생
       this.playSound('combo');
 
-      // 콤보 텍스트 펄스 애니메이션
+      // 콤보 텍스트 펄스 애니메이션 (콤보가 높을수록 더 크게)
+      const scaleAmount = 1.2 + (this.comboCount * 0.05); // 콤보가 높을수록 더 크게
       this.tweens.add({
         targets: this.comboText,
-        scale: 1.2,
+        scale: scaleAmount,
         duration: 100,
         yoyo: true,
         ease: 'Power2'
@@ -877,14 +889,14 @@ export class RealPinballScene extends Phaser.Scene {
       particles.destroy();
     });
 
-    // ===== 공에 추가 속도 =====
+    // ===== 공에 추가 속도 (강화된 범퍼 반발력) =====
     const angle = Phaser.Math.Angle.Between(
       bumperSprite.x,
       bumperSprite.y,
       ballObj.x,
       ballObj.y
     );
-    const force = 300;
+    const force = 420; // 범퍼 반발력 40% 증가
     ballObj.setVelocity(
       Math.cos(angle) * force,
       Math.sin(angle) * force
@@ -909,8 +921,10 @@ export class RealPinballScene extends Phaser.Scene {
     this.score += bonusPoints;
     this.scoreText?.setText(this.score.toString());
 
-    // 레인 배율 증가 (다음번 레인 히트 시 더 높은 점수)
-    this.laneMultiplier++;
+    // 레인 배율 증가 (최대 5배까지만)
+    if (this.laneMultiplier < this.MAX_LANE_MULTIPLIER) {
+      this.laneMultiplier++;
+    }
 
     // 레인 통과 팝업
     const H = this.sys.game.config.height as number;
@@ -1172,7 +1186,7 @@ export class RealPinballScene extends Phaser.Scene {
 
     this.isSlowMotion = true;
     this.slowMotionDuration = duration;
-    this.physics.world.timeScale = 0.5; // 시간을 절반으로 느리게
+    this.physics.world.timeScale = 0.7; // 시간을 70%로 느리게 (덜 극단적)
 
     // 슬로우 모션 비주얼 효과
     const slowMotionOverlay = this.add.rectangle(W * 0.5, H * 0.5, W * 1.0, H * 1.0, 0x4facfe, 0.1);
