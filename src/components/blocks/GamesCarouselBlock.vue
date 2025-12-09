@@ -19,6 +19,8 @@
         :key="game.type"
         class="game-slide"
         @click="goToGame(game.type)"
+        @touchstart="handleTouchStart"
+        @touchend="(e) => handleTouchEnd(e, game.type)"
       >
         <div class="game-slide-content">
           <div class="game-icon-large">{{ game.icon }}</div>
@@ -173,8 +175,43 @@ function onSliderScroll() {
   currentGameIndex.value = newIndex
 }
 
+// 터치 이벤트 처리 (드래그와 클릭 구분)
+let touchStartX = 0
+let touchStartTime = 0
+
+function handleTouchStart(e: TouchEvent) {
+  if (e.touches[0]) {
+    touchStartX = e.touches[0].clientX
+    touchStartTime = Date.now()
+  }
+}
+
+function handleTouchEnd(e: TouchEvent, type: string) {
+  if (!e.changedTouches[0]) return
+
+  const touchEndX = e.changedTouches[0].clientX
+  const touchEndTime = Date.now()
+  const deltaX = Math.abs(touchEndX - touchStartX)
+  const deltaTime = touchEndTime - touchStartTime
+
+  // 이동 거리가 10px 미만이고 시간이 300ms 미만이면 클릭으로 간주
+  if (deltaX < 10 && deltaTime < 300) {
+    goToGame(type)
+  }
+}
+
 function goToGame(type: string) {
-  router.push({ name: 'game', params: { type } })
+  // 게임 타입 매핑 (carousel → GameView)
+  const typeMap: Record<string, string> = {
+    'pinball': 'pinball',
+    'brick-breaker': 'brick-breaker',
+    'memory': 'match',
+    'spot-difference': 'spot'
+  }
+
+  const mappedType = typeMap[type] || type
+  console.log('Navigating to game:', mappedType)
+  router.push({ name: 'game', params: { type: mappedType } })
 }
 </script>
 
