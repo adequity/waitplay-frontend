@@ -4,7 +4,7 @@
       <!-- Modal Header -->
       <div class="modal-header">
         <h2 class="modal-title">
-          <i :class="[gameIcon, 'game-icon']"></i>
+          <IconBase :name="gameIconName" class="game-icon" />
           {{ gameName }} 혜택 설정
         </h2>
         <button class="btn-close" @click="close">✕</button>
@@ -142,6 +142,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import benefitsService, { type BenefitDto } from '@/services/benefitsService'
+import IconBase from '@/components/IconBase.vue'
 
 interface Props {
   isOpen: boolean
@@ -152,6 +153,17 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// Map FontAwesome class names to our icon names
+const iconMapping: Record<string, string> = {
+  'fa-solid fa-gamepad': 'gamepad',
+  'fa-solid fa-dice': 'dice',
+  'fa-solid fa-puzzle-piece': 'puzzle-piece'
+}
+
+const gameIconName = computed(() => {
+  return iconMapping[props.gameIcon] || 'gamepad'
+})
 const emit = defineEmits<{
   close: []
   saved: []
@@ -325,6 +337,8 @@ function close() {
 
 .game-icon {
   font-size: 32px;
+  width: 32px;
+  height: 32px;
 }
 
 .btn-close {

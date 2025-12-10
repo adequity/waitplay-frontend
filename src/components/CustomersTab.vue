@@ -10,7 +10,7 @@
     <div class="customer-stats">
       <div class="stat-card">
         <div class="stat-icon-wrapper">
-          <i class="fa-solid fa-users"></i>
+          <IconBase name="users" />
         </div>
         <div class="stat-content">
           <p class="stat-value">1,247</p>
@@ -20,7 +20,7 @@
 
       <div class="stat-card">
         <div class="stat-icon-wrapper star">
-          <i class="fa-solid fa-star"></i>
+          <IconBase name="star" />
         </div>
         <div class="stat-content">
           <p class="stat-value">823</p>
@@ -30,7 +30,7 @@
 
       <div class="stat-card">
         <div class="stat-icon-wrapper game">
-          <i class="fa-solid fa-gamepad"></i>
+          <IconBase name="gamepad" />
         </div>
         <div class="stat-content">
           <p class="stat-value">68%</p>
@@ -40,7 +40,7 @@
 
       <div class="stat-card">
         <div class="stat-icon-wrapper ticket">
-          <i class="fa-solid fa-ticket"></i>
+          <IconBase name="ticket" />
         </div>
         <div class="stat-content">
           <p class="stat-value">82%</p>
@@ -90,6 +90,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import IconBase from '@/components/IconBase.vue'
 
 interface Customer {
   id: string

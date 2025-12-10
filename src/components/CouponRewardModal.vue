@@ -5,7 +5,7 @@
       <div class="modal-header">
         <div class="header-content">
           <div class="celebration-icon">
-            <i class="fa-solid fa-party-horn"></i>
+            <IconBase name="party-horn" />
           </div>
           <h2 class="modal-title">축하합니다!</h2>
         </div>
@@ -16,7 +16,7 @@
         <!-- Benefit Info -->
         <div class="benefit-info">
           <div class="benefit-icon-wrapper">
-            <i class="fa-solid fa-gift"></i>
+            <IconBase name="gift" />
           </div>
           <h3 class="benefit-title">{{ benefit.title }}</h3>
           <p v-if="benefit.description" class="benefit-description">
@@ -33,7 +33,7 @@
             <p class="coupon-label">쿠폰 코드</p>
             <p class="coupon-code">{{ couponCode }}</p>
             <p class="expiry-warning">
-              <i class="fa-solid fa-clock"></i> {{ expiryMinutes }}분 내에 직원에게 제시하세요
+              <IconBase name="clock" class="warning-icon" /> {{ expiryMinutes }}분 내에 직원에게 제시하세요
             </p>
           </div>
         </div>
@@ -53,7 +53,7 @@
         <div v-if="!couponCode && !isGenerating" class="instructions">
           <p>이 혜택을 지금 받으시겠습니까?</p>
           <p class="warning-text">
-            <i class="fa-solid fa-triangle-exclamation"></i> 쿠폰은 즉시 사용해야 하며, 나중에 사용할 수 없습니다
+            <IconBase name="triangle-exclamation" class="warning-icon" /> 쿠폰은 즉시 사용해야 하며, 나중에 사용할 수 없습니다
           </p>
         </div>
       </div>
@@ -75,6 +75,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import couponsService from '@/services/couponsService'
+import IconBase from '@/components/IconBase.vue'
 
 interface Props {
   isOpen: boolean
@@ -284,6 +285,15 @@ function close() {
   color: #ff3b30;
   margin: 0;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.warning-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .loading-section {

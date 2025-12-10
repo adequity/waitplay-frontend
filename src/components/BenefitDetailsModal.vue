@@ -5,7 +5,7 @@
       <div class="modal-header">
         <div class="header-content">
           <div class="game-icon-wrapper">
-            <i :class="gameIcon"></i>
+            <IconBase :name="gameIconName" />
           </div>
           <div class="header-text">
             <h2 class="modal-title">{{ gameName }}</h2>
@@ -62,7 +62,7 @@
                   <div class="step-badge">{{ index + 1 }}</div>
                   <div class="benefit-summary">
                     <div class="benefit-title-row">
-                      <i :class="[gameIcon, 'game-icon-small']"></i>
+                      <IconBase :name="gameIconName" class="game-icon-small" />
                       <span class="benefit-name">{{ benefit.title }}</span>
                     </div>
                     <div class="benefit-score-range">
@@ -184,7 +184,7 @@
 
           <div v-else class="empty-benefits">
             <div class="empty-icon-box">
-              <i class="fa-solid fa-gift"></i>
+              <IconBase name="gift" />
             </div>
             <p class="empty-text">설정된 혜택이 없습니다</p>
             <button class="btn-add-first" @click="addNewBenefit">첫 혜택 추가하기</button>
@@ -201,8 +201,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import benefitsService, { type BenefitDto } from '@/services/benefitsService'
+import IconBase from '@/components/IconBase.vue'
 
 interface Props {
   isOpen: boolean
@@ -231,6 +232,17 @@ interface EditForm {
 }
 
 const props = defineProps<Props>()
+
+// Map FontAwesome class names to our icon names
+const iconMapping: Record<string, string> = {
+  'fa-solid fa-gamepad': 'gamepad',
+  'fa-solid fa-dice': 'dice',
+  'fa-solid fa-puzzle-piece': 'puzzle-piece'
+}
+
+const gameIconName = computed(() => {
+  return iconMapping[props.gameIcon] || 'gamepad'
+})
 const emit = defineEmits<{
   close: []
   refresh: []
@@ -636,7 +648,10 @@ function close() {
 
 .game-icon-small {
   font-size: 16px;
+  width: 16px;
+  height: 16px;
   color: #667eea;
+  flex-shrink: 0;
 }
 
 .benefit-name {
@@ -889,10 +904,13 @@ function close() {
   padding: 40px 20px;
 }
 
-.empty-icon {
+.empty-icon-box {
   font-size: 48px;
-  margin-bottom: 12px;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px auto;
   opacity: 0.6;
+  color: #9ca3af;
 }
 
 .empty-text {

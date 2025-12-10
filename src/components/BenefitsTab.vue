@@ -8,7 +8,7 @@
 
     <!-- Info Box -->
     <div class="info-box">
-      <i class="fa-solid fa-lightbulb"></i>
+      <IconBase name="lightbulb" class="info-icon" />
       <div>
         <strong>기본 설정:</strong> 게임별로 점수 구간을 설정하고 각 구간마다 제공할 쿠폰 혜택을 자유롭게 설정할 수 있습니다.
         혜택은 자동으로 게임 완료 시 제공되며, 고객은 즉시 사용하거나 나중에 사용할 수 있습니다.
@@ -18,7 +18,7 @@
     <!-- Empty State -->
     <div v-if="enabledGames.length === 0" class="empty-state">
       <div class="empty-icon-wrapper">
-        <i class="fa-solid fa-gamepad"></i>
+        <IconBase name="gamepad" />
       </div>
       <h3 class="empty-title">활성화된 게임이 없습니다</h3>
       <p class="empty-subtitle">게임 설정 탭에서 먼저 게임을 활성화해주세요</p>
@@ -37,7 +37,7 @@
         <div class="card-header">
           <div class="card-title-group">
             <div class="icon-box" :class="getIconClass(game.type)">
-              <i :class="game.icon"></i>
+              <IconBase :name="getIconName(game.icon)" />
             </div>
             <span class="card-title">{{ game.name }}</span>
           </div>
@@ -52,17 +52,17 @@
         <!-- Summary Medals (Always Visible) -->
         <div class="summary-medals">
           <div class="medal-box">
-            <i class="fa-solid fa-medal medal-bronze medal-icon"></i>
+            <IconBase name="medal" class="medal-bronze medal-icon" />
             <span class="medal-name">동메달</span>
             <span class="medal-score">6-7점</span>
           </div>
           <div class="medal-box">
-            <i class="fa-solid fa-medal medal-silver medal-icon"></i>
+            <IconBase name="medal" class="medal-silver medal-icon" />
             <span class="medal-name">은메달</span>
             <span class="medal-score">8-9점</span>
           </div>
           <div class="medal-box">
-            <i class="fa-solid fa-medal medal-gold medal-icon"></i>
+            <IconBase name="medal" class="medal-gold medal-icon" />
             <span class="medal-name">금메달</span>
             <span class="medal-score">10점</span>
           </div>
@@ -71,7 +71,7 @@
         <!-- Card Content (Collapsible) -->
         <div class="card-content">
           <button class="btn-template" @click="openBenefitSetting(game.type)">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> 템플릿 적용
+            <IconBase name="wand" /> 템플릿 적용
           </button>
 
           <!-- Additional Stats -->
@@ -93,7 +93,7 @@
           <!-- Action Buttons -->
           <div class="card-footer">
             <button class="btn-add" @click="openBenefitSetting(game.type)">
-              <i class="fa-solid fa-plus"></i> 단계 추가
+              <IconBase name="plus" /> 단계 추가
             </button>
             <button class="btn-save" @click="viewDetails(game.type)">
               저장
@@ -135,6 +135,7 @@ import gameSettingsService from '@/services/gameSettingsService'
 import benefitsService, { type GameBenefitStatsDto } from '@/services/benefitsService'
 import BenefitSettingModal from './BenefitSettingModal.vue'
 import BenefitDetailsModal from './BenefitDetailsModal.vue'
+import IconBase from '@/components/IconBase.vue'
 
 interface GameStats {
   todayPlays: number
@@ -277,6 +278,17 @@ function getIconClass(gameType: string): string {
   return iconClasses[gameType] || 'brand'
 }
 
+// Map FontAwesome class names to our icon names
+function getIconName(faClass: string): string {
+  const iconMapping: Record<string, string> = {
+    'fa-solid fa-bullseye': 'target',
+    'fa-solid fa-utensils': 'utensils',
+    'fa-solid fa-clone': 'clone',
+    'fa-solid fa-magnifying-glass': 'magnifying-glass'
+  }
+  return iconMapping[faClass] || 'gamepad'
+}
+
 onMounted(() => {
   loadGameSettings()
 })
@@ -340,9 +352,12 @@ onMounted(() => {
   line-height: 1.6;
 }
 
-.info-box i {
+.info-icon {
   font-size: 20px;
+  width: 20px;
+  height: 20px;
   color: #ffc107;
+  flex-shrink: 0;
 }
 
 /* Empty State */
@@ -366,8 +381,10 @@ onMounted(() => {
   margin: 0 auto 20px;
 }
 
-.empty-icon-wrapper i {
+.empty-icon-wrapper :deep(svg) {
   font-size: 48px;
+  width: 48px;
+  height: 48px;
   color: var(--primary-blue);
 }
 
@@ -503,6 +520,8 @@ onMounted(() => {
 
 .medal-icon {
   font-size: 20px;
+  width: 20px;
+  height: 20px;
   margin-bottom: 8px;
 }
 
