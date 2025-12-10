@@ -138,6 +138,7 @@ import { ref, computed, onMounted, watch, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
+import gameSettingsService from '@/services/gameSettingsService'
 import type { Block, PageTheme } from '@/types/blocks'
 import type { GuestbookMessageResponse } from '@/services/guestbookService'
 
@@ -393,6 +394,22 @@ onMounted(async () => {
       headerBlock.data.logoUrl = logoUrl
       headerBlock.data.storeName = storeName
       headerBlock.data.welcomeMessage = welcomeMessage
+    }
+
+    // Load game settings and update games_carousel block
+    try {
+      const gameSettings = await gameSettingsService.getGameSettings(fetchedQrCodeId)
+      const gamesCarouselBlock = blocks.value.find(b => b.type === 'games_carousel')
+
+      if (gamesCarouselBlock && gamesCarouselBlock.data) {
+        // Update with API data
+        gamesCarouselBlock.data.enabledGames = gameSettings.enabledGames
+        gamesCarouselBlock.data.gamesOrder = gameSettings.gamesOrder || []
+        console.log('Game settings loaded:', gameSettings)
+      }
+    } catch (error) {
+      console.error('Failed to load game settings:', error)
+      // Keep default settings from layout if API fails
     }
     } catch (error) {
       console.error('Error loading layout from API:', error)

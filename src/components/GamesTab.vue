@@ -6,8 +6,13 @@
       <p class="greeting-subtitle">매장 상황에 맞춰 원하는 게임을 활성화하세요.</p>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="isLoading" class="loading-state">
+      <p>게임 설정을 불러오는 중...</p>
+    </div>
+
     <!-- Games List -->
-    <div class="games-list">
+    <div v-else class="games-list">
       <div v-for="game in games" :key="game.id" class="game-card">
         <div class="game-header">
           <div class="game-info">
@@ -18,7 +23,7 @@
             </div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" v-model="game.active" />
+            <input type="checkbox" v-model="game.active" @change="handleToggleChange(game)" />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -39,11 +44,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Save Button -->
+    <div v-if="!isLoading" class="save-section">
+      <button @click="saveSettings" :disabled="isSaving" class="btn-save">
+        {{ isSaving ? '저장 중...' : '설정 저장' }}
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import gameSettingsService from '@/services/gameSettingsService'
+import type { GameOrderDto } from '@/services/gameSettingsService'
 
 interface Game {
   id: string
@@ -58,32 +73,125 @@ interface Game {
   }
 }
 
-const games = ref<Game[]>([
+// Game definitions matching GamesCarouselBlock
+const gameDefinitions = [
   {
-    id: 'quiz',
-    name: '브랜드 퀴즈',
+    id: 'pinball',
+    name: '핀볼',
     icon: '🎯',
-    description: '가장 인기 있는 게임입니다.',
-    active: true,
-    stats: { todayPlays: 24, avgScore: 8.2, participants: 127 }
+    description: '플리퍼로 공을 튕겨서 점수를 획득하세요'
   },
   {
-    id: 'menu-pick',
-    name: '메뉴 픽 맞추기',
+    id: 'brick-breaker',
+    name: '벽돌깨기',
+    icon: '🧱',
+    description: '공을 튕겨서 벽돌을 깨세요'
+  },
+  {
+    id: 'memory',
+    name: '같은 카드 찾기',
     icon: '🃏',
-    description: '신메뉴 이미지로 자동 생성됩니다.',
-    active: true,
-    stats: { todayPlays: 18, avgScore: 7.8, participants: 95 }
+    description: '같은 그림의 카드를 찾아보세요'
   },
   {
     id: 'spot-difference',
     name: '틀린 그림 찾기',
     icon: '🔍',
-    description: '이미지 비교 게임입니다.',
-    active: false,
-    stats: { todayPlays: 0, avgScore: 0, participants: 0 }
+    description: '두 그림의 다른 부분을 찾아보세요'
   }
-])
+]
+
+const authStore = useAuthStore()
+const games = ref<Game[]>([])
+const isLoading = ref(true)
+const isSaving = ref(false)
+const qrCodeId = ref<string>('')
+
+// Initialize games with default stats
+const initializeGames = (enabledGames: string[] = []) => {
+  games.value = gameDefinitions.map(game => ({
+    ...game,
+    active: enabledGames.includes(game.id),
+    stats: {
+      todayPlays: 0,
+      avgScore: 0,
+      participants: 0
+    }
+  }))
+}
+
+// Load game settings from API
+const loadSettings = async () => {
+  isLoading.value = true
+  try {
+    // Get user's QR code
+    const user = authStore.user
+    if (!user?.qrCodeId) {
+      console.error('No QR code ID found for user')
+      initializeGames(['pinball', 'memory']) // Default enabled games
+      return
+    }
+
+    qrCodeId.value = user.qrCodeId
+
+    // Fetch settings from API
+    const settings = await gameSettingsService.getGameSettings(qrCodeId.value)
+    initializeGames(settings.enabledGames)
+
+    console.log('Game settings loaded:', settings)
+  } catch (error) {
+    console.error('Failed to load game settings:', error)
+    // Initialize with defaults on error
+    initializeGames(['pinball', 'memory'])
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Handle toggle change
+const handleToggleChange = (game: Game) => {
+  console.log(`Game ${game.name} toggled:`, game.active)
+}
+
+// Save settings to API
+const saveSettings = async () => {
+  if (!qrCodeId.value) {
+    alert('QR 코드 ID를 찾을 수 없습니다.')
+    return
+  }
+
+  isSaving.value = true
+  try {
+    // Get enabled games
+    const enabledGames = games.value
+      .filter(game => game.active)
+      .map(game => game.id)
+
+    // Create games order
+    const gamesOrder: GameOrderDto[] = enabledGames.map((gameId, index) => ({
+      type: gameId,
+      order: index + 1
+    }))
+
+    // Update settings
+    await gameSettingsService.updateGameSettings(qrCodeId.value, {
+      enabledGames,
+      gamesOrder
+    })
+
+    alert('게임 설정이 저장되었습니다!')
+    console.log('Settings saved:', { enabledGames, gamesOrder })
+  } catch (error) {
+    console.error('Failed to save game settings:', error)
+    alert('게임 설정 저장에 실패했습니다.')
+  } finally {
+    isSaving.value = false
+  }
+}
+
+onMounted(() => {
+  loadSettings()
+})
 </script>
 
 <style scoped>
@@ -106,6 +214,13 @@ const games = ref<Game[]>([
   font-size: 16px;
   color: #6e6e73;
   margin: 0;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6e6e73;
+  font-size: 16px;
 }
 
 .games-list {
@@ -223,5 +338,34 @@ input:checked + .toggle-slider:before {
   font-size: 16px;
   font-weight: 600;
   color: #1d1d1f;
+}
+
+.save-section {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 20px;
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-save:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
