@@ -30,7 +30,7 @@
           </div>
           <div class="user-info">
             <h4>{{ authStore.user?.nickname || '관리자' }}</h4>
-            <p>{{ authStore.user?.email || authStore.user?.company || 'admin@waitplay.com' }}</p>
+            <p>{{ authStore.user?.company || 'admin@waitplay.com' }}</p>
           </div>
         </div>
         <button class="logout-btn" @click="handleLogout">
