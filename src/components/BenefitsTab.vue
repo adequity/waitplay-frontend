@@ -17,7 +17,9 @@
 
     <!-- Empty State -->
     <div v-if="enabledGames.length === 0" class="empty-state">
-      <div class="empty-icon">🎮</div>
+      <div class="empty-icon-wrapper">
+        <i class="fa-solid fa-gamepad"></i>
+      </div>
       <h3 class="empty-title">활성화된 게임이 없습니다</h3>
       <p class="empty-subtitle">게임 설정 탭에서 먼저 게임을 활성화해주세요</p>
       <button class="btn-go-to-games" @click="goToGamesTab">게임 설정으로 이동</button>
@@ -353,9 +355,20 @@ onMounted(() => {
   margin-bottom: 30px;
 }
 
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 20px;
+.empty-icon-wrapper {
+  width: 100px;
+  height: 100px;
+  background: var(--primary-light);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 20px;
+}
+
+.empty-icon-wrapper i {
+  font-size: 48px;
+  color: var(--primary-blue);
 }
 
 .empty-title {

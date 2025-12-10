@@ -9,7 +9,9 @@
     <!-- Customer Stats -->
     <div class="customer-stats">
       <div class="stat-card">
-        <div class="stat-icon">👥</div>
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-users"></i>
+        </div>
         <div class="stat-content">
           <p class="stat-value">1,247</p>
           <p class="stat-label">총 고객 수</p>
@@ -17,7 +19,9 @@
       </div>
 
       <div class="stat-card">
-        <div class="stat-icon">⭐</div>
+        <div class="stat-icon-wrapper star">
+          <i class="fa-solid fa-star"></i>
+        </div>
         <div class="stat-content">
           <p class="stat-value">823</p>
           <p class="stat-label">단골 고객</p>
@@ -25,7 +29,9 @@
       </div>
 
       <div class="stat-card">
-        <div class="stat-icon">🎮</div>
+        <div class="stat-icon-wrapper game">
+          <i class="fa-solid fa-gamepad"></i>
+        </div>
         <div class="stat-content">
           <p class="stat-value">68%</p>
           <p class="stat-label">게임 참여율</p>
@@ -33,7 +39,9 @@
       </div>
 
       <div class="stat-card">
-        <div class="stat-icon">🎫</div>
+        <div class="stat-icon-wrapper ticket">
+          <i class="fa-solid fa-ticket"></i>
+        </div>
         <div class="stat-content">
           <p class="stat-value">82%</p>
           <p class="stat-label">쿠폰 사용률</p>
@@ -181,15 +189,32 @@ const customers = ref<Customer[]>([
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.stat-icon {
-  font-size: 48px;
+.stat-icon-wrapper {
   width: 80px;
   height: 80px;
-  background: #f5f5f7;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon-wrapper i {
+  font-size: 32px;
+  color: white;
+}
+
+.stat-icon-wrapper.star {
+  background: linear-gradient(135deg, #ffd93d 0%, #ff9500 100%);
+}
+
+.stat-icon-wrapper.game {
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+}
+
+.stat-icon-wrapper.ticket {
+  background: linear-gradient(135deg, #ff375f 0%, #ff6482 100%);
 }
 
 .stat-value {

@@ -3,14 +3,21 @@
     <div class="modal-container">
       <!-- Modal Header -->
       <div class="modal-header">
-        <h2 class="modal-title">🎉 축하합니다!</h2>
+        <div class="header-content">
+          <div class="celebration-icon">
+            <i class="fa-solid fa-party-horn"></i>
+          </div>
+          <h2 class="modal-title">축하합니다!</h2>
+        </div>
       </div>
 
       <!-- Modal Body -->
       <div class="modal-body">
         <!-- Benefit Info -->
         <div class="benefit-info">
-          <div class="benefit-icon">🎁</div>
+          <div class="benefit-icon-wrapper">
+            <i class="fa-solid fa-gift"></i>
+          </div>
           <h3 class="benefit-title">{{ benefit.title }}</h3>
           <p v-if="benefit.description" class="benefit-description">
             {{ benefit.description }}
@@ -26,7 +33,7 @@
             <p class="coupon-label">쿠폰 코드</p>
             <p class="coupon-code">{{ couponCode }}</p>
             <p class="expiry-warning">
-              ⏰ {{ expiryMinutes }}분 내에 직원에게 제시하세요
+              <i class="fa-solid fa-clock"></i> {{ expiryMinutes }}분 내에 직원에게 제시하세요
             </p>
           </div>
         </div>
@@ -45,7 +52,9 @@
         <!-- Instructions -->
         <div v-if="!couponCode && !isGenerating" class="instructions">
           <p>이 혜택을 지금 받으시겠습니까?</p>
-          <p class="warning-text">⚠️ 쿠폰은 즉시 사용해야 하며, 나중에 사용할 수 없습니다</p>
+          <p class="warning-text">
+            <i class="fa-solid fa-triangle-exclamation"></i> 쿠폰은 즉시 사용해야 하며, 나중에 사용할 수 없습니다
+          </p>
         </div>
       </div>
 
@@ -162,6 +171,25 @@ function close() {
   color: white;
 }
 
+.header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.celebration-icon {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28px;
+  color: white;
+}
+
 .modal-title {
   font-size: 28px;
   font-weight: 700;
@@ -184,9 +212,20 @@ function close() {
   gap: 12px;
 }
 
-.benefit-icon {
-  font-size: 64px;
+.benefit-icon-wrapper {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 8px;
+}
+
+.benefit-icon-wrapper i {
+  font-size: 48px;
+  color: white;
 }
 
 .benefit-title {
@@ -362,8 +401,13 @@ function close() {
     margin: 20px;
   }
 
-  .benefit-icon {
-    font-size: 48px;
+  .benefit-icon-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+
+  .benefit-icon-wrapper i {
+    font-size: 36px;
   }
 
   .benefit-title {

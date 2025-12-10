@@ -4,7 +4,7 @@
       <!-- Modal Header -->
       <div class="modal-header">
         <h2 class="modal-title">
-          <span class="game-icon">{{ gameIcon }}</span>
+          <i :class="[gameIcon, 'game-icon']"></i>
           {{ gameName }} 혜택 설정
         </h2>
         <button class="btn-close" @click="close">✕</button>

@@ -4,7 +4,9 @@
       <!-- Modal Header -->
       <div class="modal-header">
         <div class="header-content">
-          <span class="game-icon">{{ gameIcon }}</span>
+          <div class="game-icon-wrapper">
+            <i :class="gameIcon"></i>
+          </div>
           <div class="header-text">
             <h2 class="modal-title">{{ gameName }}</h2>
             <p class="modal-subtitle">혜택 상세 관리</p>
@@ -60,7 +62,7 @@
                   <div class="step-badge">{{ index + 1 }}</div>
                   <div class="benefit-summary">
                     <div class="benefit-title-row">
-                      <span class="game-icon-small">{{ gameIcon }}</span>
+                      <i :class="[gameIcon, 'game-icon-small']"></i>
                       <span class="benefit-name">{{ benefit.title }}</span>
                     </div>
                     <div class="benefit-score-range">
@@ -181,7 +183,9 @@
           </div>
 
           <div v-else class="empty-benefits">
-            <div class="empty-icon">🎁</div>
+            <div class="empty-icon-box">
+              <i class="fa-solid fa-gift"></i>
+            </div>
             <p class="empty-text">설정된 혜택이 없습니다</p>
             <button class="btn-add-first" @click="addNewBenefit">첫 혜택 추가하기</button>
           </div>
@@ -410,9 +414,16 @@ function close() {
   gap: 16px;
 }
 
-.game-icon {
-  font-size: 40px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+.game-icon-wrapper {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: white;
 }
 
 .header-text {
@@ -624,7 +635,8 @@ function close() {
 }
 
 .game-icon-small {
-  font-size: 18px;
+  font-size: 16px;
+  color: #667eea;
 }
 
 .benefit-name {
