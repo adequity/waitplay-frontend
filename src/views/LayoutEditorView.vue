@@ -676,6 +676,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import draggable from 'vuedraggable'
 import type { Block, BlockType } from '@/types/blocks'
+import gameSettingsService from '@/services/gameSettingsService'
 
 // Import block components
 import HeaderBlock from '@/components/blocks/HeaderBlock.vue'
@@ -1003,7 +1004,7 @@ function getDefaultBlockData(type: BlockType): any {
   }
 }
 
-function editBlock(block: Block) {
+async function editBlock(block: Block) {
   editingBlock.value = block
   editForm.value = JSON.parse(JSON.stringify(block.data))
 
@@ -1017,16 +1018,52 @@ function editBlock(block: Block) {
     }
   }
 
-  // Ensure gamesOrder exists for games_carousel blocks
-  if (block.type === 'games_carousel' && (!editForm.value.gamesOrder || editForm.value.gamesOrder.length === 0)) {
-    editForm.value.gamesOrder = [
-      { type: 'pinball', name: '핀볼게임', icon: '🎯' },
-      { type: 'memory', name: '같은 카드 찾기', icon: '🃏' },
-      { type: 'spot-difference', name: '틀린 그림 찾기', icon: '🔍' }
-    ]
-    // Initialize enabledGames if not set
-    if (!editForm.value.enabledGames || editForm.value.enabledGames.length === 0) {
-      editForm.value.enabledGames = ['pinball', 'memory', 'spot-difference']
+  // Load game settings from API for games_carousel blocks
+  if (block.type === 'games_carousel') {
+    try {
+      const settings = await gameSettingsService.getGameSettings(qrCodeId.value)
+
+      // Game definitions matching GamesTab
+      const gameDefinitions: Record<string, { name: string; icon: string }> = {
+        'pinball': { name: '핀볼', icon: '🎯' },
+        'brick-breaker': { name: '벽돌깨기', icon: '🧱' },
+        'memory': { name: '같은 카드 찾기', icon: '🃏' },
+        'spot-difference': { name: '틀린 그림 찾기', icon: '🔍' }
+      }
+
+      // Update enabled games from API
+      editForm.value.enabledGames = settings.enabledGames
+
+      // Update games order from API or create from enabled games
+      if (settings.gamesOrder && settings.gamesOrder.length > 0) {
+        editForm.value.gamesOrder = settings.gamesOrder.map(order => ({
+          type: order.type,
+          name: gameDefinitions[order.type]?.name || order.type,
+          icon: gameDefinitions[order.type]?.icon || '🎮'
+        }))
+      } else {
+        // Create games order from enabled games
+        editForm.value.gamesOrder = settings.enabledGames.map(gameId => ({
+          type: gameId,
+          name: gameDefinitions[gameId]?.name || gameId,
+          icon: gameDefinitions[gameId]?.icon || '🎮'
+        }))
+      }
+
+      console.log('Game settings loaded for carousel:', settings)
+    } catch (error) {
+      console.error('Failed to load game settings:', error)
+      // Fallback to default games if API fails
+      if (!editForm.value.gamesOrder || editForm.value.gamesOrder.length === 0) {
+        editForm.value.gamesOrder = [
+          { type: 'pinball', name: '핀볼', icon: '🎯' },
+          { type: 'memory', name: '같은 카드 찾기', icon: '🃏' },
+          { type: 'spot-difference', name: '틀린 그림 찾기', icon: '🔍' }
+        ]
+      }
+      if (!editForm.value.enabledGames || editForm.value.enabledGames.length === 0) {
+        editForm.value.enabledGames = ['pinball', 'memory', 'spot-difference']
+      }
     }
   }
 
