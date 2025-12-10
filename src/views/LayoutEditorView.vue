@@ -673,6 +673,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, type Component } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import draggable from 'vuedraggable'
 import type { Block, BlockType } from '@/types/blocks'
 
@@ -690,9 +691,10 @@ import GuestbookBlock from '@/components/blocks/GuestbookBlock.vue'
 
 const router = useRouter()
 const route = useRoute()
+const authStore = useAuthStore()
 
-// Get QR Code ID from route parameter
-const qrCodeId = ref<string>(route.params.qrCodeId as string)
+// Get QR Code ID from authenticated user (not from URL parameter)
+const qrCodeId = ref<string>('')
 const isLoading = ref(true)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -732,6 +734,41 @@ const availableBlockTypes = [
 
 // Load layout from API on mount
 onMounted(async () => {
+  // Verify authentication
+  if (!authStore.isAuthenticated) {
+    router.push('/login')
+    return
+  }
+
+  // Ensure user data is loaded
+  if (!authStore.user) {
+    try {
+      await authStore.fetchUser()
+    } catch (error) {
+      console.error('Failed to fetch user:', error)
+      authStore.logout()
+      router.push('/login')
+      return
+    }
+  }
+
+  // Verify admin role
+  if (authStore.user?.userRole !== 'admin') {
+    console.warn('Access denied: Admin role required')
+    router.push('/')
+    return
+  }
+
+  // Get QR code ID from authenticated user
+  if (!authStore.user?.qrCodeId) {
+    console.error('No QR code ID found for user')
+    alert('QR 코드를 찾을 수 없습니다. QR 관리에서 QR 코드를 먼저 생성해주세요.')
+    router.push('/admin')
+    return
+  }
+
+  qrCodeId.value = authStore.user.qrCodeId
+
   await loadLandingPageSettings()
   await loadLayout()
 })

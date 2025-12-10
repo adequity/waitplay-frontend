@@ -22,10 +22,13 @@
       <!-- Account Section -->
       <div class="sidebar-account">
         <div class="account-info">
-          <div class="account-avatar">👤</div>
+          <div class="account-avatar">
+            <img v-if="authStore.user?.profileImage" :src="authStore.user.profileImage" alt="프로필" />
+            <span v-else>👤</span>
+          </div>
           <div class="account-details">
-            <p class="account-name">관리자</p>
-            <p class="account-email">admin@waitplay.com</p>
+            <p class="account-name">{{ authStore.user?.nickname || '관리자' }}</p>
+            <p class="account-email">{{ authStore.user?.company || 'WaitPlay Admin' }}</p>
           </div>
         </div>
         <button class="btn-logout" @click="handleLogout">
@@ -55,13 +58,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import DashboardTab from '@/components/DashboardTab.vue'
 import QRManagement from '@/components/QRManagement.vue'
 import GamesTab from '@/components/GamesTab.vue'
 import BenefitsTab from '@/components/BenefitsTab.vue'
 import CustomersTab from '@/components/CustomersTab.vue'
 
+const router = useRouter()
+const authStore = useAuthStore()
 const activeTab = ref('dashboard')
 
 const tabs = [
@@ -74,10 +81,35 @@ const tabs = [
 
 const handleLogout = () => {
   if (confirm('로그아웃 하시겠습니까?')) {
-    // TODO: Implement logout logic
-    window.location.href = '/'
+    authStore.logout()
+    router.push('/login')
   }
 }
+
+// Verify authentication on mount
+onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    router.push('/login')
+    return
+  }
+
+  // Fetch user data if not loaded
+  if (!authStore.user) {
+    try {
+      await authStore.fetchUser()
+    } catch (error) {
+      console.error('Failed to fetch user:', error)
+      authStore.logout()
+      router.push('/login')
+    }
+  }
+
+  // Verify admin role
+  if (authStore.user?.userRole !== 'admin') {
+    console.warn('Access denied: Admin role required')
+    router.push('/')
+  }
+})
 </script>
 
 <style scoped>

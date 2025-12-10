@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -15,18 +16,20 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     name: 'admin',
-    component: () => import('../views/AdminView.vue')
+    component: () => import('../views/AdminView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
-    path: '/admin/layout-editor/:qrCodeId',
+    path: '/admin/layout-editor',
     name: 'layout-editor',
     component: () => import('../views/LayoutEditorView.vue'),
-    props: true
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/superadmin',
     name: 'superadmin',
-    component: () => import('../views/SuperAdminView.vue')
+    component: () => import('../views/SuperAdminView.vue'),
+    meta: { requiresAuth: true, requiresSuperAdmin: true }
   },
   {
     path: '/game/:type',
@@ -49,6 +52,48 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
+})
+
+// Navigation Guard for authentication and authorization
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+
+  // Check if route requires authentication
+  if (to.meta.requiresAuth) {
+    // If not authenticated, redirect to login
+    if (!authStore.isAuthenticated) {
+      next({ name: 'login', query: { redirect: to.fullPath } })
+      return
+    }
+
+    // Ensure user data is loaded
+    if (!authStore.user) {
+      try {
+        await authStore.fetchUser()
+      } catch (error) {
+        console.error('Failed to fetch user:', error)
+        authStore.logout()
+        next({ name: 'login', query: { redirect: to.fullPath } })
+        return
+      }
+    }
+
+    // Check admin role requirement
+    if (to.meta.requiresAdmin && authStore.user?.userRole !== 'admin') {
+      console.warn('Access denied: Admin role required')
+      next({ name: 'home' })
+      return
+    }
+
+    // Check superadmin role requirement
+    if (to.meta.requiresSuperAdmin && authStore.user?.userRole !== 'superadmin') {
+      console.warn('Access denied: Superadmin role required')
+      next({ name: 'home' })
+      return
+    }
+  }
+
+  next()
 })
 
 export default router
