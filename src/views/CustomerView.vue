@@ -400,6 +400,7 @@ onMounted(async () => {
 .footer {
   padding: 2rem 1.5rem;
   text-align: center;
+  background: transparent;
 }
 
 .footer-text {
