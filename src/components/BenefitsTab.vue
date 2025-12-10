@@ -10,8 +10,8 @@
     <div class="info-box">
       <IconBase name="lightbulb" class="info-icon" />
       <div>
-        <strong>기본 설정:</strong> 게임별로 점수 구간을 설정하고 각 구간마다 제공할 쿠폰 혜택을 자유롭게 설정할 수 있습니다.
-        혜택은 자동으로 게임 완료 시 제공되며, 고객은 즉시 사용하거나 나중에 사용할 수 있습니다.
+        <strong>기본 설정:</strong> 게임별로 점수 구간(메달)을 설정하고 각 구간마다 제공할 쿠폰 혜택을 자유롭게 입력하세요. 
+        설정된 혜택은 고객이 게임을 완료했을 때 자동으로 지급됩니다.
       </div>
     </div>
 
@@ -21,11 +21,11 @@
         <IconBase name="gamepad" />
       </div>
       <h3 class="empty-title">활성화된 게임이 없습니다</h3>
-      <p class="empty-subtitle">게임 설정 탭에서 먼저 게임을 활성화해주세요</p>
-      <button class="btn-go-to-games" @click="goToGamesTab">게임 설정으로 이동</button>
+      <p class="empty-subtitle">게임 설정 탭에서 먼저 게임을 활성화해주세요.</p>
+      <button class="btn-primary" @click="goToGamesTab">게임 설정으로 이동</button>
     </div>
 
-    <!-- Grid Container -->
+    <!-- Benefits Grid -->
     <div v-else class="grid-container">
       <div
         v-for="game in enabledGames"
@@ -37,6 +37,7 @@
         <div class="card-header">
           <div class="card-title-group">
             <div class="icon-box" :class="getIconClass(game.type)">
+              <!-- icon name logic restored to match original -->
               <IconBase :name="getIconName(game.icon)" />
             </div>
             <span class="card-title">{{ game.name }}</span>
@@ -49,54 +50,60 @@
           </button>
         </div>
 
-        <!-- Summary Medals (Always Visible) -->
+        <!-- Summary Medals (Read Only, Always Visible) -->
         <div class="summary-medals">
           <div class="medal-box">
-            <IconBase name="medal" class="medal-bronze medal-icon" />
-            <span class="medal-name">동메달</span>
-            <span class="medal-score">6-7점</span>
+            <IconBase name="medal" class="medal-icon medal-bronze" />
+            <span class="medal-name">{{ getStepName(game, 0) || '미설정' }}</span>
+            <span class="medal-score">{{ getStepRange(game, 0) }}</span>
           </div>
           <div class="medal-box">
-            <IconBase name="medal" class="medal-silver medal-icon" />
-            <span class="medal-name">은메달</span>
-            <span class="medal-score">8-9점</span>
+            <IconBase name="medal" class="medal-icon medal-silver" />
+            <span class="medal-name">{{ getStepName(game, 1) || '미설정' }}</span>
+            <span class="medal-score">{{ getStepRange(game, 1) }}</span>
           </div>
           <div class="medal-box">
-            <IconBase name="medal" class="medal-gold medal-icon" />
-            <span class="medal-name">금메달</span>
-            <span class="medal-score">10점</span>
+            <IconBase name="medal" class="medal-icon medal-gold" />
+            <span class="medal-name">{{ getStepName(game, 2) || '미설정' }}</span>
+            <span class="medal-score">{{ getStepRange(game, 2) }}</span>
           </div>
         </div>
 
         <!-- Card Content (Collapsible & Editable) -->
         <div class="card-content">
-          <button class="btn-template">
-            <IconBase name="wand" /> 템플릿 적용
+          <button class="btn-template" @click="applyTemplate(game)">
+            <IconBase name="wand" /> 기본 템플릿 적용 (초기화)
           </button>
 
           <!-- Step Container (Editable Forms) -->
           <div class="step-container">
-            <div v-for="(step, index) in game.steps" :key="index" class="step-box">
-              <button class="close-step" @click="removeStep(game, index)">
-                <IconBase name="close" />
-              </button>
-              <div class="step-badge">{{ index + 1 }}</div>
-              
-              <div class="input-row">
-                <!-- Medal Name Input -->
-                <div class="input-group-medal">
-                  <IconBase name="medal" :class="getMedalClass(index)" />
-                  <input type="text" v-model="step.name" placeholder="메달 이름">
+            <template v-if="game.steps.length > 0">
+              <div v-for="(step, index) in game.steps" :key="index" class="step-box">
+                <button class="close-step" @click="removeStep(game, index)">
+                  <IconBase name="close" />
+                </button>
+                
+                <div class="step-badge">{{ index + 1 }}</div>
+                
+                <div class="input-row">
+                  <!-- Medal Name Input -->
+                  <div class="input-group-medal">
+                    <IconBase name="medal" :class="getMedalClass(index)" />
+                    <input type="text" v-model="step.name" placeholder="등급 이름 (예: 동메달)">
+                  </div>
+                  <!-- Score Range Input -->
+                  <div class="input-group-score">
+                    <input type="number" class="input-score" v-model="step.minScore" placeholder="0">
+                    <span>~</span>
+                    <input type="number" class="input-score" v-model="step.maxScore" placeholder="10">
+                  </div>
                 </div>
-                <!-- Score Range Input -->
-                <div class="input-group-score">
-                  <input type="number" class="input-score" v-model="step.minScore">
-                  <span>~</span>
-                  <input type="number" class="input-score" v-model="step.maxScore">
-                </div>
+                <!-- Reward Input -->
+                <input type="text" class="input-full" v-model="step.reward" placeholder="제공할 혜택 입력 (예: 아메리카노 1잔)">
               </div>
-              <!-- Reward Input -->
-              <input type="text" class="input-full" v-model="step.reward" placeholder="제공할 혜택 입력 (예: 아메리카노 1잔)">
+            </template>
+            <div v-else class="empty-steps">
+              등록된 혜택 단계가 없습니다. '단계 추가'를 눌러주세요.
             </div>
           </div>
 
@@ -171,15 +178,12 @@ async function loadGameSettings() {
 
     // Load actual settings
     const settings = await gameSettingsService.getGameSettings(qrCodeId)
-    // Note: In a real app, you would verify if specific benefit steps exist from the API.
-    // For now, we initialize with default steps or empty arrays.
-
+    
     gamesList.value = Object.entries(gameDefinitions).map(([type, def]) => ({
       type,
       name: def.name,
       icon: def.icon,
       enabled: settings.enabledGames.includes(type),
-      // Clone default steps to ensure reactivity and independence
       steps: JSON.parse(JSON.stringify(defaultSteps)) 
     }))
 
@@ -205,12 +209,21 @@ function addStep(game: GameBenefit) {
 }
 
 function removeStep(game: GameBenefit, index: number) {
-  game.steps.splice(index, 1)
+  if (confirm('이 혜택 단계를 삭제하시겠습니까?')) {
+    game.steps.splice(index, 1)
+  }
+}
+
+function applyTemplate(game: GameBenefit) {
+  if (confirm('기존 내용을 지우고 기본 템플릿으로 초기화하시겠습니까?')) {
+    game.steps = JSON.parse(JSON.stringify(defaultSteps))
+  }
 }
 
 async function saveGameBenefits(game: GameBenefit) {
   // TODO: Call API to save steps
   console.log('Saving benefits for', game.type, game.steps)
+  // Here you would typically call benefitsService.updateBenefits(...)
   alert(`${game.name} 혜택 설정이 저장되었습니다.`)
 }
 
@@ -229,11 +242,12 @@ function getIconClass(gameType: string): string {
 }
 
 function getIconName(faClass: string): string {
+  // Restored: Mapping logic to match your original file's expectations
   const iconMapping: Record<string, string> = {
-    'fa-solid fa-bullseye': 'target',
+    'fa-solid fa-bullseye': 'target',           // Was 'bullseye', restored to 'target'
     'fa-solid fa-utensils': 'utensils',
     'fa-solid fa-clone': 'clone',
-    'fa-solid fa-magnifying-glass': 'magnifying-glass'
+    'fa-solid fa-magnifying-glass': 'magnifying-glass' // Was 'magnify', restored to 'magnifying-glass'
   }
   return iconMapping[faClass] || 'gamepad'
 }
@@ -242,7 +256,17 @@ function getMedalClass(index: number): string {
   if (index === 0) return 'medal-bronze'
   if (index === 1) return 'medal-silver'
   if (index === 2) return 'medal-gold'
-  return 'medal-default' // Fallback color
+  return 'medal-default'
+}
+
+// Helpers for Read-only Summary
+function getStepName(game: GameBenefit, index: number) {
+  return game.steps[index]?.name
+}
+
+function getStepRange(game: GameBenefit, index: number) {
+  const s = game.steps[index]
+  return s ? `${s.minScore}-${s.maxScore}점` : '-'
 }
 
 onMounted(() => {
@@ -251,176 +275,208 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* CSS Variables */
+/* --- Design System: Apple Style Unified --- */
 :root {
-  --primary-blue: #007bff;
-  --primary-dark: #0056b3;
-  --primary-light: #e7f1ff;
-  --bg-gray: #f4f6f9;
-  --box-bg: #f8f9fa;
-  --border-color: #e9ecef;
-  --text-dark: #212529;
-  --text-gray: #868e96;
-  --card-radius: 16px;
+  --primary-blue: #0071e3;       /* Apple Blue */
+  --primary-dark: #0077ed;       /* Hover Blue */
+  --primary-light: #e8f2ff;      /* Light Blue Bg */
+  
+  --bg-gray: #f5f5f7;           /* Main Background */
+  --box-bg: #ffffff;            /* Card Background */
+  
+  --border-color: #d2d2d7;      /* Borders */
+  --border-light: #e5e5ea;      /* Light Borders */
+  
+  --text-dark: #1d1d1f;         /* Main Text */
+  --text-gray: #86868b;         /* Secondary Text */
+  --text-light-gray: #aeaeb2;   /* Placeholder */
+  
+  --card-radius: 20px;
+  --btn-radius: 12px;
+  --input-radius: 10px;
 }
 
-* { box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
+* { box-sizing: border-box; font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; }
 
-.tab-content { padding: 40px 50px; background-color: var(--bg-gray); min-height: 100vh; }
+.tab-content { padding: 50px 60px; background-color: #f5f5f7; min-height: 100vh; }
 
 /* Page Header */
-.page-header { margin-bottom: 30px; }
-.page-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; color: var(--text-dark); letter-spacing: -0.5px; }
-.page-desc { color: var(--text-gray); font-size: 15px; }
+.page-header { margin-bottom: 40px; }
+.page-title { font-size: 32px; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; color: #1d1d1f; }
+.page-desc { color: #86868b; font-size: 16px; }
 
 /* Info Box */
 .info-box {
-  background-color: var(--primary-light); border: 1px solid #b6d4fe; color: #004085;
-  padding: 20px; border-radius: 12px; font-size: 14px; display: flex; align-items: center;
+  background-color: #e8f2ff; border: 1px solid #b6d4fe; color: #004085;
+  padding: 20px; border-radius: 14px; font-size: 14px; display: flex; align-items: flex-start;
   gap: 15px; margin-bottom: 40px; line-height: 1.6;
 }
-.info-icon { font-size: 20px; width: 20px; height: 20px; color: #ffc107; flex-shrink: 0; }
+.info-icon { font-size: 20px; width: 20px; height: 20px; color: #ffc107; flex-shrink: 0; margin-top: 2px; }
 
 /* Empty State */
 .empty-state {
-  background: #ffffff; border-radius: 20px; padding: 60px 40px; text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); margin-bottom: 30px;
+  background: white; border-radius: 20px; padding: 80px 40px; text-align: center;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); margin-bottom: 30px;
 }
 .empty-icon-wrapper {
-  width: 100px; height: 100px; background: var(--primary-light); border-radius: 50%;
-  display: flex; justify-content: center; align-items: center; margin: 0 auto 20px;
+  width: 80px; height: 80px; background: #f5f5f7; border-radius: 50%;
+  display: flex; justify-content: center; align-items: center; margin: 0 auto 24px;
+  color: #86868b;
 }
-.empty-icon-wrapper :deep(svg) { font-size: 48px; width: 48px; height: 48px; color: var(--primary-blue); }
-.empty-title { font-size: 24px; font-weight: 600; color: #1d1d1f; margin: 0 0 12px 0; }
-.empty-subtitle { font-size: 16px; color: #6e6e73; margin: 0 0 28px 0; }
-.btn-go-to-games {
-  padding: 14px 32px; background: linear-gradient(135deg, #007aff 0%, #005ecb 100%);
-  color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+.empty-icon-wrapper :deep(svg) { font-size: 36px; width: 36px; height: 36px; }
+.empty-title { font-size: 20px; font-weight: 700; color: #1d1d1f; margin: 0 0 10px 0; }
+.empty-subtitle { font-size: 15px; color: #86868b; margin: 0 0 30px 0; }
+.btn-primary {
+  padding: 12px 28px; background: #0071e3; color: white; border: none;
+  border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
 }
-.btn-go-to-games:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4); }
+.btn-primary:hover { background: #0077ed; transform: translateY(-1px); }
 
 /* Grid Layout */
 .grid-container {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; align-items: start;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 30px; align-items: start;
 }
 
 /* Card Styles */
 .card {
-  background: white; border-radius: var(--card-radius);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); padding: 24px;
-  border: 1px solid rgba(0, 0, 0, 0.05); display: flex; flex-direction: column;
+  background: white; border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.04); padding: 28px;
+  border: 1px solid rgba(0,0,0,0.02); display: flex; flex-direction: column;
   transition: all 0.3s ease;
 }
+.card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.card-title-group { display: flex; align-items: center; gap: 12px; }
+.card-title-group { display: flex; align-items: center; gap: 14px; }
+.card-title { font-weight: 700; font-size: 18px; color: #1d1d1f; }
+
 .icon-box {
-  width: 40px; height: 40px; border-radius: 50%; display: flex;
-  justify-content: center; align-items: center; font-size: 18px;
+  width: 44px; height: 44px; border-radius: 50%; display: flex;
+  justify-content: center; align-items: center; font-size: 20px;
 }
-.icon-box.brand { background-color: #ffeef0; color: #ff6b6b; }
-.icon-box.menu { background-color: #f3f0ff; color: #845ef7; }
-.icon-box.find { background-color: #e7f5ff; color: #339af0; }
-.card-title { font-weight: 700; font-size: 18px; color: var(--text-dark); }
+.icon-box.brand { background-color: #fff0f2; color: #ff3b30; }
+.icon-box.menu { background-color: #f2f2ff; color: #5856d6; }
+.icon-box.find { background-color: #f0f8ff; color: #007aff; }
+
 .btn-collapse {
-  border: 1px solid #dee2e6; background: white; padding: 6px 12px;
-  border-radius: 6px; font-size: 12px; font-weight: 600;
-  color: var(--primary-blue); cursor: pointer; transition: 0.2s;
+  border: none; background: #f5f5f7; padding: 8px 14px;
+  border-radius: 8px; font-size: 12px; font-weight: 600; color: #86868b;
+  cursor: pointer; transition: 0.2s;
 }
-.btn-collapse:hover { background: var(--primary-light); }
+.btn-collapse:hover { background: #e5e5ea; color: #1d1d1f; }
 
 /* Summary Medals */
-.summary-medals { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+.summary-medals { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
 .medal-box {
-  background: var(--box-bg); padding: 16px 10px; border-radius: 8px; flex: 1;
+  background: #f5f5f7; padding: 16px 8px; border-radius: 12px; flex: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
-.medal-icon { font-size: 20px; width: 20px; height: 20px; margin-bottom: 8px; }
-.medal-bronze { color: #cd7f32; }
-.medal-silver { color: #adb5bd; }
-.medal-gold { color: #fab005; }
-.medal-default { color: #868e96; }
-.medal-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; color: var(--text-dark); }
-.medal-score { font-size: 12px; color: var(--text-gray); font-weight: 500; }
+.medal-icon { font-size: 24px; width: 24px; height: 24px; margin-bottom: 8px; }
+.medal-bronze { color: #bf8970; }
+.medal-silver { color: #98989d; }
+.medal-gold { color: #ffcc00; }
+.medal-default { color: #86868b; }
 
-/* Card Content & Steps */
-.card-content { display: block; }
+.medal-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; color: #1d1d1f; }
+.medal-score { font-size: 12px; color: #86868b; font-weight: 500; }
+
+/* Card Content & Animation */
+.card-content { display: block; animation: fadeIn 0.3s ease; }
 .card.collapsed .card-content { display: none; }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .btn-template {
-  width: 100%; padding: 12px; background: white; border: 1px solid #dee2e6;
-  border-radius: 8px; color: var(--primary-blue); font-size: 13px; font-weight: 600;
-  cursor: pointer; margin-bottom: 24px; display: flex; justify-content: center;
+  width: 100%; padding: 12px; background: white; border: 1px solid #d2d2d7;
+  border-radius: 12px; color: #0071e3; font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-bottom: 20px; display: flex; justify-content: center;
   align-items: center; gap: 8px; transition: 0.2s;
 }
-.btn-template:hover { background: var(--primary-light); border-color: #b6d4fe; }
+.btn-template:hover { background: #f5f5f7; border-color: #0071e3; }
 
-/* Step Box Styling (New) */
+/* Step Box Styling */
 .step-container { display: flex; flex-direction: column; gap: 16px; }
 .step-box {
-  border: 1px solid #dee2e6; border-radius: 12px; padding: 20px;
+  border: 1px solid #d2d2d7; border-radius: 14px; padding: 20px;
   position: relative; background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
+.empty-steps { text-align: center; color: #86868b; padding: 20px; }
+
 .step-badge {
-  background: var(--primary-blue); color: white; width: 28px; height: 28px;
-  border-radius: 8px; font-size: 14px; font-weight: 700; display: inline-flex;
+  background: #1d1d1f; color: white; width: 24px; height: 24px;
+  border-radius: 6px; font-size: 12px; font-weight: 700; display: inline-flex;
   align-items: center; justify-content: center; margin-bottom: 16px;
 }
+
 .close-step {
-  position: absolute; top: 15px; right: 15px; color: #adb5bd;
+  position: absolute; top: 16px; right: 16px; color: #aeaeb2;
   cursor: pointer; background: none; border: none; font-size: 18px;
   width: 24px; height: 24px; display: flex; justify-content: center; align-items: center;
+  transition: 0.2s;
 }
-.close-step:hover { color: #dc3545; }
+.close-step:hover { color: #ff3b30; }
 
-/* Input Styles */
+/* Unified Input Styles */
 .input-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 
 .input-group-medal {
-  display: flex; align-items: center; border: 1px solid #dee2e6;
-  border-radius: 8px; padding: 0 12px; height: 44px; background: white; flex: 1.5;
+  display: flex; align-items: center; border: 1px solid #d2d2d7;
+  border-radius: 10px; padding: 0 12px; height: 44px; background: white; flex: 1.5;
   transition: border-color 0.2s;
 }
-.input-group-medal:focus-within { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
-.input-group-medal :deep(svg) { margin-right: 10px; font-size: 16px; width: 16px; height: 16px; }
-.input-group-medal input { border: none; outline: none; width: 100%; font-size: 14px; font-weight: 500; }
-
-.input-group-score { display: flex; align-items: center; gap: 6px; flex: 1.2; }
-.input-score {
-  width: 100%; height: 44px; border: 1px solid #dee2e6; border-radius: 8px;
-  text-align: center; font-size: 14px; outline: none; font-weight: 500; transition: border-color 0.2s;
+.input-group-medal:focus-within { border-color: #0071e3; }
+.input-group-medal :deep(svg) { margin-right: 10px; font-size: 18px; width: 18px; height: 18px; }
+.input-group-medal input { 
+  border: none; outline: none; width: 100%; font-size: 14px; font-weight: 600; color: #1d1d1f; 
 }
-.input-score:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
 
-.input-full {
-  width: 100%; height: 44px; border: 1px solid #dee2e6; border-radius: 8px;
-  padding: 0 14px; font-size: 14px; outline: none; background: var(--bg-gray); transition: all 0.2s;
+.input-group-score { display: flex; align-items: center; gap: 8px; flex: 1.2; }
+.input-score { 
+  width: 100%; height: 44px; text-align: center; border: 1px solid #d2d2d7;
+  border-radius: 10px; outline: none; font-weight: 600; color: #1d1d1f;
+  transition: border-color 0.2s;
 }
-.input-full:focus { background: white; border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
+.input-score:focus { border-color: #0071e3; }
 
+.input-full { 
+  width: 100%; height: 44px; background: #f5f5f7; border: 1px solid transparent; 
+  padding: 0 14px; border-radius: 10px; font-size: 14px; outline: none; 
+  color: #1d1d1f; transition: all 0.2s;
+}
+.input-full:focus { background: white; border-color: #0071e3; }
+.input-full::placeholder { color: #aeaeb2; }
 
 /* Card Footer */
 .card-footer { margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
+
 .btn-add {
-  background: white; border: 1px solid var(--primary-blue); color: var(--primary-blue);
-  padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600;
+  background: white; border: 1px solid #0071e3; color: #0071e3;
+  padding: 10px 20px; border-radius: 12px; font-size: 14px; font-weight: 600;
   cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s;
 }
-.btn-add:hover { background: var(--primary-light); }
+.btn-add:hover { background: #e8f2ff; }
 
 .btn-save {
-  background: var(--primary-blue); color: white; border: none; padding: 10px 30px;
-  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3); transition: 0.2s;
+  background: #0071e3; color: white; border: none; padding: 10px 32px;
+  border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 113, 227, 0.3); transition: 0.2s;
 }
-.btn-save:hover { background: var(--primary-dark); }
+.btn-save:hover { background: #0077ed; transform: translateY(-1px); }
 
 /* Responsive */
 @media (max-width: 1200px) {
   .grid-container { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
+  .tab-content { padding: 30px 20px; }
   .grid-container { grid-template-columns: 1fr; }
-  .card-footer { flex-direction: row; }
+  .card-footer { flex-direction: column-reverse; gap: 10px; }
+  .btn-add, .btn-save { width: 100%; justify-content: center; }
 }
 </style>
