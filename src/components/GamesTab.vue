@@ -8,6 +8,7 @@
 
     <!-- Loading State -->
     <div v-if="isLoading" class="loading-state">
+      <div class="loading-spinner"></div>
       <p>게임 설정을 불러오는 중...</p>
     </div>
 
@@ -19,7 +20,7 @@
         <div class="game-header">
           <div class="game-info">
             <div class="icon-box" :class="game.iconBg">
-              <i :class="game.iconClass"></i>
+              <IconBase :name="getIconName(game.iconClass)" />
             </div>
             <div>
               <div class="card-title">{{ game.name }}</div>
@@ -70,10 +71,12 @@
 
         <!-- Actions -->
         <div class="game-actions">
-          <button class="btn-benefit-setting" @click="switchToBenefits">혜택 설정</button>
+          <button class="btn-benefit-setting" @click="switchToBenefits">
+            <IconBase name="gift" class="btn-icon" /> 혜택 설정
+          </button>
           <button class="btn-details" @click="game.isExpanded = !game.isExpanded">
-            <span v-if="game.isExpanded">접기 <i class="fa-solid fa-chevron-up"></i></span>
-            <span v-else>상세 보기 <i class="fa-solid fa-chevron-down"></i></span>
+            <span v-if="game.isExpanded">접기 <IconBase name="chevron-up" class="btn-icon-right" /></span>
+            <span v-else>상세 보기 <IconBase name="chevron-down" class="btn-icon-right" /></span>
           </button>
         </div>
 
@@ -86,7 +89,7 @@
                 <span class="detail-key">{{ key }}</span> <span class="detail-val">{{ val }}</span>
               </div>
             </div>
-            <div class="detail-column" style="border-left: 1px solid #e9ecef; padding-left: 40px;">
+            <div class="detail-column right-column">
               <div class="detail-title">점수 현황</div>
               <div class="detail-row" v-for="(val, key) in game.details.score" :key="key">
                 <span class="detail-key">{{ key }}</span> <span class="detail-val" :class="{'text-blue': key === '평균 점수'}">{{ val }}</span>
@@ -94,7 +97,7 @@
             </div>
           </template>
           <template v-else>
-            <div class="detail-column">상세 데이터 없음</div>
+            <div class="detail-column empty-details">상세 데이터 없음</div>
           </template>
         </div>
       </div>
@@ -103,13 +106,15 @@
     <!-- Promo Banner -->
     <div v-if="!isLoading" class="promo-banner">
       <div class="promo-content">
-        <div class="promo-icon"><i class="fa-solid fa-store"></i></div>
+        <div class="promo-icon"><IconBase name="store" /></div>
         <div class="promo-text">
           <h3>더 많은 게임이 필요하신가요?</h3>
           <p>마켓플레이스에서 새로운 게임을 구매하고 고객 경험을 확대하세요.</p>
         </div>
       </div>
-      <button class="btn-marketplace">마켓플레이스 바로가기 <i class="fa-solid fa-arrow-right"></i></button>
+      <button class="btn-marketplace">
+        마켓플레이스 바로가기 <IconBase name="arrow-right" class="btn-icon-right" />
+      </button>
     </div>
   </div>
 </template>
@@ -119,6 +124,7 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import gameSettingsService from '@/services/gameSettingsService'
 import type { GameOrderDto } from '@/services/gameSettingsService'
+import IconBase from '@/components/IconBase.vue'
 
 interface Game {
   id: string
@@ -146,14 +152,14 @@ interface Game {
 const gameDefinitions = [
   {
     id: 'pinball',
-    name: '브랜드 퀴즈',
+    name: '핀볼',
     iconClass: 'fa-solid fa-bullseye',
     iconBg: 'brand',
     statusText: '가장 인기 있는 게임입니다.'
   },
   {
     id: 'brick-breaker',
-    name: '메뉴 픽 맞추기',
+    name: '벽돌깨기',
     iconClass: 'fa-solid fa-utensils',
     iconBg: 'menu',
     statusText: '신메뉴 이미지로 자동 생성됩니다.'
@@ -203,6 +209,17 @@ const switchToBenefits = () => {
   window.dispatchEvent(new CustomEvent('switch-tab', { detail: 'benefits' }))
 }
 
+// Helper to map FontAwesome classes to IconBase names
+function getIconName(faClass: string): string {
+  const iconMapping: Record<string, string> = {
+    'fa-solid fa-bullseye': 'target',
+    'fa-solid fa-utensils': 'utensils',
+    'fa-solid fa-clone': 'clone',
+    'fa-solid fa-magnifying-glass': 'magnifying-glass'
+  }
+  return iconMapping[faClass] || 'gamepad'
+}
+
 // Load game settings from API
 const loadSettings = async () => {
   isLoading.value = true
@@ -234,12 +251,15 @@ const loadSettings = async () => {
 // Handle toggle change
 const handleToggleChange = (game: Game) => {
   console.log(`Game ${game.name} toggled:`, game.active)
+  // Auto-save logic can be triggered here if needed
+  saveSettings()
 }
 
 // Save settings to API
 const saveSettings = async () => {
   if (!qrCodeId.value) {
-    alert('QR 코드 ID를 찾을 수 없습니다.')
+    // alert('QR 코드 ID를 찾을 수 없습니다.') 
+    // Suppress alert for better UX during auto-save
     return
   }
 
@@ -262,11 +282,10 @@ const saveSettings = async () => {
       gamesOrder
     })
 
-    alert('게임 설정이 저장되었습니다!')
     console.log('Settings saved:', { enabledGames, gamesOrder })
   } catch (error) {
     console.error('Failed to save game settings:', error)
-    alert('게임 설정 저장에 실패했습니다.')
+    // alert('게임 설정 저장에 실패했습니다.')
   } finally {
     isSaving.value = false
   }
@@ -278,61 +297,94 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* --- Design System: Apple Style Unified --- */
 :root {
-  --primary-blue: #007bff;
-  --primary-dark: #0056b3;
-  --primary-light: #e7f1ff;
-  --bg-gray: #f4f6f9;
-  --box-bg: #f8f9fa;
-  --border-color: #e9ecef;
-  --text-dark: #212529;
-  --text-gray: #868e96;
-  --text-light-gray: #adb5bd;
-  --card-radius: 16px;
+  --primary-blue: #0071e3;       /* Apple Blue */
+  --primary-dark: #0077ed;       /* Hover Blue */
+  --primary-light: #e8f2ff;      /* Light Blue Bg */
+  
+  --bg-gray: #f5f5f7;           /* Main Background */
+  --box-bg: #ffffff;            /* Card Background */
+  
+  --border-color: #d2d2d7;      /* Borders */
+  --border-light: #e5e5ea;      /* Light Borders */
+  
+  --text-dark: #1d1d1f;         /* Main Text */
+  --text-gray: #86868b;         /* Secondary Text */
+  --text-light-gray: #aeaeb2;   /* Placeholder */
+  
+  --card-radius: 20px;
+  --btn-radius: 12px;
+  --input-radius: 10px;
 }
+
+* { box-sizing: border-box; font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; }
 
 .tab-content {
-  padding: 40px;
+  padding: 50px 60px;
+  background-color: #f5f5f7;
+  min-height: 100vh;
 }
 
+/* Page Header */
 .page-header {
-  margin-bottom: 30px;
+  margin-bottom: 40px;
 }
 
 .page-title {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   margin-bottom: 10px;
   letter-spacing: -0.5px;
-  color: var(--text-dark);
+  color: #1d1d1f;
 }
 
 .page-desc {
-  color: var(--text-gray);
-  font-size: 15px;
-}
-
-.loading-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #6e6e73;
+  color: #86868b;
   font-size: 16px;
 }
 
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 100px 20px;
+  color: #86868b;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e5ea;
+  border-top-color: #0071e3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Game List */
 .game-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .game-card {
   background: white;
-  border-radius: var(--card-radius);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.02);
   padding: 30px;
+  transition: all 0.3s ease;
+}
+.game-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
+/* Header */
 .game-header {
   display: flex;
   justify-content: space-between;
@@ -342,61 +394,45 @@ onMounted(() => {
 
 .game-info {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   align-items: center;
 }
 
 .icon-box {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 18px;
+  font-size: 22px;
 }
 
-.icon-box.brand {
-  background-color: #ffeef0;
-  color: #ff6b6b;
-}
-
-.icon-box.menu {
-  background-color: #f3f0ff;
-  color: #845ef7;
-}
-
-.icon-box.find {
-  background-color: #e7f5ff;
-  color: #339af0;
-}
+.icon-box.brand { background-color: #fff0f2; color: #ff3b30; }
+.icon-box.menu { background-color: #f2f2ff; color: #5856d6; }
+.icon-box.find { background-color: #f0f8ff; color: #007aff; }
 
 .card-title {
   font-weight: 700;
-  font-size: 18px;
-  color: var(--text-dark);
+  font-size: 20px;
+  color: #1d1d1f;
 }
 
 .game-status-text {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   margin-top: 4px;
 }
 
-.status-on {
-  color: var(--primary-blue);
-}
+.status-on { color: #0071e3; }
+.status-off { color: #86868b; }
 
-.status-off {
-  color: var(--text-gray);
-}
-
-/* Switch */
+/* Switch - Apple Style */
 .switch {
   position: relative;
   display: inline-block;
-  width: 52px;
-  height: 28px;
+  width: 50px;
+  height: 30px;
 }
 
 .switch input {
@@ -412,68 +448,67 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #e9ecef;
-  transition: 0.4s;
+  background-color: #e5e5ea;
+  transition: 0.3s;
   border-radius: 34px;
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 20px;
-  width: 20px;
-  left: 4px;
-  bottom: 4px;
+  height: 26px;
+  width: 26px;
+  left: 2px;
+  bottom: 2px;
   background-color: white;
-  transition: 0.4s;
+  transition: 0.3s;
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 input:checked + .slider {
-  background-color: var(--primary-blue);
+  background-color: #34c759; /* Apple Green */
 }
 
 input:checked + .slider:before {
-  transform: translateX(24px);
+  transform: translateX(20px);
 }
 
 /* Stats Grid */
 .game-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 24px;
   margin-bottom: 30px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e5ea;
 }
 
 .stat-block {
   margin-bottom: 24px;
 }
-
 .stat-block:last-child {
   margin-bottom: 0;
 }
 
 .stat-label {
-  font-size: 12px;
-  color: var(--text-gray);
+  font-size: 13px;
+  color: #86868b;
   font-weight: 600;
   margin-bottom: 6px;
   display: block;
 }
 
 .stat-value {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-dark);
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d1d1f;
   display: block;
   letter-spacing: -0.5px;
 }
 
 .stat-value.empty {
-  color: #dee2e6;
+  color: #d2d2d7;
 }
 
 /* Actions */
@@ -481,72 +516,93 @@ input:checked + .slider:before {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .btn-benefit-setting {
-  background: var(--primary-blue);
+  background: #1d1d1f;
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 12px 0;
-  width: 48%;
-  font-weight: 700;
+  border-radius: 12px;
+  padding: 14px 0;
+  flex: 1;
+  font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-benefit-setting:hover {
-  background: var(--primary-dark);
+  background: #3a3a3c;
+  transform: translateY(-1px);
 }
 
 .btn-details {
-  width: 48%;
-  border: 1px solid var(--border-color);
+  flex: 1;
+  border: 1px solid #d2d2d7;
   background: white;
-  padding: 12px 0;
-  border-radius: 8px;
-  color: var(--primary-blue);
+  padding: 14px 0;
+  border-radius: 12px;
+  color: #1d1d1f;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  transition: all 0.2s;
 }
 
 .btn-details:hover {
-  background: var(--bg-gray);
+  background: #f5f5f7;
+  border-color: #c7c7cc;
 }
+
+.btn-icon { font-size: 16px; }
+.btn-icon-right { font-size: 14px; }
 
 /* Details Box */
 .details-box {
-  margin-top: 20px;
-  background: var(--box-bg);
-  border-radius: 12px;
-  padding: 24px;
+  margin-top: 24px;
+  background: #f5f5f7;
+  border-radius: 16px;
+  padding: 28px;
   display: flex;
   gap: 40px;
-  border: 1px solid #e9ecef;
+  border: none;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .detail-column {
   flex: 1;
+}
+.right-column {
+  border-left: 1px solid #e5e5ea;
+  padding-left: 40px;
 }
 
 .detail-title {
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 16px;
-  color: var(--text-dark);
+  color: #1d1d1f;
 }
 
 .detail-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 12px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .detail-row:last-child {
@@ -554,72 +610,82 @@ input:checked + .slider:before {
 }
 
 .detail-key {
-  color: var(--text-gray);
+  color: #86868b;
   font-weight: 500;
 }
 
 .detail-val {
-  font-weight: 700;
-  color: var(--text-dark);
+  font-weight: 600;
+  color: #1d1d1f;
 }
 
 .text-blue {
-  color: var(--primary-blue);
+  color: #0071e3;
+}
+.empty-details {
+  color: #86868b;
+  text-align: center;
 }
 
 /* Promo Banner */
 .promo-banner {
   margin-top: 40px;
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-  border-radius: var(--card-radius);
-  padding: 30px;
+  background: linear-gradient(135deg, #0071e3 0%, #0077ed 100%);
+  border-radius: 20px;
+  padding: 36px;
   color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 10px 20px rgba(0, 86, 179, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 113, 227, 0.25);
 }
 
 .promo-content {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .promo-icon {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  border-radius: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .promo-text h3 {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   margin-bottom: 6px;
 }
 
 .promo-text p {
-  font-size: 14px;
+  font-size: 15px;
   opacity: 0.9;
 }
 
 .btn-marketplace {
   background: white;
-  color: var(--primary-blue);
+  color: #0071e3;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 700;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 600;
   font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.btn-marketplace:hover {
+  transform: translateY(-2px);
 }
 
 /* Responsive */
@@ -631,13 +697,19 @@ input:checked + .slider:before {
 
   .details-box {
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
+  }
+  .right-column {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid #e5e5ea;
+    padding-top: 24px;
   }
 
   .promo-banner {
     flex-direction: column;
     text-align: center;
-    gap: 20px;
+    gap: 24px;
   }
 
   .promo-content {
@@ -646,9 +718,11 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 900px) {
+  .tab-content { padding: 30px 20px; }
+  
   .game-actions {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
 
   .btn-benefit-setting,

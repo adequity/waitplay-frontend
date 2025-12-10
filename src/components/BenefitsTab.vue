@@ -157,8 +157,8 @@ const enabledGames = computed(() => {
 
 // Game definitions
 const gameDefinitions: Record<string, { name: string; icon: string }> = {
-  'pinball': { name: '브랜드 퀴즈', icon: 'fa-solid fa-bullseye' },
-  'brick-breaker': { name: '메뉴 픽 맞추기', icon: 'fa-solid fa-utensils' },
+  'pinball': { name: '핀볼', icon: 'fa-solid fa-bullseye' },
+  'brick-breaker': { name: '벽돌깨기', icon: 'fa-solid fa-utensils' },
   'memory': { name: '같은 카드 찾기', icon: 'fa-solid fa-clone' },
   'spot-difference': { name: '틀린 그림 찾기', icon: 'fa-solid fa-magnifying-glass' }
 }

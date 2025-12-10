@@ -359,10 +359,10 @@
               </select>
               <select v-model="assetGameTypeFilter" class="select-apple">
                 <option value="">전체 게임</option>
-                <option value="spot-difference">틀린그림찾기</option>
-                <option value="matching">같은그림찾기</option>
-                <option value="memory">기억력게임</option>
-                <option value="puzzle">퍼즐게임</option>
+                <option value="pinball">핀볼</option>
+                <option value="brick-breaker">벽돌깨기</option>
+                <option value="memory">같은 카드 찾기</option>
+                <option value="spot-difference">틀린 그림 찾기</option>
               </select>
             </div>
             <div class="search-box">
@@ -913,10 +913,10 @@
               <div class="modal-form-group">
                 <label class="modal-label">게임 타입</label>
                 <select v-model="assetForm.gameType" class="modal-select">
-                  <option value="spot-difference">틀린그림찾기</option>
-                  <option value="matching">같은그림찾기</option>
-                  <option value="memory">기억력게임</option>
-                  <option value="puzzle">퍼즐게임</option>
+                  <option value="pinball">핀볼</option>
+                  <option value="brick-breaker">벽돌깨기</option>
+                  <option value="memory">같은 카드 찾기</option>
+                  <option value="spot-difference">틀린 그림 찾기</option>
                 </select>
               </div>
             </div>
@@ -1983,10 +1983,10 @@ const getAssetCategoryLabel = (category: string) => {
 
 const getAssetGameTypeLabel = (gameType: string) => {
   const labels: Record<string, string> = {
-    'spot-difference': '틀린그림찾기',
-    'matching': '같은그림찾기',
-    'memory': '기억력게임',
-    'puzzle': '퍼즐게임'
+    'pinball': '핀볼',
+    'brick-breaker': '벽돌깨기',
+    'memory': '같은 카드 찾기',
+    'spot-difference': '틀린 그림 찾기'
   }
   return labels[gameType] || gameType
 }

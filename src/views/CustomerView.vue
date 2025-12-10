@@ -402,7 +402,7 @@ onMounted(async () => {
       const gamesCarouselBlock = blocks.value.find(b => b.type === 'games_carousel')
 
       if (gamesCarouselBlock && gamesCarouselBlock.data) {
-        // Game definitions for mapping
+        // Game definitions for mapping (consistent with GamesTab)
         const gameDefinitions: Record<string, { name: string; icon: string }> = {
           'pinball': { name: '핀볼', icon: '🎯' },
           'brick-breaker': { name: '벽돌깨기', icon: '🧱' },

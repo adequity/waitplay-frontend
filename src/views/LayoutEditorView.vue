@@ -974,7 +974,8 @@ function getDefaultBlockData(type: BlockType): any {
         enabledGames: ['pinball', 'memory', 'spot-difference'],
         showLeaderboard: true,
         gamesOrder: [
-          { type: 'pinball', name: '핀볼게임', icon: '🎯' },
+          { type: 'pinball', name: '핀볼', icon: '🎯' },
+          { type: 'brick-breaker', name: '벽돌깨기', icon: '🧱' },
           { type: 'memory', name: '같은 카드 찾기', icon: '🃏' },
           { type: 'spot-difference', name: '틀린 그림 찾기', icon: '🔍' }
         ]
