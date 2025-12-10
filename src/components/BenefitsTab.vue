@@ -6,8 +6,16 @@
       <p class="greeting-subtitle">게임별 쿠폰 라인업을 관리하세요.</p>
     </div>
 
+    <!-- Empty State -->
+    <div v-if="enabledGames.length === 0" class="empty-state">
+      <div class="empty-icon">🎮</div>
+      <h3 class="empty-title">활성화된 게임이 없습니다</h3>
+      <p class="empty-subtitle">게임 설정 탭에서 먼저 게임을 활성화해주세요</p>
+      <button class="btn-go-to-games" @click="goToGamesTab">게임 설정으로 이동</button>
+    </div>
+
     <!-- Game-Based Coupon Lineup -->
-    <div class="game-benefits-list">
+    <div v-else class="game-benefits-list">
       <div v-for="game in enabledGames" :key="game.type" class="game-benefit-card">
         <!-- Game Header -->
         <div class="game-header">
@@ -228,6 +236,12 @@ async function handleBenefitSaved() {
   await loadGameSettings()
 }
 
+function goToGamesTab() {
+  // Emit event to parent (AdminView) to switch to games tab
+  // Or use a more direct approach with a shared state
+  window.dispatchEvent(new CustomEvent('switch-tab', { detail: 'games' }))
+}
+
 onMounted(() => {
   loadGameSettings()
 })
@@ -253,6 +267,52 @@ onMounted(() => {
   font-size: 16px;
   color: #6e6e73;
   margin: 0;
+}
+
+/* Empty State */
+.empty-state {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 60px 40px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 30px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.empty-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 12px 0;
+}
+
+.empty-subtitle {
+  font-size: 16px;
+  color: #6e6e73;
+  margin: 0 0 28px 0;
+}
+
+.btn-go-to-games {
+  padding: 14px 32px;
+  background: linear-gradient(135deg, #007aff 0%, #005ecb 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.btn-go-to-games:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
 }
 
 .game-benefits-list {

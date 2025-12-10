@@ -95,7 +95,13 @@ const handleLogout = () => {
 // Router navigation guard already handles all authentication and authorization
 // No additional checks needed here
 onMounted(() => {
-  // Component is ready
+  // Listen for tab switch events from child components
+  window.addEventListener('switch-tab', (event: any) => {
+    const tabId = event.detail
+    if (tabs.find(t => t.id === tabId)) {
+      activeTab.value = tabId
+    }
+  })
 })
 </script>
 
