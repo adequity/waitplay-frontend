@@ -735,20 +735,19 @@ const availableBlockTypes = [
 // Load layout from API on mount
 onMounted(async () => {
   // Router navigation guard already handles authentication and admin role check
-  // Just ensure user data is loaded
-  if (!authStore.user) {
-    await authStore.fetchUser()
-  }
+  // User data should already be loaded by router guard
 
   // Get QR code ID from authenticated user
   if (!authStore.user?.qrCodeId) {
-    console.error('No QR code ID found for user')
+    console.error('[LayoutEditor] No QR code ID found for user')
     alert('QR 코드를 찾을 수 없습니다. QR 관리에서 QR 코드를 먼저 생성해주세요.')
-    router.push('/admin')
+    // Use router.replace instead of push to prevent infinite loop
+    router.replace('/admin')
     return
   }
 
   qrCodeId.value = authStore.user.qrCodeId
+  console.log('[LayoutEditor] Loading layout for QR code:', qrCodeId.value)
 
   await loadLandingPageSettings()
   await loadLayout()
