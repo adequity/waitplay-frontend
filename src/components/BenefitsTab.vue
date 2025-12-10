@@ -35,7 +35,7 @@
         <div class="card-header">
           <div class="card-title-group">
             <div class="icon-box" :class="getIconClass(game.type)">
-              <span>{{ game.icon }}</span>
+              <i :class="game.icon"></i>
             </div>
             <span class="card-title">{{ game.name }}</span>
           </div>
@@ -166,12 +166,12 @@ const enabledGames = computed(() => {
   return gamesList.value.filter(game => game.enabled)
 })
 
-// Game definitions matching GamesTab
+// Game definitions matching GamesTab and HTML design
 const gameDefinitions: Record<string, { name: string; icon: string }> = {
-  'pinball': { name: '핀볼', icon: '🎯' },
-  'brick-breaker': { name: '벽돌깨기', icon: '🧱' },
-  'memory': { name: '같은 카드 찾기', icon: '🃏' },
-  'spot-difference': { name: '틀린 그림 찾기', icon: '🔍' }
+  'pinball': { name: '핀볼', icon: 'fa-solid fa-bullseye' },
+  'brick-breaker': { name: '벽돌깨기', icon: 'fa-solid fa-utensils' },
+  'memory': { name: '같은 카드 찾기', icon: 'fa-solid fa-magnifying-glass' },
+  'spot-difference': { name: '틀린 그림 찾기', icon: 'fa-solid fa-magnifying-glass' }
 }
 
 async function loadGameSettings() {
