@@ -283,7 +283,7 @@ onMounted(() => {
 <style scoped>
 .tab-content {
   padding: 40px 50px;
-  background-color: #f4f6f9;
+  background-color: #f5f7fa;
 }
 
 /* Page Header */
