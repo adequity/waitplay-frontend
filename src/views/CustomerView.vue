@@ -402,9 +402,26 @@ onMounted(async () => {
       const gamesCarouselBlock = blocks.value.find(b => b.type === 'games_carousel')
 
       if (gamesCarouselBlock && gamesCarouselBlock.data) {
+        // Game definitions for mapping
+        const gameDefinitions: Record<string, { name: string; icon: string }> = {
+          'pinball': { name: '핀볼', icon: '🎯' },
+          'brick-breaker': { name: '벽돌깨기', icon: '🧱' },
+          'memory': { name: '같은 카드 찾기', icon: '🃏' },
+          'spot-difference': { name: '틀린 그림 찾기', icon: '🔍' }
+        }
+
         // Update with API data
         gamesCarouselBlock.data.enabledGames = gameSettings.enabledGames
-        gamesCarouselBlock.data.gamesOrder = gameSettings.gamesOrder || []
+
+        // Convert GameOrderDto[] to GameOrderItem[]
+        if (gameSettings.gamesOrder) {
+          gamesCarouselBlock.data.gamesOrder = gameSettings.gamesOrder.map(order => ({
+            type: order.type,
+            name: gameDefinitions[order.type]?.name || order.type,
+            icon: gameDefinitions[order.type]?.icon || '🎮'
+          }))
+        }
+
         console.log('Game settings loaded:', gameSettings)
       }
     } catch (error) {

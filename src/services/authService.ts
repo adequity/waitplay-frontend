@@ -40,6 +40,7 @@ export interface UserProfile {
   company?: string
   userRole: string
   createdAt: string
+  qrCodeId?: string
 }
 
 class AuthService {
