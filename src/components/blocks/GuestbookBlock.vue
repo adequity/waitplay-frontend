@@ -68,35 +68,41 @@
       </div>
     </div>
 
-    <!-- 방명록 그리드 -->
+    <!-- 방명록 슬라이더 -->
     <div v-if="isLoadingMessages" class="loading-state">
       <p>방명록을 불러오는 중...</p>
     </div>
 
-    <div v-else class="drawings-grid">
-      <div
-        v-for="message in messages"
-        :key="message.id"
-        class="post-it"
-        :class="`post-it--${message.color}`"
-        :style="{ transform: `rotate(${message.rotation}deg)` }"
-      >
-        <div class="post-it-content">
-          <img
-            v-if="message.imageUrl"
-            :src="message.imageUrl"
-            :alt="`${message.userName}의 방명록`"
-            class="drawing-image"
-          />
-          <div class="message-footer">
-            <span class="message-author">- {{ message.userName }}</span>
-            <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+    <div v-else-if="messages.length === 0" class="empty-state">
+      <p>아직 남겨진 메시지가 없습니다. 첫 메시지를 남겨보세요!</p>
+    </div>
+
+    <div v-else class="drawings-slider-container">
+      <div class="drawings-slider" ref="sliderRef">
+        <div
+          v-for="message in messages"
+          :key="message.id"
+          class="post-it-slide"
+        >
+          <div
+            class="post-it"
+            :class="`post-it--${message.color}`"
+            :style="{ transform: `rotate(${message.rotation}deg)` }"
+          >
+            <div class="post-it-content">
+              <img
+                v-if="message.imageUrl"
+                :src="message.imageUrl"
+                :alt="`${message.userName}의 방명록`"
+                class="drawing-image"
+              />
+              <div class="message-footer">
+                <span class="message-author">- {{ message.userName }}</span>
+                <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div v-if="messages.length === 0" class="empty-state">
-        <p>아직 남겨진 메시지가 없습니다. 첫 메시지를 남겨보세요!</p>
       </div>
     </div>
   </div>
@@ -139,6 +145,7 @@ let lastY = 0
 // 방명록 메시지 목록
 const messages = ref<any[]>([])
 const isLoadingMessages = ref(false)
+const sliderRef = ref<HTMLElement | null>(null)
 
 onMounted(async () => {
   if (canvasRef.value && isAuthenticated.value) {
@@ -577,12 +584,32 @@ const formatDate = (dateString: string): string => {
   box-shadow: 0 4px 8px rgba(78, 205, 196, 0.2);
 }
 
-/* 방명록 그리드 */
-.drawings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
+/* 방명록 슬라이더 */
+.drawings-slider-container {
+  width: 100%;
   margin-top: 2rem;
+  position: relative;
+}
+
+.drawings-slider {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 1rem 0.5rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.drawings-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.post-it-slide {
+  flex: 0 0 280px;
+  scroll-snap-align: center;
 }
 
 .post-it {
@@ -593,6 +620,7 @@ const formatDate = (dateString: string): string => {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
   cursor: default;
+  width: 100%;
 }
 
 .post-it::before {
@@ -701,9 +729,8 @@ const formatDate = (dateString: string): string => {
     justify-content: center;
   }
 
-  .drawings-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .post-it-slide {
+    flex: 0 0 85vw;
   }
 
   .post-it {
@@ -716,8 +743,8 @@ const formatDate = (dateString: string): string => {
 }
 
 @media (min-width: 641px) and (max-width: 1024px) {
-  .drawings-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .post-it-slide {
+    flex: 0 0 320px;
   }
 }
 </style>
