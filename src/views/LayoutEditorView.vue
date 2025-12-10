@@ -734,29 +734,10 @@ const availableBlockTypes = [
 
 // Load layout from API on mount
 onMounted(async () => {
-  // Verify authentication
-  if (!authStore.isAuthenticated) {
-    router.push('/login')
-    return
-  }
-
-  // Ensure user data is loaded
+  // Router navigation guard already handles authentication and admin role check
+  // Just ensure user data is loaded
   if (!authStore.user) {
-    try {
-      await authStore.fetchUser()
-    } catch (error) {
-      console.error('Failed to fetch user:', error)
-      authStore.logout()
-      router.push('/login')
-      return
-    }
-  }
-
-  // Verify admin role
-  if (authStore.user?.userRole !== 'admin') {
-    console.warn('Access denied: Admin role required')
-    router.push('/')
-    return
+    await authStore.fetchUser()
   }
 
   // Get QR code ID from authenticated user
