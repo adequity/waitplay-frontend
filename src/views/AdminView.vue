@@ -86,36 +86,11 @@ const handleLogout = () => {
   }
 }
 
-// Verify authentication on mount
-onMounted(async () => {
-  if (!authStore.isAuthenticated) {
-    router.push('/login')
-    return
-  }
-
-  // Fetch user data if not loaded
-  if (!authStore.user) {
-    try {
-      await authStore.fetchUser()
-    } catch (error) {
-      console.error('Failed to fetch user:', error)
-      authStore.logout()
-      router.push('/login')
-    }
-  }
-
-  // Verify admin role
-  console.log('[AdminView] User data:', authStore.user)
-  console.log('[AdminView] User role:', authStore.user?.userRole)
-  console.log('[AdminView] User role type:', typeof authStore.user?.userRole)
-  console.log('[AdminView] Is admin?', authStore.user?.userRole === 'admin')
-
-  if (authStore.user?.userRole !== 'admin') {
-    console.warn('[AdminView] Access denied: Admin role required')
-    router.push('/')
-  } else {
-    console.log('[AdminView] Access granted - user is admin')
-  }
+// Router navigation guard already handles all authentication and authorization
+// No additional checks needed here
+onMounted(() => {
+  // Component is ready
+  console.log('[AdminView] Component mounted, user:', authStore.user?.nickname)
 })
 </script>
 
