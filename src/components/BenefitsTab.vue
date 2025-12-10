@@ -33,9 +33,11 @@
       >
         <!-- Card Header -->
         <div class="card-header">
-          <div class="card-title">
-            <span class="game-icon-large">{{ game.icon }}</span>
-            <span>{{ game.name }}</span>
+          <div class="card-title-group">
+            <div class="icon-box" :class="getIconClass(game.type)">
+              <span>{{ game.icon }}</span>
+            </div>
+            <span class="card-title">{{ game.name }}</span>
           </div>
           <button
             class="btn-collapse"
@@ -47,17 +49,17 @@
 
         <!-- Summary Medals (Always Visible) -->
         <div class="summary-medals">
-          <div class="medal-item">
+          <div class="medal-box">
             <i class="fa-solid fa-medal medal-bronze medal-icon"></i>
             <span class="medal-name">동메달</span>
             <span class="medal-score">{{ game.stats.todayPlays || 0 }}회</span>
           </div>
-          <div class="medal-item">
+          <div class="medal-box">
             <i class="fa-solid fa-medal medal-silver medal-icon"></i>
             <span class="medal-name">은메달</span>
             <span class="medal-score">{{ game.stats.couponsIssued || 0 }}장</span>
           </div>
-          <div class="medal-item">
+          <div class="medal-box">
             <i class="fa-solid fa-medal medal-gold medal-icon"></i>
             <span class="medal-name">금메달</span>
             <span class="medal-score">{{ game.stats.avgScore || 0 }}점</span>
@@ -89,7 +91,7 @@
           <!-- Action Buttons -->
           <div class="card-footer">
             <button class="btn-add" @click="openBenefitSetting(game.type)">
-              + 단계 추가
+              <i class="fa-solid fa-plus"></i> 단계 추가
             </button>
             <button class="btn-save" @click="viewDetails(game.type)">
               저장
@@ -263,6 +265,16 @@ function goToGamesTab() {
   window.dispatchEvent(new CustomEvent('switch-tab', { detail: 'games' }))
 }
 
+function getIconClass(gameType: string): string {
+  const iconClasses: Record<string, string> = {
+    'pinball': 'brand',
+    'brick-breaker': 'menu',
+    'memory': 'find',
+    'spot-difference': 'brand'
+  }
+  return iconClasses[gameType] || 'brand'
+}
+
 onMounted(() => {
   loadGameSettings()
 })
@@ -270,7 +282,7 @@ onMounted(() => {
 
 <style scoped>
 .tab-content {
-  padding: 40px;
+  padding: 40px 50px;
   background-color: #f4f6f9;
 }
 
@@ -280,36 +292,36 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #333;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: #212529;
+  letter-spacing: -0.5px;
 }
 
 .page-desc {
-  color: #6c757d;
-  font-size: 14px;
+  color: #868e96;
+  font-size: 15px;
 }
 
 /* Info Box */
 .info-box {
   background-color: #e7f1ff;
   border: 1px solid #b6d4fe;
-  color: #084298;
-  padding: 16px;
-  border-radius: 8px;
-  font-size: 13px;
+  color: #004085;
+  padding: 20px;
+  border-radius: 12px;
+  font-size: 14px;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 30px;
-  line-height: 1.5;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 40px;
+  line-height: 1.6;
 }
 
 .info-box i {
-  font-size: 18px;
+  font-size: 20px;
   color: #ffc107;
-  margin-top: 2px;
 }
 
 /* Empty State */
@@ -362,17 +374,16 @@ onMounted(() => {
 .grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 30px;
   align-items: start;
-  margin-bottom: 30px;
 }
 
 /* Card Styles */
 .card {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  padding: 24px;
   border: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
@@ -383,58 +394,84 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+}
+
+.icon-box.brand {
+  background-color: #ffeef0;
+  color: #ff6b6b;
+}
+
+.icon-box.menu {
+  background-color: #f3f0ff;
+  color: #845ef7;
+}
+
+.icon-box.find {
+  background-color: #e7f5ff;
+  color: #339af0;
 }
 
 .card-title {
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  color: #333;
-}
-
-.game-icon-large {
-  font-size: 24px;
+  font-size: 18px;
+  color: #212529;
 }
 
 .btn-collapse {
   border: 1px solid #dee2e6;
   background: white;
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
-  color: #6c757d;
+  font-weight: 600;
+  color: #007bff;
   cursor: pointer;
   transition: 0.2s;
 }
 
 .btn-collapse:hover {
-  background: #f8f9fa;
+  background: #e7f1ff;
 }
 
 /* Summary Medals */
 .summary-medals {
   display: flex;
   justify-content: space-between;
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-.medal-item {
-  text-align: center;
+.medal-box {
+  background: #f8f9fa;
+  padding: 16px 10px;
+  border-radius: 8px;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .medal-icon {
-  font-size: 18px;
-  margin-bottom: 6px;
+  font-size: 20px;
+  margin-bottom: 8px;
 }
 
 .medal-bronze {
@@ -442,23 +479,24 @@ onMounted(() => {
 }
 
 .medal-silver {
-  color: #c0c0c0;
+  color: #adb5bd;
 }
 
 .medal-gold {
-  color: #ffd700;
+  color: #fab005;
 }
 
 .medal-name {
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 2px;
-  color: #333;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #212529;
 }
 
 .medal-score {
-  font-size: 11px;
-  color: #6c757d;
+  font-size: 12px;
+  color: #868e96;
+  font-weight: 500;
 }
 
 /* Card Content (Collapsible) */
@@ -502,29 +540,31 @@ onMounted(() => {
 /* Template Button */
 .btn-template {
   width: 100%;
-  padding: 10px;
-  background: #f8f9fa;
+  padding: 12px;
+  background: white;
   border: 1px solid #dee2e6;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #007bff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 20px;
-  transition: 0.2s;
+  margin-bottom: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: 0.2s;
 }
 
 .btn-template:hover {
-  background: #e9ecef;
+  background: #e7f1ff;
+  border-color: #b6d4fe;
 }
 
 /* Card Footer */
 .card-footer {
-  margin-top: 20px;
+  margin-top: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -534,12 +574,15 @@ onMounted(() => {
   background: white;
   border: 1px solid #007bff;
   color: #007bff;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-add:hover {
@@ -550,16 +593,18 @@ onMounted(() => {
   background: #007bff;
   color: white;
   border: none;
-  padding: 8px 24px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 10px 30px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
 .btn-save:hover {
-  background: #0056b3;
+  background: #0069d9;
+  transform: translateY(-1px);
 }
 
 /* Responsive Design */
