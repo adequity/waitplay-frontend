@@ -82,6 +82,29 @@
         </button>
       </div>
     </div>
+
+    <!-- Modals -->
+    <BenefitSettingModal
+      v-if="selectedGame"
+      :is-open="showBenefitSettingModal"
+      :game-type="selectedGame.type"
+      :game-name="selectedGame.name"
+      :game-icon="selectedGame.icon"
+      :qr-code-id="authStore.user?.qrCodeId || ''"
+      @close="showBenefitSettingModal = false"
+      @saved="handleBenefitSaved"
+    />
+
+    <BenefitDetailsModal
+      v-if="selectedGame"
+      :is-open="showBenefitDetailsModal"
+      :game-type="selectedGame.type"
+      :game-name="selectedGame.name"
+      :game-icon="selectedGame.icon"
+      :qr-code-id="authStore.user?.qrCodeId || ''"
+      :stats="selectedGame.stats"
+      @close="showBenefitDetailsModal = false"
+    />
   </div>
 </template>
 
@@ -89,6 +112,9 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import gameSettingsService from '@/services/gameSettingsService'
+import benefitsService, { type GameBenefitStatsDto } from '@/services/benefitsService'
+import BenefitSettingModal from './BenefitSettingModal.vue'
+import BenefitDetailsModal from './BenefitDetailsModal.vue'
 
 interface GameStats {
   todayPlays: number
@@ -111,6 +137,11 @@ const authStore = useAuthStore()
 const gamesList = ref<GameBenefit[]>([])
 const loading = ref(false)
 
+// Modal state
+const showBenefitSettingModal = ref(false)
+const showBenefitDetailsModal = ref(false)
+const selectedGame = ref<GameBenefit | null>(null)
+
 // Game definitions matching GamesTab
 const gameDefinitions: Record<string, { name: string; icon: string }> = {
   'pinball': { name: '핀볼', icon: '🎯' },
@@ -128,15 +159,25 @@ async function loadGameSettings() {
       return
     }
 
-    const settings = await gameSettingsService.getGameSettings(qrCodeId)
+    // Load game settings and stats in parallel
+    const [settings, stats] = await Promise.all([
+      gameSettingsService.getGameSettings(qrCodeId),
+      benefitsService.getGameStats(qrCodeId)
+    ])
 
-    // Create games list from all game types
+    // Create stats lookup map
+    const statsMap: Record<string, GameBenefitStatsDto> = {}
+    stats.forEach(stat => {
+      statsMap[stat.gameType] = stat
+    })
+
+    // Create games list from all game types with real stats
     gamesList.value = Object.entries(gameDefinitions).map(([type, def]) => ({
       type,
       name: def.name,
       icon: def.icon,
       enabled: settings.enabledGames.includes(type),
-      stats: {
+      stats: statsMap[type] || {
         todayPlays: 0,
         avgScore: 0,
         participants: 0,
@@ -146,7 +187,7 @@ async function loadGameSettings() {
       }
     }))
 
-    console.log('Game benefits loaded:', gamesList.value)
+    console.log('Game benefits loaded with stats:', gamesList.value)
   } catch (error) {
     console.error('Failed to load game settings:', error)
     // Initialize with default games on error
@@ -209,15 +250,24 @@ async function toggleGame(gameType: string) {
 }
 
 function openBenefitSetting(gameType: string) {
-  // TODO: Open benefit setting modal for specific game
-  console.log('Opening benefit setting for:', gameType)
-  alert(`${gameType} 혜택 설정 기능 구현 예정`)
+  const game = gamesList.value.find(g => g.type === gameType)
+  if (!game) return
+
+  selectedGame.value = game
+  showBenefitSettingModal.value = true
 }
 
 function viewDetails(gameType: string) {
-  // TODO: Open details modal/page for specific game
-  console.log('Viewing details for:', gameType)
-  alert(`${gameType} 상세 보기 기능 구현 예정`)
+  const game = gamesList.value.find(g => g.type === gameType)
+  if (!game) return
+
+  selectedGame.value = game
+  showBenefitDetailsModal.value = true
+}
+
+async function handleBenefitSaved() {
+  // Reload stats after saving benefit
+  await loadGameSettings()
 }
 
 onMounted(() => {
