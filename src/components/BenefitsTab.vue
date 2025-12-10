@@ -8,7 +8,7 @@
 
     <!-- Info Box -->
     <div class="info-box">
-      <i class="fa-regular fa-lightbulb"></i>
+      <i class="fa-solid fa-lightbulb"></i>
       <div>
         <strong>기본 설정:</strong> 게임별로 점수 구간을 설정하고 각 구간마다 제공할 쿠폰 혜택을 자유롭게 설정할 수 있습니다.
         혜택은 자동으로 게임 완료 시 제공되며, 고객은 즉시 사용하거나 나중에 사용할 수 있습니다.
