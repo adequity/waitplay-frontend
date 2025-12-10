@@ -1,9 +1,18 @@
 <template>
   <div class="tab-content">
-    <!-- Apple-Style Greeting -->
-    <div class="apple-greeting">
-      <h1 class="greeting-title">혜택 설정</h1>
-      <p class="greeting-subtitle">게임별 쿠폰 라인업을 관리하세요.</p>
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">혜택 설정</h1>
+      <p class="page-desc">게임별 리워드를 설정하고 고객 만족도를 높이세요.</p>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+      <i class="fa-regular fa-lightbulb"></i>
+      <div>
+        <strong>기본 설정:</strong> 게임별로 점수 구간을 설정하고 각 구간마다 제공할 쿠폰 혜택을 자유롭게 설정할 수 있습니다.
+        혜택은 자동으로 게임 완료 시 제공되며, 고객은 즉시 사용하거나 나중에 사용할 수 있습니다.
+      </div>
     </div>
 
     <!-- Empty State -->
@@ -14,72 +23,75 @@
       <button class="btn-go-to-games" @click="goToGamesTab">게임 설정으로 이동</button>
     </div>
 
-    <!-- Game-Based Coupon Lineup -->
-    <div v-else class="game-benefits-list">
-      <div v-for="game in enabledGames" :key="game.type" class="game-benefit-card">
-        <!-- Game Header -->
-        <div class="game-header">
-          <div class="game-info">
-            <span class="game-icon">{{ game.icon }}</span>
-            <h3 class="game-title">{{ game.name }}</h3>
+    <!-- Grid Container -->
+    <div v-else class="grid-container">
+      <div
+        v-for="game in enabledGames"
+        :key="game.type"
+        class="card"
+        :class="{ 'collapsed': collapsedCards[game.type] }"
+      >
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="card-title">
+            <span class="game-icon-large">{{ game.icon }}</span>
+            <span>{{ game.name }}</span>
           </div>
-          <div class="game-status-badge">활성화됨</div>
-        </div>
-
-        <!-- Game Statistics -->
-        <div class="game-stats">
-          <div class="stat-group">
-            <div class="stat-item">
-              <span class="stat-label">오늘 플레이</span>
-              <span class="stat-value">{{ game.stats.todayPlays || 0 }}회</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">평균 점수</span>
-              <span class="stat-value">{{ game.stats.avgScore || 0 }}점</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">참여자</span>
-              <span class="stat-value">{{ game.stats.participants || 0 }}명</span>
-            </div>
-          </div>
-          <div class="stat-group">
-            <div class="stat-item">
-              <span class="stat-label">쿠폰 발급 수</span>
-              <span class="stat-value">{{ game.stats.couponsIssued || 0 }}장</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">최고 점수</span>
-              <span class="stat-value">{{ game.stats.highestScore || 0 }}점</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">평균 플레이 시간</span>
-              <span class="stat-value">{{ game.stats.avgPlayTime || 0 }}초</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="game-actions">
-          <button class="btn-benefit-setting" @click="openBenefitSetting(game.type)">
-            혜택 설정
-          </button>
-          <button class="btn-detail" @click="viewDetails(game.type)">
-            상세 보기
+          <button
+            class="btn-collapse"
+            @click="toggleCard(game.type)"
+          >
+            {{ collapsedCards[game.type] ? '▼ 더보기' : '▲ 접기' }}
           </button>
         </div>
-      </div>
-    </div>
 
-    <!-- More Games Section -->
-    <div class="more-games-section">
-      <div class="more-games-card">
-        <div class="more-games-content">
-          <h3 class="more-games-title">더 많은 게임이 필요하신가요?</h3>
-          <p class="more-games-subtitle">다양한 게임을 마켓플레이스에서 찾아보세요</p>
+        <!-- Summary Medals (Always Visible) -->
+        <div class="summary-medals">
+          <div class="medal-item">
+            <i class="fa-solid fa-trophy medal-bronze medal-icon"></i>
+            <span class="medal-name">오늘 플레이</span>
+            <span class="medal-score">{{ game.stats.todayPlays || 0 }}회</span>
+          </div>
+          <div class="medal-item">
+            <i class="fa-solid fa-star medal-gold medal-icon"></i>
+            <span class="medal-name">쿠폰 발급</span>
+            <span class="medal-score">{{ game.stats.couponsIssued || 0 }}장</span>
+          </div>
+          <div class="medal-item">
+            <i class="fa-solid fa-chart-line medal-silver medal-icon"></i>
+            <span class="medal-name">평균 점수</span>
+            <span class="medal-score">{{ game.stats.avgScore || 0 }}점</span>
+          </div>
         </div>
-        <button class="btn-marketplace">
-          마켓플레이스 보기
-        </button>
+
+        <!-- Card Content (Collapsible) -->
+        <div class="card-content">
+          <!-- Additional Stats -->
+          <div class="detail-stats">
+            <div class="detail-stat-item">
+              <span class="detail-stat-label">참여자</span>
+              <span class="detail-stat-value">{{ game.stats.participants || 0 }}명</span>
+            </div>
+            <div class="detail-stat-item">
+              <span class="detail-stat-label">최고 점수</span>
+              <span class="detail-stat-value">{{ game.stats.highestScore || 0 }}점</span>
+            </div>
+            <div class="detail-stat-item">
+              <span class="detail-stat-label">평균 플레이 시간</span>
+              <span class="detail-stat-value">{{ game.stats.avgPlayTime || 0 }}초</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="card-footer">
+            <button class="btn-benefit-setting" @click="openBenefitSetting(game.type)">
+              <i class="fa-solid fa-sliders"></i> 혜택 설정
+            </button>
+            <button class="btn-detail" @click="viewDetails(game.type)">
+              <i class="fa-solid fa-chart-bar"></i> 상세 보기
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -136,6 +148,7 @@ interface GameBenefit {
 const authStore = useAuthStore()
 const gamesList = ref<GameBenefit[]>([])
 const loading = ref(false)
+const collapsedCards = ref<Record<string, boolean>>({})
 
 // Modal state
 const showBenefitSettingModal = ref(false)
@@ -236,6 +249,10 @@ async function handleBenefitSaved() {
   await loadGameSettings()
 }
 
+function toggleCard(gameType: string) {
+  collapsedCards.value[gameType] = !collapsedCards.value[gameType]
+}
+
 function goToGamesTab() {
   // Emit event to parent (AdminView) to switch to games tab
   // Or use a more direct approach with a shared state
@@ -250,23 +267,45 @@ onMounted(() => {
 <style scoped>
 .tab-content {
   padding: 40px;
+  background-color: #f4f6f9;
 }
 
-.apple-greeting {
-  margin-bottom: 40px;
+/* Page Header */
+.page-header {
+  margin-bottom: 30px;
 }
 
-.greeting-title {
-  font-size: 36px;
+.page-title {
+  font-size: 24px;
   font-weight: 700;
-  margin: 0 0 8px 0;
-  color: #1d1d1f;
+  margin-bottom: 8px;
+  color: #333;
 }
 
-.greeting-subtitle {
-  font-size: 16px;
-  color: #6e6e73;
-  margin: 0;
+.page-desc {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Info Box */
+.info-box {
+  background-color: #e7f1ff;
+  border: 1px solid #b6d4fe;
+  color: #084298;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.info-box i {
+  font-size: 18px;
+  color: #ffc107;
+  margin-top: 2px;
 }
 
 /* Empty State */
@@ -315,233 +354,208 @@ onMounted(() => {
   box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
 }
 
-.game-benefits-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+/* Grid Layout */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  align-items: start;
   margin-bottom: 30px;
 }
 
-.game-benefit-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+/* Card Styles */
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
 }
 
-.game-header {
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-.game-info {
+.card-title {
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  font-size: 16px;
+  color: #333;
 }
 
-.game-icon {
-  font-size: 32px;
+.game-icon-large {
+  font-size: 24px;
 }
 
-.game-title {
-  font-size: 22px;
-  font-weight: 600;
-  margin: 0;
-  color: #1d1d1f;
-}
-
-.game-status-badge {
-  padding: 6px 16px;
-  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
-  color: white;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
-}
-
-/* Toggle Switch (Removed - not needed for benefits tab) */
-.toggle-switch {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.btn-collapse {
+  border: 1px solid #dee2e6;
+  background: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #6c757d;
   cursor: pointer;
-  position: relative;
+  transition: 0.2s;
 }
 
-.toggle-switch input {
+.btn-collapse:hover {
+  background: #f8f9fa;
+}
+
+/* Summary Medals */
+.summary-medals {
+  display: flex;
+  justify-content: space-between;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.medal-item {
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.medal-icon {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.medal-bronze {
+  color: #cd7f32;
+}
+
+.medal-silver {
+  color: #c0c0c0;
+}
+
+.medal-gold {
+  color: #ffd700;
+}
+
+.medal-name {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #333;
+}
+
+.medal-score {
+  font-size: 11px;
+  color: #6c757d;
+}
+
+/* Card Content (Collapsible) */
+.card-content {
+  display: block;
+}
+
+.card.collapsed .card-content {
   display: none;
 }
 
-.toggle-slider {
-  width: 52px;
-  height: 28px;
-  background: #d2d2d7;
-  border-radius: 14px;
-  position: relative;
-  transition: background-color 0.3s ease;
-}
-
-.toggle-slider::before {
-  content: '';
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  background: white;
-  border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.3s ease;
-}
-
-.toggle-switch input:checked + .toggle-slider {
-  background: #34c759;
-}
-
-.toggle-switch input:checked + .toggle-slider::before {
-  transform: translateX(24px);
-}
-
-.toggle-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1d1d1f;
-  min-width: 30px;
-}
-
-/* Game Statistics */
-.game-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.stat-group {
+/* Detail Stats */
+.detail-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 12px;
+  margin-bottom: 20px;
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
 }
 
-.stat-item {
+.detail-stat-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
-.stat-label {
-  font-size: 13px;
-  color: #86868b;
+.detail-stat-label {
+  font-size: 11px;
+  color: #6c757d;
+  font-weight: 500;
 }
 
-.stat-value {
-  font-size: 18px;
+.detail-stat-value {
+  font-size: 14px;
   font-weight: 600;
-  color: #1d1d1f;
+  color: #333;
 }
 
-/* Action Buttons */
-.game-actions {
+/* Card Footer */
+.card-footer {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  margin-top: auto;
 }
 
 .btn-benefit-setting,
 .btn-detail {
   flex: 1;
-  padding: 12px 24px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 10px;
-  font-size: 15px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn-benefit-setting {
-  background: #0071e3;
-  color: #ffffff;
-}
-
-.btn-benefit-setting:hover {
-  background: #0077ed;
-}
-
-.btn-detail {
-  background: #f5f5f7;
-  color: #1d1d1f;
-}
-
-.btn-detail:hover {
-  background: #e5e5ea;
-}
-
-/* More Games Section */
-.more-games-section {
-  margin-top: 30px;
-}
-
-.more-games-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  padding: 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-}
-
-.more-games-content {
+  background: #007bff;
   color: white;
 }
 
-.more-games-title {
-  font-size: 24px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-}
-
-.more-games-subtitle {
-  font-size: 15px;
-  margin: 0;
-  opacity: 0.9;
-}
-
-.btn-marketplace {
-  background: white;
-  color: #667eea;
-  border: none;
-  padding: 14px 28px;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.btn-marketplace:hover {
+.btn-benefit-setting:hover {
+  background: #0056b3;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.btn-detail {
+  background: white;
+  color: #007bff;
+  border: 1px solid #007bff;
+}
+
+.btn-detail:hover {
+  background: #e7f1ff;
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .stat-group {
+  .grid-container {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-stats {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .game-actions {
+  .card-footer {
     flex-direction: column;
-  }
-
-  .more-games-card {
-    flex-direction: column;
-    text-align: center;
-    gap: 20px;
   }
 }
 </style>
