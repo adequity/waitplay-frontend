@@ -134,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, type Component } from 'vue'
+import { ref, computed, onMounted, watch, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
@@ -288,6 +288,18 @@ const formatDate = (dateString: string) => {
     day: 'numeric'
   })
 }
+
+// Watch for theme changes and update body background
+watch(() => pageTheme.value.backgroundColor, (newBgColor) => {
+  if (newBgColor) {
+    // Update body background color
+    document.body.style.backgroundColor = newBgColor
+
+    // Update CSS variables
+    document.documentElement.style.setProperty('--bg-primary', newBgColor)
+    document.documentElement.style.setProperty('--bg-secondary', newBgColor)
+  }
+}, { immediate: true })
 
 onMounted(async () => {
   // Get storeId and QR code from route query
