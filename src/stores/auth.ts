@@ -73,9 +73,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const fetchedUser = await authService.getCurrentUser()
-      console.log('[authStore] Fetched user from /api/auth/me:', JSON.stringify(fetchedUser, null, 2))
-      console.log('[authStore] User role from API:', fetchedUser.userRole)
-      console.log('[authStore] User role type:', typeof fetchedUser.userRole)
       user.value = fetchedUser
     } catch (error) {
       console.error('Failed to fetch user:', error)

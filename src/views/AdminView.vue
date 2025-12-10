@@ -90,7 +90,6 @@ const handleLogout = () => {
 // No additional checks needed here
 onMounted(() => {
   // Component is ready
-  console.log('[AdminView] Component mounted, user:', authStore.user?.nickname)
 })
 </script>
 
