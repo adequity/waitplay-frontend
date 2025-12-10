@@ -26,6 +26,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
+    path: '/admin/verify-coupon',
+    name: 'verify-coupon',
+    component: () => import('../components/CouponVerificationView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/superadmin',
     name: 'superadmin',
     component: () => import('../views/SuperAdminView.vue'),

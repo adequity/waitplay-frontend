@@ -110,6 +110,25 @@
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
 }
 
+/* Coupon Verification Button */
+.nav-item.coupon-verify-btn {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 0.5px solid #e1e4e8;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.nav-item.coupon-verify-btn:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #653a91 100%);
+  color: white;
+  transform: translateX(2px);
+}
+
+.nav-item.coupon-verify-btn .nav-icon {
+  font-size: 20px;
+}
+
 /* Sidebar Account Section */
 .sidebar-account {
   padding: 20px 16px;

@@ -17,6 +17,12 @@
           <span class="nav-dot"></span>
           <span class="nav-label">{{ tab.label }}</span>
         </button>
+
+        <!-- Coupon Verification Button -->
+        <button class="nav-item coupon-verify-btn" @click="router.push('/admin/verify-coupon')">
+          <span class="nav-icon">🎫</span>
+          <span class="nav-label">쿠폰 검증</span>
+        </button>
       </nav>
 
       <!-- Account Section -->

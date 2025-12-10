@@ -8,22 +8,14 @@
 
     <!-- Game-Based Coupon Lineup -->
     <div class="game-benefits-list">
-      <div v-for="game in gamesList" :key="game.type" class="game-benefit-card">
-        <!-- Game Header with Toggle -->
+      <div v-for="game in enabledGames" :key="game.type" class="game-benefit-card">
+        <!-- Game Header -->
         <div class="game-header">
           <div class="game-info">
             <span class="game-icon">{{ game.icon }}</span>
             <h3 class="game-title">{{ game.name }}</h3>
           </div>
-          <label class="toggle-switch">
-            <input
-              type="checkbox"
-              :checked="game.enabled"
-              @change="toggleGame(game.type)"
-            />
-            <span class="toggle-slider"></span>
-            <span class="toggle-label">{{ game.enabled ? 'ON' : 'OFF' }}</span>
-          </label>
+          <div class="game-status-badge">활성화됨</div>
         </div>
 
         <!-- Game Statistics -->
@@ -109,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import gameSettingsService from '@/services/gameSettingsService'
 import benefitsService, { type GameBenefitStatsDto } from '@/services/benefitsService'
@@ -141,6 +133,11 @@ const loading = ref(false)
 const showBenefitSettingModal = ref(false)
 const showBenefitDetailsModal = ref(false)
 const selectedGame = ref<GameBenefit | null>(null)
+
+// Computed property for enabled games only
+const enabledGames = computed(() => {
+  return gamesList.value.filter(game => game.enabled)
+})
 
 // Game definitions matching GamesTab
 const gameDefinitions: Record<string, { name: string; icon: string }> = {
@@ -207,45 +204,6 @@ async function loadGameSettings() {
     }))
   } finally {
     loading.value = false
-  }
-}
-
-async function toggleGame(gameType: string) {
-  const game = gamesList.value.find(g => g.type === gameType)
-  if (!game) return
-
-  try {
-    const qrCodeId = authStore.user?.qrCodeId
-    if (!qrCodeId) {
-      console.error('No QR code ID found for admin user')
-      return
-    }
-
-    // Toggle the enabled state
-    game.enabled = !game.enabled
-
-    // Update the enabled games list
-    const enabledGames = gamesList.value
-      .filter(g => g.enabled)
-      .map(g => g.type)
-
-    // Create games order
-    const gamesOrder = enabledGames.map((gameType, index) => ({
-      type: gameType,
-      order: index
-    }))
-
-    // Save to backend
-    await gameSettingsService.updateGameSettings(qrCodeId, {
-      enabledGames,
-      gamesOrder
-    })
-
-    console.log(`Game ${gameType} toggled to ${game.enabled}`)
-  } catch (error) {
-    console.error('Failed to toggle game:', error)
-    // Revert on error
-    game.enabled = !game.enabled
   }
 }
 
@@ -335,7 +293,17 @@ onMounted(() => {
   color: #1d1d1f;
 }
 
-/* Toggle Switch */
+.game-status-badge {
+  padding: 6px 16px;
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+}
+
+/* Toggle Switch (Removed - not needed for benefits tab) */
 .toggle-switch {
   display: flex;
   align-items: center;
