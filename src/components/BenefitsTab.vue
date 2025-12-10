@@ -48,24 +48,28 @@
         <!-- Summary Medals (Always Visible) -->
         <div class="summary-medals">
           <div class="medal-item">
-            <i class="fa-solid fa-trophy medal-bronze medal-icon"></i>
-            <span class="medal-name">오늘 플레이</span>
+            <i class="fa-solid fa-medal medal-bronze medal-icon"></i>
+            <span class="medal-name">동메달</span>
             <span class="medal-score">{{ game.stats.todayPlays || 0 }}회</span>
           </div>
           <div class="medal-item">
-            <i class="fa-solid fa-star medal-gold medal-icon"></i>
-            <span class="medal-name">쿠폰 발급</span>
+            <i class="fa-solid fa-medal medal-silver medal-icon"></i>
+            <span class="medal-name">은메달</span>
             <span class="medal-score">{{ game.stats.couponsIssued || 0 }}장</span>
           </div>
           <div class="medal-item">
-            <i class="fa-solid fa-chart-line medal-silver medal-icon"></i>
-            <span class="medal-name">평균 점수</span>
+            <i class="fa-solid fa-medal medal-gold medal-icon"></i>
+            <span class="medal-name">금메달</span>
             <span class="medal-score">{{ game.stats.avgScore || 0 }}점</span>
           </div>
         </div>
 
         <!-- Card Content (Collapsible) -->
         <div class="card-content">
+          <button class="btn-template" @click="openBenefitSetting(game.type)">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> 템플릿 적용
+          </button>
+
           <!-- Additional Stats -->
           <div class="detail-stats">
             <div class="detail-stat-item">
@@ -84,11 +88,11 @@
 
           <!-- Action Buttons -->
           <div class="card-footer">
-            <button class="btn-benefit-setting" @click="openBenefitSetting(game.type)">
-              <i class="fa-solid fa-sliders"></i> 혜택 설정
+            <button class="btn-add" @click="openBenefitSetting(game.type)">
+              + 단계 추가
             </button>
-            <button class="btn-detail" @click="viewDetails(game.type)">
-              <i class="fa-solid fa-chart-bar"></i> 상세 보기
+            <button class="btn-save" @click="viewDetails(game.type)">
+              저장
             </button>
           </div>
         </div>
@@ -495,47 +499,67 @@ onMounted(() => {
   color: #333;
 }
 
-/* Card Footer */
-.card-footer {
-  display: flex;
-  gap: 8px;
-  margin-top: auto;
-}
-
-.btn-benefit-setting,
-.btn-detail {
-  flex: 1;
-  padding: 10px 16px;
-  border: none;
+/* Template Button */
+.btn-template {
+  width: 100%;
+  padding: 10px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
   border-radius: 6px;
+  color: #007bff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  margin-bottom: 20px;
   transition: 0.2s;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   gap: 6px;
 }
 
-.btn-benefit-setting {
+.btn-template:hover {
+  background: #e9ecef;
+}
+
+/* Card Footer */
+.card-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-add {
+  background: white;
+  border: 1px solid #007bff;
+  color: #007bff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-add:hover {
+  background: #e7f1ff;
+}
+
+.btn-save {
   background: #007bff;
   color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.btn-benefit-setting:hover {
+.btn-save:hover {
   background: #0056b3;
-  transform: translateY(-2px);
-}
-
-.btn-detail {
-  background: white;
-  color: #007bff;
-  border: 1px solid #007bff;
-}
-
-.btn-detail:hover {
-  background: #e7f1ff;
 }
 
 /* Responsive Design */
