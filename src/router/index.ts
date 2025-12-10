@@ -79,10 +79,16 @@ router.beforeEach(async (to, from, next) => {
     }
 
     // Check admin role requirement
-    if (to.meta.requiresAdmin && authStore.user?.userRole !== 'admin') {
-      console.warn('Access denied: Admin role required')
-      next({ name: 'home' })
-      return
+    if (to.meta.requiresAdmin) {
+      console.log('User data:', authStore.user)
+      console.log('User role:', authStore.user?.userRole)
+      console.log('Checking admin role...', authStore.user?.userRole !== 'admin')
+
+      if (authStore.user?.userRole !== 'admin') {
+        console.warn('Access denied: Admin role required')
+        next({ name: 'home' })
+        return
+      }
     }
 
     // Check superadmin role requirement
