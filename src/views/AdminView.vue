@@ -105,9 +105,16 @@ onMounted(async () => {
   }
 
   // Verify admin role
+  console.log('[AdminView] User data:', authStore.user)
+  console.log('[AdminView] User role:', authStore.user?.userRole)
+  console.log('[AdminView] User role type:', typeof authStore.user?.userRole)
+  console.log('[AdminView] Is admin?', authStore.user?.userRole === 'admin')
+
   if (authStore.user?.userRole !== 'admin') {
-    console.warn('Access denied: Admin role required')
+    console.warn('[AdminView] Access denied: Admin role required')
     router.push('/')
+  } else {
+    console.log('[AdminView] Access granted - user is admin')
   }
 })
 </script>
