@@ -52,17 +52,17 @@
           <div class="medal-box">
             <i class="fa-solid fa-medal medal-bronze medal-icon"></i>
             <span class="medal-name">동메달</span>
-            <span class="medal-score">{{ game.stats.todayPlays || 0 }}회</span>
+            <span class="medal-score">6-7점</span>
           </div>
           <div class="medal-box">
             <i class="fa-solid fa-medal medal-silver medal-icon"></i>
             <span class="medal-name">은메달</span>
-            <span class="medal-score">{{ game.stats.couponsIssued || 0 }}장</span>
+            <span class="medal-score">8-9점</span>
           </div>
           <div class="medal-box">
             <i class="fa-solid fa-medal medal-gold medal-icon"></i>
             <span class="medal-name">금메달</span>
-            <span class="medal-score">{{ game.stats.avgScore || 0 }}점</span>
+            <span class="medal-score">10점</span>
           </div>
         </div>
 
@@ -168,9 +168,9 @@ const enabledGames = computed(() => {
 
 // Game definitions matching GamesTab and HTML design
 const gameDefinitions: Record<string, { name: string; icon: string }> = {
-  'pinball': { name: '핀볼', icon: 'fa-solid fa-bullseye' },
-  'brick-breaker': { name: '벽돌깨기', icon: 'fa-solid fa-utensils' },
-  'memory': { name: '같은 카드 찾기', icon: 'fa-solid fa-magnifying-glass' },
+  'pinball': { name: '브랜드 퀴즈', icon: 'fa-solid fa-bullseye' },
+  'brick-breaker': { name: '메뉴 픽 맞추기', icon: 'fa-solid fa-utensils' },
+  'memory': { name: '같은 카드 찾기', icon: 'fa-solid fa-clone' },
   'spot-difference': { name: '틀린 그림 찾기', icon: 'fa-solid fa-magnifying-glass' }
 }
 
