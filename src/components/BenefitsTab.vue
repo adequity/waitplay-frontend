@@ -281,9 +281,28 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* CSS Variables matching HTML design */
+:root {
+  --primary-blue: #007bff;
+  --primary-dark: #0056b3;
+  --primary-light: #e7f1ff;
+  --bg-gray: #f4f6f9;
+  --box-bg: #f8f9fa;
+  --border-color: #e9ecef;
+  --text-dark: #212529;
+  --text-gray: #868e96;
+  --text-light-gray: #adb5bd;
+  --card-radius: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
 .tab-content {
   padding: 40px 50px;
-  background-color: #f5f7fa;
+  background-color: var(--bg-gray);
 }
 
 /* Page Header */
@@ -295,18 +314,18 @@ onMounted(() => {
   font-size: 28px;
   font-weight: 800;
   margin-bottom: 10px;
-  color: #212529;
+  color: var(--text-dark);
   letter-spacing: -0.5px;
 }
 
 .page-desc {
-  color: #868e96;
+  color: var(--text-gray);
   font-size: 15px;
 }
 
 /* Info Box */
 .info-box {
-  background-color: #e7f1ff;
+  background-color: var(--primary-light);
   border: 1px solid #b6d4fe;
   color: #004085;
   padding: 20px;
@@ -381,7 +400,7 @@ onMounted(() => {
 /* Card Styles */
 .card {
   background: white;
-  border-radius: 16px;
+  border-radius: var(--card-radius);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   padding: 24px;
   border: 1px solid rgba(0, 0, 0, 0.05);
@@ -431,7 +450,7 @@ onMounted(() => {
 .card-title {
   font-weight: 700;
   font-size: 18px;
-  color: #212529;
+  color: var(--text-dark);
 }
 
 .btn-collapse {
@@ -441,13 +460,13 @@ onMounted(() => {
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #007bff;
+  color: var(--primary-blue);
   cursor: pointer;
   transition: 0.2s;
 }
 
 .btn-collapse:hover {
-  background: #e7f1ff;
+  background: var(--primary-light);
 }
 
 /* Summary Medals */
@@ -459,7 +478,7 @@ onMounted(() => {
 }
 
 .medal-box {
-  background: #f8f9fa;
+  background: var(--box-bg);
   padding: 16px 10px;
   border-radius: 8px;
   flex: 1;
@@ -490,12 +509,12 @@ onMounted(() => {
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 4px;
-  color: #212529;
+  color: var(--text-dark);
 }
 
 .medal-score {
   font-size: 12px;
-  color: #868e96;
+  color: var(--text-gray);
   font-weight: 500;
 }
 
@@ -514,7 +533,7 @@ onMounted(() => {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 20px;
-  background: #f8f9fa;
+  background: var(--box-bg);
   padding: 12px;
   border-radius: 8px;
 }
@@ -544,7 +563,7 @@ onMounted(() => {
   background: white;
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  color: #007bff;
+  color: var(--primary-blue);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -553,12 +572,11 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: 0.2s;
 }
 
 .btn-template:hover {
-  background: #e7f1ff;
+  background: var(--primary-light);
   border-color: #b6d4fe;
 }
 
@@ -572,25 +590,25 @@ onMounted(() => {
 
 .btn-add {
   background: white;
-  border: 1px solid #007bff;
-  color: #007bff;
+  border: 1px solid var(--primary-blue);
+  color: var(--primary-blue);
   padding: 10px 18px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: 0.2s;
 }
 
 .btn-add:hover {
-  background: #e7f1ff;
+  background: var(--primary-light);
 }
 
 .btn-save {
-  background: #007bff;
+  background: var(--primary-blue);
   color: white;
   border: none;
   padding: 10px 30px;
@@ -598,13 +616,12 @@ onMounted(() => {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
   box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+  transition: 0.2s;
 }
 
 .btn-save:hover {
-  background: #0069d9;
-  transform: translateY(-1px);
+  background: var(--primary-dark);
 }
 
 /* Responsive Design */
