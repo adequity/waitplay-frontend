@@ -198,8 +198,8 @@ const openLayoutEditor = () => {
     alert('QR 코드를 먼저 선택해주세요')
     return
   }
-  // Open the layout editor with the selected QR code ID
-  window.open(`/admin/layout-editor/${selectedQR.value.id}`, '_blank')
+  // Open the layout editor (QR code ID comes from JWT token, not URL)
+  window.open('/admin/layout-editor', '_blank')
 }
 
 // Load settings from backend API
