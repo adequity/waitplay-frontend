@@ -229,8 +229,11 @@
           <!-- Image Edit -->
           <template v-if="editingBlock.type === 'image'">
             <div class="form-group">
-              <label class="form-label">이미지 URL</label>
-              <input type="text" class="form-input" v-model="editForm.imageUrl" placeholder="https://...">
+              <label class="form-label">이미지 업로드</label>
+              <input type="file" class="form-input" @change="handleImageUpload" accept="image/*" style="margin-bottom: 8px;">
+              <div v-if="editForm.imageUrl" style="margin-top: 8px;">
+                <img :src="editForm.imageUrl" alt="미리보기" style="width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; border: 1px solid #e5e5ea;">
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">캡션 (선택)</label>
@@ -282,7 +285,16 @@
           <template v-if="editingBlock.type === 'social_links'">
             <div class="form-group">
               <label class="form-label">SNS 링크 관리</label>
-              <div v-for="(link, index) in editForm.links" :key="index" style="display: flex; gap: 8px; margin-bottom: 8px;">
+              <div v-for="(link, index) in editForm.links" :key="index" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                <div style="flex: 0 0 40px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                  <span v-if="link.type === 'instagram'">📷</span>
+                  <span v-else-if="link.type === 'facebook'">👥</span>
+                  <span v-else-if="link.type === 'youtube'">▶️</span>
+                  <span v-else-if="link.type === 'twitter'">🐦</span>
+                  <span v-else-if="link.type === 'tiktok'">🎵</span>
+                  <span v-else-if="link.type === 'website'">🌐</span>
+                  <span v-else>🔗</span>
+                </div>
                 <select class="form-input" v-model="link.type" style="flex: 0 0 120px;">
                   <option value="instagram">Instagram</option>
                   <option value="facebook">Facebook</option>
@@ -316,7 +328,10 @@
               <label class="form-label">영상 관리</label>
               <div v-for="(video, index) in editForm.videos" :key="index" style="margin-bottom: 12px; padding: 12px; background: #f9fafb; border-radius: 8px;">
                 <input type="text" class="form-input" v-model="video.title" placeholder="영상 제목" style="margin-bottom: 8px;">
-                <input type="text" class="form-input" v-model="video.url" placeholder="YouTube URL" style="margin-bottom: 8px;">
+                <input type="text" class="form-input" v-model="video.url" @blur="updateVideoThumbnail(video)" placeholder="YouTube URL (예: https://youtube.com/watch?v=...)" style="margin-bottom: 8px;">
+                <div v-if="video.thumbnail" style="margin-bottom: 8px;">
+                  <img :src="video.thumbnail" alt="썸네일" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px;">
+                </div>
                 <button class="btn-icon delete" @click="editForm.videos.splice(index, 1)" title="삭제" style="width: 100%;">
                   삭제
                 </button>
@@ -836,6 +851,82 @@ function deleteBlock(index: number) {
 
 function toggleBlockVisibility(block: Block) {
   block.isVisible = !block.isVisible
+}
+
+// YouTube URL에서 비디오 ID 추출
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+    /youtube\.com\/embed\/([^&\n?#]+)/,
+    /youtube\.com\/v\/([^&\n?#]+)/
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match && match[1]) {
+      return match[1]
+    }
+  }
+  return null
+}
+
+// YouTube 썸네일 URL 생성
+function generateYouTubeThumbnail(url: string): string {
+  const videoId = extractYouTubeId(url)
+  if (videoId) {
+    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+  }
+  return ''
+}
+
+// 영상 URL 변경 시 썸네일 자동 생성
+function updateVideoThumbnail(video: any) {
+  if (video.url) {
+    const thumbnail = generateYouTubeThumbnail(video.url)
+    if (thumbnail) {
+      video.thumbnail = thumbnail
+    }
+  }
+}
+
+// 이미지 파일 업로드
+async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      },
+      body: formData
+    })
+
+    if (!response.ok) {
+      throw new Error('이미지 업로드 실패')
+    }
+
+    const data = await response.json()
+    return data.url
+  } catch (error) {
+    console.error('Upload error:', error)
+    alert('이미지 업로드에 실패했습니다.')
+    throw error
+  }
+}
+
+// 이미지 파일 선택 핸들러
+async function handleImageUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    try {
+      const url = await uploadImage(input.files[0])
+      editForm.value.imageUrl = url
+    } catch (error) {
+      console.error('Image upload failed:', error)
+    }
+  }
 }
 
 function goBack() {
