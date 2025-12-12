@@ -169,7 +169,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-414
 const fetchAdmins = async () => {
   loading.value = true
   try {
-    const response = await fetch(`${API_URL}/api/users/admins`, {
+    const response = await fetch(`${API_URL}/api/superadmin/admins`, {
       headers: {
         'Authorization': `Bearer ${authStore.accessToken}`
       }
@@ -195,7 +195,7 @@ const createAdmin = async () => {
 
   creating.value = true
   try {
-    const response = await fetch(`${API_URL}/api/setup/create-admin`, {
+    const response = await fetch(`${API_URL}/api/superadmin/admins`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -226,7 +226,7 @@ const deleteAdmin = async (admin: Admin) => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/users/${admin.id}`, {
+    const response = await fetch(`${API_URL}/api/superadmin/admins/${admin.id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${authStore.accessToken}`
