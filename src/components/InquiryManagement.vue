@@ -41,7 +41,7 @@
               <span :class="`status-badge status-${inquiry.status}`">
                 {{ getStatusLabel(inquiry.status) }}
               </span>
-              <span class="category-badge">{{ inquiry.category }}</span>
+              <span class="category-badge">문의</span>
             </div>
             <span class="inquiry-date">{{ formatDate(inquiry.createdAt) }}</span>
           </div>
@@ -54,7 +54,7 @@
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            <span>{{ inquiry.adminNickname }} ({{ inquiry.adminCompany }})</span>
+            <span>{{ inquiry.adminName }} {{ inquiry.adminCompany ? `(${inquiry.adminCompany})` : '' }}</span>
           </div>
 
           <div v-if="inquiry.status === 'answered' && inquiry.answer" class="inquiry-answer">
@@ -105,7 +105,7 @@
         <div class="modal-body">
           <div class="inquiry-detail">
             <div class="detail-header">
-              <span class="category-badge">{{ selectedInquiry?.category }}</span>
+              <span class="category-badge">문의</span>
               <span class="inquiry-date">{{ formatDate(selectedInquiry!.createdAt) }}</span>
             </div>
             <h3>{{ selectedInquiry?.title }}</h3>
@@ -115,7 +115,7 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
-              <span>{{ selectedInquiry?.adminNickname }} ({{ selectedInquiry?.adminCompany }})</span>
+              <span>{{ selectedInquiry?.adminName }} {{ selectedInquiry?.adminCompany ? `(${selectedInquiry?.adminCompany})` : '' }}</span>
             </div>
           </div>
 
@@ -152,14 +152,12 @@ interface Inquiry {
   id: number
   title: string
   content: string
-  category: string
   status: 'waiting' | 'answered'
-  answer?: string
-  answeredAt?: string
+  answer?: string | null
+  answeredAt?: string | null
   createdAt: string
-  adminNickname: string
-  adminCompany: string
-  adminUserId: string
+  adminName: string
+  adminCompany: string | null
 }
 
 const authStore = useAuthStore()
@@ -202,7 +200,7 @@ const getStatusLabel = (status: string) => {
 const fetchInquiries = async () => {
   loading.value = true
   try {
-    const response = await fetch(`${API_URL}/api/inquiry/all`, {
+    const response = await fetch(`${API_URL}/api/superadmin/inquiries`, {
       headers: {
         'Authorization': `Bearer ${authStore.accessToken}`
       }
@@ -237,7 +235,7 @@ const submitAnswer = async () => {
 
   submitting.value = true
   try {
-    const response = await fetch(`${API_URL}/api/inquiry/${selectedInquiry.value.id}/answer`, {
+    const response = await fetch(`${API_URL}/api/superadmin/inquiries/${selectedInquiry.value.id}/answer`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
