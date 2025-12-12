@@ -332,8 +332,8 @@
                   type="text"
                   class="form-input"
                   v-model="video.url"
-                  @input="updateVideoThumbnail(video)"
                   @blur="updateVideoThumbnail(video)"
+                  @keyup.enter="updateVideoThumbnail(video)"
                   placeholder="YouTube URL (예: https://youtube.com/watch?v=...)"
                   style="margin-bottom: 8px;"
                 >
@@ -890,30 +890,21 @@ function generateYouTubeThumbnail(url: string): string {
   return ''
 }
 
-// 디바운스 타이머
-let thumbnailUpdateTimer: number | null = null
-
-// 영상 URL 변경 시 썸네일 자동 생성 (디바운스 적용)
+// 영상 URL 변경 시 썸네일 자동 생성
 function updateVideoThumbnail(video: any) {
-  // 이전 타이머 취소
-  if (thumbnailUpdateTimer) {
-    clearTimeout(thumbnailUpdateTimer)
+  // 즉시 썸네일 생성 시도
+  if (!video.url) {
+    video.thumbnail = ''
+    return
   }
 
-  // 500ms 후에 썸네일 생성
-  thumbnailUpdateTimer = window.setTimeout(() => {
-    if (video.url) {
-      const thumbnail = generateYouTubeThumbnail(video.url)
-      if (thumbnail) {
-        video.thumbnail = thumbnail
-        console.log('썸네일 생성:', thumbnail)
-      } else {
-        console.log('썸네일 생성 실패 - URL:', video.url)
-      }
-    } else {
-      video.thumbnail = ''
-    }
-  }, 500)
+  const thumbnail = generateYouTubeThumbnail(video.url)
+  if (thumbnail) {
+    video.thumbnail = thumbnail
+    console.log('썸네일 생성 성공:', thumbnail, 'URL:', video.url)
+  } else {
+    console.log('썸네일 생성 실패 - 유효한 YouTube URL이 아닙니다:', video.url)
+  }
 }
 
 // 이미지 파일 업로드
