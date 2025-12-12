@@ -1,525 +1,372 @@
 <template>
-  <div class="superadmin-dashboard">
-    <!-- Header -->
-    <div class="dashboard-header">
-      <h1>전체 통계</h1>
-      <p class="header-subtitle">WaitPlay 전체 시스템 현황을 모니터링합니다</p>
-    </div>
+  <div class="dashboard-content">
 
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <div class="stat-card purple">
-        <div class="stat-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
+    <!-- 1. Key Metrics Cards -->
+    <div class="kpi-grid">
+      <div class="metric-card" v-for="(card, index) in topCards" :key="index">
+        <div class="card-icon-wrapper" :class="card.color">
+          <IconBase :name="card.icon" class="card-icon" />
         </div>
-        <div class="stat-info">
-          <p class="stat-label">총 Admin 수</p>
-          <h3 class="stat-value">{{ stats.totalAdmins }}</h3>
+        <div class="card-info">
+          <span class="card-label">{{ card.label }}</span>
+          <div class="card-value-row">
+            <span class="card-value">{{ card.value }}</span>
+            <span class="card-unit" v-if="card.unit">{{ card.unit }}</span>
+          </div>
         </div>
-      </div>
-
-      <div class="stat-card blue">
-        <div class="stat-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </div>
-        <div class="stat-info">
-          <p class="stat-label">총 사용자 수</p>
-          <h3 class="stat-value">{{ stats.totalUsers }}</h3>
-        </div>
-      </div>
-
-      <div class="stat-card orange">
-        <div class="stat-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-        </div>
-        <div class="stat-info">
-          <p class="stat-label">대기중 문의</p>
-          <h3 class="stat-value">{{ stats.waitingInquiries }}</h3>
-        </div>
-      </div>
-
-      <div class="stat-card green">
-        <div class="stat-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-        </div>
-        <div class="stat-info">
-          <p class="stat-label">시스템 상태</p>
-          <h3 class="stat-value">정상</h3>
+        <div class="card-trend">
+          <span class="trend-badge">{{ card.period }}</span>
         </div>
       </div>
     </div>
 
-    <!-- Recent Activities -->
+    <!-- 2. Alert & Status Cards -->
+    <div class="status-grid">
+      <div class="status-card" v-for="(card, index) in middleCards" :key="index" :class="{ alert: card.isAlert }">
+        <div class="status-header">
+          <span class="status-label">{{ card.label }}</span>
+          <span class="status-badge" :class="card.isAlert ? 'red' : 'green'">
+            {{ card.isAlert ? 'Action Required' : 'Normal' }}
+          </span>
+        </div>
+        <div class="status-body">
+          <span class="status-value" :class="card.isAlert ? 'text-red' : 'text-dark'">
+            {{ card.value }}
+          </span>
+          <span class="status-desc">{{ card.subText }}</span>
+        </div>
+        <button class="btn-arrow" @click="handleStatusCardClick(card)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Real-time Franchise Activity -->
     <div class="activity-section">
       <div class="section-header">
-        <h2>최근 활동</h2>
-        <p>최근 Admin 및 시스템 활동 내역</p>
+        <div class="title-group">
+          <h3 class="section-title">가맹점 실시간 현황</h3>
+          <span class="section-subtitle">오늘 쿠폰 사용량 기준 TOP 9</span>
+        </div>
+        <button class="btn-more" @click="viewAllStores">더보기</button>
       </div>
 
-      <div class="activity-list">
-        <div v-if="loadingActivities" class="loading-state">
-          <div class="spinner"></div>
-          <p>활동 내역을 불러오는 중...</p>
-        </div>
-
-        <div v-else-if="activities.length === 0" class="empty-state">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-          <p>활동 내역이 없습니다</p>
-        </div>
-
-        <div v-else class="activity-items">
-          <div v-for="activity in activities" :key="activity.id" class="activity-item">
-            <div class="activity-icon" :class="activity.type">
-              <svg v-if="activity.type === 'inquiry'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-              <svg v-else-if="activity.type === 'admin'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
-              </svg>
-              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+      <div class="store-grid">
+        <div class="store-card" v-for="(store, index) in topStores" :key="store.id">
+          <div class="rank-badge" :class="'rank-' + (index + 1)">{{ index + 1 }}</div>
+          <div class="store-header">
+            <span class="store-name">{{ store.name }}</span>
+            <span class="store-location">{{ store.location }}</span>
+          </div>
+          <div class="store-stats">
+            <div class="stat-item">
+              <span class="stat-label">쿠폰 사용</span>
+              <span class="stat-value">{{ store.couponCount }}</span>
             </div>
-            <div class="activity-content">
-              <p class="activity-text">{{ activity.text }}</p>
-              <p class="activity-time">{{ formatTime(activity.createdAt) }}</p>
-            </div>
+          </div>
+          <div class="game-tags">
+            <span v-for="game in store.games.slice(0, 2)" :key="game" class="game-tag">
+              {{ game }}
+            </span>
+            <span v-if="store.games.length > 2" class="game-tag more">+{{ store.games.length - 2 }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-      <div class="section-header">
-        <h2>빠른 작업</h2>
-        <p>자주 사용하는 기능</p>
-      </div>
-
-      <div class="actions-grid">
-        <button class="action-card" @click="switchTab('admins')">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="8.5" cy="7" r="4"/>
-            <line x1="20" y1="8" x2="20" y2="14"/>
-            <line x1="23" y1="11" x2="17" y2="11"/>
-          </svg>
-          <span>Admin 생성</span>
-        </button>
-
-        <button class="action-card" @click="switchTab('inquiries')">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          <span>문의 확인</span>
-        </button>
-
-        <button class="action-card" @click="refreshData">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 4 23 10 17 10"/>
-            <polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-          </svg>
-          <span>새로고침</span>
-        </button>
-
-        <button class="action-card" @click="viewLogs">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-          </svg>
-          <span>시스템 로그</span>
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import IconBase from '@/components/IconBase.vue'
 import { useAuthStore } from '@/stores/auth'
 
-interface Stats {
-  totalAdmins: number
-  totalUsers: number
-  waitingInquiries: number
-}
-
-interface Activity {
-  id: string
-  type: 'inquiry' | 'admin' | 'system'
-  text: string
-  createdAt: string
-}
-
 const authStore = useAuthStore()
-const loadingActivities = ref(false)
 
-const stats = ref<Stats>({
-  totalAdmins: 0,
-  totalUsers: 0,
-  waitingInquiries: 0
-})
+// Data
+const topCards = [
+  { label: '전체 가맹점', value: '47', unit: '개소', period: '이번 달 +2', icon: 'users', color: 'blue' },
+  { label: '전체 이용자', value: '8,532', unit: '명', period: '이번 주 +124', icon: 'users', color: 'purple' },
+  { label: '오늘 게임 수', value: '12,847', unit: '건', period: '어제 대비 ▲5%', icon: 'gamepad', color: 'green' },
+  { label: '오늘 쿠폰 사용', value: '3,421', unit: '장', period: '어제 대비 ▲2%', icon: 'gift', color: 'orange' }
+]
 
-const activities = ref<Activity[]>([])
+const middleCards = [
+  { label: '미처리 CS 문의', value: '2건', subText: '24시간 이내 응답 필요', isAlert: true, action: 'inquiries' },
+  { label: '가맹점 승인 대기', value: '1건', subText: '신규 가입 요청', isAlert: true, action: 'admins' },
+  { label: '서버 상태', value: '정상', subText: '모든 시스템 가동 중', isAlert: false, action: null },
+  { label: '인기 혜택', value: '스타벅스 아메리카노', subText: '이번 주 가장 많이 발급된 쿠폰', isAlert: false, action: null }
+]
+
+const topStores = ref([
+  { id: 1, name: '강남점', location: '서울 강남구', couponCount: 247, games: ['룰렛', '슬롯', '빙고'] },
+  { id: 2, name: '홍대점', location: '서울 마포구', couponCount: 198, games: ['룰렛', '슬롯'] },
+  { id: 3, name: '신촌점', location: '서울 서대문구', couponCount: 176, games: ['빙고', '룰렛', '슬롯'] },
+  { id: 4, name: '건대점', location: '서울 광진구', couponCount: 154, games: ['슬롯', '빙고'] },
+  { id: 5, name: '판교점', location: '경기 성남시', couponCount: 143, games: ['룰렛', '슬롯'] },
+  { id: 6, name: '분당점', location: '경기 성남시', couponCount: 132, games: ['빙고', '슬롯'] },
+  { id: 7, name: '일산점', location: '경기 고양시', couponCount: 119, games: ['룰렛'] },
+  { id: 8, name: '수원점', location: '경기 수원시', couponCount: 107, games: ['슬롯', '룰렛'] },
+  { id: 9, name: '인천점', location: '인천 남동구', couponCount: 95, games: ['빙고'] }
+])
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
-const fetchStats = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/stats/superadmin`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
-    })
-
-    if (!response.ok) throw new Error('Failed to fetch stats')
-
-    const data = await response.json()
-    stats.value = data
-  } catch (error) {
-    console.error('Failed to fetch stats:', error)
-    // Use mock data for now
-    stats.value = {
-      totalAdmins: 0,
-      totalUsers: 0,
-      waitingInquiries: 0
-    }
+const handleStatusCardClick = (card: any) => {
+  if (card.action) {
+    window.dispatchEvent(new CustomEvent('switch-tab', { detail: card.action }))
   }
 }
 
-const fetchActivities = async () => {
-  loadingActivities.value = true
-  try {
-    const response = await fetch(`${API_URL}/api/activities/recent`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
-    })
-
-    if (!response.ok) throw new Error('Failed to fetch activities')
-
-    const data = await response.json()
-    activities.value = data
-  } catch (error) {
-    console.error('Failed to fetch activities:', error)
-    // Use mock data for now
-    activities.value = []
-  } finally {
-    loadingActivities.value = false
-  }
+const viewAllStores = () => {
+  alert('전체 가맹점 현황은 곧 제공될 예정입니다.')
 }
-
-const switchTab = (tabId: string) => {
-  window.dispatchEvent(new CustomEvent('switch-tab', { detail: tabId }))
-}
-
-const refreshData = () => {
-  fetchStats()
-  fetchActivities()
-}
-
-const viewLogs = () => {
-  alert('시스템 로그 기능은 곧 제공될 예정입니다.')
-}
-
-const formatTime = (dateString: string) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-
-  if (diffInMinutes < 1) return '방금 전'
-  if (diffInMinutes < 60) return `${diffInMinutes}분 전`
-  if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}시간 전`
-
-  return date.toLocaleDateString('ko-KR', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-onMounted(() => {
-  fetchStats()
-  fetchActivities()
-})
 </script>
 
 <style scoped>
-.superadmin-dashboard {
+/* Common Layout */
+.dashboard-content {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
   padding: 40px;
-  min-height: 100vh;
 }
 
-/* Dashboard Header */
-.dashboard-header {
-  margin-bottom: 32px;
-}
-
-.dashboard-header h1 {
-  font-size: 32px;
-  font-weight: 800;
-  color: #1d1d1f;
-  margin: 0 0 8px 0;
-}
-
-.header-subtitle {
-  font-size: 15px;
-  color: #86868b;
-  margin: 0;
-}
-
-/* Stats Grid */
-.stats-grid {
+/* 1. KPI Cards */
+.kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
-.stat-card {
+.metric-card {
   background: white;
-  border: 1px solid #e5e5ea;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.02);
   display: flex;
-  gap: 16px;
-  align-items: center;
-  transition: all 0.2s;
+  align-items: flex-start;
+  position: relative;
+  transition: transform 0.2s;
 }
 
-.stat-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+.metric-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
 }
 
-.stat-icon {
-  width: 56px;
-  height: 56px;
+.card-icon-wrapper {
+  width: 48px;
+  height: 48px;
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  margin-right: 16px;
 }
+.card-icon-wrapper.blue { background: #e8f2ff; color: #0071e3; }
+.card-icon-wrapper.purple { background: #f3e8ff; color: #9333ea; }
+.card-icon-wrapper.green { background: #dcfce7; color: #16a34a; }
+.card-icon-wrapper.orange { background: #ffedd5; color: #ea580c; }
 
-.stat-card.purple .stat-icon {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-  color: white;
+.card-icon { width: 24px; height: 24px; }
+
+.card-info { flex: 1; }
+.card-label { font-size: 13px; color: #86868b; font-weight: 600; display: block; margin-bottom: 4px; }
+.card-value-row { display: flex; align-items: baseline; gap: 4px; }
+.card-value { font-size: 28px; font-weight: 800; color: #1d1d1f; letter-spacing: -0.5px; }
+.card-unit { font-size: 14px; color: #86868b; font-weight: 500; }
+
+.card-trend {
+  position: absolute;
+  top: 24px;
+  right: 24px;
 }
-
-.stat-card.blue .stat-icon {
-  background: linear-gradient(135deg, #0071e3 0%, #0056b3 100%);
-  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
-  color: white;
-}
-
-.stat-card.orange .stat-icon {
-  background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
-  box-shadow: 0 4px 12px rgba(245, 124, 0, 0.3);
-  color: white;
-}
-
-.stat-card.green .stat-icon {
-  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
-  color: white;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: #86868b;
-  margin: 0 0 6px 0;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 800;
-  color: #1d1d1f;
-  margin: 0;
-}
-
-/* Activity Section */
-.activity-section,
-.quick-actions {
-  background: white;
-  border: 1px solid #e5e5ea;
-  border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 24px;
-}
-
-.section-header {
-  margin-bottom: 24px;
-}
-
-.section-header h2 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1d1d1f;
-  margin: 0 0 4px 0;
-}
-
-.section-header p {
-  font-size: 14px;
-  color: #86868b;
-  margin: 0;
-}
-
-.loading-state,
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  color: #86868b;
-}
-
-.loading-state p,
-.empty-state p {
-  margin-top: 12px;
-  font-size: 14px;
-}
-
-.empty-state svg {
-  color: #d2d2d7;
-}
-
-.activity-items {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.activity-item {
-  display: flex;
-  gap: 16px;
-  padding: 16px;
-  background: #f9f9fb;
-  border-radius: 12px;
-  transition: all 0.2s;
-}
-
-.activity-item:hover {
+.trend-badge {
+  font-size: 11px;
+  padding: 4px 8px;
   background: #f5f5f7;
-}
-
-.activity-icon {
-  width: 40px;
-  height: 40px;
   border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  color: #6e6e73;
+  font-weight: 500;
 }
 
-.activity-icon.inquiry {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.activity-icon.admin {
-  background: #f3e5f5;
-  color: #8b5cf6;
-}
-
-.activity-icon.system {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.activity-content {
-  flex: 1;
-}
-
-.activity-text {
-  font-size: 14px;
-  color: #1d1d1f;
-  margin: 0 0 4px 0;
-}
-
-.activity-time {
-  font-size: 12px;
-  color: #aeaeb2;
-  margin: 0;
-}
-
-/* Quick Actions */
-.actions-grid {
+/* 2. Status Grid */
+.status-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
 }
 
-.action-card {
+.status-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  border: 1px solid #e5e5ea;
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 24px;
-  background: #f9f9fb;
-  border: 1px solid #e5e5ea;
-  border-radius: 12px;
-  cursor: pointer;
+  justify-content: space-between;
+  height: 160px;
   transition: all 0.2s;
 }
 
-.action-card:hover {
-  background: white;
-  border-color: #8b5cf6;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+.status-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
   transform: translateY(-2px);
 }
 
-.action-card svg {
-  color: #8b5cf6;
+.status-card.alert {
+  border-color: #ffcccc;
+  background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
 }
 
-.action-card span {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1d1d1f;
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-/* Spinner */
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f0f0f0;
-  border-top-color: #8b5cf6;
+.status-label { font-size: 14px; font-weight: 700; color: #1d1d1f; }
+.status-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+.status-badge.red { background: #ff3b30; color: white; }
+.status-badge.green { background: #34c759; color: white; }
+
+.status-body { margin-top: auto; }
+.status-value { font-size: 24px; font-weight: 800; display: block; margin-bottom: 4px; }
+.text-red { color: #ff3b30; }
+.text-dark { color: #1d1d1f; }
+.status-desc { font-size: 12px; color: #86868b; }
+
+.btn-arrow {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: #d2d2d7;
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.2s;
+}
+.btn-arrow:hover { color: #1d1d1f; transform: translateX(2px); }
+
+/* 3. Activity Section */
+.activity-section {
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f5f5f7;
+}
+
+.title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.section-title { font-size: 20px; font-weight: 800; color: #1d1d1f; margin: 0; }
+.section-subtitle { font-size: 13px; color: #86868b; }
+.btn-more {
+  font-size: 13px; font-weight: 600; color: #0071e3;
+  background: transparent; border: none; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-more:hover { color: #0056b3; }
+
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.store-card {
+  background: #ffffff;
+  border: 1px solid #e5e5ea;
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.store-card:hover {
+  border-color: #8b5cf6;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+  transform: translateY(-2px);
+}
+
+.rank-badge {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 24px;
+  height: 24px;
+  background: #f5f5f7;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: #86868b;
+}
+.rank-badge.rank-1 { background: #ffdf00; color: #b4690e; }
+.rank-badge.rank-2 { background: #e0e0e0; color: #555; }
+.rank-badge.rank-3 { background: #cd7f32; color: #6d3303; }
+
+.store-header {
+  margin-bottom: 12px;
+  padding-left: 32px;
+}
+.store-name { font-size: 16px; font-weight: 700; color: #1d1d1f; display: block; }
+.store-location { font-size: 12px; color: #86868b; }
+
+.store-stats {
+  padding-left: 32px;
+  margin-bottom: 16px;
+}
+.stat-item { display: flex; align-items: baseline; gap: 8px; }
+.stat-label { font-size: 12px; color: #86868b; }
+.stat-value { font-size: 18px; font-weight: 800; color: #1d1d1f; }
+
+.game-tags {
+  display: flex;
+  gap: 6px;
+  padding-left: 32px;
+}
+.game-tag {
+  font-size: 11px;
+  padding: 4px 8px;
+  background: #f5f5f7;
+  border-radius: 6px;
+  color: #6e6e73;
+  font-weight: 500;
+}
+.game-tag.more { background: white; border: 1px solid #e5e5ea; color: #aeaeb2; }
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .kpi-grid, .status-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@media (max-width: 768px) {
+  .kpi-grid, .status-grid { grid-template-columns: 1fr; }
+  .store-grid { grid-template-columns: 1fr; }
+  .dashboard-content { padding: 20px; }
 }
 </style>
