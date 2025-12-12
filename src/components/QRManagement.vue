@@ -176,13 +176,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import axios from 'axios'
+import apiClient from '@/services/api'
 import QRCode from 'qrcode'
 import IconBase from '@/components/IconBase.vue'
 import { useAuthStore } from '@/stores/auth'
 import gameSettingsService from '@/services/gameSettingsService'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 const authStore = useAuthStore()
 
 interface QRCodeData {
@@ -279,7 +278,7 @@ const openLayoutEditor = () => {
 // Load settings from backend API
 const loadSettings = async () => {
   try {
-    const response = await axios.get(`${API_URL}/api/landingpage/settings`)
+    const response = await apiClient.get('/api/landingpage/settings')
     if (response.data && response.data.storeName) {
       storeName.value = response.data.storeName
       logoUrl.value = response.data.logoUrl || ''
@@ -314,7 +313,7 @@ const loadSettings = async () => {
 const fetchQRCodes = async () => {
   isLoading.value = true
   try {
-    const response = await axios.get(`${API_URL}/api/qrcode`)
+    const response = await apiClient.get('/api/qrcode')
     qrCodes.value = response.data
 
     if (qrCodes.value.length > 0 && !selectedQR.value) {
@@ -337,7 +336,7 @@ const saveSettings = async () => {
       welcomeMessage: welcomeMessage.value
     }
 
-    const response = await axios.post(`${API_URL}/api/landingpage/settings`, settingsData)
+    const response = await apiClient.post('/api/landingpage/settings', settingsData)
 
     if (response.data.landingPageUrl) {
       landingPageUrl.value = response.data.landingPageUrl
@@ -373,7 +372,7 @@ const handleLogoUpload = async (event: Event) => {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await axios.post(`${API_URL}/api/fileupload/logo`, formData, {
+      const response = await apiClient.post('/api/fileupload/logo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
