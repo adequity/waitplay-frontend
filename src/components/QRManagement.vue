@@ -75,9 +75,14 @@
           <div class="form-group">
             <label class="form-label">활성화된 게임</label>
             <div class="active-games-summary">
-              <span class="game-chip">브랜드 퀴즈</span>
-              <span class="game-chip">메뉴 픽 맞추기</span>
-              <span class="game-chip game-chip-disabled">틀린 그림 찾기 (비활성)</span>
+              <span
+                v-for="game in games"
+                :key="game.id"
+                class="game-chip"
+                :class="{ 'game-chip-disabled': !game.enabled }"
+              >
+                {{ game.name }}{{ !game.enabled ? ' (비활성)' : '' }}
+              </span>
             </div>
             <p class="settings-hint">게임 관리 탭에서 활성화/비활성화 할 수 있습니다.</p>
           </div>
@@ -170,12 +175,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import QRCode from 'qrcode'
 import IconBase from '@/components/IconBase.vue'
+import { useAuthStore } from '@/stores/auth'
+import gameSettingsService from '@/services/gameSettingsService'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
+const authStore = useAuthStore()
 
 interface QRCodeData {
   id: string
@@ -196,6 +204,12 @@ interface QRCodeData {
   qrCodeUrl: string
 }
 
+interface Game {
+  id: string
+  name: string
+  enabled: boolean
+}
+
 const qrCodes = ref<QRCodeData[]>([])
 const selectedQR = ref<QRCodeData | null>(null)
 const qrImageUrl = ref<string>('')
@@ -207,6 +221,51 @@ const logoUrl = ref<string>('')
 const logoFileInput = ref<HTMLInputElement | null>(null)
 const welcomeMessage = ref('')
 const landingPageUrl = ref('waitplay.io/store/demo123')
+
+// Game settings
+const games = ref<Game[]>([])
+
+// Game definitions matching GamesTab
+const gameDefinitions = [
+  { id: 'pinball', name: '핀볼' },
+  { id: 'brick-breaker', name: '벽돌깨기' },
+  { id: 'memory', name: '같은 카드 찾기' },
+  { id: 'spot-difference', name: '틀린 그림 찾기' }
+]
+
+// Load game settings from API
+const loadGameSettings = async () => {
+  try {
+    const qrCodeId = authStore.user?.qrCodeId
+    if (!qrCodeId) {
+      console.warn('No QR code ID found for user')
+      // Set all games as disabled by default
+      games.value = gameDefinitions.map(def => ({
+        id: def.id,
+        name: def.name,
+        enabled: false
+      }))
+      return
+    }
+
+    const settings = await gameSettingsService.getGameSettings(qrCodeId)
+
+    // Map all games with their enabled status
+    games.value = gameDefinitions.map(def => ({
+      id: def.id,
+      name: def.name,
+      enabled: settings.enabledGames.includes(def.id)
+    }))
+  } catch (error) {
+    console.error('Failed to load game settings:', error)
+    // Fallback: show all games as disabled
+    games.value = gameDefinitions.map(def => ({
+      id: def.id,
+      name: def.name,
+      enabled: false
+    }))
+  }
+}
 
 // Open Layout Editor
 const openLayoutEditor = () => {
@@ -458,6 +517,7 @@ const formatDate = (dateString: string) => {
 onMounted(() => {
   loadSettings()
   fetchQRCodes()
+  loadGameSettings()
 })
 </script>
 
