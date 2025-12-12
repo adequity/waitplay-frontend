@@ -278,10 +278,74 @@
             </div>
           </template>
 
-          <!-- Social Links, Video Grid, Games Carousel - 복잡한 구조는 현재 편집 불가 안내 -->
-          <div v-if="['social_links', 'video_grid', 'games_carousel'].includes(editingBlock.type)" class="form-hint-box">
-            이 블록은 현재 간단 편집만 지원됩니다. 상세 설정은 각 관리 탭에서 진행해주세요.
-          </div>
+          <!-- Social Links Edit -->
+          <template v-if="editingBlock.type === 'social_links'">
+            <div class="form-group">
+              <label class="form-label">SNS 링크 관리</label>
+              <div v-for="(link, index) in editForm.links" :key="index" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <select class="form-input" v-model="link.type" style="flex: 0 0 120px;">
+                  <option value="instagram">Instagram</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="twitter">Twitter</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="website">Website</option>
+                </select>
+                <input type="text" class="form-input" v-model="link.url" placeholder="https://..." style="flex: 1;">
+                <button class="btn-icon delete" @click="editForm.links.splice(index, 1)" title="삭제">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+              <button class="btn-action btn-secondary" @click="editForm.links.push({ type: 'instagram', url: '' })" style="width: 100%; margin-top: 8px;">
+                + 링크 추가
+              </button>
+            </div>
+          </template>
+
+          <!-- Video Grid Edit -->
+          <template v-if="editingBlock.type === 'video_grid'">
+            <div class="form-group">
+              <label class="form-label">레이아웃</label>
+              <select class="form-input" v-model="editForm.layout">
+                <option value="grid-2">2단 그리드</option>
+                <option value="grid-3">3단 그리드</option>
+                <option value="list">리스트</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">영상 관리</label>
+              <div v-for="(video, index) in editForm.videos" :key="index" style="margin-bottom: 12px; padding: 12px; background: #f9fafb; border-radius: 8px;">
+                <input type="text" class="form-input" v-model="video.title" placeholder="영상 제목" style="margin-bottom: 8px;">
+                <input type="text" class="form-input" v-model="video.url" placeholder="YouTube URL" style="margin-bottom: 8px;">
+                <button class="btn-icon delete" @click="editForm.videos.splice(index, 1)" title="삭제" style="width: 100%;">
+                  삭제
+                </button>
+              </div>
+              <button class="btn-action btn-secondary" @click="editForm.videos.push({ title: '', url: '', thumbnail: '' })" style="width: 100%;">
+                + 영상 추가
+              </button>
+            </div>
+          </template>
+
+          <!-- Games Carousel Edit -->
+          <template v-if="editingBlock.type === 'games_carousel'">
+            <div class="form-group">
+              <label class="form-label">리더보드 표시</label>
+              <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" v-model="editForm.showLeaderboard">
+                <span>게임 리더보드 보이기</span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="form-label">활성화된 게임</label>
+              <div v-for="game in editForm.gamesOrder" :key="game.type" style="margin-bottom: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #f9fafb; border-radius: 8px;">
+                  <input type="checkbox" :value="game.type" v-model="editForm.enabledGames">
+                  <span>{{ game.icon }} {{ game.name }}</span>
+                </label>
+              </div>
+            </div>
+          </template>
 
         </div>
 
@@ -641,6 +705,21 @@ async function editBlock(block: Block) {
       startOpacity: 0,
       endOpacity: 100,
       color: pageTheme.value.backgroundColor
+    }
+  }
+
+  // Ensure links array exists for social_links blocks
+  if (block.type === 'social_links' && !editForm.value.links) {
+    editForm.value.links = []
+  }
+
+  // Ensure videos array exists for video_grid blocks
+  if (block.type === 'video_grid') {
+    if (!editForm.value.videos) {
+      editForm.value.videos = []
+    }
+    if (!editForm.value.layout) {
+      editForm.value.layout = 'grid-2'
     }
   }
 
