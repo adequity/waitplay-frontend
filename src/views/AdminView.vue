@@ -62,6 +62,7 @@
         <GamesTab v-if="activeTab === 'games'" />
         <BenefitsTab v-if="activeTab === 'benefits'" />
         <CustomersTab v-if="activeTab === 'customers'" />
+        <CustomerSupportTab v-if="activeTab === 'cs'" />
       </div>
     </main>
   </div>
@@ -77,6 +78,7 @@ import QRManagement from '@/components/QRManagement.vue'
 import GamesTab from '@/components/GamesTab.vue'
 import BenefitsTab from '@/components/BenefitsTab.vue'
 import CustomersTab from '@/components/CustomersTab.vue'
+import CustomerSupportTab from '@/components/CustomerSupportTab.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -88,7 +90,8 @@ const tabs = [
   { id: 'qr', label: 'QR 관리', iconName: 'qr' },
   { id: 'games', label: '게임 설정', iconName: 'gamepad' },
   { id: 'benefits', label: '혜택 설정', iconName: 'gift' },
-  { id: 'customers', label: '고객 분석', iconName: 'users' }
+  { id: 'customers', label: '고객 분석', iconName: 'users' },
+  { id: 'cs', label: 'CS 게시판', iconName: 'message' }
 ]
 
 const handleLogout = () => {

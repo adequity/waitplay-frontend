@@ -185,19 +185,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 // --- Types ---
 interface Inquiry {
-  id: string
-  userId: string
-  category: string
+  id: number
   title: string
   content: string
   status: 'waiting' | 'answered'
   createdAt: string
   answer?: string
   answeredAt?: string
+  category?: string
 }
 
 // --- State ---
@@ -207,6 +210,7 @@ const searchQuery = ref('')
 const showWriteModal = ref(false)
 const selectedInquiry = ref<Inquiry | null>(null)
 const isSubmitting = ref(false)
+const isLoading = ref(false)
 
 const writeForm = ref({
   category: '시스템 오류',
@@ -269,6 +273,44 @@ const closeWriteModal = () => {
   showWriteModal.value = false
 }
 
+// Load inquiries from API
+const loadInquiries = async () => {
+  isLoading.value = true
+  try {
+    const params = new URLSearchParams()
+    if (currentFilter.value !== 'all') {
+      params.append('status', currentFilter.value)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/inquiry?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to load inquiries')
+    }
+
+    const data = await response.json()
+    inquiries.value = data.map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      content: item.content,
+      status: item.status,
+      createdAt: item.createdAt,
+      answer: item.answer,
+      answeredAt: item.answeredAt,
+      category: '시스템 오류' // Default category for display
+    }))
+  } catch (error) {
+    console.error('Error loading inquiries:', error)
+    alert('문의 목록을 불러오는 중 오류가 발생했습니다.')
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const submitInquiry = async () => {
   if (!writeForm.value.title || !writeForm.value.content) {
     alert('제목과 내용을 입력해주세요.')
@@ -277,16 +319,28 @@ const submitInquiry = async () => {
 
   isSubmitting.value = true
   try {
-    // TODO: API 연동
-    const newInquiry: Inquiry = {
-      id: Date.now().toString(),
-      userId: 'user-id',
-      ...writeForm.value,
-      status: 'waiting',
-      createdAt: new Date().toISOString()
+    const response = await fetch(`${API_BASE_URL}/api/inquiry`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.accessToken}`
+      },
+      body: JSON.stringify({
+        title: writeForm.value.title,
+        content: writeForm.value.content
+      })
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to submit inquiry')
     }
 
-    inquiries.value.unshift(newInquiry)
+    const newInquiry = await response.json()
+    inquiries.value.unshift({
+      ...newInquiry,
+      category: writeForm.value.category
+    })
     closeWriteModal()
     alert('문의가 등록되었습니다.')
   } catch (error) {
@@ -305,18 +359,34 @@ const closeDetailModal = () => {
   selectedInquiry.value = null
 }
 
-const deleteInquiry = async (id: string) => {
+const deleteInquiry = async (id: number) => {
   if (confirm('문의 내역을 삭제하시겠습니까?')) {
     try {
-      // TODO: API 연동
+      const response = await fetch(`${API_BASE_URL}/api/inquiry/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete inquiry')
+      }
+
       inquiries.value = inquiries.value.filter(i => i.id !== id)
       closeDetailModal()
+      alert('문의가 삭제되었습니다.')
     } catch (error) {
       console.error('Error deleting inquiry:', error)
       alert('삭제 중 오류가 발생했습니다.')
     }
   }
 }
+
+// Load inquiries on mount
+onMounted(() => {
+  loadInquiries()
+})
 </script>
 
 <style scoped>
