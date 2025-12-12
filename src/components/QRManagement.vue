@@ -279,39 +279,37 @@ const openLayoutEditor = () => {
 const loadSettings = async () => {
   if (!selectedQR.value) {
     console.warn('No QR code selected, cannot load settings')
+    // Reset to defaults when no QR selected
+    storeName.value = ''
+    logoUrl.value = ''
+    welcomeMessage.value = ''
+    landingPageUrl.value = ''
     return
   }
 
   try {
+    console.log(`Loading settings for QR code: ${selectedQR.value.id}`)
     const response = await apiClient.get(`/api/landingpage/settings/${selectedQR.value.id}`)
-    if (response.data && response.data.storeName) {
-      storeName.value = response.data.storeName
-      logoUrl.value = response.data.logoUrl || ''
-      welcomeMessage.value = response.data.welcomeMessage || ''
-      landingPageUrl.value = response.data.landingPageUrl || 'waitplay.io/store/demo123'
 
-      localStorage.setItem('waitplay_landing_settings', JSON.stringify(response.data))
-      return
-    }
+    // Load data from server response
+    storeName.value = response.data.storeName || ''
+    logoUrl.value = response.data.logoUrl || ''
+    welcomeMessage.value = response.data.welcomeMessage || ''
+    landingPageUrl.value = response.data.landingPageUrl || ''
+
+    console.log('Settings loaded:', {
+      storeName: storeName.value,
+      logoUrl: logoUrl.value,
+      welcomeMessage: welcomeMessage.value,
+      landingPageUrl: landingPageUrl.value
+    })
   } catch (error) {
-    console.warn('Failed to load settings from backend, trying localStorage:', error)
-  }
-
-  // Fallback to localStorage
-  const savedSettings = localStorage.getItem('waitplay_landing_settings')
-  if (savedSettings) {
-    try {
-      const settings = JSON.parse(savedSettings)
-      storeName.value = settings.storeName || 'WaitPlay 데모 매장'
-      logoUrl.value = settings.logoUrl || ''
-      welcomeMessage.value = settings.welcomeMessage || '환영합니다! QR 코드를 스캔하여 대기열에 참여하세요.'
-      landingPageUrl.value = settings.landingPageUrl || 'waitplay.io/store/demo123'
-    } catch (error) {
-      console.error('Failed to load settings from localStorage:', error)
-    }
-  } else {
-    storeName.value = 'WaitPlay 데모 매장'
-    welcomeMessage.value = '환영합니다! QR 코드를 스캔하여 대기열에 참여하세요.'
+    console.error('Failed to load settings from backend:', error)
+    // Reset to empty on error
+    storeName.value = ''
+    logoUrl.value = ''
+    welcomeMessage.value = ''
+    landingPageUrl.value = ''
   }
 }
 
@@ -348,17 +346,14 @@ const saveSettings = async () => {
       welcomeMessage: welcomeMessage.value
     }
 
+    console.log(`Saving settings for QR code: ${selectedQR.value.id}`, settingsData)
     const response = await apiClient.post(`/api/landingpage/settings/${selectedQR.value.id}`, settingsData)
 
     if (response.data.landingPageUrl) {
       landingPageUrl.value = response.data.landingPageUrl
     }
 
-    localStorage.setItem('waitplay_landing_settings', JSON.stringify({
-      ...settingsData,
-      landingPageUrl: landingPageUrl.value
-    }))
-
+    console.log('Settings saved successfully:', response.data)
     alert('설정이 저장되었습니다!')
   } catch (error) {
     console.error('Failed to save settings:', error)
