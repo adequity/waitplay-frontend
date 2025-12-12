@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
 import DashboardTab from '@/components/DashboardTab.vue'
@@ -79,6 +79,7 @@ import BenefitsTab from '@/components/BenefitsTab.vue'
 import CustomersTab from '@/components/CustomersTab.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const activeTab = ref('dashboard')
 
@@ -100,6 +101,12 @@ const handleLogout = () => {
 // Router navigation guard already handles all authentication and authorization
 // No additional checks needed here
 onMounted(() => {
+  // Check for tab query parameter
+  const tabParam = route.query.tab as string
+  if (tabParam && tabs.find(t => t.id === tabParam)) {
+    activeTab.value = tabParam
+  }
+
   // Listen for tab switch events from child components
   window.addEventListener('switch-tab', (event: any) => {
     const tabId = event.detail

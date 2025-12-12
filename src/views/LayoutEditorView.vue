@@ -696,8 +696,8 @@ function toggleBlockVisibility(block: Block) {
 }
 
 function goBack() {
-  // QR 관리 페이지로 리다이렉트
-  router.push('/admin')
+  // QR 관리 탭으로 리다이렉트
+  router.push('/admin?tab=qr')
 }
 
 async function saveLayout() {
