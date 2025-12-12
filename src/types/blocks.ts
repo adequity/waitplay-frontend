@@ -36,7 +36,8 @@ export interface ButtonBlockData {
 
 // Social Links Block
 export interface SocialLink {
-  platform: 'instagram' | 'youtube' | 'naver' | 'threads' | 'facebook' | 'twitter'
+  platform?: 'instagram' | 'youtube' | 'naver' | 'threads' | 'facebook' | 'twitter' | 'tiktok' | 'website'
+  type?: 'instagram' | 'youtube' | 'naver' | 'threads' | 'facebook' | 'twitter' | 'tiktok' | 'website'
   url: string
 }
 
@@ -48,12 +49,13 @@ export interface SocialLinksBlockData {
 export interface VideoItem {
   url: string
   thumbnail: string
+  title?: string
 }
 
 export interface VideoGridBlockData {
   title?: string
   videos: VideoItem[]
-  layout: 'grid-1' | 'grid-2' | 'carousel'
+  layout: 'grid-1' | 'grid-2' | 'grid-3' | 'carousel' | 'list'
 }
 
 // Games Carousel Block

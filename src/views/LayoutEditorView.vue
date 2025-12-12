@@ -1047,42 +1047,6 @@ function removeBackgroundImage() {
   }
 }
 
-// YouTube helper functions
-function extractYoutubeVideoId(url: string): string | null {
-  if (!url) return null
-
-  // Handle various YouTube URL formats including Shorts
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
-    /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
-  ]
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match && match[1]) {
-      return match[1]
-    }
-  }
-
-  return null
-}
-
-function getYoutubeThumbnail(videoId: string): string {
-  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
-}
-
-function updateVideoThumbnail(video: any) {
-  if (!video.url) {
-    video.thumbnail = ''
-    return
-  }
-
-  const videoId = extractYoutubeVideoId(video.url)
-  if (videoId) {
-    video.thumbnail = getYoutubeThumbnail(videoId)
-  }
-}
-
 // Video helpers
 function addVideo() {
   if (!editForm.value.videos) editForm.value.videos = []
