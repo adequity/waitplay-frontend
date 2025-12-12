@@ -60,15 +60,62 @@
           </div>
 
           <!-- 사업자 정보 (사업자일 경우만 표시) -->
-          <div v-if="formData.isBusinessUser" class="form-group">
-            <label class="form-label">회사/상호명</label>
-            <input
-              type="text"
-              v-model="formData.companyName"
-              class="form-input"
-              placeholder="예: WaitPlay 강남점"
-              :required="formData.isBusinessUser"
-            />
+          <div v-if="formData.isBusinessUser" class="business-info-section">
+            <div class="form-group">
+              <label class="form-label">회사/상호명</label>
+              <input
+                type="text"
+                v-model="formData.companyName"
+                class="form-input"
+                placeholder="예: WaitPlay 강남점"
+                :required="formData.isBusinessUser"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">사업자번호</label>
+              <input
+                type="text"
+                v-model="formData.businessNumber"
+                class="form-input"
+                placeholder="000-00-00000"
+                maxlength="12"
+                :required="formData.isBusinessUser"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">사업자 주소</label>
+              <input
+                type="text"
+                v-model="formData.businessAddress"
+                class="form-input"
+                placeholder="서울시 강남구 테헤란로 123"
+                :required="formData.isBusinessUser"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">업종</label>
+              <input
+                type="text"
+                v-model="formData.businessType"
+                class="form-input"
+                placeholder="예: 음식점업"
+                :required="formData.isBusinessUser"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">업태</label>
+              <input
+                type="text"
+                v-model="formData.businessCategory"
+                class="form-input"
+                placeholder="예: 한식"
+                :required="formData.isBusinessUser"
+              />
+            </div>
           </div>
 
           <div class="form-group">
@@ -150,6 +197,10 @@ const formData = ref({
   passwordConfirm: '',
   isBusinessUser: false,
   companyName: '',
+  businessNumber: '',
+  businessAddress: '',
+  businessType: '',
+  businessCategory: '',
   agreeTerms: false,
   agreeMarketing: false
 })
@@ -200,9 +251,27 @@ const handleEmailSignup = async () => {
     return
   }
 
-  if (formData.value.isBusinessUser && !formData.value.companyName.trim()) {
-    alert('회사/상호명을 입력해주세요.')
-    return
+  if (formData.value.isBusinessUser) {
+    if (!formData.value.companyName.trim()) {
+      alert('회사/상호명을 입력해주세요.')
+      return
+    }
+    if (!formData.value.businessNumber.trim()) {
+      alert('사업자번호를 입력해주세요.')
+      return
+    }
+    if (!formData.value.businessAddress.trim()) {
+      alert('사업자 주소를 입력해주세요.')
+      return
+    }
+    if (!formData.value.businessType.trim()) {
+      alert('업종을 입력해주세요.')
+      return
+    }
+    if (!formData.value.businessCategory.trim()) {
+      alert('업태를 입력해주세요.')
+      return
+    }
   }
 
   isLoading.value = true
@@ -216,7 +285,11 @@ const handleEmailSignup = async () => {
       qrCodeId: qrCodeId.value || undefined,
       agreeMarketing: formData.value.agreeMarketing,
       isBusinessUser: formData.value.isBusinessUser,
-      companyName: formData.value.isBusinessUser ? formData.value.companyName : undefined
+      companyName: formData.value.isBusinessUser ? formData.value.companyName : undefined,
+      businessNumber: formData.value.isBusinessUser ? formData.value.businessNumber : undefined,
+      businessAddress: formData.value.isBusinessUser ? formData.value.businessAddress : undefined,
+      businessType: formData.value.isBusinessUser ? formData.value.businessType : undefined,
+      businessCategory: formData.value.isBusinessUser ? formData.value.businessCategory : undefined
     })
 
     // 자동 로그인 (토큰 저장)
@@ -458,6 +531,23 @@ const handleEmailSignup = async () => {
   font-size: 14px;
   font-weight: 600;
   color: #1a1a1a;
+}
+
+/* Business Info Section */
+.business-info-section {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 1rem;
+}
+
+.business-info-section .form-group {
+  margin-bottom: 1rem;
+}
+
+.business-info-section .form-group:last-child {
+  margin-bottom: 0;
 }
 
 .form-group {

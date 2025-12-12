@@ -24,6 +24,10 @@ export interface EmailSignupRequest {
   agreeMarketing?: boolean
   isBusinessUser?: boolean
   companyName?: string
+  businessNumber?: string
+  businessAddress?: string
+  businessType?: string
+  businessCategory?: string
 }
 
 export interface SocialSignupRequest {
