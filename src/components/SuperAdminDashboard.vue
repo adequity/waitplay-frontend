@@ -54,7 +54,15 @@
         <button class="btn-more" @click="viewAllStores">더보기</button>
       </div>
 
-      <div class="store-grid">
+      <div v-if="loading" class="loading-message">
+        데이터를 불러오는 중입니다...
+      </div>
+
+      <div v-else-if="topStores.length === 0" class="empty-message">
+        아직 가맹점 데이터가 없습니다.
+      </div>
+
+      <div v-else class="store-grid">
         <div class="store-card" v-for="(store, index) in topStores" :key="store.id">
           <div class="rank-badge" :class="'rank-' + (index + 1)">{{ index + 1 }}</div>
           <div class="store-header">
@@ -89,40 +97,71 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import IconBase from '@/components/IconBase.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
+
 // Data
-const topCards = [
-  { label: '전체 가맹점', value: '47', unit: '개소', period: '이번 달 +2', icon: 'users', color: 'blue' },
-  { label: '전체 이용자', value: '8,532', unit: '명', period: '이번 주 +124', icon: 'users', color: 'purple' },
-  { label: '오늘 게임 수', value: '12,847', unit: '건', period: '어제 대비 ▲5%', icon: 'gamepad', color: 'green' },
-  { label: '오늘 쿠폰 사용', value: '3,421', unit: '장', period: '어제 대비 ▲2%', icon: 'gift', color: 'orange' }
-]
-
-const middleCards = [
-  { label: '미처리 CS 문의', value: '2건', subText: '24시간 이내 응답 필요', isAlert: true, action: 'inquiries' },
-  { label: '가맹점 승인 대기', value: '1건', subText: '신규 가입 요청', isAlert: true, action: 'admins' },
-  { label: '서버 상태', value: '정상', subText: '모든 시스템 가동 중', isAlert: false, action: null },
-  { label: '인기 혜택', value: '스타벅스 아메리카노', subText: '이번 주 가장 많이 발급된 쿠폰', isAlert: false, action: null }
-]
-
-const topStores = ref([
-  { id: 1, name: '강남점', location: '서울 강남구', couponCount: 247, gameCount: 523, regularCount: 89, games: ['룰렛', '슬롯', '빙고'] },
-  { id: 2, name: '홍대점', location: '서울 마포구', couponCount: 198, gameCount: 412, regularCount: 76, games: ['룰렛', '슬롯'] },
-  { id: 3, name: '신촌점', location: '서울 서대문구', couponCount: 176, gameCount: 387, regularCount: 62, games: ['빙고', '룰렛', '슬롯'] },
-  { id: 4, name: '건대점', location: '서울 광진구', couponCount: 154, gameCount: 321, regularCount: 54, games: ['슬롯', '빙고'] },
-  { id: 5, name: '판교점', location: '경기 성남시', couponCount: 143, gameCount: 298, regularCount: 48, games: ['룰렛', '슬롯'] },
-  { id: 6, name: '분당점', location: '경기 성남시', couponCount: 132, gameCount: 276, regularCount: 41, games: ['빙고', '슬롯'] },
-  { id: 7, name: '일산점', location: '경기 고양시', couponCount: 119, gameCount: 245, regularCount: 38, games: ['룰렛'] },
-  { id: 8, name: '수원점', location: '경기 수원시', couponCount: 107, gameCount: 223, regularCount: 32, games: ['슬롯', '룰렛'] },
-  { id: 9, name: '인천점', location: '인천 남동구', couponCount: 95, gameCount: 198, regularCount: 28, games: ['빙고'] }
+const topCards = ref([
+  { label: '전체 가맹점', value: '0', unit: '개소', period: '로딩중...', icon: 'users', color: 'blue' },
+  { label: '전체 이용자', value: '0', unit: '명', period: '로딩중...', icon: 'users', color: 'purple' },
+  { label: '오늘 게임 수', value: '0', unit: '건', period: '로딩중...', icon: 'gamepad', color: 'green' },
+  { label: '오늘 쿠폰 사용', value: '0', unit: '장', period: '로딩중...', icon: 'gift', color: 'orange' }
 ])
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
+const middleCards = ref([
+  { label: '미처리 CS 문의', value: '0건', subText: '로딩중...', isAlert: false, action: 'inquiries' },
+  { label: '가맹점 승인 대기', value: '0건', subText: '로딩중...', isAlert: false, action: 'admins' },
+  { label: '서버 상태', value: '확인중', subText: '로딩중...', isAlert: false, action: null },
+  { label: '인기 혜택', value: '로딩중', subText: '로딩중...', isAlert: false, action: null }
+])
+
+const topStores = ref<any[]>([])
+const loading = ref(true)
+
+// Fetch dashboard statistics
+const fetchDashboardStats = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/superadmin/dashboard/stats`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      }
+    })
+
+    if (!response.ok) throw new Error('Failed to fetch dashboard stats')
+
+    const data = await response.json()
+    topCards.value = data.topCards
+    middleCards.value = data.middleCards
+  } catch (error) {
+    console.error('Failed to fetch dashboard stats:', error)
+  }
+}
+
+// Fetch top stores
+const fetchTopStores = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/superadmin/dashboard/top-stores`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      }
+    })
+
+    if (!response.ok) throw new Error('Failed to fetch top stores')
+
+    const data = await response.json()
+    topStores.value = data
+  } catch (error) {
+    console.error('Failed to fetch top stores:', error)
+    // Keep empty array on error
+  } finally {
+    loading.value = false
+  }
+}
 
 const handleStatusCardClick = (card: any) => {
   if (card.action) {
@@ -133,6 +172,13 @@ const handleStatusCardClick = (card: any) => {
 const viewAllStores = () => {
   alert('전체 가맹점 현황은 곧 제공될 예정입니다.')
 }
+
+onMounted(async () => {
+  await Promise.all([
+    fetchDashboardStats(),
+    fetchTopStores()
+  ])
+})
 </script>
 
 <style scoped>
@@ -373,6 +419,14 @@ const viewAllStores = () => {
   font-weight: 500;
 }
 .game-tag.more { background: white; border: 1px solid #e5e5ea; color: #aeaeb2; }
+
+/* Loading & Empty States */
+.loading-message, .empty-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: #86868b;
+  font-size: 14px;
+}
 
 /* Responsive */
 @media (max-width: 1400px) {
