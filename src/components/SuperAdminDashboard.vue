@@ -66,6 +66,14 @@
               <span class="stat-label">쿠폰 사용</span>
               <span class="stat-value">{{ store.couponCount }}</span>
             </div>
+            <div class="stat-item">
+              <span class="stat-label">게임 수</span>
+              <span class="stat-value">{{ store.gameCount }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">단골 수</span>
+              <span class="stat-value">{{ store.regularCount }}</span>
+            </div>
           </div>
           <div class="game-tags">
             <span v-for="game in store.games.slice(0, 2)" :key="game" class="game-tag">
@@ -103,15 +111,15 @@ const middleCards = [
 ]
 
 const topStores = ref([
-  { id: 1, name: '강남점', location: '서울 강남구', couponCount: 247, games: ['룰렛', '슬롯', '빙고'] },
-  { id: 2, name: '홍대점', location: '서울 마포구', couponCount: 198, games: ['룰렛', '슬롯'] },
-  { id: 3, name: '신촌점', location: '서울 서대문구', couponCount: 176, games: ['빙고', '룰렛', '슬롯'] },
-  { id: 4, name: '건대점', location: '서울 광진구', couponCount: 154, games: ['슬롯', '빙고'] },
-  { id: 5, name: '판교점', location: '경기 성남시', couponCount: 143, games: ['룰렛', '슬롯'] },
-  { id: 6, name: '분당점', location: '경기 성남시', couponCount: 132, games: ['빙고', '슬롯'] },
-  { id: 7, name: '일산점', location: '경기 고양시', couponCount: 119, games: ['룰렛'] },
-  { id: 8, name: '수원점', location: '경기 수원시', couponCount: 107, games: ['슬롯', '룰렛'] },
-  { id: 9, name: '인천점', location: '인천 남동구', couponCount: 95, games: ['빙고'] }
+  { id: 1, name: '강남점', location: '서울 강남구', couponCount: 247, gameCount: 523, regularCount: 89, games: ['룰렛', '슬롯', '빙고'] },
+  { id: 2, name: '홍대점', location: '서울 마포구', couponCount: 198, gameCount: 412, regularCount: 76, games: ['룰렛', '슬롯'] },
+  { id: 3, name: '신촌점', location: '서울 서대문구', couponCount: 176, gameCount: 387, regularCount: 62, games: ['빙고', '룰렛', '슬롯'] },
+  { id: 4, name: '건대점', location: '서울 광진구', couponCount: 154, gameCount: 321, regularCount: 54, games: ['슬롯', '빙고'] },
+  { id: 5, name: '판교점', location: '경기 성남시', couponCount: 143, gameCount: 298, regularCount: 48, games: ['룰렛', '슬롯'] },
+  { id: 6, name: '분당점', location: '경기 성남시', couponCount: 132, gameCount: 276, regularCount: 41, games: ['빙고', '슬롯'] },
+  { id: 7, name: '일산점', location: '경기 고양시', couponCount: 119, gameCount: 245, regularCount: 38, games: ['룰렛'] },
+  { id: 8, name: '수원점', location: '경기 수원시', couponCount: 107, gameCount: 223, regularCount: 32, games: ['슬롯', '룰렛'] },
+  { id: 9, name: '인천점', location: '인천 남동구', couponCount: 95, gameCount: 198, regularCount: 28, games: ['빙고'] }
 ])
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -339,10 +347,17 @@ const viewAllStores = () => {
 .store-stats {
   padding-left: 32px;
   margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
-.stat-item { display: flex; align-items: baseline; gap: 8px; }
-.stat-label { font-size: 12px; color: #86868b; }
-.stat-value { font-size: 18px; font-weight: 800; color: #1d1d1f; }
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-label { font-size: 11px; color: #86868b; font-weight: 600; }
+.stat-value { font-size: 16px; font-weight: 800; color: #1d1d1f; }
 
 .game-tags {
   display: flex;
