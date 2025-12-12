@@ -221,10 +221,7 @@
 
         </div>
 
-        <div class="modal-actions">
-          <button class="btn-action btn-secondary" @click="cancelEdit">취소</button>
-          <button class="btn-action btn-primary" @click="saveBlockEdit">저장</button>
-        </div>
+<div class="modal-actions">          <button class="btn-action btn-primary" @click="saveBlockEdit">닫기</button>        </div>
       </div>
     </div>
 
@@ -568,7 +565,7 @@ function getDefaultBlockData(type: BlockType): any {
 
 async function editBlock(block: Block) {
   editingBlock.value = block
-  editForm.value = JSON.parse(JSON.stringify(block.data))
+  editForm.value = block.data
 
   // Ensure gradientOverlay exists for header blocks
   if (block.type === 'header' && !editForm.value.gradientOverlay) {
@@ -668,22 +665,7 @@ function cancelEdit() {
   editForm.value = {}
 }
 
-function saveBlockEdit() {
-  if (editingBlock.value) {
-    const formData = JSON.parse(JSON.stringify(editForm.value))
-
-    // Convert datetime-local back to ISO format for countdown blocks
-    if (editingBlock.value.type === 'countdown' && formData.targetDate) {
-      // datetime-local format: 2024-12-17T12:00
-      // ISO format: 2024-12-17T12:00:00.000Z
-      formData.targetDate = new Date(formData.targetDate).toISOString()
-    }
-
-    editingBlock.value.data = formData
-    editingBlock.value = null
-    editForm.value = {}
-  }
-}
+function saveBlockEdit() {  // 이미 editForm이 block.data를 직접 참조하므로 실시간 반영됨  // 모달만 닫기  editingBlock.value = null  editForm.value = {}}
 
 function deleteBlock(index: number) {
   if (confirm('이 블록을 삭제하시겠습니까?')) {
