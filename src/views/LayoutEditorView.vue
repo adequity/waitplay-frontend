@@ -911,7 +911,7 @@ function removeMenuItem(index: number) {
   background: #f5f5f7; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
 }
-.header-title h1 { font-size: 18px; font-weight: 700; margin: 0; }
+.header-title h1 { font-size: 18px; font-weight: 700; margin: 0; color: #1d1d1f; }
 .header-subtitle { font-size: 12px; color: #86868b; margin: 0; }
 
 .header-actions { display: flex; gap: 12px; }
@@ -947,8 +947,8 @@ function removeMenuItem(index: number) {
   display: flex; justify-content: space-between; align-items: center;
 }
 .panel-title { display: flex; align-items: center; }
-.panel-title h2 { font-size: 18px; font-weight: 700; margin: 0; }
-.block-count { background: #f5f5f7; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-left: 8px; }
+.panel-title h2 { font-size: 18px; font-weight: 700; margin: 0; color: #1d1d1f; }
+.block-count { background: #f5f5f7; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-left: 8px; color: #1d1d1f; }
 .btn-add-block {
   padding: 8px 16px; background: #e8f2ff; color: #0071e3;
   border: none; border-radius: 16px; font-weight: 600; cursor: pointer;
