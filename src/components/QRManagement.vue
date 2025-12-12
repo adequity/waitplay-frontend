@@ -314,10 +314,12 @@ const fetchQRCodes = async () => {
   isLoading.value = true
   try {
     const response = await apiClient.get('/api/qrcode')
+    console.log('QR codes fetched:', response.data)
     qrCodes.value = response.data
 
     if (qrCodes.value.length > 0 && !selectedQR.value) {
       selectedQR.value = qrCodes.value[0] || null
+      console.log('Selected first QR code:', selectedQR.value)
     }
   } catch (error) {
     console.error('Failed to fetch QR codes:', error)
@@ -418,9 +420,12 @@ const generateQRImage = async (url: string) => {
 
 // Watch for selectedQR changes
 watch(selectedQR, (newQR) => {
+  console.log('selectedQR changed:', newQR)
   if (newQR && newQR.qrCodeUrl) {
+    console.log('Generating QR code for URL:', newQR.qrCodeUrl)
     generateQRImage(newQR.qrCodeUrl)
   } else {
+    console.log('No QR code URL available')
     qrImageUrl.value = ''
   }
 }, { immediate: true })
