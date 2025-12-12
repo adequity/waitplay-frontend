@@ -913,7 +913,7 @@ async function uploadImage(file: File): Promise<string> {
   formData.append('file', file)
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/upload`, {
+    const response = await fetch(`${API_BASE_URL}/api/FileUpload/image`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${authStore.accessToken}`
@@ -922,11 +922,12 @@ async function uploadImage(file: File): Promise<string> {
     })
 
     if (!response.ok) {
-      throw new Error('이미지 업로드 실패')
+      const errorData = await response.json()
+      throw new Error(errorData.message || '이미지 업로드 실패')
     }
 
     const data = await response.json()
-    return data.url
+    return data.fileUrl
   } catch (error) {
     console.error('Upload error:', error)
     alert('이미지 업로드에 실패했습니다.')
