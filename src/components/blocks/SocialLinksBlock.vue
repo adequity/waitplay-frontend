@@ -2,14 +2,14 @@
   <div class="social-links-block">
     <div class="social-links">
       <a
-        v-for="social in data.links"
-        :key="social.platform"
+        v-for="(social, index) in data.links"
+        :key="index"
         :href="social.url"
         target="_blank"
         class="social-link"
-        :class="`social-link--${social.platform}`"
+        :class="`social-link--${social.type || social.platform}`"
       >
-        <Icon :icon="getSocialIcon(social.platform)" width="24" height="24" />
+        <Icon :icon="getSocialIcon(social.type || social.platform)" width="24" height="24" />
       </a>
     </div>
   </div>
@@ -32,7 +32,9 @@ function getSocialIcon(platform: string): string {
     naver: 'simple-icons:naver',
     threads: 'ri:threads-fill',
     facebook: 'mdi:facebook',
-    twitter: 'mdi:twitter'
+    twitter: 'mdi:twitter',
+    tiktok: 'mdi:music-note',
+    website: 'mdi:web'
   }
   return icons[platform] || 'mdi:link-variant'
 }
@@ -98,5 +100,13 @@ function getSocialIcon(platform: string): string {
 
 .social-link--twitter {
   background: #1DA1F2;
+}
+
+.social-link--tiktok {
+  background: #000000;
+}
+
+.social-link--website {
+  background: #6366f1;
 }
 </style>

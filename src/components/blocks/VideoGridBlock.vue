@@ -32,7 +32,55 @@
       </div>
     </div>
 
-    <!-- 2열: 세로 영상 (9:16 Shorts) -->
+    <!-- 2열 그리드 (grid-2) -->
+    <div class="youtube-grid grid-2" v-else-if="data.layout === 'grid-2'">
+      <div
+        v-for="(video, index) in data.videos"
+        :key="index"
+        class="youtube-video-item"
+        @click="openVideo(video.url)"
+      >
+        <div class="video-thumbnail">
+          <img :src="video.thumbnail" alt="Video thumbnail" />
+          <div class="play-button-medium">▶</div>
+        </div>
+        <p v-if="video.title" class="video-title">{{ video.title }}</p>
+      </div>
+    </div>
+
+    <!-- 3열 그리드 (grid-3) -->
+    <div class="youtube-grid grid-3" v-else-if="data.layout === 'grid-3'">
+      <div
+        v-for="(video, index) in data.videos"
+        :key="index"
+        class="youtube-video-item"
+        @click="openVideo(video.url)"
+      >
+        <div class="video-thumbnail">
+          <img :src="video.thumbnail" alt="Video thumbnail" />
+          <div class="play-button-small">▶</div>
+        </div>
+        <p v-if="video.title" class="video-title">{{ video.title }}</p>
+      </div>
+    </div>
+
+    <!-- 리스트 레이아웃 -->
+    <div class="youtube-videos-list" v-else-if="data.layout === 'list'">
+      <div
+        v-for="(video, index) in data.videos"
+        :key="index"
+        class="youtube-video"
+        @click="openVideo(video.url)"
+      >
+        <div class="video-thumbnail">
+          <img :src="video.thumbnail" alt="Video thumbnail" />
+          <div class="play-button-large">▶</div>
+        </div>
+        <p v-if="video.title" class="video-title">{{ video.title }}</p>
+      </div>
+    </div>
+
+    <!-- 2열: 세로 영상 (9:16 Shorts) - 기본값 -->
     <div class="youtube-shorts-grid" v-else>
       <div
         v-for="(video, index) in data.videos"
@@ -258,6 +306,62 @@ function openVideo(url: string) {
   align-items: center;
   justify-content: center;
   font-size: 18px;
+  color: #ffffff;
+  padding-left: 3px;
+}
+
+/* 그리드 레이아웃 */
+.youtube-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.youtube-grid.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.youtube-grid.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.youtube-video-item {
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.youtube-video-item:active {
+  transform: scale(0.98);
+}
+
+.video-title {
+  font-size: 12px;
+  color: #ffffff;
+  margin: 8px 0 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+.play-button-medium {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
   color: #ffffff;
   padding-left: 3px;
 }
