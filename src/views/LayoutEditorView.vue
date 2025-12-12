@@ -197,13 +197,6 @@
           <!-- Example: Header Edit -->
           <template v-if="editingBlock.type === 'header'">
             <div class="form-group">
-              <label class="form-label">로고 이미지</label>
-              <input type="file" class="form-input" @change="handleLogoUpload" accept="image/*" style="margin-bottom: 8px;">
-              <div v-if="editForm.logoUrl" style="margin-top: 8px;">
-                <img :src="editForm.logoUrl" alt="로고 미리보기" style="width: 100%; max-height: 120px; object-fit: contain; border-radius: 8px; border: 1px solid #e5e5ea;">
-              </div>
-            </div>
-            <div class="form-group">
               <label class="form-label">매장 이름</label>
               <input type="text" class="form-input" v-model="editForm.storeName" placeholder="매장명 입력" />
             </div>
@@ -1016,58 +1009,6 @@ function addSocialLink() {
 
 function removeSocialLink(index: number) {
   editForm.value.links.splice(index, 1)
-}
-
-// Logo image upload function
-async function handleLogoUpload(event: Event) {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-
-  if (!file) return
-
-  // Validate file size (2MB max)
-  const maxSize = 2 * 1024 * 1024 // 2MB
-  if (file.size > maxSize) {
-    alert('파일 크기는 2MB 이하여야 합니다.')
-    return
-  }
-
-  // Validate file type
-  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml']
-  if (!allowedTypes.includes(file.type)) {
-    alert('PNG, JPG, SVG 파일만 업로드 가능합니다.')
-    return
-  }
-
-  try {
-    // Create FormData and upload
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const response = await fetch(`${API_BASE_URL}/api/FileUpload/logo`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      },
-      body: formData
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to upload logo')
-    }
-
-    const data = await response.json()
-
-    if (data.success && data.fileUrl) {
-      editForm.value.logoUrl = data.fileUrl
-    } else {
-      throw new Error(data.message || 'Upload failed')
-    }
-  } catch (error) {
-    console.error('Error uploading logo:', error)
-    alert('로고 업로드 중 오류가 발생했습니다.')
-  }
 }
 
 // Background image upload functions
