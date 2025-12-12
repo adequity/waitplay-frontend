@@ -7,9 +7,9 @@
         :href="social.url"
         target="_blank"
         class="social-link"
-        :class="`social-link--${social.type || social.platform}`"
+        :class="`social-link--${social.type || social.platform || 'website'}`"
       >
-        <Icon :icon="getSocialIcon(social.type || social.platform)" width="24" height="24" />
+        <Icon :icon="getSocialIcon(social.type || social.platform || 'website')" width="24" height="24" />
       </a>
     </div>
   </div>
@@ -25,7 +25,9 @@ interface Props {
 
 defineProps<Props>()
 
-function getSocialIcon(platform: string): string {
+function getSocialIcon(platform: string | undefined): string {
+  if (!platform) return 'mdi:web'
+
   const icons: Record<string, string> = {
     instagram: 'mdi:instagram',
     youtube: 'mdi:youtube',
