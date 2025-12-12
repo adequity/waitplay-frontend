@@ -250,7 +250,7 @@ const loadGameSettings = async () => {
 
     const settings = await gameSettingsService.getGameSettings(qrCodeId)
 
-    // Map game definitions to game chips with enabled state
+    // Map all games with their enabled status
     games.value = gameDefinitions.map(def => ({
       id: def.id,
       name: def.name,
@@ -258,7 +258,7 @@ const loadGameSettings = async () => {
     }))
   } catch (error) {
     console.error('Failed to load game settings:', error)
-    // Fallback to all disabled
+    // Fallback: show all games as disabled
     games.value = gameDefinitions.map(def => ({
       id: def.id,
       name: def.name,
@@ -267,79 +267,86 @@ const loadGameSettings = async () => {
   }
 }
 
-// Fetch QR codes
-const fetchQRCodes = async () => {
-  try {
-    isLoading.value = true
-    const response = await axios.get(`${API_URL}/api/qrcodes/user`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      }
-    })
+// Open Layout Editor
+const openLayoutEditor = () => {
+  if (!selectedQR.value) {
+    alert('QR 코드를 먼저 선택해주세요')
+    return
+  }
+  window.open('/admin/layout-editor', '_blank')
+}
 
-    if (response.data.success) {
-      qrCodes.value = response.data.qrCodes || []
-      if (qrCodes.value.length > 0) {
-        selectedQR.value = qrCodes.value[0]
-      }
+// Load settings from backend API
+const loadSettings = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/landingpage/settings`)
+    if (response.data && response.data.storeName) {
+      storeName.value = response.data.storeName
+      logoUrl.value = response.data.logoUrl || ''
+      welcomeMessage.value = response.data.welcomeMessage || ''
+      landingPageUrl.value = response.data.landingPageUrl || 'waitplay.io/store/demo123'
+
+      localStorage.setItem('waitplay_landing_settings', JSON.stringify(response.data))
+      return
+    }
+  } catch (error) {
+    console.warn('Failed to load settings from backend, trying localStorage:', error)
+  }
+
+  // Fallback to localStorage
+  const savedSettings = localStorage.getItem('waitplay_landing_settings')
+  if (savedSettings) {
+    try {
+      const settings = JSON.parse(savedSettings)
+      storeName.value = settings.storeName || 'WaitPlay 데모 매장'
+      logoUrl.value = settings.logoUrl || ''
+      welcomeMessage.value = settings.welcomeMessage || '환영합니다! QR 코드를 스캔하여 대기열에 참여하세요.'
+      landingPageUrl.value = settings.landingPageUrl || 'waitplay.io/store/demo123'
+    } catch (error) {
+      console.error('Failed to load settings from localStorage:', error)
+    }
+  } else {
+    storeName.value = 'WaitPlay 데모 매장'
+    welcomeMessage.value = '환영합니다! QR 코드를 스캔하여 대기열에 참여하세요.'
+  }
+}
+
+const fetchQRCodes = async () => {
+  isLoading.value = true
+  try {
+    const response = await axios.get(`${API_URL}/api/qrcode`)
+    qrCodes.value = response.data
+
+    if (qrCodes.value.length > 0 && !selectedQR.value) {
+      selectedQR.value = qrCodes.value[0] || null
     }
   } catch (error) {
     console.error('Failed to fetch QR codes:', error)
+    alert('QR 코드 목록을 불러오는데 실패했습니다')
   } finally {
     isLoading.value = false
   }
 }
 
-// Generate QR image
-const generateQRImage = async (url: string) => {
-  try {
-    const qrDataUrl = await QRCode.toDataURL(url, {
-      width: 400,
-      margin: 2,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    })
-    qrImageUrl.value = qrDataUrl
-  } catch (error) {
-    console.error('Failed to generate QR code image:', error)
-  }
-}
-
-// Load landing page settings
-const loadSettings = async () => {
-  try {
-    const qrCodeId = authStore.user?.qrCodeId
-    if (!qrCodeId) return
-
-    const response = await axios.get(`${API_URL}/api/landingpage/settings/${qrCodeId}`)
-
-    if (response.data) {
-      storeName.value = response.data.storeName || ''
-      logoUrl.value = response.data.logoUrl || ''
-      welcomeMessage.value = response.data.welcomeMessage || ''
-    }
-  } catch (error) {
-    console.error('Failed to load settings:', error)
-  }
-}
-
-// Save landing page settings
+// Save settings
 const saveSettings = async () => {
   try {
-    const qrCodeId = authStore.user?.qrCodeId
-    if (!qrCodeId) {
-      alert('QR 코드를 찾을 수 없습니다.')
-      return
-    }
-
-    await axios.post(`${API_URL}/api/landingpage/settings`, {
-      qrCodeId,
+    const settingsData = {
       storeName: storeName.value,
       logoUrl: logoUrl.value,
       welcomeMessage: welcomeMessage.value
-    })
+    }
+
+    const response = await axios.post(`${API_URL}/api/landingpage/settings`, settingsData)
+
+    if (response.data.landingPageUrl) {
+      landingPageUrl.value = response.data.landingPageUrl
+    }
+
+    localStorage.setItem('waitplay_landing_settings', JSON.stringify({
+      ...settingsData,
+      landingPageUrl: landingPageUrl.value
+    }))
 
     alert('설정이 저장되었습니다!')
   } catch (error) {
@@ -392,12 +399,22 @@ const removeLogo = () => {
   }
 }
 
-const openLayoutEditor = () => {
-  if (!selectedQR.value) {
-    alert('QR 코드를 먼저 선택해주세요')
-    return
+// Generate QR code image
+const generateQRImage = async (url: string) => {
+  try {
+    const dataUrl = await QRCode.toDataURL(url, {
+      width: 400,
+      margin: 4,
+      errorCorrectionLevel: 'M',
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    })
+    qrImageUrl.value = dataUrl
+  } catch (error) {
+    console.error('Failed to generate QR code:', error)
   }
-  window.open('/admin/layout-editor', '_blank')
 }
 
 // Watch for selectedQR changes
@@ -505,16 +522,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* --- Design Tokens (LayoutEditor Style) --- */
+/* --- Apple Style Design System --- */
 :root {
   --primary-blue: #0071e3;
   --primary-dark: #0077ed;
-  --bg-body: #f5f5f7;
-  --bg-white: #ffffff;
+  --bg-gray: #f5f5f7;
+  --box-bg: #ffffff;
+  --border-color: #d2d2d7;
+  --border-light: #e5e5ea;
   --text-dark: #1d1d1f;
   --text-gray: #86868b;
-  --border-light: #e5e5ea;
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
+  --text-light-gray: #aeaeb2;
+  --card-radius: 20px;
+  --btn-radius: 12px;
 }
 
 * {
@@ -535,7 +555,7 @@ onMounted(() => {
 
 .page-title {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 10px;
   letter-spacing: -0.5px;
   color: #1d1d1f;
@@ -544,30 +564,28 @@ onMounted(() => {
 .page-desc {
   color: #86868b;
   font-size: 16px;
-  line-height: 1.5;
 }
 
 /* Main Grid Layout */
 .qr-grid {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
-  gap: 24px;
+  gap: 30px;
   align-items: start;
 }
 
-/* Card Styles (LayoutEditor Enhanced) */
+/* Card Styles */
 .card {
   background: white;
   border-radius: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  padding: 32px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  padding: 30px;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  transition: all 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 .card-title {
@@ -599,40 +617,37 @@ onMounted(() => {
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .form-label {
   font-size: 14px;
   font-weight: 600;
   color: #1d1d1f;
-  display: block;
-  margin-bottom: 8px;
 }
 
 .form-input,
 .form-textarea {
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px 16px;
   border: 1px solid #d2d2d7;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 10px;
+  font-size: 14px;
   color: #1d1d1f;
   background: white;
   transition: all 0.2s;
-  font-family: inherit;
-  outline: none;
 }
 
 .form-input:focus,
 .form-textarea:focus {
+  outline: none;
   border-color: #0071e3;
   box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
 }
 
 .form-textarea {
   resize: vertical;
-  min-height: 80px;
+  font-family: inherit;
 }
 
 /* Logo Upload */
@@ -647,9 +662,9 @@ onMounted(() => {
 }
 
 .logo-preview {
-  width: 100px;
-  height: 100px;
-  border-radius: 16px;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
   border: 2px solid #e5e5ea;
   overflow: hidden;
   display: flex;
@@ -671,69 +686,71 @@ onMounted(() => {
 
 .btn-logo-change,
 .btn-logo-remove {
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-size: 14px;
+  padding: 8px 16px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
-  border: none;
+  background: white;
+  color: #1d1d1f;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.btn-logo-change {
-  background: #e8f2ff;
+.btn-logo-change:hover {
+  background: #f5f5f7;
+  border-color: #0071e3;
   color: #0071e3;
 }
 
-.btn-logo-change:hover {
-  background: #d0e7ff;
-}
-
 .btn-logo-remove {
-  background: #fff0f3;
   color: #ff3b30;
+  border-color: #ff3b30;
 }
 
 .btn-logo-remove:hover {
-  background: #ffe0e5;
+  background: #fff0f2;
 }
 
 .logo-upload-box {
   width: 100%;
-  padding: 32px;
+  height: 140px;
   border: 2px dashed #d2d2d7;
-  border-radius: 16px;
-  background: #fafafa;
-  text-align: center;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  background: #f5f5f7;
   transition: all 0.2s;
 }
 
 .logo-upload-box:hover {
   border-color: #0071e3;
-  background: #f0f7ff;
+  background: #e8f2ff;
 }
 
 .upload-icon {
-  font-size: 36px;
+  font-size: 32px;
   color: #86868b;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .upload-text {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #1d1d1f;
-  margin: 0 0 4px 0;
-}
-
-.upload-hint {
-  font-size: 13px;
-  color: #86868b;
   margin: 0;
 }
 
-/* Active Games Summary (LayoutEditor Enhanced) */
+.upload-hint {
+  font-size: 12px;
+  color: #86868b;
+  margin: 4px 0 0 0;
+}
+
+/* Active Games Summary */
 .active-games-summary {
   display: flex;
   flex-wrap: wrap;
@@ -747,11 +764,6 @@ onMounted(() => {
   font-weight: 600;
   background: #e8f2ff;
   color: #0071e3;
-  transition: all 0.2s;
-}
-
-.game-chip:hover {
-  background: #d0e7ff;
 }
 
 .game-chip-disabled {
@@ -762,36 +774,28 @@ onMounted(() => {
 .settings-hint {
   font-size: 12px;
   color: #86868b;
-  margin: 8px 0 0 0;
-  line-height: 1.4;
+  margin: 4px 0 0 0;
 }
 
-/* Save Button (LayoutEditor Style) */
+/* Save Button */
 .btn-save-settings {
   width: 100%;
-  padding: 16px;
+  padding: 14px;
   background: #0071e3;
   color: white;
   border: none;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
 }
 
 .btn-save-settings:hover {
   background: #0077ed;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
-}
-
-.btn-save-settings:active {
-  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(0, 113, 227, 0.4);
 }
 
 /* Right Column */
@@ -805,7 +809,7 @@ onMounted(() => {
 .qr-subtitle {
   font-size: 14px;
   color: #86868b;
-  margin: 0 0 24px 0;
+  margin: 0 0 20px 0;
 }
 
 .qr-preview-container {
@@ -820,16 +824,10 @@ onMounted(() => {
   aspect-ratio: 1;
   background: #f5f5f7;
   border-radius: 16px;
-  border: 2px solid #e5e5ea;
   padding: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.2s;
-}
-
-.qr-frame:hover {
-  border-color: #0071e3;
 }
 
 .qr-image {
@@ -843,7 +841,7 @@ onMounted(() => {
   height: 100%;
 }
 
-/* QR Actions (LayoutEditor Enhanced) */
+/* QR Actions */
 .qr-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -855,7 +853,7 @@ onMounted(() => {
 .btn-qr-print {
   padding: 12px;
   border: 1px solid #d2d2d7;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   background: white;
@@ -870,18 +868,17 @@ onMounted(() => {
 
 .btn-qr-download:hover,
 .btn-qr-print:hover {
-  background: #f0f7ff;
+  background: #f5f5f7;
   border-color: #0071e3;
   color: #0071e3;
-  transform: translateY(-1px);
 }
 
 .btn-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
-/* QR Info Box (Enhanced) */
+/* QR Info Box */
 .qr-info-box {
   background: #f5f5f7;
   border-radius: 12px;
@@ -889,7 +886,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .info-item {
@@ -907,7 +903,7 @@ onMounted(() => {
 }
 
 .info-value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #1d1d1f;
   text-align: right;
@@ -918,19 +914,17 @@ onMounted(() => {
   color: #0071e3;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.2s;
 }
 
 .qr-url-link:hover {
   text-decoration: underline;
-  color: #0077ed;
 }
 
-/* Advanced Settings Card (LayoutEditor Gradient) */
+/* Advanced Settings Card */
 .advanced-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border: none;
 }
 
 .advanced-card .card-title {
@@ -943,40 +937,35 @@ onMounted(() => {
 
 .advanced-desc {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   margin: 0 0 20px 0;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .btn-layout-manager {
   width: 100%;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 14px 24px;
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 14px 20px;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
 }
 
 .btn-layout-manager:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .btn-icon-right {
   width: 16px;
   height: 16px;
-  margin-left: auto;
 }
 
 /* Responsive */
@@ -989,14 +978,6 @@ onMounted(() => {
 @media (max-width: 768px) {
   .tab-content {
     padding: 30px 20px;
-  }
-
-  .page-title {
-    font-size: 24px;
-  }
-
-  .card {
-    padding: 24px;
   }
 
   .qr-actions {
