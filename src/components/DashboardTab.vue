@@ -1,288 +1,554 @@
 <template>
   <div class="tab-content">
-    <!-- Apple-Style Greeting -->
-    <div class="apple-greeting">
-      <h1 class="greeting-title">WaitPlay 관리자</h1>
-      <p class="greeting-subtitle">오늘도 좋은 하루 보내세요</p>
-    </div>
-
-    <!-- Global Date Filter -->
-    <div class="global-filter-section">
-      <div class="filter-label">기간 선택</div>
-      <div class="date-filter-apple">
-        <button
-          v-for="filter in dateFilters"
-          :key="filter.value"
-          @click="selectedFilter = filter.value"
-          :class="['filter-btn-apple', { active: selectedFilter === filter.value }]"
-        >
-          {{ filter.label }}
-        </button>
+    <!-- Header Section -->
+    <div class="dashboard-header">
+      <div class="header-text">
+        <h1 class="page-title">WaitPlay 관리자</h1>
+        <p class="page-desc">오늘도 좋은 하루 보내세요 👋</p>
       </div>
-    </div>
-
-    <!-- Apple-Style Key Metrics -->
-    <div class="metrics-apple">
-      <div class="metric-apple">
-        <p class="metric-value-apple">{{ animatedQrUsers }}</p>
-        <p class="metric-label-apple">QR 활용자</p>
-        <p class="metric-change-apple">{{ selectedDateRange }}</p>
-      </div>
-
-      <div class="metric-apple">
-        <p class="metric-value-apple">{{ animatedCouponUsed }}</p>
-        <p class="metric-label-apple">쿠폰 사용</p>
-        <p class="metric-change-apple">{{ selectedDateRange }}</p>
-      </div>
-
-      <div class="metric-apple">
-        <p class="metric-value-apple">{{ animatedNewFavorites }}</p>
-        <p class="metric-label-apple">신규 단골</p>
-        <p class="metric-change-apple">{{ selectedDateRange }}</p>
-      </div>
-
-      <div class="metric-apple">
-        <p class="metric-value-apple">{{ animatedTotalFavorites }}</p>
-        <p class="metric-label-apple">총 단골 수</p>
-        <p class="metric-change-apple">누적</p>
+      
+      <!-- Date Range Filter -->
+      <div class="date-filter">
+        <span class="filter-label">기간 선택</span>
+        <div class="segmented-control">
+          <button 
+            v-for="period in ['today', 'week', 'month']" 
+            :key="period"
+            class="segment-btn"
+            :class="{ active: currentPeriod === period }"
+            @click="setPeriod(period)"
+          >
+            {{ getPeriodLabel(period) }}
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Apple-Style Chart Section -->
-    <div class="chart-apple">
-      <div class="chart-header-apple">
-        <h3 class="chart-title-apple">일자별 활동 추이</h3>
+    <!-- 1. KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-value">{{ animatedStats.qrScan }}</div>
+        <div class="kpi-label">QR 활용자</div>
+        <div class="kpi-badge blue">{{ getPeriodLabel(currentPeriod) }}</div>
       </div>
-
-      <div class="chart-legend-apple">
-        <div class="legend-item-apple">
-          <span class="legend-dot-apple" style="background: #007aff"></span>
-          <span class="legend-label-apple">QR 활용자</span>
-        </div>
-        <div class="legend-item-apple">
-          <span class="legend-dot-apple" style="background: #34c759"></span>
-          <span class="legend-label-apple">쿠폰 사용</span>
-        </div>
-        <div class="legend-item-apple">
-          <span class="legend-dot-apple" style="background: #ff9500"></span>
-          <span class="legend-label-apple">신규 단골</span>
-        </div>
+      <div class="kpi-card">
+        <div class="kpi-value">{{ animatedStats.couponUsed }}</div>
+        <div class="kpi-label">쿠폰 사용</div>
+        <div class="kpi-badge blue">{{ getPeriodLabel(currentPeriod) }}</div>
       </div>
+      <div class="kpi-card">
+        <div class="kpi-value">{{ animatedStats.newRegular }}</div>
+        <div class="kpi-label">신규 단골</div>
+        <div class="kpi-badge blue">{{ getPeriodLabel(currentPeriod) }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">{{ animatedStats.totalRegular }}</div>
+        <div class="kpi-label">총 단골 수</div>
+        <div class="kpi-badge gray">누적</div>
+      </div>
+    </div>
 
-      <div class="chart-container-apple">
-        <div class="line-chart">
-          <!-- Y-axis labels -->
-          <div class="y-axis">
-            <div class="y-label-apple" v-for="i in 5" :key="i">
-              {{ Math.round((maxValue * (5 - i)) / 4) }}
-            </div>
+    <!-- 2. Activity Chart -->
+    <div class="chart-section card">
+      <div class="card-header">
+        <h2 class="section-title">일자별 활동 추이</h2>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <span class="dot blue"></span> QR 활용자
           </div>
-
-          <!-- Chart area -->
-          <div class="chart-area">
-            <!-- Grid lines -->
-            <div class="grid-lines-apple">
-              <div class="grid-line-apple" v-for="i in 5" :key="i"></div>
-            </div>
-
-            <!-- Lines -->
-            <svg class="chart-svg" viewBox="0 0 700 300" preserveAspectRatio="none">
-              <!-- QR Users line -->
-              <polyline
-                :points="currentChartData.map((d, i) => `${i * 100 + 50},${300 - (d.qrUsers / maxValue * 280)}`).join(' ')"
-                fill="none"
-                stroke="#007aff"
-                stroke-width="3"
-              />
-              <!-- Coupon Used line -->
-              <polyline
-                :points="currentChartData.map((d, i) => `${i * 100 + 50},${300 - (d.couponUsed / maxValue * 280)}`).join(' ')"
-                fill="none"
-                stroke="#34c759"
-                stroke-width="3"
-              />
-              <!-- New Favorites line -->
-              <polyline
-                :points="currentChartData.map((d, i) => `${i * 100 + 50},${300 - (d.newFavorites / maxValue * 280)}`).join(' ')"
-                fill="none"
-                stroke="#ff9500"
-                stroke-width="3"
-              />
-
-              <!-- Data points for QR Users -->
-              <g v-for="(d, i) in currentChartData" :key="`qr-${i}`">
-                <circle :cx="i * 100 + 50" :cy="300 - (d.qrUsers / maxValue * 280)" r="4" fill="#007aff" />
-              </g>
-              <!-- Data points for Coupon Used -->
-              <g v-for="(d, i) in currentChartData" :key="`coupon-${i}`">
-                <circle :cx="i * 100 + 50" :cy="300 - (d.couponUsed / maxValue * 280)" r="4" fill="#34c759" />
-              </g>
-              <!-- Data points for New Favorites -->
-              <g v-for="(d, i) in currentChartData" :key="`fav-${i}`">
-                <circle :cx="i * 100 + 50" :cy="300 - (d.newFavorites / maxValue * 280)" r="4" fill="#ff9500" />
-              </g>
-            </svg>
-
-            <!-- X-axis labels -->
-            <div class="x-axis">
-              <div class="x-label-apple" v-for="(d, i) in currentChartData" :key="i">
-                {{ d.label }}
-              </div>
-            </div>
+          <div class="legend-item">
+            <span class="dot green"></span> 쿠폰 사용
+          </div>
+          <div class="legend-item">
+            <span class="dot orange"></span> 신규 단골
           </div>
         </div>
+      </div>
+
+      <div class="chart-container">
+        <!-- SVG Line Chart -->
+        <svg viewBox="0 0 1000 300" class="activity-chart" preserveAspectRatio="none">
+          <!-- Grid Lines (Horizontal) -->
+          <g class="grid-lines">
+            <line x1="0" y1="250" x2="1000" y2="250" />
+            <line x1="0" y1="190" x2="1000" y2="190" />
+            <line x1="0" y1="130" x2="1000" y2="130" />
+            <line x1="0" y1="70" x2="1000" y2="70" />
+          </g>
+
+          <!-- Y-Axis Labels (Dynamic based on max value) -->
+          <g class="axis-labels y-axis">
+            <text x="0" y="255">0</text>
+            <text x="0" y="195">{{ Math.round(maxY * 0.33) }}</text>
+            <text x="0" y="135">{{ Math.round(maxY * 0.66) }}</text>
+            <text x="0" y="75">{{ maxY }}</text>
+          </g>
+
+          <!-- Paths (Lines) - Calculated Dynamically -->
+          <!-- Blue: QR Scans -->
+          <polyline 
+            :points="getPoints('qrScan')"
+            class="chart-line blue" 
+          />
+          <!-- Green: Coupon -->
+          <polyline 
+            :points="getPoints('couponUsed')"
+            class="chart-line green" 
+          />
+          <!-- Orange: New Regular -->
+          <polyline 
+            :points="getPoints('newRegular')"
+            class="chart-line orange" 
+          />
+
+          <!-- Data Points (Circles) -->
+          <g class="data-points">
+            <template v-for="(point, index) in chartData" :key="index">
+              <!-- X Coordinate Calculation: 50 + (index / (length-1)) * 900 -->
+              <!-- Y Coordinate Calculation: 250 - (value / maxY) * 180 -->
+              
+              <circle 
+                :cx="getX(index)" 
+                :cy="getY(point.qrScan)" 
+                r="4" class="point blue" 
+              />
+              <circle 
+                :cx="getX(index)" 
+                :cy="getY(point.couponUsed)" 
+                r="4" class="point green" 
+              />
+              <circle 
+                :cx="getX(index)" 
+                :cy="getY(point.newRegular)" 
+                r="4" class="point orange" 
+              />
+            </template>
+          </g>
+
+          <!-- X-Axis Labels -->
+          <g class="axis-labels x-axis">
+            <text 
+              v-for="(point, index) in chartData" 
+              :key="index"
+              :x="getX(index)" 
+              y="280" 
+              text-anchor="middle"
+            >
+              {{ point.label }}
+            </text>
+          </g>
+        </svg>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, type Ref } from 'vue'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
 
-const selectedFilter = ref('today')
-const selectedDateRange = ref('오늘')
+// --- Data Types ---
+type Period = 'today' | 'week' | 'month'
 
-const dateFilters = [
-  { label: '오늘', value: 'today' },
-  { label: '7일', value: '7days' },
-  { label: '30일', value: '30days' }
-]
-
-const dashboardData = ref({
-  qrUsers: 127,
-  couponUsed: 85,
-  newFavorites: 12,
-  totalFavorites: 248
-})
-
-// Animated values for counting animation
-const animatedQrUsers = ref(127)
-const animatedCouponUsed = ref(85)
-const animatedNewFavorites = ref(12)
-const animatedTotalFavorites = ref(248)
-
-// Animation function with ease-out cubic easing
-function animateValue(animatedRef: Ref<number>, target: number, duration: number = 800) {
-  const start = animatedRef.value
-  const startTime = Date.now()
-
-  const animate = () => {
-    const elapsed = Date.now() - startTime
-    const progress = Math.min(elapsed / duration, 1)
-
-    // Easing function (ease-out cubic) for smooth deceleration
-    const easeProgress = 1 - Math.pow(1 - progress, 3)
-
-    animatedRef.value = Math.round(start + (target - start) * easeProgress)
-
-    if (progress < 1) {
-      requestAnimationFrame(animate)
-    }
-  }
-
-  requestAnimationFrame(animate)
+interface ChartPoint {
+  label: string
+  qrScan: number
+  couponUsed: number
+  newRegular: number
 }
 
-// Watch dashboard data changes and trigger animations
-watch(dashboardData, (newData) => {
-  animateValue(animatedQrUsers, newData.qrUsers)
-  animateValue(animatedCouponUsed, newData.couponUsed)
-  animateValue(animatedNewFavorites, newData.newFavorites)
-  animateValue(animatedTotalFavorites, newData.totalFavorites)
-}, { deep: true })
+// --- State ---
+const currentPeriod = ref<Period>('today')
 
-// Initialize with current values on mount
+// Animated Display Stats
+const animatedStats = reactive({
+  qrScan: 0,
+  couponUsed: 0,
+  newRegular: 0,
+  totalRegular: 248 // This typically doesn't reset by period
+})
+
+// --- Mock Data ---
+const mockData: Record<Period, ChartPoint[]> = {
+  today: [
+    { label: '0시', qrScan: 5, couponUsed: 2, newRegular: 0 },
+    { label: '6시', qrScan: 12, couponUsed: 8, newRegular: 1 },
+    { label: '12시', qrScan: 45, couponUsed: 30, newRegular: 5 },
+    { label: '18시', qrScan: 85, couponUsed: 60, newRegular: 8 },
+    { label: '21시', qrScan: 110, couponUsed: 75, newRegular: 10 },
+    { label: '현재', qrScan: 127, couponUsed: 85, newRegular: 12 },
+  ],
+  week: [
+    { label: '월', qrScan: 150, couponUsed: 100, newRegular: 15 },
+    { label: '화', qrScan: 180, couponUsed: 120, newRegular: 20 },
+    { label: '수', qrScan: 160, couponUsed: 110, newRegular: 18 },
+    { label: '목', qrScan: 190, couponUsed: 130, newRegular: 22 },
+    { label: '금', qrScan: 250, couponUsed: 180, newRegular: 30 },
+    { label: '토', qrScan: 300, couponUsed: 220, newRegular: 45 },
+    { label: '일', qrScan: 280, couponUsed: 200, newRegular: 40 },
+  ],
+  month: [
+    { label: '1주', qrScan: 800, couponUsed: 500, newRegular: 80 },
+    { label: '2주', qrScan: 950, couponUsed: 600, newRegular: 100 },
+    { label: '3주', qrScan: 1100, couponUsed: 750, newRegular: 120 },
+    { label: '4주', qrScan: 1050, couponUsed: 700, newRegular: 110 },
+  ]
+}
+
+// --- Computeds ---
+const chartData = computed(() => mockData[currentPeriod.value])
+
+// Calculate totals based on current chart data
+const currentTotals = computed(() => {
+  if (currentPeriod.value === 'today') {
+    // For today, take the last value (cumulative)
+    const last = chartData.value[chartData.value.length - 1]
+    if (!last) {
+      return { qrScan: 0, couponUsed: 0, newRegular: 0, totalRegular: 248 }
+    }
+    return {
+      qrScan: last.qrScan,
+      couponUsed: last.couponUsed,
+      newRegular: last.newRegular,
+      totalRegular: 248
+    }
+  } else {
+    // For week/month, sum up values
+    return chartData.value.reduce((acc, curr) => ({
+      qrScan: acc.qrScan + curr.qrScan,
+      couponUsed: acc.couponUsed + curr.couponUsed,
+      newRegular: acc.newRegular + curr.newRegular,
+      totalRegular: 248
+    }), { qrScan: 0, couponUsed: 0, newRegular: 0, totalRegular: 248 })
+  }
+})
+
+// Calculate max value for Y-axis scaling
+const maxY = computed(() => {
+  const allValues = chartData.value.flatMap(p => [p.qrScan, p.couponUsed, p.newRegular])
+  const max = Math.max(...allValues)
+  return Math.ceil(max * 1.1) // Add 10% padding
+})
+
+// --- Helper Functions for SVG ---
+const getX = (index: number) => {
+  const count = chartData.value.length
+  const width = 900 // 1000 - 50 - 50 (padding)
+  return 50 + (index / (count - 1)) * width
+}
+
+const getY = (value: number) => {
+  const height = 180 // 250 (bottom) - 70 (top grid)
+  const ratio = value / maxY.value
+  return 250 - (ratio * height)
+}
+
+const getPoints = (key: keyof ChartPoint) => {
+  return chartData.value.map((point, index) => {
+    // Exclude label field for type safety
+    if (key === 'label') return '' 
+    return `${getX(index)},${getY(point[key as 'qrScan' | 'couponUsed' | 'newRegular'])}`
+  }).join(' ')
+}
+
+const getPeriodLabel = (period: string) => {
+  const labels: Record<string, string> = {
+    today: '오늘',
+    week: '7일',
+    month: '30일'
+  }
+  return labels[period]
+}
+
+// --- Animation ---
+const animateNumbers = () => {
+  const duration = 800
+  const start = { ...animatedStats }
+  const end = currentTotals.value
+  const startTime = performance.now()
+
+  const step = (currentTime: number) => {
+    const elapsed = currentTime - startTime
+    const progress = Math.min(elapsed / duration, 1)
+    const easeOut = 1 - Math.pow(1 - progress, 3) // Cubic ease-out
+
+    animatedStats.qrScan = Math.round(start.qrScan + (end.qrScan - start.qrScan) * easeOut)
+    animatedStats.couponUsed = Math.round(start.couponUsed + (end.couponUsed - start.couponUsed) * easeOut)
+    animatedStats.newRegular = Math.round(start.newRegular + (end.newRegular - start.newRegular) * easeOut)
+    animatedStats.totalRegular = end.totalRegular
+
+    if (progress < 1) {
+      requestAnimationFrame(step)
+    }
+  }
+  requestAnimationFrame(step)
+}
+
+const setPeriod = (period: string) => {
+  currentPeriod.value = period as Period
+}
+
+// Watch for data changes to trigger animation
+watch(currentTotals, animateNumbers)
+
 onMounted(() => {
-  animatedQrUsers.value = dashboardData.value.qrUsers
-  animatedCouponUsed.value = dashboardData.value.couponUsed
-  animatedNewFavorites.value = dashboardData.value.newFavorites
-  animatedTotalFavorites.value = dashboardData.value.totalFavorites
-})
-
-// 오늘 시간별 데이터 (24시간)
-const todayData = ref([
-  { label: '0시', qrUsers: 5, couponUsed: 2, newFavorites: 0 },
-  { label: '6시', qrUsers: 12, couponUsed: 5, newFavorites: 1 },
-  { label: '12시', qrUsers: 45, couponUsed: 18, newFavorites: 3 },
-  { label: '18시', qrUsers: 65, couponUsed: 32, newFavorites: 5 },
-  { label: '21시', qrUsers: 85, couponUsed: 42, newFavorites: 7 },
-  { label: '23시', qrUsers: 95, couponUsed: 48, newFavorites: 8 },
-  { label: '현재', qrUsers: 127, couponUsed: 85, newFavorites: 12 }
-])
-
-// 7일 데이터 (주간)
-const weeklyData = ref([
-  { label: '월', qrUsers: 98, couponUsed: 45, newFavorites: 8 },
-  { label: '화', qrUsers: 112, couponUsed: 52, newFavorites: 11 },
-  { label: '수', qrUsers: 105, couponUsed: 48, newFavorites: 9 },
-  { label: '목', qrUsers: 128, couponUsed: 61, newFavorites: 13 },
-  { label: '금', qrUsers: 145, couponUsed: 73, newFavorites: 15 },
-  { label: '토', qrUsers: 138, couponUsed: 68, newFavorites: 12 },
-  { label: '일', qrUsers: 127, couponUsed: 59, newFavorites: 14 }
-])
-
-// 30일 데이터 (월간 - 주차별)
-const monthlyData = ref([
-  { label: '1주차', qrUsers: 420, couponUsed: 198, newFavorites: 45 },
-  { label: '2주차', qrUsers: 485, couponUsed: 225, newFavorites: 52 },
-  { label: '3주차', qrUsers: 512, couponUsed: 248, newFavorites: 58 },
-  { label: '4주차', qrUsers: 548, couponUsed: 265, newFavorites: 62 },
-  { label: '5주차', qrUsers: 592, couponUsed: 285, newFavorites: 68 },
-  { label: '이번주', qrUsers: 625, couponUsed: 302, newFavorites: 72 },
-  { label: '누적', qrUsers: 853, couponUsed: 359, newFavorites: 89 }
-])
-
-// 현재 차트 데이터 (필터에 따라 변경)
-const currentChartData = computed(() => {
-  if (selectedFilter.value === 'today') {
-    return todayData.value
-  } else if (selectedFilter.value === '7days') {
-    return weeklyData.value
-  } else {
-    return monthlyData.value
-  }
-})
-
-const maxValue = computed(() => {
-  const data = currentChartData.value
-  return Math.max(...data.map(d => Math.max(d.qrUsers, d.couponUsed, d.newFavorites)))
-})
-
-// 필터 변경 시 대시보드 데이터도 업데이트
-watch(selectedFilter, (newFilter) => {
-  if (newFilter === 'today') {
-    selectedDateRange.value = '오늘'
-    const lastData = todayData.value[todayData.value.length - 1]
-    dashboardData.value = {
-      qrUsers: lastData?.qrUsers || 0,
-      couponUsed: lastData?.couponUsed || 0,
-      newFavorites: lastData?.newFavorites || 0,
-      totalFavorites: 248
-    }
-  } else if (newFilter === '7days') {
-    selectedDateRange.value = '7일'
-    const totalQr = weeklyData.value.reduce((sum, d) => sum + d.qrUsers, 0)
-    const totalCoupon = weeklyData.value.reduce((sum, d) => sum + d.couponUsed, 0)
-    const totalNew = weeklyData.value.reduce((sum, d) => sum + d.newFavorites, 0)
-    dashboardData.value = {
-      qrUsers: totalQr,
-      couponUsed: totalCoupon,
-      newFavorites: totalNew,
-      totalFavorites: 248
-    }
-  } else {
-    selectedDateRange.value = '30일'
-    const lastData = monthlyData.value[monthlyData.value.length - 1]
-    dashboardData.value = {
-      qrUsers: lastData?.qrUsers || 0,
-      couponUsed: lastData?.couponUsed || 0,
-      newFavorites: lastData?.newFavorites || 0,
-      totalFavorites: 248
-    }
-  }
+  animateNumbers()
 })
 </script>
 
 <style scoped>
-@import '../assets/admin-styles.css';
+/* --- Design Tokens (Apple Style) --- */
+:root {
+  --primary-blue: #0071e3;
+  --bg-gray: #f5f5f7;
+  --text-dark: #1d1d1f;
+  --text-gray: #86868b;
+  --border-light: #e5e5ea;
+  --card-radius: 20px;
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.04);
+  
+  --chart-blue: #0071e3;
+  --chart-green: #34c759;
+  --chart-orange: #ff9500;
+}
+
+.tab-content {
+  padding: 50px 60px;
+  background-color: #f5f5f7;
+  min-height: 100vh;
+  color: #1d1d1f;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 30px;
+  background: white;
+  padding: 30px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: #1d1d1f;
+  letter-spacing: -0.5px;
+}
+
+.page-desc {
+  color: #86868b;
+  font-size: 16px;
+}
+
+/* Date Filter */
+.date-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.segmented-control {
+  background: #f5f5f7;
+  padding: 4px;
+  border-radius: 12px;
+  display: flex;
+  gap: 4px;
+}
+
+.segment-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #86868b;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 60px;
+}
+
+.segment-btn.active {
+  background: #0071e3;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 113, 227, 0.2);
+}
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: var(--card-radius);
+  padding: 30px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0,0,0,0.02);
+  transition: transform 0.2s;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.kpi-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: #1d1d1f;
+  margin-bottom: 8px;
+  letter-spacing: -1px;
+}
+
+.kpi-label {
+  font-size: 14px;
+  color: #86868b;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.kpi-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.kpi-badge.blue {
+  color: #0071e3;
+  background: #e8f2ff;
+}
+
+.kpi-badge.gray {
+  color: #0071e3;
+  background: #f5f5f7;
+}
+
+/* Chart Section */
+.card {
+  background: white;
+  border-radius: var(--card-radius);
+  padding: 36px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,0.02);
+}
+
+.card-header {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 16px;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #86868b;
+  font-weight: 500;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.dot.blue { background: #0071e3; }
+.dot.green { background: #34c759; }
+.dot.orange { background: #ff9500; }
+
+/* SVG Chart Styles */
+.chart-container {
+  width: 100%;
+  height: 300px;
+  position: relative;
+}
+
+.activity-chart {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.grid-lines line {
+  stroke: #e5e5ea;
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.axis-labels text {
+  fill: #86868b;
+  font-size: 12px;
+  font-family: -apple-system, sans-serif;
+}
+
+.y-axis text {
+  text-anchor: start;
+}
+
+.chart-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: all 0.5s ease; /* Animation for line changes */
+}
+
+.chart-line.blue { stroke: #0071e3; }
+.chart-line.green { stroke: #34c759; }
+.chart-line.orange { stroke: #ff9500; }
+
+.point {
+  stroke-width: 2;
+  stroke: white;
+  fill: currentColor;
+  transition: all 0.5s ease; /* Animation for point movement */
+}
+.point.blue { color: #0071e3; }
+.point.green { color: #34c759; }
+.point.orange { color: #ff9500; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .tab-content { padding: 30px 20px; }
+  .dashboard-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .date-filter { width: 100%; align-items: flex-start; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .axis-labels.y-axis { display: none; } /* Mobile: Hide Y-axis labels for space */
+}
 </style>
