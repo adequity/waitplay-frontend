@@ -92,34 +92,91 @@
 
     <!-- Write Modal -->
     <div v-if="showWriteModal" class="modal-overlay active" @click.self="closeWriteModal">
-      <div class="modal-card">
+      <div class="modal-card write-modal">
         <div class="modal-header">
-          <h2>새 문의 작성</h2>
-          <button class="btn-close" @click="closeWriteModal">✕</button>
+          <div class="header-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+          <div class="header-text">
+            <h2>새 문의 작성</h2>
+            <p class="header-subtitle">문제 상황을 자세히 설명해 주시면 빠르게 도와드리겠습니다.</p>
+          </div>
+          <button class="btn-close" @click="closeWriteModal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">문의 유형</label>
+            <label class="form-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 7h16M4 12h16M4 17h10"/>
+              </svg>
+              문의 유형
+            </label>
             <select v-model="writeForm.category" class="form-select">
-              <option value="시스템 오류">시스템 오류</option>
-              <option value="결제/정산">결제/정산</option>
-              <option value="게임 설정">게임 설정</option>
-              <option value="기타">기타 문의</option>
+              <option value="시스템 오류">🔧 시스템 오류</option>
+              <option value="결제/정산">💳 결제/정산</option>
+              <option value="게임 설정">🎮 게임 설정</option>
+              <option value="기타">💬 기타 문의</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">제목</label>
-            <input type="text" v-model="writeForm.title" class="form-input" placeholder="문의 제목을 입력하세요">
+            <label class="form-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16v16H4z"/>
+                <path d="M4 10h16"/>
+              </svg>
+              제목
+            </label>
+            <input
+              type="text"
+              v-model="writeForm.title"
+              class="form-input"
+              placeholder="예: 게임 점수가 저장되지 않는 문제"
+              maxlength="200"
+            >
+            <div class="input-hint">{{ writeForm.title.length }}/200</div>
           </div>
           <div class="form-group">
-            <label class="form-label">내용</label>
-            <textarea v-model="writeForm.content" class="form-textarea" placeholder="문의하실 내용을 자세히 적어주세요."></textarea>
+            <label class="form-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              내용
+            </label>
+            <textarea
+              v-model="writeForm.content"
+              class="form-textarea"
+              placeholder="문제가 발생한 상황을 구체적으로 설명해 주세요.&#10;&#10;예시:&#10;- 언제 문제가 발생했나요?&#10;- 어떤 작업을 하던 중이었나요?&#10;- 오류 메시지가 있었나요?"
+              maxlength="2000"
+            ></textarea>
+            <div class="input-hint">{{ writeForm.content.length }}/2000</div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeWriteModal">취소</button>
+          <button class="btn-secondary" @click="closeWriteModal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            취소
+          </button>
           <button class="btn-primary" @click="submitInquiry" :disabled="isSubmitting">
-            {{ isSubmitting ? '등록 중...' : '등록하기' }}
+            <svg v-if="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13"/>
+              <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+            <svg v-else class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" opacity="0.25"/>
+              <path d="M4 12a8 8 0 018-8" opacity="0.75"/>
+            </svg>
+            {{ isSubmitting ? '등록 중...' : '문의 등록' }}
           </button>
         </div>
       </div>
@@ -633,78 +690,257 @@ onMounted(() => {
 /* --- Modal Styles --- */
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex; justify-content: center; align-items: center;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-card {
   background: white;
-  width: 500px;
-  border-radius: 20px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  width: 560px;
+  border-radius: 24px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2), 0 0 1px rgba(0,0,0,0.1);
   display: flex; flex-direction: column;
-  max-height: 85vh;
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 90vh;
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 
-.detail-card { width: 600px; }
+.write-modal {
+  width: 620px;
+}
+
+.detail-card { width: 640px; }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: scale(0.96) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* Enhanced Modal Header */
 .modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e5ea;
-  display: flex; justify-content: space-between; align-items: center;
+  padding: 32px 32px 24px 32px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 }
-.modal-header h2 { font-size: 18px; font-weight: 700; margin: 0; }
 
-.detail-header { align-items: flex-start; }
+.header-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #0071e3 0%, #0056b3 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0, 113, 227, 0.3);
+}
+
+.header-text {
+  flex: 1;
+}
+
+.modal-header h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: #1d1d1f;
+  letter-spacing: -0.5px;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: #86868b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.detail-header {
+  align-items: flex-start;
+  background: white;
+}
+
 .header-status { display: flex; align-items: center; gap: 10px; }
 .detail-category { color: #86868b; font-size: 13px; font-weight: 500; }
 
 .btn-close {
-  background: #f5f5f7; border: none; width: 32px; height: 32px;
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #86868b;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #86868b;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
-.btn-close:hover { background: #e5e5ea; color: #1d1d1f; }
 
-.modal-body { padding: 24px; overflow-y: auto; }
+.btn-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #1d1d1f;
+  transform: scale(1.05);
+}
 
-.form-group { margin-bottom: 20px; }
-.form-label { display: block; font-size: 13px; font-weight: 600; color: #1d1d1f; margin-bottom: 8px; }
+/* Enhanced Modal Body */
+.modal-body {
+  padding: 32px;
+  overflow-y: auto;
+  background: white;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 10px;
+}
+
+.form-label svg {
+  color: #0071e3;
+}
+
 .form-input, .form-textarea, .form-select {
-  width: 100%; padding: 12px; border: 1px solid #d2d2d7; border-radius: 10px;
-  font-size: 15px; outline: none; font-family: inherit;
-}
-.form-textarea { resize: vertical; min-height: 120px; }
-.form-input:focus, .form-textarea:focus, .form-select:focus {
-  border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.1);
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e5e5ea;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background: #fafafa;
 }
 
+.form-input:hover, .form-textarea:hover, .form-select:hover {
+  border-color: #d2d2d7;
+  background: white;
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: #0071e3;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+  background: white;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 160px;
+  line-height: 1.6;
+}
+
+.form-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%2386868b' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 44px;
+}
+
+.input-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #aeaeb2;
+  text-align: right;
+}
+
+/* Enhanced Modal Footer */
 .modal-footer {
-  padding: 20px 24px; border-top: 1px solid #e5e5ea;
-  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 24px 32px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #fafafa;
 }
 
 .btn-secondary {
-  padding: 10px 20px; border-radius: 10px; border: 1px solid #d2d2d7;
-  background: white; color: #1d1d1f; font-weight: 600; cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 2px solid #e5e5ea;
+  background: white;
+  color: #1d1d1f;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
-.btn-secondary:hover { background: #f5f5f7; }
+
+.btn-secondary:hover {
+  background: #f5f5f7;
+  border-color: #d2d2d7;
+  transform: translateY(-1px);
+}
 
 .btn-primary {
-  padding: 10px 24px; border-radius: 10px; border: none;
-  background: #0071e3; color: white; font-weight: 600; cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #0071e3 0%, #0056b3 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+  transition: all 0.2s ease;
 }
-.btn-primary:hover { background: #0077ed; transform: translateY(-1px); }
-.btn-primary:disabled { background: #b0c4de; cursor: not-allowed; transform: none; }
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 113, 227, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  background: #b0c4de;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.spinner {
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 .btn-text-danger {
   padding: 10px 16px; background: none; border: none;
