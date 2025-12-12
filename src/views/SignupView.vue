@@ -35,6 +35,19 @@
 
         <!-- 이메일 회원가입 폼 -->
         <form @submit.prevent="handleEmailSignup" class="auth-form">
+          <!-- 회원 유형 선택 -->
+          <div class="user-type-section">
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                v-model="formData.isBusinessUser"
+                class="toggle-checkbox"
+              />
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">사업자로 가입하기</span>
+            </label>
+          </div>
+
           <div class="form-group">
             <label class="form-label">이름</label>
             <input
@@ -43,6 +56,18 @@
               class="form-input"
               placeholder="홍길동"
               required
+            />
+          </div>
+
+          <!-- 사업자 정보 (사업자일 경우만 표시) -->
+          <div v-if="formData.isBusinessUser" class="form-group">
+            <label class="form-label">회사/상호명</label>
+            <input
+              type="text"
+              v-model="formData.companyName"
+              class="form-input"
+              placeholder="예: WaitPlay 강남점"
+              :required="formData.isBusinessUser"
             />
           </div>
 
@@ -123,6 +148,8 @@ const formData = ref({
   email: '',
   password: '',
   passwordConfirm: '',
+  isBusinessUser: false,
+  companyName: '',
   agreeTerms: false,
   agreeMarketing: false
 })
@@ -173,6 +200,11 @@ const handleEmailSignup = async () => {
     return
   }
 
+  if (formData.value.isBusinessUser && !formData.value.companyName.trim()) {
+    alert('회사/상호명을 입력해주세요.')
+    return
+  }
+
   isLoading.value = true
 
   try {
@@ -182,7 +214,9 @@ const handleEmailSignup = async () => {
       email: formData.value.email,
       password: formData.value.password,
       qrCodeId: qrCodeId.value || undefined,
-      agreeMarketing: formData.value.agreeMarketing
+      agreeMarketing: formData.value.agreeMarketing,
+      isBusinessUser: formData.value.isBusinessUser,
+      companyName: formData.value.isBusinessUser ? formData.value.companyName : undefined
     })
 
     // 자동 로그인 (토큰 저장)
@@ -190,8 +224,10 @@ const handleEmailSignup = async () => {
 
     alert('회원가입이 완료되었습니다!')
 
-    // QR 코드가 있으면 해당 매장 페이지로, 없으면 홈으로 이동
-    if (response.redirectUrl) {
+    // 사업자는 Admin 페이지로, 일반 사용자는 QR/홈으로 이동
+    if (formData.value.isBusinessUser) {
+      router.push('/admin')
+    } else if (response.redirectUrl) {
       router.push(response.redirectUrl)
     } else if (qrCodeId.value) {
       router.push(`/customer?qr=${qrCodeId.value}`)
@@ -364,6 +400,64 @@ const handleEmailSignup = async () => {
 /* Form */
 .auth-form {
   margin-bottom: 1.5rem;
+}
+
+/* User Type Toggle */
+.user-type-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-checkbox {
+  display: none;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #e0e0e0;
+  border-radius: 12px;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-checkbox:checked + .toggle-slider {
+  background: #1e88e5;
+}
+
+.toggle-checkbox:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.toggle-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
 .form-group {

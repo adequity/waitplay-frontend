@@ -22,6 +22,8 @@ export interface EmailSignupRequest {
   password: string
   qrCodeId?: string
   agreeMarketing?: boolean
+  isBusinessUser?: boolean
+  companyName?: string
 }
 
 export interface SocialSignupRequest {
