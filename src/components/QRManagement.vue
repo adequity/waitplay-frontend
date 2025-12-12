@@ -275,10 +275,15 @@ const openLayoutEditor = () => {
   window.open('/admin/layout-editor', '_blank')
 }
 
-// Load settings from backend API
+// Load settings from backend API for specific QR code
 const loadSettings = async () => {
+  if (!selectedQR.value) {
+    console.warn('No QR code selected, cannot load settings')
+    return
+  }
+
   try {
-    const response = await apiClient.get('/api/landingpage/settings')
+    const response = await apiClient.get(`/api/landingpage/settings/${selectedQR.value.id}`)
     if (response.data && response.data.storeName) {
       storeName.value = response.data.storeName
       logoUrl.value = response.data.logoUrl || ''
@@ -329,8 +334,13 @@ const fetchQRCodes = async () => {
   }
 }
 
-// Save settings
+// Save settings for specific QR code
 const saveSettings = async () => {
+  if (!selectedQR.value) {
+    alert('QR 코드를 먼저 선택해주세요.')
+    return
+  }
+
   try {
     const settingsData = {
       storeName: storeName.value,
@@ -338,7 +348,7 @@ const saveSettings = async () => {
       welcomeMessage: welcomeMessage.value
     }
 
-    const response = await apiClient.post('/api/landingpage/settings', settingsData)
+    const response = await apiClient.post(`/api/landingpage/settings/${selectedQR.value.id}`, settingsData)
 
     if (response.data.landingPageUrl) {
       landingPageUrl.value = response.data.landingPageUrl
@@ -518,9 +528,17 @@ const formatDate = (dateString: string) => {
   })
 }
 
-onMounted(() => {
-  loadSettings()
-  fetchQRCodes()
+// Watch for QR code selection changes and reload settings
+watch(selectedQR, (newQR, oldQR) => {
+  if (newQR && newQR.id !== oldQR?.id) {
+    console.log('QR code selection changed, loading settings for:', newQR.id)
+    loadSettings()
+  }
+})
+
+onMounted(async () => {
+  await fetchQRCodes()
+  // loadSettings will be called automatically when selectedQR is set in fetchQRCodes
   loadGameSettings()
 })
 </script>
