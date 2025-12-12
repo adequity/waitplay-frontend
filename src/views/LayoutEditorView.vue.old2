@@ -1,37 +1,39 @@
 <template>
   <div class="layout-editor">
-    <!-- 1. Header (Apple Style) -->
-    <header class="editor-header">
+    <!-- Top Header -->
+    <div class="editor-header">
       <div class="header-left">
         <button class="btn-back" @click="goBack">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span class="icon">←</span>
         </button>
         <div class="header-title">
-          <h1>랜딩 페이지 디자인</h1>
-          <p class="header-subtitle">블록을 드래그하여 순서를 변경하고 스타일을 편집하세요</p>
+          <h1>랜딩 페이지 레이아웃 관리</h1>
+          <p class="header-subtitle">블록을 드래그하여 순서를 변경하고 내용을 편집하세요</p>
         </div>
       </div>
       <div class="header-actions">
-        <button class="btn-action btn-secondary" @click="goBack">
-          취소
+        <button class="btn-secondary" @click="goBack">
+          <span class="icon">✕</span>
+          <span>취소</span>
         </button>
-        <button class="btn-action btn-primary" @click="saveLayout">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-          저장하기
+        <button class="btn-primary" @click="saveLayout">
+          <span class="icon">✓</span>
+          <span>저장하기</span>
         </button>
       </div>
-    </header>
+    </div>
 
     <div class="editor-container">
-      <!-- 2. Left Panel: Block List & Editor -->
-      <aside class="editor-panel">
+      <!-- Left Panel: Block Editor -->
+      <div class="editor-panel">
         <div class="panel-header">
           <div class="panel-title">
-            <h2>블록 레이어</h2>
+            <h2>블록 목록</h2>
             <span class="block-count">{{ blocks.length }}개</span>
           </div>
-          <button class="btn-add-block" @click="showAddBlockModal = true">
-            + 블록 추가
+          <button class="btn-add" @click="showAddBlockModal = true">
+            <span class="icon">+</span>
+            <span>블록 추가</span>
           </button>
         </div>
 
@@ -40,64 +42,55 @@
             v-model="blocks"
             item-key="id"
             handle=".drag-handle"
-            animation="300"
-            ghost-class="sortable-ghost"
-            chosen-class="sortable-chosen"
-            drag-class="sortable-drag"
+            animation="200"
+            ghost-class="ghost"
+            chosen-class="chosen"
+            drag-class="dragging"
             @end="onDragEnd"
           >
             <template #item="{ element, index }">
-              <div
-                class="block-item"
-                :class="{
-                  fixed: element.type === 'header',
-                  hidden: !element.isVisible
-                }"
-              >
-                <!-- Drag Handle -->
-                <div class="drag-handle" v-if="element.type !== 'header'">
-                  <div class="drag-dot"></div><div class="drag-dot"></div><div class="drag-dot"></div>
-                </div>
-
-                <!-- Icon -->
-                <div class="block-icon">
-                  {{ getBlockIcon(element.type) }}
-                </div>
-
-                <!-- Info -->
-                <div class="block-info">
-                  <div class="block-header">
-                    <span class="block-title">{{ getBlockTitle(element.type) }}</span>
-                    <span v-if="element.type === 'header'" class="badge fixed">고정</span>
-                    <span v-if="!element.isVisible" class="badge hidden">숨김</span>
+              <div class="block-item" :class="{
+                fixed: element.type === 'header',
+                hidden: !element.isVisible
+              }">
+                <div class="block-content">
+                  <div class="block-left">
+                    <div class="drag-handle" v-if="element.type !== 'header'" title="드래그하여 순서 변경">
+                      <span class="drag-icon">⋮⋮</span>
+                    </div>
+                    <div class="block-info">
+                      <div class="block-header-row">
+                        <span class="block-icon">{{ getBlockIcon(element.type) }}</span>
+                        <span class="block-title">{{ getBlockTitle(element.type) }}</span>
+                        <span v-if="element.type === 'header'" class="fixed-badge">고정</span>
+                        <span v-if="!element.isVisible" class="hidden-badge">숨김</span>
+                      </div>
+                      <div class="block-preview">
+                        {{ getBlockPreview(element) }}
+                      </div>
+                    </div>
                   </div>
-                  <div class="block-preview">
-                    {{ getBlockPreview(element) }}
+                  <div class="block-actions">
+                    <button class="btn-icon" @click="editBlock(element)" title="편집">
+                      <span>✏️</span>
+                    </button>
+                    <button
+                      v-if="element.type !== 'header'"
+                      class="btn-icon"
+                      @click="toggleBlockVisibility(element)"
+                      :title="element.isVisible ? '숨기기' : '표시하기'"
+                    >
+                      <span>{{ element.isVisible ? '👁️' : '🔒' }}</span>
+                    </button>
+                    <button
+                      v-if="element.type !== 'header'"
+                      class="btn-icon danger"
+                      @click="deleteBlock(index)"
+                      title="삭제"
+                    >
+                      <span>🗑️</span>
+                    </button>
                   </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="block-actions">
-                  <button class="btn-icon" @click="editBlock(element)" title="편집">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button
-                    v-if="element.type !== 'header'"
-                    class="btn-icon"
-                    @click="toggleBlockVisibility(element)"
-                    :title="element.isVisible ? '숨기기' : '표시하기'"
-                  >
-                    <svg v-if="element.isVisible" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  </button>
-                  <button
-                    v-if="element.type !== 'header'"
-                    class="btn-icon delete"
-                    @click="deleteBlock(index)"
-                    title="삭제"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                  </button>
                 </div>
               </div>
             </template>
@@ -108,126 +101,572 @@
         <div v-else class="empty-state">
           <div class="empty-icon">📦</div>
           <h3>블록이 없습니다</h3>
-          <p>첫 번째 블록을 추가하여 페이지를 구성하세요</p>
+          <p>블록 추가 버튼을 클릭하여 첫 번째 블록을 추가하세요</p>
           <button class="btn-add-large" @click="showAddBlockModal = true">
-            블록 추가하기
+            <span class="icon">+</span>
+            <span>블록 추가하기</span>
           </button>
         </div>
-      </aside>
+      </div>
 
-      <!-- 3. Right Panel: Preview (iPhone Frame) -->
-      <main class="preview-panel">
-        <div class="preview-toolbar">
-          <div class="segmented-control">
-            <button class="segment-btn" :class="{ active: previewDevice === 'mobile' }" @click="previewDevice = 'mobile'">모바일</button>
-            <button class="segment-btn" :class="{ active: previewDevice === 'desktop' }" @click="previewDevice = 'desktop'">데스크톱</button>
+      <!-- Right Panel: Preview -->
+      <div class="preview-panel">
+        <div class="panel-header">
+          <h2>미리보기</h2>
+          <div class="device-toggle">
+            <button
+              class="device-btn"
+              :class="{ active: previewDevice === 'mobile' }"
+              @click="previewDevice = 'mobile'"
+            >
+              모바일
+            </button>
+            <button
+              class="device-btn"
+              :class="{ active: previewDevice === 'desktop' }"
+              @click="previewDevice = 'desktop'"
+            >
+              데스크톱
+            </button>
           </div>
-          <div class="theme-picker">
-            <span style="font-size:12px; font-weight:600; color:#666;">배경색</span>
-            <input type="color" v-model="pageTheme.backgroundColor" class="color-dot-input" />
+        </div>
+
+        <!-- Theme Settings -->
+        <div class="theme-settings">
+          <div class="theme-control">
+            <label class="theme-label">페이지 배경색</label>
+            <div class="color-input-group-mini">
+              <input
+                type="color"
+                v-model="pageTheme.backgroundColor"
+                class="form-color-picker-mini"
+              />
+              <input
+                type="text"
+                v-model="pageTheme.backgroundColor"
+                class="form-input-mini"
+                placeholder="#121212"
+              />
+            </div>
           </div>
         </div>
 
         <div class="preview-container" :class="previewDevice">
-          <div class="phone-frame">
-            <div class="notch" v-if="previewDevice === 'mobile'"></div>
-            <div
-              class="preview-screen"
-              :style="{
-                backgroundColor: pageTheme.backgroundColor,
-                color: pageTheme.textColor
-              }"
-            >
-              <!-- Dynamic Block Component Rendering (Logic Preserved) -->
-              <component
-                v-for="block in visibleBlocks"
-                :key="block.id"
-                :is="getBlockComponent(block.type)"
-                :data="block.data"
-                :qrCodeId="qrCodeId"
-              />
+          <div
+            class="preview-content"
+            :style="{
+              backgroundColor: pageTheme.backgroundColor,
+              color: pageTheme.textColor
+            }"
+          >
+            <!-- Dynamic Block Rendering (same as CustomerView) -->
+            <component
+              v-for="block in visibleBlocks"
+              :key="block.id"
+              :is="getBlockComponent(block.type)"
+              :data="block.data"
+              :qrCodeId="qrCodeId"
+            />
 
-              <!-- Footer -->
-              <div class="footer">
-                <p class="footer-text" :style="{ color: pageTheme.textColor, opacity: 0.4 }">
-                  Powered by WaitPlay
-                </p>
-              </div>
+            <!-- Footer (same as CustomerView) -->
+            <div class="footer">
+              <p class="footer-text" :style="{ color: pageTheme.textColor, opacity: 0.4 }">
+                Powered by WaitPlay
+              </p>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
 
-    <!-- 4. Modals (Add / Edit) -->
-
     <!-- Add Block Modal -->
-    <div v-if="showAddBlockModal" class="modal-overlay active" @click="showAddBlockModal = false">
-      <div class="modal-card" @click.stop>
-        <div class="modal-header">
-          <h2>블록 추가하기</h2>
-          <button class="btn-icon-close" @click="showAddBlockModal = false">✕</button>
-        </div>
-        <div class="modal-grid">
+    <div v-if="showAddBlockModal" class="modal-overlay" @click="showAddBlockModal = false">
+      <div class="modal-content" @click.stop>
+        <h2>블록 추가하기</h2>
+        <div class="block-types-grid">
           <div
             v-for="blockType in availableBlockTypes"
             :key="blockType.type"
             class="block-type-card"
             @click="addBlock(blockType.type as BlockType)"
           >
-            <div class="type-icon">{{ blockType.icon }}</div>
-            <div class="type-info">
-              <div class="type-name">{{ blockType.name }}</div>
-              <div class="type-desc">{{ blockType.description }}</div>
+            <div class="block-type-icon">{{ blockType.icon }}</div>
+            <div class="block-type-info">
+              <div class="block-type-name">{{ blockType.name }}</div>
+              <div class="block-type-desc">{{ blockType.description }}</div>
             </div>
           </div>
         </div>
+        <button class="btn-close" @click="showAddBlockModal = false">닫기</button>
       </div>
     </div>
 
     <!-- Edit Block Modal -->
-    <div v-if="editingBlock" class="modal-overlay active" @click="cancelEdit">
-      <div class="modal-card large" @click.stop>
+    <div v-if="editingBlock" class="modal-overlay" @click="cancelEdit">
+      <div class="modal-content large" @click.stop>
         <div class="modal-header">
           <h2>{{ getBlockTitle(editingBlock.type) }} 편집</h2>
           <button class="btn-icon-close" @click="cancelEdit">✕</button>
         </div>
 
-        <div class="edit-form-content">
-          <!-- Example: Header Edit -->
+        <div class="edit-form">
+          <!-- Header Block Edit Form -->
           <template v-if="editingBlock.type === 'header'">
             <div class="form-group">
               <label class="form-label">매장 이름</label>
-              <input type="text" class="form-input" v-model="editForm.storeName" placeholder="매장명 입력" />
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.storeName"
+                placeholder="예: 테라스 레스토랑"
+              />
             </div>
+
+            <div class="form-group">
+              <label class="form-label">배경 이미지</label>
+              <div v-if="editForm.backgroundImage" class="image-preview-container">
+                <img :src="editForm.backgroundImage" alt="배경 이미지 미리보기" class="image-preview" />
+                <button type="button" class="btn-remove-image" @click="removeBackgroundImage">
+                  ✕ 삭제
+                </button>
+              </div>
+              <div v-else class="upload-placeholder">
+                <input
+                  type="file"
+                  ref="backgroundImageInput"
+                  @change="handleBackgroundImageUpload"
+                  accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                  class="file-input"
+                  id="background-image-upload"
+                />
+                <label for="background-image-upload" class="upload-label">
+                  <span class="upload-icon">📷</span>
+                  <span class="upload-text">배경 이미지 업로드</span>
+                  <span class="upload-hint">PNG, JPG, SVG (최대 2MB)</span>
+                </label>
+              </div>
+              <div v-if="backgroundImageUploading" class="upload-progress">
+                업로드 중...
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">환영 메시지</label>
-              <textarea class="form-textarea" v-model="editForm.welcomeMessage" placeholder="환영 메시지 입력"></textarea>
+              <textarea
+                class="form-textarea"
+                v-model="editForm.welcomeMessage"
+                rows="5"
+                placeholder="📶 WiFi 정보&#10;🕐 영업시간&#10;📞 연락처"
+              ></textarea>
+            </div>
+
+            <!-- Gradient Overlay Settings -->
+            <div class="form-section gradient-section">
+              <div class="section-header">
+                <h3 class="section-title">🎨 그라데이션 오버레이</h3>
+                <label class="toggle-switch">
+                  <input
+                    type="checkbox"
+                    v-model="editForm.gradientOverlay.enabled"
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div v-if="editForm.gradientOverlay.enabled" class="gradient-controls">
+                <div class="form-group">
+                  <label class="form-label">
+                    그라데이션 색상
+                    <span class="label-hint">배경 페이지 색상과 일치시키세요</span>
+                  </label>
+                  <div class="color-input-group">
+                    <input
+                      type="color"
+                      class="form-color-picker"
+                      v-model="editForm.gradientOverlay.color"
+                    />
+                    <input
+                      type="text"
+                      class="form-input"
+                      v-model="editForm.gradientOverlay.color"
+                      placeholder="#121212"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    시작 투명도 (상단)
+                    <span class="label-value">{{ editForm.gradientOverlay.startOpacity }}%</span>
+                  </label>
+                  <input
+                    type="range"
+                    class="form-range"
+                    min="0"
+                    max="100"
+                    v-model.number="editForm.gradientOverlay.startOpacity"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    끝 투명도 (하단)
+                    <span class="label-value">{{ editForm.gradientOverlay.endOpacity }}%</span>
+                  </label>
+                  <input
+                    type="range"
+                    class="form-range"
+                    min="0"
+                    max="100"
+                    v-model.number="editForm.gradientOverlay.endOpacity"
+                  />
+                </div>
+
+                <div class="gradient-preview">
+                  <div class="preview-label">미리보기</div>
+                  <div
+                    class="gradient-demo"
+                    :style="{
+                      background: getGradientPreview(editForm.gradientOverlay)
+                    }"
+                  ></div>
+                </div>
+              </div>
             </div>
           </template>
 
-          <!-- Example: Button Edit -->
-          <div v-if="editingBlock.type === 'button'" class="form-group">
-            <label class="form-label">버튼 텍스트</label>
-            <input type="text" class="form-input" v-model="editForm.text" placeholder="버튼명 입력">
-            <label class="form-label mt-2">링크 URL</label>
-            <input type="text" class="form-input" v-model="editForm.url" placeholder="https://...">
-          </div>
+          <!-- Button Block Edit Form -->
+          <template v-if="editingBlock.type === 'button'">
+            <div class="form-group">
+              <label class="form-label">버튼 텍스트</label>
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.text"
+                placeholder="예: 메뉴 보기"
+              />
+            </div>
 
-          <!-- Other blocks placeholder -->
-          <div v-if="!['header', 'button'].includes(editingBlock.type)" class="form-hint-box">
-            선택한 블록의 세부 설정 옵션이 여기에 표시됩니다.
-          </div>
+            <div class="form-group">
+              <label class="form-label">링크 URL</label>
+              <input
+                type="url"
+                class="form-input"
+                v-model="editForm.url"
+                placeholder="https://"
+              />
+            </div>
 
+            <div class="form-group">
+              <label class="form-label">버튼 스타일</label>
+              <select class="form-select" v-model="editForm.style">
+                <option value="primary">기본</option>
+                <option value="secondary">보조</option>
+                <option value="outline">테두리</option>
+              </select>
+            </div>
+          </template>
+
+          <!-- Social Links Block Edit Form -->
+          <template v-if="editingBlock.type === 'social_links'">
+            <div class="form-section">
+              <h3 class="section-title">소셜 미디어 링크</h3>
+              <div v-for="(link, index) in editForm.links" :key="index" class="social-link-item">
+                <div class="social-link-row">
+                  <select class="form-select-compact" v-model="link.platform">
+                    <option value="instagram">Instagram</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="twitter">Twitter</option>
+                    <option value="naver">Naver</option>
+                    <option value="threads">Threads</option>
+                  </select>
+                  <input
+                    type="url"
+                    class="form-input-compact"
+                    v-model="link.url"
+                    placeholder="https://..."
+                  />
+                  <button class="btn-icon-small danger" @click="removeSocialLink(index)" title="삭제">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              <button class="btn-add-item" @click="addSocialLink">
+                + 링크 추가
+              </button>
+            </div>
+          </template>
+
+          <!-- Video Grid Block Edit Form -->
+          <template v-if="editingBlock.type === 'video_grid'">
+            <div class="form-group">
+              <label class="form-label">레이아웃</label>
+              <select class="form-select" v-model="editForm.layout">
+                <option value="grid-1">1열 (가로 영상)</option>
+                <option value="grid-2">2열 (Shorts)</option>
+                <option value="carousel">캐러셀 (가로 스크롤)</option>
+              </select>
+            </div>
+
+            <div class="form-section">
+              <h3 class="section-title">영상 목록</h3>
+              <div v-for="(video, index) in editForm.videos" :key="index" class="video-item">
+                <div class="form-group">
+                  <label class="form-label">영상 URL</label>
+                  <input
+                    type="url"
+                    class="form-input"
+                    v-model="video.url"
+                    @input="updateVideoThumbnail(video)"
+                    placeholder="YouTube Shorts 공유 링크 (공유하기 버튼 사용)"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">썸네일 URL (자동 생성)</label>
+                  <input
+                    type="url"
+                    class="form-input"
+                    v-model="video.thumbnail"
+                    readonly
+                    placeholder="YouTube URL 입력 시 자동으로 생성됩니다"
+                    style="background-color: #f3f4f6; cursor: not-allowed;"
+                  />
+                </div>
+                <button class="btn-remove-item" @click="removeVideo(index)">
+                  영상 삭제
+                </button>
+              </div>
+              <button class="btn-add-item" @click="addVideo">
+                + 영상 추가
+              </button>
+            </div>
+          </template>
+
+          <!-- Games Carousel Block Edit Form -->
+          <template v-if="editingBlock.type === 'games_carousel'">
+            <div class="form-group">
+              <label class="form-label">게임 선택 및 순서</label>
+              <p class="form-hint">체크한 게임만 표시되며, 드래그하여 순서를 변경할 수 있습니다</p>
+              <draggable
+                v-model="editForm.gamesOrder"
+                item-key="type"
+                handle=".game-drag-handle"
+                animation="200"
+                class="games-order-list"
+              >
+                <template #item="{ element }">
+                  <div class="game-order-item">
+                    <div class="game-drag-handle">
+                      <span>⋮⋮</span>
+                    </div>
+                    <label class="checkbox-label-inline">
+                      <input
+                        type="checkbox"
+                        :value="element.type"
+                        v-model="editForm.enabledGames"
+                      />
+                      <span class="game-icon">{{ element.icon }}</span>
+                      <span class="game-name">{{ element.name }}</span>
+                    </label>
+                  </div>
+                </template>
+              </draggable>
+            </div>
+
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="editForm.showLeaderboard" />
+                <span>리더보드 표시</span>
+              </label>
+            </div>
+          </template>
+
+          <!-- Popular Menu Block Edit Form -->
+          <template v-if="editingBlock.type === 'popular_menu'">
+            <div class="form-group">
+              <label class="form-label">제목</label>
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.title"
+                placeholder="예: 인기 메뉴"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">부제목</label>
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.subtitle"
+                placeholder="예: 사람들이 많이 받아간 메뉴"
+              />
+            </div>
+
+            <div class="form-section">
+              <h3 class="section-title">메뉴 목록</h3>
+              <div v-for="(item, index) in editForm.items" :key="index" class="menu-item">
+                <div class="menu-row">
+                  <input
+                    type="number"
+                    class="form-input rank-input"
+                    v-model.number="item.rank"
+                    placeholder="#"
+                  />
+                  <input
+                    type="text"
+                    class="form-input flex-1"
+                    v-model="item.name"
+                    placeholder="메뉴명"
+                  />
+                  <input
+                    type="number"
+                    class="form-input price-input"
+                    v-model.number="item.price"
+                    placeholder="가격"
+                  />
+                  <button class="btn-icon danger" @click="removeMenuItem(index)">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              <button class="btn-add-item" @click="addMenuItem">
+                + 메뉴 추가
+              </button>
+            </div>
+          </template>
+
+          <!-- Text Block Edit Form -->
+          <template v-if="editingBlock.type === 'text'">
+            <div class="form-group">
+              <label class="form-label">텍스트 내용</label>
+              <textarea
+                class="form-textarea"
+                v-model="editForm.content"
+                rows="8"
+                placeholder="자유롭게 텍스트를 입력하세요..."
+              ></textarea>
+            </div>
+          </template>
+
+          <!-- Image Block Edit Form -->
+          <template v-if="editingBlock.type === 'image'">
+            <div class="form-group">
+              <label class="form-label">이미지 URL</label>
+              <input
+                type="url"
+                class="form-input"
+                v-model="editForm.imageUrl"
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">대체 텍스트</label>
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.alt"
+                placeholder="이미지 설명"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">링크 URL (선택사항)</label>
+              <input
+                type="url"
+                class="form-input"
+                v-model="editForm.link"
+                placeholder="https://"
+              />
+            </div>
+          </template>
+
+          <!-- Countdown Block Edit Form -->
+          <template v-if="editingBlock.type === 'countdown'">
+            <div class="form-group">
+              <label class="form-label">제목</label>
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.title"
+                placeholder="이벤트 카운트다운"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">설명 (선택사항)</label>
+              <textarea
+                class="form-textarea"
+                v-model="editForm.description"
+                placeholder="이벤트 설명을 입력하세요"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">목표 날짜</label>
+              <input
+                type="datetime-local"
+                class="form-input"
+                v-model="editForm.targetDate"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">스타일</label>
+              <select class="form-select" v-model="editForm.style">
+                <option value="card">카드</option>
+                <option value="minimal">미니멀</option>
+                <option value="banner">배너</option>
+              </select>
+            </div>
+          </template>
+
+          <!-- Guestbook Block Edit Form -->
+          <template v-if="editingBlock.type === 'guestbook'">
+            <div class="form-group">
+              <label class="form-label">제목</label>
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.title"
+                placeholder="방명록"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">최대 메시지 길이</label>
+              <input
+                type="number"
+                class="form-input"
+                v-model.number="editForm.maxMessageLength"
+                min="50"
+                max="500"
+                placeholder="200"
+              />
+              <small class="form-hint">손글씨로 작성할 메시지의 최대 글자 수 (50-500자)</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">텍스트 색상</label>
+              <input
+                type="color"
+                class="form-input-color"
+                v-model="editForm.textColor"
+              />
+              <small class="form-hint">방명록 텍스트의 색상을 선택하세요</small>
+            </div>
+          </template>
         </div>
 
         <div class="modal-actions">
-          <button class="btn-action btn-secondary" @click="cancelEdit">취소</button>
-          <button class="btn-action btn-primary" @click="saveBlockEdit">저장</button>
+          <button class="btn-secondary" @click="cancelEdit">취소</button>
+          <button class="btn-primary" @click="saveBlockEdit">저장</button>
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
