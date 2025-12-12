@@ -273,14 +273,14 @@ const fetchQRCodes = async () => {
     isLoading.value = true
     const response = await axios.get(`${API_URL}/api/qrcodes/user`, {
       headers: {
-        Authorization: `Bearer ${authStore.token}`
+        Authorization: `Bearer ${authStore.accessToken}`
       }
     })
 
     if (response.data.success) {
       qrCodes.value = response.data.qrCodes || []
       if (qrCodes.value.length > 0) {
-        selectedQR.value = qrCodes.value[0]
+        selectedQR.value = qrCodes.value[0] || null
       }
     }
   } catch (error) {
