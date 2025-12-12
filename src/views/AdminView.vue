@@ -3,7 +3,9 @@
     <!-- Left Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="logo">⚙️</div>
+        <div class="logo">
+          <IconBase name="logo" class="logo-icon" />
+        </div>
         <h2>WaitPlay</h2>
       </div>
 
@@ -16,13 +18,17 @@
           class="nav-item"
           :class="{ active: activeTab === tab.id }"
         >
-          <span class="nav-icon">{{ tab.icon }}</span>
+          <div class="nav-icon-wrapper">
+            <IconBase :name="tab.iconName" class="nav-icon" />
+          </div>
           <span class="nav-label">{{ tab.label }}</span>
         </button>
 
         <!-- Coupon Verification Button (Special Style) -->
         <button class="nav-item coupon-verify-btn" @click="router.push('/admin/verify-coupon')">
-          <span class="nav-icon">🎫</span>
+          <div class="nav-icon-wrapper">
+            <IconBase name="qr" class="nav-icon" />
+          </div>
           <span class="nav-label">쿠폰 검증</span>
         </button>
       </nav>
@@ -33,7 +39,7 @@
           <div class="account-avatar">
             <!-- Profile Image Fallback -->
             <img v-if="authStore.user?.profileImage" :src="authStore.user.profileImage" alt="프로필" />
-            <span v-else>👤</span>
+            <IconBase v-else name="user" class="avatar-icon" />
           </div>
           <div class="account-details">
             <p class="account-name">{{ authStore.user?.nickname || '관리자' }}</p>
@@ -41,6 +47,7 @@
           </div>
         </div>
         <button class="btn-logout" @click="handleLogout">
+          <IconBase name="logout" class="logout-icon" />
           로그아웃
         </button>
       </div>
@@ -64,6 +71,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import IconBase from '@/components/IconBase.vue'
 import DashboardTab from '@/components/DashboardTab.vue'
 import QRManagement from '@/components/QRManagement.vue'
 import GamesTab from '@/components/GamesTab.vue'
@@ -75,11 +83,11 @@ const authStore = useAuthStore()
 const activeTab = ref('dashboard')
 
 const tabs = [
-  { id: 'dashboard', label: '대시보드', icon: '📊' },
-  { id: 'qr', label: 'QR 관리', icon: '📱' },
-  { id: 'games', label: '게임 설정', icon: '🎮' },
-  { id: 'benefits', label: '혜택 설정', icon: '🎁' },
-  { id: 'customers', label: '고객 분석', icon: '👥' }
+  { id: 'dashboard', label: '대시보드', iconName: 'chart' },
+  { id: 'qr', label: 'QR 관리', iconName: 'qr' },
+  { id: 'games', label: '게임 설정', iconName: 'gamepad' },
+  { id: 'benefits', label: '혜택 설정', iconName: 'gift' },
+  { id: 'customers', label: '고객 분석', iconName: 'users' }
 ]
 
 const handleLogout = () => {
@@ -111,6 +119,7 @@ onMounted(() => {
   --primary-blue: #0071e3;
   --text-dark: #1d1d1f;
   --text-gray: #86868b;
+  --text-light: #aeaeb2;
   --text-light-gray: #aeaeb2;
   --bg-main: #f5f5f7;
   --bg-sidebar: rgba(255, 255, 255, 0.85);
@@ -145,24 +154,36 @@ onMounted(() => {
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 30px;
-  padding-left: 8px;
+  gap: 14px;
+  margin-bottom: 36px;
+  padding-left: 6px;
 }
 
 .logo {
-  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  background: var(--primary-blue);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+}
+
+.logo-icon {
+  width: 20px;
+  height: 20px;
+  color: white;
 }
 
 .sidebar-header h2 {
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 800;
   color: var(--text-dark);
   margin: 0;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.6px;
 }
 
 /* Navigation Menu */
@@ -185,17 +206,26 @@ onMounted(() => {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
+  position: relative;
+}
+
+.nav-icon-wrapper {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+  flex-shrink: 0;
 }
 
 .nav-icon {
-  margin-right: 12px;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
   width: 20px;
-  justify-content: center;
+  height: 20px;
+  color: var(--text-light);
+  transition: color 0.2s ease;
 }
 
 .nav-label {
@@ -207,6 +237,11 @@ onMounted(() => {
   background-color: white;
   color: var(--text-dark);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: translateX(2px);
+}
+
+.nav-item:hover .nav-icon {
+  color: var(--primary-blue);
 }
 
 /* Active State */
@@ -214,7 +249,12 @@ onMounted(() => {
   background-color: var(--primary-blue);
   color: white !important;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 113, 227, 0.35);
+  transform: translateX(0);
+}
+
+.nav-item.active .nav-icon {
+  color: white;
 }
 
 /* Coupon Verify Button */
@@ -229,6 +269,11 @@ onMounted(() => {
 .coupon-verify-btn:hover {
   background-color: #f5f5f7;
   border-color: #d2d2d7;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.coupon-verify-btn .nav-icon {
+  color: var(--primary-blue);
 }
 
 /* Account Section */
@@ -258,7 +303,7 @@ onMounted(() => {
   justify-content: center;
   overflow: hidden;
   border: 1px solid var(--border-light);
-  color: var(--text-dark);
+  flex-shrink: 0;
 }
 
 .account-avatar img {
@@ -267,13 +312,17 @@ onMounted(() => {
   object-fit: cover;
 }
 
-.account-avatar span {
-  font-size: 18px;
+.avatar-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-gray);
 }
 
 .account-details {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 .account-name {
@@ -281,17 +330,23 @@ onMounted(() => {
   font-weight: 600;
   color: var(--text-dark);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .account-email {
   font-size: 12px;
   color: var(--text-gray);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-logout {
   width: 100%;
-  padding: 10px;
+  padding: 10px 14px;
   background: transparent;
   border: 1px solid #d2d2d7;
   border-radius: var(--btn-radius);
@@ -300,12 +355,27 @@ onMounted(() => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.logout-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-gray);
+  transition: color 0.2s;
 }
 
 .btn-logout:hover {
   background-color: #fff0f3;
   color: #ff3b30;
   border-color: #ffcdd2;
+}
+
+.btn-logout:hover .logout-icon {
+  color: #ff3b30;
 }
 
 /* Main Content */
