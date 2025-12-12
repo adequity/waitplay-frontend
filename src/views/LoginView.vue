@@ -130,9 +130,13 @@ const handleLogin = async () => {
 
     alert('로그인 성공!')
 
-    // QR 코드가 있으면 해당 매장 페이지로, 없으면 홈으로 이동
+    // 역할에 따른 리다이렉션
     if (response.redirectUrl) {
       router.push(response.redirectUrl)
+    } else if (response.userRole === 'superadmin') {
+      router.push('/superadmin')
+    } else if (response.userRole === 'admin') {
+      router.push('/admin')
     } else if (qrCodeId.value) {
       router.push(`/customer?qr=${qrCodeId.value}`)
     } else {
