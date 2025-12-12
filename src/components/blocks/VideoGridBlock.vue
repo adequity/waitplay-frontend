@@ -32,7 +32,7 @@
       </div>
     </div>
 
-    <!-- 2열 그리드 (grid-2) -->
+    <!-- 2열 그리드 (grid-2) - 세로 영상 (Shorts) -->
     <div class="youtube-grid grid-2" v-else-if="data.layout === 'grid-2'">
       <div
         v-for="(video, index) in data.videos"
@@ -40,9 +40,9 @@
         class="youtube-video-item"
         @click="openVideo(video.url)"
       >
-        <div class="video-thumbnail">
+        <div class="short-thumbnail">
           <img :src="video.thumbnail" alt="Video thumbnail" />
-          <div class="play-button-medium">▶</div>
+          <div class="play-button-small">▶</div>
         </div>
         <p v-if="video.title" class="video-title">{{ video.title }}</p>
       </div>
