@@ -5,200 +5,212 @@
   background: #f5f7fa;
 }
 
-/* Sidebar - Apple Style */
-.sidebar {
-  width: 280px;
-  background: #ffffff;
-  border-right: 0.5px solid #d1d1d6;
-  padding: 32px 0;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.03);
+/* --- Design Tokens --- */
+:root {
+  --sidebar-width: 260px;
+  --primary-blue: #0071e3;
+  --text-dark: #1d1d1f;
+  --text-gray: #86868b;
+  --text-light-gray: #aeaeb2;
+  --bg-hover: rgba(0, 0, 0, 0.05);
+  --border-light: #e5e5ea;
+  --btn-radius: 12px;
 }
 
+/* Sidebar Container */
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.85); /* 반투명 배경 */
+  backdrop-filter: blur(20px); /* Apple 스타일 블러 효과 */
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  padding: 30px 20px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Sidebar Header */
 .sidebar-header {
-  padding: 0 24px;
-  margin-bottom: 40px;
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-bottom: 40px;
+  padding-left: 10px;
 }
 
 .logo {
-  font-size: 1.5rem;
-  width: 44px;
-  height: 44px;
+  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #007aff 0%, #005ecb 100%);
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
 }
 
 .sidebar-header h2 {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-size: 22px;
-  color: #1d1d1f;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
+/* Navigation */
 .sidebar-nav {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 16px;
+  flex: 1;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
   padding: 12px 16px;
   background: transparent;
   border: none;
-  border-radius: 10px;
-  color: #8e8e93;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 15px;
+  border-radius: var(--btn-radius);
+  color: var(--text-gray);
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   text-align: left;
+  width: 100%;
 }
 
 .nav-item:hover {
-  background: #f2f2f7;
-  color: #1d1d1f;
+  background-color: white;
+  color: var(--text-dark);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .nav-item.active {
-  background: #007aff;
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
+  background-color: var(--primary-blue);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
 }
 
-.nav-icon {
-  font-size: 18px;
-  width: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.nav-label {
-  flex: 1;
-  letter-spacing: -0.01em;
-}
-
+/* Navigation Icons/Dots */
 .nav-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #c7c7cc;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--text-light-gray);
+  margin-right: 12px;
+  transition: background-color 0.2s;
 }
 
 .nav-item:hover .nav-dot {
-  background: #8e8e93;
+  background-color: var(--primary-blue);
 }
 
 .nav-item.active .nav-dot {
-  background: #ffffff;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+  background-color: white;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
-/* Coupon Verification Button */
-.nav-item.coupon-verify-btn {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 0.5px solid #e1e4e8;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.nav-label {
+  flex: 1;
 }
 
-.nav-item.coupon-verify-btn:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #653a91 100%);
-  color: white;
-  transform: translateX(2px);
+/* Coupon Verify Button (Special Style) */
+.coupon-verify-btn {
+  margin-top: 20px;
+  background-color: #f5f5f7;
+  color: var(--text-dark);
+  font-weight: 600;
+  border: 1px solid var(--border-light);
 }
 
-.nav-item.coupon-verify-btn .nav-icon {
-  font-size: 20px;
+.coupon-verify-btn:hover {
+  background-color: #e5e5ea;
+  border-color: #d2d2d7;
 }
 
-/* Sidebar Account Section */
+.nav-icon {
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+/* Account Section */
 .sidebar-account {
-  padding: 20px 16px;
-  border-top: 0.5px solid #e1e4e8;
   margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-light);
 }
 
 .account-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 8px;
   margin-bottom: 12px;
-  padding: 12px;
-  background: #f5f7fa;
-  border-radius: 10px;
+  border-radius: 12px;
+  transition: background-color 0.2s;
 }
 
 .account-avatar {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #007aff 0%, #005ecb 100%);
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  background-color: #f5f5f7;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+
+.account-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.account-avatar span {
+  font-size: 18px;
 }
 
 .account-details {
-  flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .account-name {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: #1d1d1f;
-  margin: 0 0 2px 0;
-  letter-spacing: -0.01em;
+  color: var(--text-dark);
+  margin: 0;
 }
 
 .account-email {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 13px;
-  color: #8e8e93;
+  font-size: 12px;
+  color: var(--text-gray);
   margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
+/* Logout Button */
 .btn-logout {
   width: 100%;
   padding: 10px;
-  background: #f2f2f7;
-  border: none;
-  border-radius: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 14px;
+  background: transparent;
+  border: 1px solid #d2d2d7;
+  border-radius: var(--btn-radius);
+  color: var(--text-gray);
+  font-size: 13px;
   font-weight: 500;
-  color: #8e8e93;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s;
 }
 
 .btn-logout:hover {
-  background: #007aff;
-  color: #ffffff;
+  background-color: #fff0f3;
+  color: #ff3b30; /* Apple Red for destructive action */
+  border-color: #ffcdd2;
 }
 
 /* Main Content */
@@ -1586,33 +1598,10 @@ input:checked + .toggle-slider:before {
   }
 }
 
+/* Responsive Hide */
 @media (max-width: 768px) {
-  .admin-view {
-    flex-direction: column;
-  }
-
   .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 0.5px solid #d1d1d6;
-    padding: 24px 0;
-  }
-
-  .sidebar-header {
-    padding: 0 20px;
-    margin-bottom: 24px;
-  }
-
-  .sidebar-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 0 20px;
-    gap: 8px;
-  }
-
-  .nav-item {
-    flex-shrink: 0;
-    min-width: 120px;
+    display: none;
   }
 
   .main-content {
