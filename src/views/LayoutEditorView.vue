@@ -328,7 +328,15 @@
               <label class="form-label">영상 관리</label>
               <div v-for="(video, index) in editForm.videos" :key="index" style="margin-bottom: 12px; padding: 12px; background: #f9fafb; border-radius: 8px;">
                 <input type="text" class="form-input" v-model="video.title" placeholder="영상 제목" style="margin-bottom: 8px;">
-                <input type="text" class="form-input" v-model="video.url" @blur="updateVideoThumbnail(video)" placeholder="YouTube URL (예: https://youtube.com/watch?v=...)" style="margin-bottom: 8px;">
+                <input
+                  type="text"
+                  class="form-input"
+                  v-model="video.url"
+                  @input="updateVideoThumbnail(video)"
+                  @blur="updateVideoThumbnail(video)"
+                  placeholder="YouTube URL (예: https://youtube.com/watch?v=...)"
+                  style="margin-bottom: 8px;"
+                >
                 <div v-if="video.thumbnail" style="margin-bottom: 8px;">
                   <img :src="video.thumbnail" alt="썸네일" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px;">
                 </div>
@@ -855,10 +863,13 @@ function toggleBlockVisibility(block: Block) {
 
 // YouTube URL에서 비디오 ID 추출
 function extractYouTubeId(url: string): string | null {
+  if (!url) return null
+
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
     /youtube\.com\/embed\/([^&\n?#]+)/,
-    /youtube\.com\/v\/([^&\n?#]+)/
+    /youtube\.com\/v\/([^&\n?#]+)/,
+    /youtube\.com\/shorts\/([^&\n?#]+)/
   ]
 
   for (const pattern of patterns) {
@@ -879,14 +890,30 @@ function generateYouTubeThumbnail(url: string): string {
   return ''
 }
 
-// 영상 URL 변경 시 썸네일 자동 생성
+// 디바운스 타이머
+let thumbnailUpdateTimer: number | null = null
+
+// 영상 URL 변경 시 썸네일 자동 생성 (디바운스 적용)
 function updateVideoThumbnail(video: any) {
-  if (video.url) {
-    const thumbnail = generateYouTubeThumbnail(video.url)
-    if (thumbnail) {
-      video.thumbnail = thumbnail
-    }
+  // 이전 타이머 취소
+  if (thumbnailUpdateTimer) {
+    clearTimeout(thumbnailUpdateTimer)
   }
+
+  // 500ms 후에 썸네일 생성
+  thumbnailUpdateTimer = window.setTimeout(() => {
+    if (video.url) {
+      const thumbnail = generateYouTubeThumbnail(video.url)
+      if (thumbnail) {
+        video.thumbnail = thumbnail
+        console.log('썸네일 생성:', thumbnail)
+      } else {
+        console.log('썸네일 생성 실패 - URL:', video.url)
+      }
+    } else {
+      video.thumbnail = ''
+    }
+  }, 500)
 }
 
 // 이미지 파일 업로드
