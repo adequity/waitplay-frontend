@@ -206,17 +206,81 @@
             </div>
           </template>
 
-          <!-- Example: Button Edit -->
-          <div v-if="editingBlock.type === 'button'" class="form-group">
-            <label class="form-label">버튼 텍스트</label>
-            <input type="text" class="form-input" v-model="editForm.text" placeholder="버튼명 입력">
-            <label class="form-label mt-2">링크 URL</label>
-            <input type="text" class="form-input" v-model="editForm.url" placeholder="https://...">
-          </div>
+          <!-- Button Edit -->
+          <template v-if="editingBlock.type === 'button'">
+            <div class="form-group">
+              <label class="form-label">버튼 텍스트</label>
+              <input type="text" class="form-input" v-model="editForm.text" placeholder="버튼명 입력">
+            </div>
+            <div class="form-group">
+              <label class="form-label">링크 URL</label>
+              <input type="text" class="form-input" v-model="editForm.url" placeholder="https://...">
+            </div>
+          </template>
 
-          <!-- Other blocks placeholder -->
-          <div v-if="!['header', 'button'].includes(editingBlock.type)" class="form-hint-box">
-            선택한 블록의 세부 설정 옵션이 여기에 표시됩니다.
+          <!-- Text Edit -->
+          <template v-if="editingBlock.type === 'text'">
+            <div class="form-group">
+              <label class="form-label">텍스트 내용</label>
+              <textarea class="form-textarea" v-model="editForm.content" placeholder="내용을 입력하세요"></textarea>
+            </div>
+          </template>
+
+          <!-- Image Edit -->
+          <template v-if="editingBlock.type === 'image'">
+            <div class="form-group">
+              <label class="form-label">이미지 URL</label>
+              <input type="text" class="form-input" v-model="editForm.imageUrl" placeholder="https://...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">캡션 (선택)</label>
+              <input type="text" class="form-input" v-model="editForm.caption" placeholder="이미지 설명">
+            </div>
+          </template>
+
+          <!-- Countdown Edit -->
+          <template v-if="editingBlock.type === 'countdown'">
+            <div class="form-group">
+              <label class="form-label">제목</label>
+              <input type="text" class="form-input" v-model="editForm.title" placeholder="이벤트 제목">
+            </div>
+            <div class="form-group">
+              <label class="form-label">설명</label>
+              <textarea class="form-textarea" v-model="editForm.description" placeholder="이벤트 설명"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">목표 날짜</label>
+              <input type="datetime-local" class="form-input" v-model="editForm.targetDate">
+            </div>
+          </template>
+
+          <!-- Popular Menu Edit -->
+          <template v-if="editingBlock.type === 'popular_menu'">
+            <div class="form-group">
+              <label class="form-label">제목</label>
+              <input type="text" class="form-input" v-model="editForm.title" placeholder="인기 메뉴">
+            </div>
+            <div class="form-group">
+              <label class="form-label">부제목 (선택)</label>
+              <input type="text" class="form-input" v-model="editForm.subtitle" placeholder="부제목">
+            </div>
+          </template>
+
+          <!-- Guestbook Edit -->
+          <template v-if="editingBlock.type === 'guestbook'">
+            <div class="form-group">
+              <label class="form-label">제목</label>
+              <input type="text" class="form-input" v-model="editForm.title" placeholder="방명록">
+            </div>
+            <div class="form-group">
+              <label class="form-label">최대 글자 수</label>
+              <input type="number" class="form-input" v-model="editForm.maxMessageLength" placeholder="200">
+            </div>
+          </template>
+
+          <!-- Social Links, Video Grid, Games Carousel - 복잡한 구조는 현재 편집 불가 안내 -->
+          <div v-if="['social_links', 'video_grid', 'games_carousel'].includes(editingBlock.type)" class="form-hint-box">
+            이 블록은 현재 간단 편집만 지원됩니다. 상세 설정은 각 관리 탭에서 진행해주세요.
           </div>
 
         </div>
