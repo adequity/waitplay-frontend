@@ -35,7 +35,12 @@
       </div>
 
       <div v-else class="inquiry-cards">
-        <div v-for="inquiry in filteredInquiries" :key="inquiry.id" class="inquiry-card">
+        <div
+          v-for="inquiry in filteredInquiries"
+          :key="inquiry.id"
+          class="inquiry-card"
+          @click="openDetailModal(inquiry)"
+        >
           <div class="inquiry-header">
             <div class="inquiry-meta">
               <span :class="`status-badge status-${inquiry.status}`">
@@ -47,7 +52,7 @@
           </div>
 
           <h3 class="inquiry-title">{{ inquiry.title }}</h3>
-          <p class="inquiry-content">{{ inquiry.content }}</p>
+          <p class="inquiry-content">{{ truncateContent(inquiry.content) }}</p>
 
           <div class="inquiry-admin">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -66,13 +71,77 @@
               <span>답변</span>
               <span class="answer-date">{{ formatDate(inquiry.answeredAt!) }}</span>
             </div>
-            <p class="answer-content">{{ inquiry.answer }}</p>
+            <p class="answer-content">{{ truncateContent(inquiry.answer) }}</p>
           </div>
 
           <button
             v-if="inquiry.status === 'waiting'"
             class="btn-answer"
-            @click="openAnswerModal(inquiry)"
+            @click.stop="openAnswerModal(inquiry)"
+          >
+            답변하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div v-if="showDetailModal" class="modal-overlay active" @click.self="closeDetailModal">
+      <div class="modal-card detail-modal">
+        <div class="modal-header">
+          <h2>문의 상세</h2>
+          <button class="btn-close" @click="closeDetailModal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="detail-section">
+            <div class="badge-row">
+              <span :class="`status-badge status-${selectedInquiry?.status}`">
+                {{ getStatusLabel(selectedInquiry?.status || 'waiting') }}
+              </span>
+              <span class="category-badge">문의</span>
+            </div>
+
+            <h3 class="detail-title">{{ selectedInquiry?.title }}</h3>
+
+            <div class="meta-row">
+              <span class="meta-item">가맹점: {{ selectedInquiry?.adminCompany || '정보 없음' }}</span>
+              <span class="meta-item">작성자: {{ selectedInquiry?.adminName }}</span>
+              <span class="meta-item">등록일: {{ formatDateFull(selectedInquiry?.createdAt || '') }}</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="content-section">
+            <h4 class="content-label">문의 내용</h4>
+            <div class="content-text">{{ selectedInquiry?.content }}</div>
+          </div>
+
+          <div v-if="selectedInquiry?.status === 'answered' && selectedInquiry?.answer" class="answer-section">
+            <div class="answer-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 11 12 14 22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              <span>답변</span>
+              <span class="answer-date">{{ formatDateFull(selectedInquiry?.answeredAt || '') }}</span>
+            </div>
+            <div class="answer-text">{{ selectedInquiry?.answer }}</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="closeDetailModal">닫기</button>
+          <button
+            v-if="selectedInquiry?.status === 'waiting'"
+            class="btn-primary"
+            @click="openAnswerFromDetail"
           >
             답변하기
           </button>
@@ -165,6 +234,7 @@ const loading = ref(false)
 const submitting = ref(false)
 const inquiries = ref<Inquiry[]>([])
 const currentStatus = ref<'all' | 'waiting' | 'answered'>('all')
+const showDetailModal = ref(false)
 const showAnswerModal = ref(false)
 const selectedInquiry = ref<Inquiry | null>(null)
 const answerText = ref('')
@@ -216,6 +286,26 @@ const fetchInquiries = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const truncateContent = (content: string, maxLength = 100) => {
+  if (!content) return ''
+  return content.length > maxLength ? content.substring(0, maxLength) + '...' : content
+}
+
+const openDetailModal = (inquiry: Inquiry) => {
+  selectedInquiry.value = inquiry
+  showDetailModal.value = true
+}
+
+const closeDetailModal = () => {
+  showDetailModal.value = false
+  selectedInquiry.value = null
+}
+
+const openAnswerFromDetail = () => {
+  showDetailModal.value = false
+  showAnswerModal.value = true
 }
 
 const openAnswerModal = (inquiry: Inquiry) => {
@@ -273,6 +363,18 @@ const formatDate = (dateString: string) => {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
+  })
+}
+
+const formatDateFull = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 
@@ -383,11 +485,13 @@ onMounted(() => {
   border-radius: 16px;
   padding: 24px;
   transition: all 0.2s;
+  cursor: pointer;
 }
 
 .inquiry-card:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
+  border-color: #8b5cf6;
 }
 
 .inquiry-header {
@@ -764,5 +868,128 @@ onMounted(() => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Detail Modal Styles */
+.detail-modal {
+  max-width: 700px;
+}
+
+.detail-modal .modal-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid #e5e5ea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.detail-section {
+  margin-bottom: 0;
+}
+
+.badge-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.detail-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 16px 0;
+  line-height: 1.3;
+}
+
+.meta-row {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #86868b;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  position: relative;
+}
+
+.meta-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: -9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 12px;
+  background: #d2d2d7;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e5ea;
+  margin: 24px 0;
+}
+
+.content-section {
+  margin-bottom: 24px;
+}
+
+.content-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 12px 0;
+}
+
+.content-text {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #4a4a4a;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.answer-section {
+  background: #f9f9fb;
+  border: 1px solid #e5e5ea;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.answer-section .answer-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+.answer-section .answer-header svg {
+  color: #2e7d32;
+  flex-shrink: 0;
+}
+
+.answer-section .answer-date {
+  margin-left: auto;
+  font-size: 12px;
+  color: #aeaeb2;
+  font-weight: 500;
+}
+
+.answer-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a4a4a;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 </style>
