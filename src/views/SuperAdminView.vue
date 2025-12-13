@@ -28,6 +28,23 @@
         </button>
       </nav>
 
+      <!-- Invite Code Section -->
+      <div class="invite-code-section">
+        <div class="invite-code-label">
+          <IconBase name="gift" class="invite-icon" />
+          <span>초대 코드</span>
+        </div>
+        <div class="invite-code-box">
+          <span class="invite-code-text">{{ inviteCode || '...' }}</span>
+          <button class="btn-copy-small" @click="copyInviteCode" :disabled="!inviteCode" :title="copied ? '복사됨!' : '복사'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <!-- Account Section -->
       <div class="sidebar-account">
         <div class="account-info">
@@ -72,12 +89,47 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const activeTab = ref('dashboard')
+const inviteCode = ref('')
+const copied = ref(false)
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
 const tabs = [
   { id: 'dashboard', label: '대시보드', iconName: 'chart' },
   { id: 'admins', label: 'Admin 관리', iconName: 'users' },
   { id: 'inquiries', label: '문의 관리', iconName: 'message' }
 ]
+
+// Fetch invite code
+const fetchInviteCode = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/superadmin/invite-code`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      }
+    })
+
+    if (!response.ok) throw new Error('Failed to fetch invite code')
+
+    const data = await response.json()
+    inviteCode.value = data.inviteCode
+  } catch (error) {
+    console.error('Failed to fetch invite code:', error)
+  }
+}
+
+// Copy invite code to clipboard
+const copyInviteCode = async () => {
+  try {
+    await navigator.clipboard.writeText(inviteCode.value)
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 1500)
+  } catch (error) {
+    console.error('Failed to copy invite code:', error)
+  }
+}
 
 const handleLogout = () => {
   if (confirm('로그아웃 하시겠습니까?')) {
@@ -87,6 +139,9 @@ const handleLogout = () => {
 }
 
 onMounted(() => {
+  // Fetch invite code
+  fetchInviteCode()
+
   // Check for tab query parameter
   const tabParam = route.query.tab as string
   if (tabParam && tabs.find(t => t.id === tabParam)) {
@@ -254,6 +309,77 @@ onMounted(() => {
 
 .nav-item.active .nav-icon {
   color: white;
+}
+
+/* Invite Code Section */
+.invite-code-section {
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(124, 58, 237, 0.08) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.invite-code-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-purple);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.invite-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.invite-code-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: white;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.invite-code-text {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary-purple);
+  letter-spacing: 2px;
+  flex: 1;
+}
+
+.btn-copy-small {
+  padding: 6px;
+  background: rgba(139, 92, 246, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: var(--primary-purple);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-copy-small:hover:not(:disabled) {
+  background: var(--primary-purple);
+  color: white;
+  transform: scale(1.05);
+}
+
+.btn-copy-small:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Account Section */

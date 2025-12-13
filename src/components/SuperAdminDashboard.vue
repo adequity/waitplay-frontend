@@ -1,38 +1,6 @@
 <template>
   <div class="dashboard-content">
 
-    <!-- Invite Code Card -->
-    <div class="invite-code-section">
-      <div class="invite-code-card">
-        <div class="invite-header">
-          <div class="header-content">
-            <h3>내 초대 코드</h3>
-            <p>Admin이 가맹점 소속을 요청할 때 사용하는 코드입니다</p>
-          </div>
-          <button class="btn-regenerate" @click="regenerateInviteCode" :disabled="regenerating">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"/>
-              <polyline points="1 20 1 14 7 14"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-            </svg>
-            {{ regenerating ? '생성 중...' : '재생성' }}
-          </button>
-        </div>
-        <div class="invite-code-display">
-          <div class="code-box">
-            <span class="code-text">{{ inviteCode || '로딩중...' }}</span>
-          </div>
-          <button class="btn-copy" @click="copyInviteCode" :disabled="!inviteCode">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-            {{ copied ? '복사됨!' : '복사' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- 1. Key Metrics Cards -->
     <div class="kpi-grid">
       <div class="metric-card" v-for="(card, index) in topCards" :key="index">
@@ -154,70 +122,6 @@ const middleCards = ref([
 
 const topStores = ref<any[]>([])
 const loading = ref(true)
-const inviteCode = ref('')
-const regenerating = ref(false)
-const copied = ref(false)
-
-// Fetch invite code
-const fetchInviteCode = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/superadmin/invite-code`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
-    })
-
-    if (!response.ok) throw new Error('Failed to fetch invite code')
-
-    const data = await response.json()
-    inviteCode.value = data.inviteCode
-  } catch (error) {
-    console.error('Failed to fetch invite code:', error)
-    inviteCode.value = '오류'
-  }
-}
-
-// Regenerate invite code
-const regenerateInviteCode = async () => {
-  if (!confirm('초대 코드를 재생성하시겠습니까? 기존 코드는 더 이상 사용할 수 없습니다.')) {
-    return
-  }
-
-  regenerating.value = true
-  try {
-    const response = await fetch(`${API_URL}/api/superadmin/invite-code/regenerate`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
-    })
-
-    if (!response.ok) throw new Error('Failed to regenerate invite code')
-
-    const data = await response.json()
-    inviteCode.value = data.inviteCode
-    alert('초대 코드가 재생성되었습니다.')
-  } catch (error) {
-    console.error('Failed to regenerate invite code:', error)
-    alert('초대 코드 재생성에 실패했습니다.')
-  } finally {
-    regenerating.value = false
-  }
-}
-
-// Copy invite code to clipboard
-const copyInviteCode = async () => {
-  try {
-    await navigator.clipboard.writeText(inviteCode.value)
-    copied.value = true
-    setTimeout(() => {
-      copied.value = false
-    }, 2000)
-  } catch (error) {
-    console.error('Failed to copy invite code:', error)
-    alert('복사에 실패했습니다.')
-  }
-}
 
 // Fetch dashboard statistics
 const fetchDashboardStats = async () => {
@@ -271,7 +175,6 @@ const viewAllStores = () => {
 
 onMounted(async () => {
   await Promise.all([
-    fetchInviteCode(),
     fetchDashboardStats(),
     fetchTopStores()
   ])
@@ -285,130 +188,6 @@ onMounted(async () => {
   max-width: 1600px;
   margin: 0 auto;
   padding: 40px;
-}
-
-/* Invite Code Section */
-.invite-code-section {
-  margin-bottom: 32px;
-}
-
-.invite-code-card {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.25);
-  color: white;
-}
-
-.invite-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-}
-
-.header-content h3 {
-  font-size: 20px;
-  font-weight: 800;
-  margin: 0 0 6px 0;
-  color: white;
-}
-
-.header-content p {
-  font-size: 14px;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-}
-
-.btn-regenerate {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-regenerate:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
-}
-
-.btn-regenerate:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-regenerate svg {
-  width: 16px;
-  height: 16px;
-}
-
-.invite-code-display {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.code-box {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
-  padding: 20px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.code-text {
-  font-size: 32px;
-  font-weight: 900;
-  letter-spacing: 8px;
-  color: white;
-  font-family: 'Courier New', monospace;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.btn-copy {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 20px 24px;
-  background: white;
-  border: none;
-  border-radius: 16px;
-  color: #8b5cf6;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-}
-
-.btn-copy:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  background: #f9f9fb;
-}
-
-.btn-copy:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-copy svg {
-  width: 18px;
-  height: 18px;
 }
 
 /* 1. KPI Cards */
