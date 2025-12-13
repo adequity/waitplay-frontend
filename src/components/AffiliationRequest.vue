@@ -59,7 +59,7 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 const authStore = useAuthStore()
 
 interface AffiliationStatus {
@@ -78,7 +78,7 @@ const affiliationStatus = ref<AffiliationStatus | null>(null)
 
 const fetchAffiliationStatus = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/inquiry/affiliation-status`, {
+    const response = await fetch(`${API_URL}/api/inquiry/affiliation-status`, {
       headers: {
         'Authorization': `Bearer ${authStore.accessToken}`
       }
@@ -106,7 +106,7 @@ const submitRequest = async () => {
   message.value = ''
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/inquiry/request-affiliation`, {
+    const response = await fetch(`${API_URL}/api/inquiry/request-affiliation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
