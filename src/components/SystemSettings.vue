@@ -290,8 +290,8 @@ const saveSettings = () => {
 /* Color Picker */
 .color-picker-wrapper { display: flex; align-items: center; gap: 10px; }
 .color-preview { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #007AFF; }
-.btn-pick-color { padding: 10px 16px; border: 1px solid var(--primary-blue); background: white; border-radius: 10px; font-weight: 600; color: var(--primary-blue); cursor: pointer; font-size: 13px; transition: 0.2s; }
-.btn-pick-color:hover { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
+.btn-pick-color { padding: 10px 16px; border: 1px solid var(--primary-blue); background: var(--primary-blue); border-radius: 10px; font-weight: 600; color: white; cursor: pointer; font-size: 13px; transition: 0.2s; box-shadow: 0 2px 6px rgba(0, 113, 227, 0.2); }
+.btn-pick-color:hover { background: var(--primary-dark); border-color: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0, 113, 227, 0.3); }
 .color-text { width: 120px; font-family: monospace; }
 
 /* Notification Toggles */
