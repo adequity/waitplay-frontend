@@ -176,7 +176,7 @@ import { ref } from 'vue'
 
 interface Notice {
   id: number
-  category: string
+  category: string // '중요' | '업데이트' | '이벤트' | '공지'
   title: string
   content: string
   isFixed: boolean
@@ -198,6 +198,7 @@ interface NoticeForm {
   popupEndDate: string
 }
 
+// Mock Data matching the image
 const notices = ref<Notice[]>([
   {
     id: 5,
@@ -268,6 +269,7 @@ const form = ref<NoticeForm>({
   popupEndDate: ''
 })
 
+// Helper Functions
 const getCategoryClass = (category: string) => {
   switch(category) {
     case '중요': return 'badge-red'
@@ -278,9 +280,11 @@ const getCategoryClass = (category: string) => {
 }
 
 const toggleFixed = (notice: Notice) => {
+  // In a real app, call API
   notice.isFixed = !notice.isFixed
 }
 
+// Modal Actions
 const openWriteModal = () => {
   isEditing.value = false
   const today = new Date().toISOString().split('T')[0]!
@@ -377,7 +381,7 @@ const deleteNotice = (id: number) => {
   --border-light: #e5e5ea;
   --border-color: #d2d2d7;
 
-  /* Badge Colors */
+  /* Badge Colors from image */
   --red-bg: #fff1f0; --red-text: #e03131;
   --blue-bg: #e7f5ff; --blue-text: #1971c2;
   --orange-bg: #fff4e6; --orange-text: #f59f00;
