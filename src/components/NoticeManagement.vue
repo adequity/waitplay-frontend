@@ -332,8 +332,8 @@ const deleteNotice = (id: number) => {
 }
 </script>
 
-<style scoped>
-/* Common Variables */
+<style>
+/* Global CSS Variables */
 :root {
   --primary-blue: #0071e3;
   --primary-dark: #0056b3;
@@ -342,7 +342,7 @@ const deleteNotice = (id: number) => {
   --bg-body: #f5f5f7;
   --border-light: #e5e5ea;
   --border-color: #d2d2d7;
-  
+
   /* Badge Colors from image */
   --red-bg: #fff1f0; --red-text: #e03131;
   --blue-bg: #e7f5ff; --blue-text: #1971c2;
@@ -353,7 +353,9 @@ const deleteNotice = (id: number) => {
   --status-active-bg: #e6fcf5; --status-active-text: #0ca678;
   --status-inactive-bg: #f1f3f5; --status-inactive-text: #868e96;
 }
+</style>
 
+<style scoped>
 .tab-content { width: 100%; max-width: 1600px; margin: 0 auto; padding-top: 20px; }
 .page-header { margin-bottom: 24px; }
 .page-title { font-size: 28px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; letter-spacing: -0.5px; }
