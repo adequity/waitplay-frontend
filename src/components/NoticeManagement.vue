@@ -21,7 +21,15 @@
 
       <!-- Table -->
       <div class="table-container">
-        <table class="data-table">
+        <div v-if="loading" class="loading-message">
+          데이터를 불러오는 중입니다...
+        </div>
+
+        <div v-else-if="notices.length === 0" class="empty-message">
+          아직 등록된 공지사항이 없습니다.
+        </div>
+
+        <table v-else class="data-table">
           <thead>
             <tr>
               <th width="60" class="text-center">고정</th>
@@ -172,8 +180,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+
+const authStore = useAuthStore()
+const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
 interface Notice {
   id: number
@@ -188,76 +200,44 @@ interface Notice {
   views: number
 }
 
-// Mock Data matching the image
-const notices = ref<Notice[]>([
-  { 
-    id: 5, 
-    category: '중요', 
-    title: '[중요] 2025년 1월 정기 점검 안내', 
-    content: '서버 점검 내용...', 
-    isFixed: true, 
-    isPopup: true, 
-    popupStartDate: '2025-12-01',
-    popupEndDate: '2025-12-31',
-    createdAt: '2025-12-01', 
-    views: 1247 
-  },
-  { 
-    id: 4, 
-    category: '업데이트', 
-    title: '신규 게임 "포춘휠" 출시 안내', 
-    content: '신규 게임 출시...', 
-    isFixed: true, 
-    isPopup: false, 
-    createdAt: '2025-11-28', 
-    views: 892 
-  },
-  { 
-    id: 3, 
-    category: '이벤트', 
-    title: '연말 프로모션 이벤트 기획안', 
-    content: '이벤트 내용...', 
-    isFixed: false, 
-    isPopup: true, 
-    popupStartDate: '2025-12-15',
-    popupEndDate: '2025-12-31',
-    createdAt: '2025-11-25', 
-    views: 654 
-  },
-  { 
-    id: 2, 
-    category: '공지', 
-    title: '가맹점 교육 일정 안내', 
-    content: '교육 일정...', 
-    isFixed: false, 
-    isPopup: false, 
-    createdAt: '2025-11-20', 
-    views: 523 
-  },
-  { 
-    id: 1, 
-    category: '업데이트', 
-    title: '모바일 앱 v2.3 업데이트 내역', 
-    content: '업데이트 내역...', 
-    isFixed: false, 
-    isPopup: false, 
-    createdAt: '2025-11-15', 
-    views: 418 
-  },
-])
-
+const notices = ref<Notice[]>([])
 const showModal = ref(false)
 const isEditing = ref(false)
+const loading = ref(true)
 const form = ref<any>({
-  id: 0, 
+  id: 0,
   category: '공지',
-  title: '', 
-  content: '', 
+  title: '',
+  content: '',
   isFixed: false,
   isPopup: false,
   popupStartDate: '',
   popupEndDate: ''
 })
+
+// Fetch notices from API
+const fetchNotices = async () => {
+  try {
+    loading.value = true
+    const response = await fetch(`${API_URL}/api/superadmin/notices`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch notices')
+    }
+
+    const data = await response.json()
+    notices.value = data
+  } catch (error) {
+    console.error('Failed to fetch notices:', error)
+    alert('공지사항 목록을 불러오는데 실패했습니다.')
+  } finally {
+    loading.value = false
+  }
+}
 
 // Helper Functions
 const getCategoryClass = (category: string) => {
@@ -269,9 +249,25 @@ const getCategoryClass = (category: string) => {
   }
 }
 
-const toggleFixed = (notice: Notice) => {
-  // In a real app, call API
-  notice.isFixed = !notice.isFixed
+const toggleFixed = async (notice: Notice) => {
+  try {
+    const response = await fetch(`${API_URL}/api/superadmin/notices/${notice.id}/toggle-fixed`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle fixed')
+    }
+
+    notice.isFixed = !notice.isFixed
+  } catch (error) {
+    console.error('Failed to toggle fixed:', error)
+    alert('고정 상태 변경에 실패했습니다.')
+  }
 }
 
 // Modal Actions
@@ -279,12 +275,12 @@ const openWriteModal = () => {
   isEditing.value = false
   const today = new Date().toISOString().split('T')[0]
   const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  
-  form.value = { 
-    id: 0, 
+
+  form.value = {
+    id: 0,
     category: '공지',
-    title: '', 
-    content: '', 
+    title: '',
+    content: '',
     isFixed: false,
     isPopup: false,
     popupStartDate: today,
@@ -303,33 +299,83 @@ const closeModal = () => {
   showModal.value = false
 }
 
-const saveNotice = () => {
+const saveNotice = async () => {
   if (!form.value.title || !form.value.content) {
     alert('제목과 내용을 입력해주세요.')
     return
   }
 
-  if (isEditing.value) {
-    const index = notices.value.findIndex(n => n.id === form.value.id)
-    if (index !== -1) {
-      notices.value[index] = { ...notices.value[index], ...form.value }
+  try {
+    if (isEditing.value) {
+      // Update existing notice
+      const response = await fetch(`${API_URL}/api/superadmin/notices/${form.value.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(form.value)
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update notice')
+      }
+
+      alert('공지사항이 수정되었습니다.')
+    } else {
+      // Create new notice
+      const response = await fetch(`${API_URL}/api/superadmin/notices`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(form.value)
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create notice')
+      }
+
+      alert('공지사항이 등록되었습니다.')
     }
-  } else {
-    notices.value.unshift({
-      id: notices.value.length + 1,
-      ...form.value,
-      createdAt: new Date().toISOString().split('T')[0],
-      views: 0
-    })
+
+    closeModal()
+    await fetchNotices()
+  } catch (error) {
+    console.error('Failed to save notice:', error)
+    alert('공지사항 저장에 실패했습니다.')
   }
-  closeModal()
 }
 
-const deleteNotice = (id: number) => {
-  if (confirm('삭제하시겠습니까?')) {
-    notices.value = notices.value.filter(n => n.id !== id)
+const deleteNotice = async (id: number) => {
+  if (!confirm('삭제하시겠습니까?')) {
+    return
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/superadmin/notices/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete notice')
+    }
+
+    alert('공지사항이 삭제되었습니다.')
+    await fetchNotices()
+  } catch (error) {
+    console.error('Failed to delete notice:', error)
+    alert('공지사항 삭제에 실패했습니다.')
   }
 }
+
+onMounted(() => {
+  fetchNotices()
+})
 </script>
 
 <style>
@@ -450,4 +496,13 @@ const deleteNotice = (id: number) => {
 .modal-footer { padding: 20px 28px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 10px; }
 .btn-secondary { padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border-color); background: white; color: var(--text-dark); font-weight: 600; cursor: pointer; }
 .btn-secondary:hover { background: #f5f5f7; }
+
+/* Loading & Empty States */
+.loading-message,
+.empty-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-gray);
+  font-size: 14px;
+}
 </style>
