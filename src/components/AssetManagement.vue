@@ -171,11 +171,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import IconBase from '@/components/IconBase.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+const API_URL = import.meta.env.VITE_API_URL || 'https://brandflow-backend-production-99ae.up.railway.app'
 
 interface Asset {
-  id: number
+  id: string
   name: string
   category: string
   gameType: string
@@ -184,15 +188,8 @@ interface Asset {
   createdAt: string
 }
 
-// Mock Data
-const assets = ref<Asset[]>([
-  { id: 1, name: '햄버거 세트', category: '음식', gameType: '틀린그림찾기', imageUrl: '', usageCount: 12, createdAt: '2025-11-15' },
-  { id: 2, name: '아이스 아메리카노', category: '음료', gameType: '같은그림찾기', imageUrl: '', usageCount: 8, createdAt: '2025-11-20' },
-  { id: 3, name: '초콜릿 케이크', category: '디저트', gameType: '기억력게임', imageUrl: '', usageCount: 15, createdAt: '2025-11-25' },
-  { id: 4, name: '파스타', category: '음식', gameType: '틀린그림찾기', imageUrl: '', usageCount: 6, createdAt: '2025-12-01' },
-  { id: 5, name: '오렌지 주스', category: '음료', gameType: '같은그림찾기', imageUrl: '', usageCount: 10, createdAt: '2025-12-03' },
-])
-
+const assets = ref<Asset[]>([])
+const loading = ref(false)
 const filterCategory = ref('all')
 const filterGame = ref('all')
 const searchQuery = ref('')
@@ -201,11 +198,15 @@ const isEditing = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 const form = ref<any>({
-  id: 0,
+  id: '',
   name: '',
   category: '음식',
   gameType: '틀린그림찾기',
   imageUrl: ''
+})
+
+onMounted(() => {
+  fetchAssets()
 })
 
 const filteredAssets = computed(() => {
@@ -217,10 +218,30 @@ const filteredAssets = computed(() => {
   })
 })
 
+// API Functions
+const fetchAssets = async () => {
+  try {
+    loading.value = true
+    const response = await fetch(`${API_URL}/api/superadmin/assets`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      }
+    })
+    if (!response.ok) throw new Error('Failed to fetch assets')
+    const data = await response.json()
+    assets.value = data
+  } catch (error) {
+    console.error('Failed to fetch assets:', error)
+    alert('에셋 목록을 불러오는데 실패했습니다.')
+  } finally {
+    loading.value = false
+  }
+}
+
 // Modal Actions
 const openUploadModal = () => {
   isEditing.value = false
-  form.value = { id: 0, name: '', category: '음식', gameType: '틀린그림찾기', imageUrl: '' }
+  form.value = { id: '', name: '', category: '음식', gameType: '틀린그림찾기', imageUrl: '' }
   showModal.value = true
 }
 
@@ -242,7 +263,7 @@ const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
     // Mock upload: Create a fake URL
-    // In real app: Upload to server/S3/Firebase Storage
+    // TODO: Upload to server/S3/Firebase Storage
     form.value.imageUrl = 'https://via.placeholder.com/300x200?text=' + encodeURIComponent(form.value.name || 'Image')
     // Reset input to allow re-selecting same file
     target.value = ''
@@ -253,31 +274,62 @@ const removeImage = () => {
   form.value.imageUrl = ''
 }
 
-const saveAsset = () => {
+const saveAsset = async () => {
   if (!form.value.name) {
     alert('에셋 이름을 입력해주세요.')
     return
   }
 
-  if (isEditing.value) {
-    const index = assets.value.findIndex(a => a.id === form.value.id)
-    if (index !== -1) {
-      assets.value[index] = { ...assets.value[index], ...form.value }
+  try {
+    if (isEditing.value) {
+      const { id, ...updateData } = form.value
+      const response = await fetch(`${API_URL}/api/superadmin/assets/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
+      if (!response.ok) throw new Error('Failed to update asset')
+      alert('에셋이 수정되었습니다.')
+    } else {
+      const { id, ...createData } = form.value
+      const response = await fetch(`${API_URL}/api/superadmin/assets`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(createData)
+      })
+      if (!response.ok) throw new Error('Failed to create asset')
+      alert('에셋이 등록되었습니다.')
     }
-  } else {
-    assets.value.unshift({
-      id: assets.value.length + 1,
-      ...form.value,
-      usageCount: 0,
-      createdAt: new Date().toISOString().split('T')[0]
-    })
+    closeModal()
+    await fetchAssets()
+  } catch (error) {
+    console.error('Failed to save asset:', error)
+    alert('에셋 저장에 실패했습니다.')
   }
-  closeModal()
 }
 
-const deleteAsset = (id: number) => {
+const deleteAsset = async (id: string) => {
   if (confirm('이 에셋을 삭제하시겠습니까?')) {
-    assets.value = assets.value.filter(a => a.id !== id)
+    try {
+      const response = await fetch(`${API_URL}/api/superadmin/assets/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`
+        }
+      })
+      if (!response.ok) throw new Error('Failed to delete asset')
+      alert('에셋이 삭제되었습니다.')
+      await fetchAssets()
+    } catch (error) {
+      console.error('Failed to delete asset:', error)
+      alert('에셋 삭제에 실패했습니다.')
+    }
   }
 }
 
