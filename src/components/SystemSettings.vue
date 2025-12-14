@@ -259,8 +259,8 @@ const saveSettings = () => {
 .title-group { display: flex; align-items: center; gap: 10px; }
 .section-icon { font-size: 20px; }
 .section-title { font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 0; }
-.btn-text-blue { background: #e8f2ff; color: var(--primary-blue); font-size: 13px; font-weight: 600; cursor: pointer; border: none; padding: 6px 12px; border-radius: 6px; transition: 0.2s; }
-.btn-text-blue:hover { background: #d0e6ff; }
+.btn-text-blue { background: var(--primary-blue); color: white; font-size: 13px; font-weight: 600; cursor: pointer; border: none; padding: 8px 14px; border-radius: 8px; transition: 0.2s; box-shadow: 0 2px 6px rgba(0, 113, 227, 0.2); }
+.btn-text-blue:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0, 113, 227, 0.3); }
 
 /* Brand Grid */
 .brand-grid { display: grid; grid-template-columns: 240px 1fr; gap: 40px; }
@@ -290,8 +290,8 @@ const saveSettings = () => {
 /* Color Picker */
 .color-picker-wrapper { display: flex; align-items: center; gap: 10px; }
 .color-preview { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #007AFF; }
-.btn-pick-color { padding: 10px 16px; border: 1px solid var(--border-color); background: white; border-radius: 10px; font-weight: 600; color: var(--text-dark); cursor: pointer; font-size: 13px; }
-.btn-pick-color:hover { background: #f5f5f7; }
+.btn-pick-color { padding: 10px 16px; border: 1px solid var(--primary-blue); background: white; border-radius: 10px; font-weight: 600; color: var(--primary-blue); cursor: pointer; font-size: 13px; transition: 0.2s; }
+.btn-pick-color:hover { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
 .color-text { width: 120px; font-family: monospace; }
 
 /* Notification Toggles */
