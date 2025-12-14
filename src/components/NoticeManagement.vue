@@ -140,15 +140,23 @@ const saveNotice = () => {
   if (isEditing.value) {
     const index = notices.value.findIndex(n => n.id === form.value.id)
     if (index !== -1) {
-      notices.value[index] = { ...notices.value[index], ...form.value }
+      notices.value[index] = {
+        ...notices.value[index],
+        title: form.value.title,
+        content: form.value.content,
+        isImportant: form.value.isImportant
+      }
     }
   } else {
-    notices.value.unshift({
+    const newNotice: Notice = {
       id: notices.value.length + 1,
-      ...form.value,
+      title: form.value.title,
+      content: form.value.content,
+      isImportant: form.value.isImportant,
       createdAt: new Date().toISOString().split('T')[0],
       views: 0
-    })
+    }
+    notices.value.unshift(newNotice)
   }
   closeModal()
 }
