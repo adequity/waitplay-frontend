@@ -101,6 +101,13 @@ interface Notice {
   views: number
 }
 
+interface NoticeForm {
+  id: number
+  title: string
+  content: string
+  isImportant: boolean
+}
+
 const notices = ref<Notice[]>([
   { id: 10, title: '[필독] 12월 정기 서버 점검 안내', content: '서버 점검 내용...', isImportant: true, createdAt: '2025-12-01', views: 452 },
   { id: 9, title: '신규 게임 "틀린 그림 찾기" 출시 안내', content: '신규 게임 출시...', isImportant: true, createdAt: '2025-11-28', views: 320 },
@@ -111,7 +118,7 @@ const notices = ref<Notice[]>([
 
 const showModal = ref(false)
 const isEditing = ref(false)
-const form = ref({ id: 0, title: '', content: '', isImportant: false })
+const form = ref<NoticeForm>({ id: 0, title: '', content: '', isImportant: false })
 
 const formatDate = (date: string) => new Date(date).toLocaleDateString('ko-KR')
 
@@ -123,7 +130,12 @@ const openWriteModal = () => {
 
 const editNotice = (notice: Notice) => {
   isEditing.value = true
-  form.value = { ...notice }
+  form.value = {
+    id: notice.id,
+    title: notice.title,
+    content: notice.content,
+    isImportant: notice.isImportant
+  }
   showModal.value = true
 }
 
