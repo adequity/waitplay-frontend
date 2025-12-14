@@ -72,6 +72,7 @@
         <AdminManagement v-if="activeTab === 'admins'" />
         <InquiryManagement v-if="activeTab === 'inquiries'" />
         <NoticeManagement v-if="activeTab === 'notices'" />
+        <AssetManagement v-if="activeTab === 'assets'" />
       </div>
     </main>
   </div>
@@ -86,6 +87,7 @@ import SuperAdminDashboard from '@/components/SuperAdminDashboard.vue'
 import AdminManagement from '@/components/AdminManagement.vue'
 import InquiryManagement from '@/components/InquiryManagement.vue'
 import NoticeManagement from '@/components/NoticeManagement.vue'
+import AssetManagement from '@/components/AssetManagement.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -100,7 +102,8 @@ const tabs = [
   { id: 'dashboard', label: '대시보드', iconName: 'chart' },
   { id: 'admins', label: 'Admin 관리', iconName: 'users' },
   { id: 'inquiries', label: '문의 관리', iconName: 'message' },
-  { id: 'notices', label: '공지사항', iconName: 'bell' }
+  { id: 'notices', label: '공지사항', iconName: 'bell' },
+  { id: 'assets', label: '에셋 관리', iconName: 'image' }
 ]
 
 // Fetch invite code
