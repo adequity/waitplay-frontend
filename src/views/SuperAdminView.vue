@@ -71,6 +71,7 @@
         <SuperAdminDashboard v-if="activeTab === 'dashboard'" />
         <AdminManagement v-if="activeTab === 'admins'" />
         <InquiryManagement v-if="activeTab === 'inquiries'" />
+        <NoticeManagement v-if="activeTab === 'notices'" />
       </div>
     </main>
   </div>
@@ -84,6 +85,7 @@ import IconBase from '@/components/IconBase.vue'
 import SuperAdminDashboard from '@/components/SuperAdminDashboard.vue'
 import AdminManagement from '@/components/AdminManagement.vue'
 import InquiryManagement from '@/components/InquiryManagement.vue'
+import NoticeManagement from '@/components/NoticeManagement.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -97,7 +99,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-414
 const tabs = [
   { id: 'dashboard', label: '대시보드', iconName: 'chart' },
   { id: 'admins', label: 'Admin 관리', iconName: 'users' },
-  { id: 'inquiries', label: '문의 관리', iconName: 'message' }
+  { id: 'inquiries', label: '문의 관리', iconName: 'message' },
+  { id: 'notices', label: '공지사항', iconName: 'bell' }
 ]
 
 // Fetch invite code
