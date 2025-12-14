@@ -132,14 +132,13 @@ const handleLogin = async () => {
     )
 
     // Navigate based on user_role from backend response
-    // Possible roles: admin, superadmin, company, user
     switch (response.userRole) {
-      case 'admin':
       case 'superadmin':
-        router.push('/admin')
+        router.push('/superadmin')
         break
+      case 'admin':
       case 'company':
-        router.push('/admin') // or specific company dashboard
+        router.push('/admin')
         break
       case 'user':
       default:
