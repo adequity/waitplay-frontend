@@ -132,7 +132,11 @@ const fetchDashboardStats = async () => {
       }
     })
 
-    if (!response.ok) throw new Error('Failed to fetch dashboard stats')
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+      console.error('Dashboard stats error:', response.status, errorData)
+      throw new Error(`Failed to fetch dashboard stats: ${errorData.message || response.statusText}`)
+    }
 
     const data = await response.json()
     topCards.value = data.topCards
@@ -151,7 +155,11 @@ const fetchTopStores = async () => {
       }
     })
 
-    if (!response.ok) throw new Error('Failed to fetch top stores')
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+      console.error('Top stores error:', response.status, errorData)
+      throw new Error(`Failed to fetch top stores: ${errorData.message || response.statusText}`)
+    }
 
     const data = await response.json()
     topStores.value = data
