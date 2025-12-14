@@ -40,48 +40,48 @@
               <!-- Fixed Checkbox -->
               <td class="text-center">
                 <div class="checkbox-wrapper">
-                  <input
-                    type="checkbox"
-                    class="custom-checkbox"
-                    :checked="notice.isFixed"
+                  <input 
+                    type="checkbox" 
+                    class="custom-checkbox" 
+                    :checked="notice.isFixed" 
                     @change="toggleFixed(notice)"
                   >
                 </div>
               </td>
-
+              
               <!-- Category Badge -->
               <td class="text-center">
                 <span class="badge" :class="getCategoryClass(notice.category)">
                   {{ notice.category }}
                 </span>
               </td>
-
+              
               <!-- Title -->
               <td>
                 <span class="text-title">{{ notice.title }}</span>
               </td>
-
+              
               <!-- Writer -->
               <td class="text-gray">본사 관리자</td>
-
+              
               <!-- Date -->
               <td class="text-gray">{{ notice.createdAt }}</td>
-
+              
               <!-- Views -->
               <td class="text-gray text-center">{{ notice.views.toLocaleString() }}</td>
-
+              
               <!-- Popup Status -->
               <td class="text-center">
                 <span class="status-badge" :class="notice.isPopup ? 'active' : 'inactive'">
                   {{ notice.isPopup ? '활성' : '비활성' }}
                 </span>
               </td>
-
+              
               <!-- Popup Period -->
               <td class="text-gray text-small">
                 {{ notice.isPopup ? `${notice.popupStartDate} ~ ${notice.popupEndDate}` : '-' }}
               </td>
-
+              
               <!-- Actions -->
               <td class="text-center">
                 <div class="action-group center">
@@ -102,14 +102,14 @@
           <h2>{{ isEditing ? '공지사항 상세' : '공지사항 작성' }}</h2>
           <button class="btn-close" @click="closeModal">✕</button>
         </div>
-
+        
         <div class="modal-body">
           <div class="form-row">
             <div class="form-group half">
               <label class="form-label">구분</label>
               <div class="category-options">
-                <button
-                  v-for="cat in ['중요', '업데이트', '이벤트', '공지']"
+                <button 
+                  v-for="cat in ['중요', '업데이트', '이벤트', '공지']" 
                   :key="cat"
                   class="category-btn"
                   :class="[getCategoryClass(cat), { active: form.category === cat }]"
@@ -119,7 +119,7 @@
                 </button>
               </div>
             </div>
-
+            
             <div class="form-group half">
                <label class="form-label">상단 고정</label>
                <label class="toggle-label">
@@ -133,21 +133,21 @@
             <label class="form-label">제목</label>
             <input type="text" v-model="form.title" class="form-input" placeholder="제목을 입력하세요">
           </div>
-
+          
           <!-- Popup Settings -->
           <div class="popup-settings-box">
             <div class="form-group mb-0">
               <div class="flex-between">
                 <label class="form-label mb-0">팝업 설정</label>
-                <button
-                  class="btn-toggle-popup"
+                <button 
+                  class="btn-toggle-popup" 
                   :class="{ active: form.isPopup }"
                   @click="form.isPopup = !form.isPopup"
                 >
                   {{ form.isPopup ? '팝업 활성' : '팝업 비활성' }}
                 </button>
               </div>
-
+              
               <div v-if="form.isPopup" class="date-range-picker">
                 <input type="date" v-model="form.popupStartDate" class="form-input date">
                 <span class="tilde">~</span>
@@ -161,7 +161,7 @@
             <textarea v-model="form.content" class="form-textarea" placeholder="공지 내용을 입력하세요"></textarea>
           </div>
         </div>
-
+        
         <div class="modal-footer">
           <button class="btn-secondary" @click="closeModal">취소</button>
           <button class="btn-primary" @click="saveNotice">{{ isEditing ? '수정' : '등록' }}</button>
@@ -173,6 +173,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import IconBase from '@/components/IconBase.vue'
 
 interface Notice {
   id: number
@@ -187,82 +188,71 @@ interface Notice {
   views: number
 }
 
-interface NoticeForm {
-  id: number
-  category: string
-  title: string
-  content: string
-  isFixed: boolean
-  isPopup: boolean
-  popupStartDate: string
-  popupEndDate: string
-}
-
 // Mock Data matching the image
 const notices = ref<Notice[]>([
-  {
-    id: 5,
-    category: '중요',
-    title: '[중요] 2025년 1월 정기 점검 안내',
-    content: '서버 점검 내용...',
-    isFixed: true,
-    isPopup: true,
+  { 
+    id: 5, 
+    category: '중요', 
+    title: '[중요] 2025년 1월 정기 점검 안내', 
+    content: '서버 점검 내용...', 
+    isFixed: true, 
+    isPopup: true, 
     popupStartDate: '2025-12-01',
     popupEndDate: '2025-12-31',
-    createdAt: '2025-12-01',
-    views: 1247
+    createdAt: '2025-12-01', 
+    views: 1247 
   },
-  {
-    id: 4,
-    category: '업데이트',
-    title: '신규 게임 "포춘휠" 출시 안내',
-    content: '신규 게임 출시...',
-    isFixed: true,
-    isPopup: false,
-    createdAt: '2025-11-28',
-    views: 892
+  { 
+    id: 4, 
+    category: '업데이트', 
+    title: '신규 게임 "포춘휠" 출시 안내', 
+    content: '신규 게임 출시...', 
+    isFixed: true, 
+    isPopup: false, 
+    createdAt: '2025-11-28', 
+    views: 892 
   },
-  {
-    id: 3,
-    category: '이벤트',
-    title: '연말 프로모션 이벤트 기획안',
-    content: '이벤트 내용...',
-    isFixed: false,
-    isPopup: true,
+  { 
+    id: 3, 
+    category: '이벤트', 
+    title: '연말 프로모션 이벤트 기획안', 
+    content: '이벤트 내용...', 
+    isFixed: false, 
+    isPopup: true, 
     popupStartDate: '2025-12-15',
     popupEndDate: '2025-12-31',
-    createdAt: '2025-11-25',
-    views: 654
+    createdAt: '2025-11-25', 
+    views: 654 
   },
-  {
-    id: 2,
-    category: '공지',
-    title: '가맹점 교육 일정 안내',
-    content: '교육 일정...',
-    isFixed: false,
-    isPopup: false,
-    createdAt: '2025-11-20',
-    views: 523
+  { 
+    id: 2, 
+    category: '공지', 
+    title: '가맹점 교육 일정 안내', 
+    content: '교육 일정...', 
+    isFixed: false, 
+    isPopup: false, 
+    createdAt: '2025-11-20', 
+    views: 523 
   },
-  {
-    id: 1,
-    category: '업데이트',
-    title: '모바일 앱 v2.3 업데이트 내역',
-    content: '업데이트 내역...',
-    isFixed: false,
-    isPopup: false,
-    createdAt: '2025-11-15',
-    views: 418
+  { 
+    id: 1, 
+    category: '업데이트', 
+    title: '모바일 앱 v2.3 업데이트 내역', 
+    content: '업데이트 내역...', 
+    isFixed: false, 
+    isPopup: false, 
+    createdAt: '2025-11-15', 
+    views: 418 
   },
 ])
 
 const showModal = ref(false)
 const isEditing = ref(false)
-const form = ref<NoticeForm>({
-  id: 0,
+const form = ref<any>({
+  id: 0, 
   category: '공지',
-  title: '',
-  content: '',
+  title: '', 
+  content: '', 
   isFixed: false,
   isPopup: false,
   popupStartDate: '',
@@ -287,14 +277,14 @@ const toggleFixed = (notice: Notice) => {
 // Modal Actions
 const openWriteModal = () => {
   isEditing.value = false
-  const today = new Date().toISOString().split('T')[0]!
-  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]!
-
-  form.value = {
-    id: 0,
+  const today = new Date().toISOString().split('T')[0]
+  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  
+  form.value = { 
+    id: 0, 
     category: '공지',
-    title: '',
-    content: '',
+    title: '', 
+    content: '', 
     isFixed: false,
     isPopup: false,
     popupStartDate: today,
@@ -305,16 +295,7 @@ const openWriteModal = () => {
 
 const editNotice = (notice: Notice) => {
   isEditing.value = true
-  form.value = {
-    id: notice.id,
-    category: notice.category,
-    title: notice.title,
-    content: notice.content,
-    isFixed: notice.isFixed,
-    isPopup: notice.isPopup,
-    popupStartDate: notice.popupStartDate || '',
-    popupEndDate: notice.popupEndDate || ''
-  }
+  form.value = JSON.parse(JSON.stringify(notice))
   showModal.value = true
 }
 
@@ -331,34 +312,15 @@ const saveNotice = () => {
   if (isEditing.value) {
     const index = notices.value.findIndex(n => n.id === form.value.id)
     if (index !== -1) {
-      const existing = notices.value[index]!
-      notices.value[index] = {
-        id: existing.id,
-        category: form.value.category,
-        title: form.value.title,
-        content: form.value.content,
-        isFixed: form.value.isFixed,
-        isPopup: form.value.isPopup,
-        popupStartDate: form.value.popupStartDate || undefined,
-        popupEndDate: form.value.popupEndDate || undefined,
-        createdAt: existing.createdAt,
-        views: existing.views
-      }
+      notices.value[index] = { ...notices.value[index], ...form.value }
     }
   } else {
-    const newNotice: Notice = {
+    notices.value.unshift({
       id: notices.value.length + 1,
-      category: form.value.category,
-      title: form.value.title,
-      content: form.value.content,
-      isFixed: form.value.isFixed,
-      isPopup: form.value.isPopup,
-      popupStartDate: form.value.popupStartDate || undefined,
-      popupEndDate: form.value.popupEndDate || undefined,
-      createdAt: new Date().toISOString().split('T')[0]!,
+      ...form.value,
+      createdAt: new Date().toISOString().split('T')[0],
       views: 0
-    }
-    notices.value.unshift(newNotice)
+    })
   }
   closeModal()
 }
@@ -380,7 +342,7 @@ const deleteNotice = (id: number) => {
   --bg-body: #f5f5f7;
   --border-light: #e5e5ea;
   --border-color: #d2d2d7;
-
+  
   /* Badge Colors from image */
   --red-bg: #fff1f0; --red-text: #e03131;
   --blue-bg: #e7f5ff; --blue-text: #1971c2;
