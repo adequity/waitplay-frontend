@@ -188,7 +188,7 @@ const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
 interface Notice {
-  id: number
+  id: string  // Changed from number to string (Guid)
   category: string // '중요' | '업데이트' | '이벤트' | '공지'
   title: string
   content: string
@@ -205,7 +205,7 @@ const showModal = ref(false)
 const isEditing = ref(false)
 const loading = ref(true)
 const form = ref<any>({
-  id: 0,
+  id: '',
   category: '공지',
   title: '',
   content: '',
@@ -277,7 +277,7 @@ const openWriteModal = () => {
   const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   form.value = {
-    id: 0,
+    id: '',
     category: '공지',
     title: '',
     content: '',
@@ -348,7 +348,7 @@ const saveNotice = async () => {
   }
 }
 
-const deleteNotice = async (id: number) => {
+const deleteNotice = async (id: string) => {
   if (!confirm('삭제하시겠습니까?')) {
     return
   }
