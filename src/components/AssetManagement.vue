@@ -286,8 +286,8 @@ const viewDetail = (asset: Asset) => {
 }
 </script>
 
-<style scoped>
-/* Common Variables */
+<style>
+/* Global CSS Variables */
 :root {
   --primary-blue: #0071e3;
   --primary-dark: #0056b3;
@@ -302,7 +302,9 @@ const viewDetail = (asset: Asset) => {
   --tag-blue-bg: #e7f5ff; --tag-blue-text: #1971c2;
   --tag-purple-bg: #f3f0ff; --tag-purple-text: #7950f2;
 }
+</style>
 
+<style scoped>
 .tab-content { width: 100%; max-width: 1600px; margin: 0 auto; padding-top: 20px; }
 .page-header { margin-bottom: 24px; }
 .page-title { font-size: 28px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; letter-spacing: -0.5px; }
