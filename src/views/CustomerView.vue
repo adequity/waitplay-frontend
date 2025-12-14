@@ -219,7 +219,7 @@ const closeSidebar = () => {
 const handleLogout = () => {
   authStore.logout()
   isSidebarOpen.value = false
-  alert('로그아웃되었습니다.')
+  router.push('/login')
 }
 
 const goToLogin = () => {
