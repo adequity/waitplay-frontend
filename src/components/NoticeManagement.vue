@@ -143,7 +143,7 @@ const closeModal = () => {
   showModal.value = false
 }
 
-const saveNotice = () => {
+const saveNotice = (): void => {
   if (!form.value.title || !form.value.content) {
     alert('제목과 내용을 입력해주세요.')
     return
@@ -152,12 +152,13 @@ const saveNotice = () => {
   if (isEditing.value) {
     const index = notices.value.findIndex(n => n.id === form.value.id)
     if (index !== -1) {
-      notices.value[index] = {
+      const updatedNotice: Notice = {
         ...notices.value[index],
         title: form.value.title,
         content: form.value.content,
         isImportant: form.value.isImportant
       }
+      notices.value[index] = updatedNotice
     }
   } else {
     const newNotice: Notice = {
