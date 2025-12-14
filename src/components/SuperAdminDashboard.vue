@@ -387,9 +387,9 @@ onMounted(async () => {
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 800; color: #86868b;
 }
-.rank-badge.rank-1 { background: #ffdf00; color: #b4690e; }
-.rank-badge.rank-2 { background: #e0e0e0; color: #555; }
-.rank-badge.rank-3 { background: #cd7f32; color: #6d3303; }
+.rank-badge.rank-1 { background: #9333ea; color: #ffffff; }
+.rank-badge.rank-2 { background: #a855f7; color: #ffffff; }
+.rank-badge.rank-3 { background: #c084fc; color: #ffffff; }
 
 .store-header {
   margin-bottom: 12px;
