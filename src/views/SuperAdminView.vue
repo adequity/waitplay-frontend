@@ -73,6 +73,7 @@
         <InquiryManagement v-if="activeTab === 'inquiries'" />
         <NoticeManagement v-if="activeTab === 'notices'" />
         <AssetManagement v-if="activeTab === 'assets'" />
+        <SystemSettings v-if="activeTab === 'settings'" />
       </div>
     </main>
   </div>
@@ -88,6 +89,7 @@ import AdminManagement from '@/components/AdminManagement.vue'
 import InquiryManagement from '@/components/InquiryManagement.vue'
 import NoticeManagement from '@/components/NoticeManagement.vue'
 import AssetManagement from '@/components/AssetManagement.vue'
+import SystemSettings from '@/components/SystemSettings.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -103,7 +105,8 @@ const tabs = [
   { id: 'admins', label: 'Admin 관리', iconName: 'users' },
   { id: 'inquiries', label: '문의 관리', iconName: 'message' },
   { id: 'notices', label: '공지사항', iconName: 'bell' },
-  { id: 'assets', label: '에셋 관리', iconName: 'image' }
+  { id: 'assets', label: '에셋 관리', iconName: 'image' },
+  { id: 'settings', label: '시스템 설정', iconName: 'settings' }
 ]
 
 // Fetch invite code
