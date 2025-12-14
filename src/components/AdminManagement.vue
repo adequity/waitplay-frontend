@@ -264,9 +264,9 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* Common Variables */
-.tab-content {
+<style>
+/* Global CSS Variables */
+:root {
   --primary-purple: #8b5cf6;
   --primary-purple-dark: #7c3aed;
   --text-dark: #1d1d1f;
@@ -276,7 +276,11 @@ onMounted(() => {
   --border-color: #d2d2d7;
   --success-green: #34c759;
   --warning-orange: #ff9f0a;
+}
+</style>
 
+<style scoped>
+.tab-content {
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
