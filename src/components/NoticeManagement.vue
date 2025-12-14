@@ -308,13 +308,14 @@ const saveNotice = async () => {
   try {
     if (isEditing.value) {
       // Update existing notice
-      const response = await fetch(`${API_URL}/api/superadmin/notices/${form.value.id}`, {
+      const { id, ...updateData } = form.value
+      const response = await fetch(`${API_URL}/api/superadmin/notices/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${authStore.accessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(form.value)
+        body: JSON.stringify(updateData)
       })
 
       if (!response.ok) {
@@ -323,14 +324,15 @@ const saveNotice = async () => {
 
       alert('공지사항이 수정되었습니다.')
     } else {
-      // Create new notice
+      // Create new notice - exclude id field
+      const { id, ...createData } = form.value
       const response = await fetch(`${API_URL}/api/superadmin/notices`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authStore.accessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(form.value)
+        body: JSON.stringify(createData)
       })
 
       if (!response.ok) {
