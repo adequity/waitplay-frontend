@@ -215,8 +215,8 @@ const saveSettings = () => {
 }
 </script>
 
-<style scoped>
-/* Common Variables */
+<style>
+/* Global CSS Variables */
 :root {
   --primary-blue: #0071e3;
   --primary-dark: #0056b3;
@@ -230,7 +230,9 @@ const saveSettings = () => {
   --toggle-on: #34c759;
   --toggle-off: #e5e5ea;
 }
+</style>
 
+<style scoped>
 .tab-content { width: 100%; max-width: 1000px; margin: 0 auto; padding-top: 20px; }
 
 /* Page Header */
