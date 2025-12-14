@@ -382,14 +382,11 @@ onMounted(async () => {
   left: 20px;
   width: 24px;
   height: 24px;
-  background: #f5f5f7;
+  background: #9333ea;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800; color: #86868b;
+  font-size: 12px; font-weight: 800; color: #ffffff;
 }
-.rank-badge.rank-1 { background: #9333ea; color: #ffffff; }
-.rank-badge.rank-2 { background: #a855f7; color: #ffffff; }
-.rank-badge.rank-3 { background: #c084fc; color: #ffffff; }
 
 .store-header {
   margin-bottom: 12px;
