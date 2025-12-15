@@ -101,7 +101,7 @@
 
         <!-- Footer Links -->
         <div class="login-footer-apple">
-          <a href="#" class="footer-link-apple">비밀번호 찾기</a>
+          <router-link to="/forgot-password" class="footer-link-apple">비밀번호 찾기</router-link>
           <span class="footer-divider-apple">·</span>
           <router-link to="/signup" class="footer-link-apple">회원가입</router-link>
         </div>
