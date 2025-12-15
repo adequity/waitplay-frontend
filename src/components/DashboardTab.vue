@@ -26,22 +26,22 @@
 
     <!-- 1. KPI Cards -->
     <div class="kpi-grid">
-      <div class="kpi-card">
+      <div class="kpi-card" :class="{ loading: isLoading }">
         <div class="kpi-value">{{ animatedStats.qrScan }}</div>
         <div class="kpi-label">QR 활용자</div>
         <div class="kpi-badge blue">{{ getPeriodLabel(currentPeriod) }}</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card" :class="{ loading: isLoading }">
         <div class="kpi-value">{{ animatedStats.couponUsed }}</div>
         <div class="kpi-label">쿠폰 사용</div>
         <div class="kpi-badge blue">{{ getPeriodLabel(currentPeriod) }}</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card" :class="{ loading: isLoading }">
         <div class="kpi-value">{{ animatedStats.newRegular }}</div>
         <div class="kpi-label">신규 단골</div>
         <div class="kpi-badge blue">{{ getPeriodLabel(currentPeriod) }}</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card" :class="{ loading: isLoading }">
         <div class="kpi-value">{{ animatedStats.totalRegular }}</div>
         <div class="kpi-label">총 단골 수</div>
         <div class="kpi-badge gray">누적</div>
@@ -145,82 +145,93 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive, watch } from 'vue'
-
-// --- Data Types ---
-type Period = 'today' | 'week' | 'month'
-
-interface ChartPoint {
-  label: string
-  qrScan: number
-  couponUsed: number
-  newRegular: number
-}
+import { getDashboardStats, getChartData, type ChartPoint, type Period, type DashboardStats } from '@/services/dashboardService'
 
 // --- State ---
 const currentPeriod = ref<Period>('today')
+const isLoading = ref(false)
+
+// API에서 받아온 차트 데이터
+const apiChartData = ref<ChartPoint[]>([])
+
+// API에서 받아온 통계 데이터
+const apiStats = ref<DashboardStats>({
+  qrScan: 0,
+  couponUsed: 0,
+  newRegular: 0,
+  totalRegular: 0
+})
 
 // Animated Display Stats
 const animatedStats = reactive({
   qrScan: 0,
   couponUsed: 0,
   newRegular: 0,
-  totalRegular: 248 // This typically doesn't reset by period
+  totalRegular: 0
 })
 
-// --- Mock Data ---
-const mockData: Record<Period, ChartPoint[]> = {
-  today: [
-    { label: '0시', qrScan: 5, couponUsed: 2, newRegular: 0 },
-    { label: '6시', qrScan: 12, couponUsed: 8, newRegular: 1 },
-    { label: '12시', qrScan: 45, couponUsed: 30, newRegular: 5 },
-    { label: '18시', qrScan: 85, couponUsed: 60, newRegular: 8 },
-    { label: '21시', qrScan: 110, couponUsed: 75, newRegular: 10 },
-    { label: '현재', qrScan: 127, couponUsed: 85, newRegular: 12 },
-  ],
-  week: [
-    { label: '월', qrScan: 150, couponUsed: 100, newRegular: 15 },
-    { label: '화', qrScan: 180, couponUsed: 120, newRegular: 20 },
-    { label: '수', qrScan: 160, couponUsed: 110, newRegular: 18 },
-    { label: '목', qrScan: 190, couponUsed: 130, newRegular: 22 },
-    { label: '금', qrScan: 250, couponUsed: 180, newRegular: 30 },
-    { label: '토', qrScan: 300, couponUsed: 220, newRegular: 45 },
-    { label: '일', qrScan: 280, couponUsed: 200, newRegular: 40 },
-  ],
-  month: [
-    { label: '1주', qrScan: 800, couponUsed: 500, newRegular: 80 },
-    { label: '2주', qrScan: 950, couponUsed: 600, newRegular: 100 },
-    { label: '3주', qrScan: 1100, couponUsed: 750, newRegular: 120 },
-    { label: '4주', qrScan: 1050, couponUsed: 700, newRegular: 110 },
-  ]
+// --- API 호출 ---
+const fetchDashboardData = async () => {
+  isLoading.value = true
+  try {
+    // 통계와 차트 데이터 병렬 조회
+    const [stats, chart] = await Promise.all([
+      getDashboardStats(currentPeriod.value),
+      getChartData(currentPeriod.value)
+    ])
+
+    apiStats.value = stats
+    apiChartData.value = chart.length > 0 ? chart : getDefaultChartData(currentPeriod.value)
+  } catch (error) {
+    console.error('대시보드 데이터 조회 실패:', error)
+    // 에러 시 기본 데이터 사용
+    apiChartData.value = getDefaultChartData(currentPeriod.value)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 데이터가 없을 때 기본 차트 데이터
+const getDefaultChartData = (period: Period): ChartPoint[] => {
+  if (period === 'today') {
+    return [
+      { label: '0시', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '6시', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '12시', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '18시', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '21시', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '현재', qrScan: 0, couponUsed: 0, newRegular: 0 }
+    ]
+  } else if (period === 'week') {
+    return [
+      { label: '월', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '화', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '수', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '목', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '금', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '토', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '일', qrScan: 0, couponUsed: 0, newRegular: 0 }
+    ]
+  } else {
+    return [
+      { label: '1주', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '2주', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '3주', qrScan: 0, couponUsed: 0, newRegular: 0 },
+      { label: '4주', qrScan: 0, couponUsed: 0, newRegular: 0 }
+    ]
+  }
 }
 
 // --- Computeds ---
-const chartData = computed(() => mockData[currentPeriod.value])
+const chartData = computed(() => apiChartData.value)
 
-// Calculate totals based on current chart data
-const currentTotals = computed(() => {
-  if (currentPeriod.value === 'today') {
-    // For today, take the last value (cumulative)
-    const last = chartData.value[chartData.value.length - 1]
-    if (!last) {
-      return { qrScan: 0, couponUsed: 0, newRegular: 0, totalRegular: 248 }
-    }
-    return {
-      qrScan: last.qrScan,
-      couponUsed: last.couponUsed,
-      newRegular: last.newRegular,
-      totalRegular: 248
-    }
-  } else {
-    // For week/month, sum up values
-    return chartData.value.reduce((acc, curr) => ({
-      qrScan: acc.qrScan + curr.qrScan,
-      couponUsed: acc.couponUsed + curr.couponUsed,
-      newRegular: acc.newRegular + curr.newRegular,
-      totalRegular: 248
-    }), { qrScan: 0, couponUsed: 0, newRegular: 0, totalRegular: 248 })
-  }
-})
+// API에서 받은 통계 데이터 사용
+const currentTotals = computed(() => ({
+  qrScan: apiStats.value.qrScan,
+  couponUsed: apiStats.value.couponUsed,
+  newRegular: apiStats.value.newRegular,
+  totalRegular: apiStats.value.totalRegular
+}))
 
 // Calculate max value for Y-axis scaling
 const maxY = computed(() => {
@@ -283,14 +294,16 @@ const animateNumbers = () => {
   requestAnimationFrame(step)
 }
 
-const setPeriod = (period: string) => {
+const setPeriod = async (period: string) => {
   currentPeriod.value = period as Period
+  await fetchDashboardData()
 }
 
 // Watch for data changes to trigger animation
 watch(currentTotals, animateNumbers)
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchDashboardData()
   animateNumbers()
 })
 </script>
@@ -409,6 +422,20 @@ onMounted(() => {
 .kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.kpi-card.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.kpi-card.loading .kpi-value {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .kpi-value {
