@@ -76,6 +76,29 @@
           <span v-else>로그인 중...</span>
         </button>
 
+        <!-- SNS Login Divider -->
+        <div class="sns-divider-apple">
+          <span class="divider-line"></span>
+          <span class="divider-text">또는</span>
+          <span class="divider-line"></span>
+        </div>
+
+        <!-- SNS Login Buttons -->
+        <div class="sns-login-section">
+          <button type="button" class="sns-btn kakao-btn" @click="handleKakaoLogin" :disabled="isLoading">
+            <svg class="sns-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.89 5.33 4.71 6.73-.19.7-.69 2.53-.79 2.92-.13.48.17.47.36.34.15-.1 2.37-1.61 3.33-2.27.77.11 1.57.17 2.39.17 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+            </svg>
+            <span>카카오로 로그인</span>
+          </button>
+          <button type="button" class="sns-btn naver-btn" @click="handleNaverLogin" :disabled="isLoading">
+            <svg class="sns-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727z" transform="scale(0.75) translate(4, 4)"/>
+            </svg>
+            <span>네이버로 로그인</span>
+          </button>
+        </div>
+
         <!-- Footer Links -->
         <div class="login-footer-apple">
           <a href="#" class="footer-link-apple">비밀번호 찾기</a>
@@ -112,6 +135,16 @@ onMounted(() => {
     rememberUsername.value = true
   }
 })
+
+const handleKakaoLogin = () => {
+  // TODO: 카카오 OAuth 연동 (정식 서비스 승인 후 구현)
+  alert('카카오 로그인은 정식 서비스 승인 후 이용 가능합니다.')
+}
+
+const handleNaverLogin = () => {
+  // TODO: 네이버 OAuth 연동 (정식 서비스 승인 후 구현)
+  alert('네이버 로그인은 정식 서비스 승인 후 이용 가능합니다.')
+}
 
 const handleLogin = async () => {
   loginError.value = ''
@@ -375,6 +408,91 @@ const handleLogin = async () => {
 .footer-divider-apple {
   font-size: 14px;
   color: #d1d1d6;
+}
+
+/* SNS Login Section */
+.sns-divider-apple {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 8px 0;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: #d1d1d6;
+}
+
+.divider-text {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 13px;
+  color: #8e8e93;
+  font-weight: 500;
+}
+
+.sns-login-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sns-btn {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.sns-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sns-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Kakao Button */
+.kakao-btn {
+  background: #FEE500;
+  color: #000000;
+}
+
+.kakao-btn:hover:not(:disabled) {
+  background: #F5DC00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(254, 229, 0, 0.4);
+}
+
+.kakao-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Naver Button */
+.naver-btn {
+  background: #03C75A;
+  color: #ffffff;
+}
+
+.naver-btn:hover:not(:disabled) {
+  background: #02B350;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(3, 199, 90, 0.4);
+}
+
+.naver-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 /* Responsive Design */
