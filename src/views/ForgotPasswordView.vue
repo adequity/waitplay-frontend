@@ -167,7 +167,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const API_URL = import.meta.env.VITE_API_URL || 'https://brandflow-backend-production-99ae.up.railway.app'
+const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
 const step = ref(1)
 const email = ref('')
