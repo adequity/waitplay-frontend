@@ -9,7 +9,7 @@
     <!-- 1. Customer Segments (KPI Cards) -->
     <div class="segments-grid">
       <!-- VIP -->
-      <div class="segment-card">
+      <div class="segment-card" :class="{ loading: isLoading }">
         <div class="segment-header">
           <div class="icon-circle yellow">
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z"/></svg>
@@ -19,15 +19,15 @@
             <div class="segment-subtitle">방문 20회 이상</div>
           </div>
         </div>
-        <div class="segment-count">12<span class="unit">명</span></div>
+        <div class="segment-count">{{ segments.vip.count }}<span class="unit">명</span></div>
         <div class="segment-footer">
-          <div class="stat-row"><span>평균 방문</span><strong>27회</strong></div>
-          <div class="stat-row"><span>쿠폰 보유</span><strong>평균 8장</strong></div>
+          <div class="stat-row"><span>평균 방문</span><strong>{{ segments.vip.avgVisits }}회</strong></div>
+          <div class="stat-row"><span>쿠폰 보유</span><strong>평균 {{ segments.vip.avgCoupons }}장</strong></div>
         </div>
       </div>
 
       <!-- Regular -->
-      <div class="segment-card">
+      <div class="segment-card" :class="{ loading: isLoading }">
         <div class="segment-header">
           <div class="icon-circle blue">
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
@@ -37,15 +37,15 @@
             <div class="segment-subtitle">방문 10-19회</div>
           </div>
         </div>
-        <div class="segment-count">28<span class="unit">명</span></div>
+        <div class="segment-count">{{ segments.regular.count }}<span class="unit">명</span></div>
         <div class="segment-footer">
-          <div class="stat-row"><span>평균 방문</span><strong>14회</strong></div>
-          <div class="stat-row"><span>쿠폰 보유</span><strong>평균 5장</strong></div>
+          <div class="stat-row"><span>평균 방문</span><strong>{{ segments.regular.avgVisits }}회</strong></div>
+          <div class="stat-row"><span>쿠폰 보유</span><strong>평균 {{ segments.regular.avgCoupons }}장</strong></div>
         </div>
       </div>
 
       <!-- Active -->
-      <div class="segment-card">
+      <div class="segment-card" :class="{ loading: isLoading }">
         <div class="segment-header">
           <div class="icon-circle purple">
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -55,15 +55,15 @@
             <div class="segment-subtitle">방문 4-9회</div>
           </div>
         </div>
-        <div class="segment-count">56<span class="unit">명</span></div>
+        <div class="segment-count">{{ segments.active.count }}<span class="unit">명</span></div>
         <div class="segment-footer">
-          <div class="stat-row"><span>평균 방문</span><strong>6회</strong></div>
-          <div class="stat-row"><span>쿠폰 보유</span><strong>3장</strong></div>
+          <div class="stat-row"><span>평균 방문</span><strong>{{ segments.active.avgVisits }}회</strong></div>
+          <div class="stat-row"><span>쿠폰 보유</span><strong>평균 {{ segments.active.avgCoupons }}장</strong></div>
         </div>
       </div>
 
       <!-- New -->
-      <div class="segment-card">
+      <div class="segment-card" :class="{ loading: isLoading }">
         <div class="segment-header">
           <div class="icon-circle green">
             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
@@ -73,10 +73,10 @@
             <div class="segment-subtitle">방문 1-3회</div>
           </div>
         </div>
-        <div class="segment-count">45<span class="unit">명</span></div>
+        <div class="segment-count">{{ segments.new.count }}<span class="unit">명</span></div>
         <div class="segment-footer">
-          <div class="stat-row"><span>평균 방문</span><strong>2회</strong></div>
-          <div class="stat-row"><span>쿠폰 보유</span><strong>평균 2장</strong></div>
+          <div class="stat-row"><span>평균 방문</span><strong>{{ segments.new.avgVisits }}회</strong></div>
+          <div class="stat-row"><span>쿠폰 보유</span><strong>평균 {{ segments.new.avgCoupons }}장</strong></div>
         </div>
       </div>
     </div>
@@ -116,10 +116,11 @@
         <label class="form-label">대상 고객 세그먼트</label>
         <div class="select-wrapper">
           <select v-model="form.segment" class="form-select">
-            <option value="all">전체 고객 (141명)</option>
-            <option value="vip">VIP 고객 (12명)</option>
-            <option value="regular">단골 고객 (28명)</option>
-            <option value="new">신규 고객 (45명)</option>
+            <option value="all">전체 고객 ({{ segments.total }}명)</option>
+            <option value="vip">VIP 고객 ({{ segments.vip.count }}명)</option>
+            <option value="regular">단골 고객 ({{ segments.regular.count }}명)</option>
+            <option value="active">활동 고객 ({{ segments.active.count }}명)</option>
+            <option value="new">신규 고객 ({{ segments.new.count }}명)</option>
           </select>
           <svg class="select-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
         </div>
@@ -206,7 +207,7 @@
     <div class="estimate-grid">
       <div class="estimate-card">
         <span class="est-label">예상 발송 건수</span>
-        <span class="est-value blue">141건</span>
+        <span class="est-value blue">{{ selectedSegmentCount }}건</span>
       </div>
       <div class="estimate-card">
         <span class="est-label">예상 비용</span>
@@ -286,7 +287,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { getCustomerSegments, type CustomerSegments, type SegmentData } from '@/services/customersService'
 
 // --- Types ---
 interface Template {
@@ -296,6 +298,15 @@ interface Template {
 }
 
 // --- State ---
+const isLoading = ref(false)
+const segments = ref<CustomerSegments>({
+  vip: { count: 0, avgVisits: 0, avgCoupons: 0 },
+  regular: { count: 0, avgVisits: 0, avgCoupons: 0 },
+  active: { count: 0, avgVisits: 0, avgCoupons: 0 },
+  new: { count: 0, avgVisits: 0, avgCoupons: 0 },
+  total: 0
+})
+
 const form = ref({
   method: 'sms', // 'sms' | 'kakao'
   segment: 'all',
@@ -316,6 +327,29 @@ const templates = ref<Template[]>([
   { id: 't3', title: '신메뉴 출시', content: '새로운 디저트 메뉴가 출시되었습니다. 이번 주말, 달콤한 휴식 어떠세요?' }
 ])
 
+// --- API 호출 ---
+const fetchCustomerSegments = async () => {
+  isLoading.value = true
+  try {
+    segments.value = await getCustomerSegments()
+  } catch (error) {
+    console.error('고객 세그먼트 조회 실패:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 선택된 세그먼트의 고객 수
+const selectedSegmentCount = computed(() => {
+  switch (form.value.segment) {
+    case 'vip': return segments.value.vip.count
+    case 'regular': return segments.value.regular.count
+    case 'active': return segments.value.active.count
+    case 'new': return segments.value.new.count
+    default: return segments.value.total
+  }
+})
+
 // Modal States
 const isTemplateModalOpen = ref(false)
 const isPreviewModalOpen = ref(false)
@@ -330,9 +364,8 @@ const newTemplate = ref({
 const charCount = computed(() => form.value.message.length)
 
 const estimatedCost = computed(() => {
-  // Mock calculation: 141 users * cost per msg
   const costPerMsg = form.value.method === 'sms' ? 15 : 12
-  return 141 * costPerMsg
+  return selectedSegmentCount.value * costPerMsg
 })
 
 // --- Methods ---
@@ -407,6 +440,11 @@ function openPreviewModal() {
 function closePreviewModal() {
   isPreviewModalOpen.value = false
 }
+
+// --- Lifecycle ---
+onMounted(() => {
+  fetchCustomerSegments()
+})
 </script>
 
 <style scoped>
@@ -454,6 +492,9 @@ function closePreviewModal() {
   cursor: default;
 }
 .segment-card:hover { transform: translateY(-3px); }
+.segment-card.loading { opacity: 0.6; }
+.segment-card.loading .segment-count { animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 .segment-header {
   display: flex;
