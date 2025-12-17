@@ -1,8 +1,8 @@
 <template>
   <div class="affiliation-request">
     <div class="header">
-      <h2>SuperAdmin 소속 요청</h2>
-      <p class="subtitle">SuperAdmin의 초대 코드를 입력하여 소속을 요청하세요</p>
+      <h2>본사 소속 요청</h2>
+      <p class="subtitle">본사의 초대 코드를 입력하여 소속을 요청하세요</p>
     </div>
 
     <!-- Current Status -->
@@ -130,7 +130,7 @@ const submitRequest = async () => {
     // Refresh status
     await fetchAffiliationStatus()
   } catch (error: any) {
-    message.value = error.message || '소속 요청 중 오류가 발생했습니다.'
+    message.value = error.message || '본사 소속 요청 중 오류가 발생했습니다.'
     messageType.value = 'error'
   } finally {
     isSubmitting.value = false
