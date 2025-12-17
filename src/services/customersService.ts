@@ -2,7 +2,7 @@ import apiClient from './api'
 
 export interface SegmentData {
   count: number
-  avgVisits: number
+  avgUsage: number
   avgCoupons: number
 }
 
@@ -10,6 +10,7 @@ export interface CustomerSegments {
   vip: SegmentData
   regular: SegmentData
   active: SegmentData
+  normal: SegmentData
   new: SegmentData
   total: number
 }
@@ -18,10 +19,10 @@ export interface CustomerListItem {
   id: string
   nickname: string
   phone: string
-  visitCount: number
+  usageCount: number
   couponCount: number
   segment: string
-  lastVisit: string | null
+  lastUsage: string | null
   createdAt: string
 }
 

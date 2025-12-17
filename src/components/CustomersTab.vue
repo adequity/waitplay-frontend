@@ -6,6 +6,21 @@
       <p class="page-desc">고객 세그먼트별 현황과 참여도를 확인하세요.</p>
     </div>
 
+    <!-- Segment Guide -->
+    <div class="segment-guide">
+      <div class="guide-header">
+        <svg class="guide-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        <span class="guide-title">세그먼트 분류 기준</span>
+      </div>
+      <div class="guide-content">
+        <div class="guide-item"><span class="guide-badge yellow">VIP</span> 쿠폰 사용 상위 5%</div>
+        <div class="guide-item"><span class="guide-badge blue">단골</span> 상위 5~15% (다음 10%)</div>
+        <div class="guide-item"><span class="guide-badge purple">활동</span> 상위 15~55% (다음 40%)</div>
+        <div class="guide-item"><span class="guide-badge gray">일반</span> 나머지 45%</div>
+        <div class="guide-item"><span class="guide-badge green">신규</span> 최근 1달 내 첫 쿠폰 사용</div>
+      </div>
+    </div>
+
     <!-- 1. Customer Segments (KPI Cards) -->
     <div class="segments-grid">
       <!-- VIP -->
@@ -16,12 +31,12 @@
           </div>
           <div>
             <div class="segment-title">VIP 고객</div>
-            <div class="segment-subtitle">방문 20회 이상</div>
+            <div class="segment-subtitle">상위 5%</div>
           </div>
         </div>
         <div class="segment-count">{{ segments.vip.count }}<span class="unit">명</span></div>
         <div class="segment-footer">
-          <div class="stat-row"><span>평균 방문</span><strong>{{ segments.vip.avgVisits }}회</strong></div>
+          <div class="stat-row"><span>평균 사용</span><strong>{{ segments.vip.avgUsage }}회</strong></div>
           <div class="stat-row"><span>쿠폰 보유</span><strong>평균 {{ segments.vip.avgCoupons }}장</strong></div>
         </div>
       </div>
@@ -34,12 +49,12 @@
           </div>
           <div>
             <div class="segment-title">단골 고객</div>
-            <div class="segment-subtitle">방문 10-19회</div>
+            <div class="segment-subtitle">상위 5~15%</div>
           </div>
         </div>
         <div class="segment-count">{{ segments.regular.count }}<span class="unit">명</span></div>
         <div class="segment-footer">
-          <div class="stat-row"><span>평균 방문</span><strong>{{ segments.regular.avgVisits }}회</strong></div>
+          <div class="stat-row"><span>평균 사용</span><strong>{{ segments.regular.avgUsage }}회</strong></div>
           <div class="stat-row"><span>쿠폰 보유</span><strong>평균 {{ segments.regular.avgCoupons }}장</strong></div>
         </div>
       </div>
@@ -52,13 +67,31 @@
           </div>
           <div>
             <div class="segment-title">활동 고객</div>
-            <div class="segment-subtitle">방문 4-9회</div>
+            <div class="segment-subtitle">상위 15~55%</div>
           </div>
         </div>
         <div class="segment-count">{{ segments.active.count }}<span class="unit">명</span></div>
         <div class="segment-footer">
-          <div class="stat-row"><span>평균 방문</span><strong>{{ segments.active.avgVisits }}회</strong></div>
+          <div class="stat-row"><span>평균 사용</span><strong>{{ segments.active.avgUsage }}회</strong></div>
           <div class="stat-row"><span>쿠폰 보유</span><strong>평균 {{ segments.active.avgCoupons }}장</strong></div>
+        </div>
+      </div>
+
+      <!-- Normal -->
+      <div class="segment-card" :class="{ loading: isLoading }">
+        <div class="segment-header">
+          <div class="icon-circle gray">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </div>
+          <div>
+            <div class="segment-title">일반 고객</div>
+            <div class="segment-subtitle">나머지 45%</div>
+          </div>
+        </div>
+        <div class="segment-count">{{ segments.normal.count }}<span class="unit">명</span></div>
+        <div class="segment-footer">
+          <div class="stat-row"><span>평균 사용</span><strong>{{ segments.normal.avgUsage }}회</strong></div>
+          <div class="stat-row"><span>쿠폰 보유</span><strong>평균 {{ segments.normal.avgCoupons }}장</strong></div>
         </div>
       </div>
 
@@ -66,16 +99,16 @@
       <div class="segment-card" :class="{ loading: isLoading }">
         <div class="segment-header">
           <div class="icon-circle green">
-            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
           </div>
           <div>
             <div class="segment-title">신규 고객</div>
-            <div class="segment-subtitle">방문 1-3회</div>
+            <div class="segment-subtitle">최근 1달 내</div>
           </div>
         </div>
         <div class="segment-count">{{ segments.new.count }}<span class="unit">명</span></div>
         <div class="segment-footer">
-          <div class="stat-row"><span>평균 방문</span><strong>{{ segments.new.avgVisits }}회</strong></div>
+          <div class="stat-row"><span>평균 사용</span><strong>{{ segments.new.avgUsage }}회</strong></div>
           <div class="stat-row"><span>쿠폰 보유</span><strong>평균 {{ segments.new.avgCoupons }}장</strong></div>
         </div>
       </div>
@@ -120,6 +153,7 @@
             <option value="vip">VIP 고객 ({{ segments.vip.count }}명)</option>
             <option value="regular">단골 고객 ({{ segments.regular.count }}명)</option>
             <option value="active">활동 고객 ({{ segments.active.count }}명)</option>
+            <option value="normal">일반 고객 ({{ segments.normal.count }}명)</option>
             <option value="new">신규 고객 ({{ segments.new.count }}명)</option>
           </select>
           <svg class="select-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
@@ -300,10 +334,11 @@ interface Template {
 // --- State ---
 const isLoading = ref(false)
 const segments = ref<CustomerSegments>({
-  vip: { count: 0, avgVisits: 0, avgCoupons: 0 },
-  regular: { count: 0, avgVisits: 0, avgCoupons: 0 },
-  active: { count: 0, avgVisits: 0, avgCoupons: 0 },
-  new: { count: 0, avgVisits: 0, avgCoupons: 0 },
+  vip: { count: 0, avgUsage: 0, avgCoupons: 0 },
+  regular: { count: 0, avgUsage: 0, avgCoupons: 0 },
+  active: { count: 0, avgUsage: 0, avgCoupons: 0 },
+  normal: { count: 0, avgUsage: 0, avgCoupons: 0 },
+  new: { count: 0, avgUsage: 0, avgCoupons: 0 },
   total: 0
 })
 
@@ -345,6 +380,7 @@ const selectedSegmentCount = computed(() => {
     case 'vip': return segments.value.vip.count
     case 'regular': return segments.value.regular.count
     case 'active': return segments.value.active.count
+    case 'normal': return segments.value.normal.count
     case 'new': return segments.value.new.count
     default: return segments.value.total
   }
@@ -474,11 +510,60 @@ onMounted(() => {
 .page-title { font-size: 32px; font-weight: 800; margin-bottom: 10px; color: #1d1d1f; letter-spacing: -0.5px; }
 .page-desc { color: #86868b; font-size: 16px; }
 
+/* Segment Guide */
+.segment-guide {
+  background: white;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(0, 113, 227, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 113, 227, 0.06);
+}
+.guide-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.guide-icon {
+  width: 20px;
+  height: 20px;
+  fill: #0071e3;
+}
+.guide-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+.guide-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.guide-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #515154;
+}
+.guide-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.guide-badge.yellow { background: #fff9e6; color: #d97706; }
+.guide-badge.blue { background: #e8f2ff; color: #0071e3; }
+.guide-badge.purple { background: #f3f0ff; color: #845ef7; }
+.guide-badge.gray { background: #f0f0f2; color: #6e6e73; }
+.guide-badge.green { background: #e8fff0; color: #22c55e; }
+
 /* 1. Segments Grid */
 .segments-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
   margin-bottom: 40px;
 }
 
@@ -511,6 +596,7 @@ onMounted(() => {
 .icon-circle.yellow { background: #fff9e6; color: #ffab00; }
 .icon-circle.blue { background: #e8f2ff; color: #0071e3; }
 .icon-circle.purple { background: #f3f0ff; color: #845ef7; }
+.icon-circle.gray { background: #f0f0f2; color: #6e6e73; }
 .icon-circle.green { background: #e6fcf5; color: #0ca678; }
 
 .icon-svg { width: 24px; height: 24px; fill: currentColor; }
@@ -773,6 +859,12 @@ onMounted(() => {
   .estimate-card { flex-direction: row; justify-content: space-between; padding: 20px 30px; }
   .est-label { margin-bottom: 0; }
 }
+@media (max-width: 1200px) {
+  .segments-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .segments-grid { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 768px) {
   .tab-content { padding: 30px 20px; }
   .segments-grid { grid-template-columns: 1fr; }
@@ -780,5 +872,6 @@ onMounted(() => {
   .filter-box { grid-template-columns: 1fr; }
   .action-row { flex-direction: column-reverse; }
   .btn-preview, .btn-send { width: 100%; justify-content: center; }
+  .guide-content { flex-direction: column; gap: 8px; }
 }
 </style>
