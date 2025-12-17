@@ -237,7 +237,8 @@ const currentTotals = computed(() => ({
 const maxY = computed(() => {
   const allValues = chartData.value.flatMap(p => [p.qrScan, p.couponUsed, p.newRegular])
   const max = Math.max(...allValues)
-  return Math.ceil(max * 1.1) // Add 10% padding
+  // 최소값 10 보장 (0으로 나누기 방지)
+  return Math.max(Math.ceil(max * 1.1), 10)
 })
 
 // --- Helper Functions for SVG ---
