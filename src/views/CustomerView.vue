@@ -317,14 +317,17 @@ onMounted(async () => {
   let storeName = '테라스 레스토랑'
   let welcomeMessage = '📶 테라스_Guest / terrace1234\n🕐 매일 10:00 - 22:00\n📞 02-1234-5678'
 
-  try {
+  // QR 코드 데이터를 저장해서 재사용 (중복 호출 방지)
+  let qrData: { id: string } | null = null
 
+  try {
     // If QR code is provided, call QR code API to log scan
     if (qrCode) {
       try {
         // Call QR code API to increment scan count and log analytics
         const qrResponse = await fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCode)}`)
         if (qrResponse.ok) {
+          qrData = await qrResponse.json()
           console.log('QR scan logged successfully')
         }
       } catch (err) {
@@ -350,16 +353,9 @@ onMounted(async () => {
   }
 
   // Load layout from API if QR code is provided
-  if (qrCode) {
+  if (qrCode && qrData) {
     try {
-    // Extract QR code ID from the QR code
-    const qrResponse = await fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCode)}`)
-    if (!qrResponse.ok) {
-      console.error('Failed to fetch QR code data')
-      return
-    }
-
-    const qrData = await qrResponse.json()
+    // 이미 위에서 가져온 qrData 재사용 (중복 API 호출 방지)
     const fetchedQrCodeId = qrData.id
 
     // Store QR code (Code 문자열) for guestbook
