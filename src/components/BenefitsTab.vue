@@ -52,18 +52,18 @@
 
         <!-- Summary Medals (Read Only, Always Visible) -->
         <div class="summary-medals">
-          <div class="medal-box">
-            <IconBase name="medal" class="medal-icon medal-bronze" />
+          <div class="medal-box medal-box-bronze">
+            <IconBase name="medal-bronze" class="medal-icon medal-bronze" />
             <span class="medal-name">{{ getStepName(game, 0) || '미설정' }}</span>
             <span class="medal-score">{{ getStepRange(game, 0) }}</span>
           </div>
-          <div class="medal-box">
-            <IconBase name="medal" class="medal-icon medal-silver" />
+          <div class="medal-box medal-box-silver">
+            <IconBase name="medal-silver" class="medal-icon medal-silver" />
             <span class="medal-name">{{ getStepName(game, 1) || '미설정' }}</span>
             <span class="medal-score">{{ getStepRange(game, 1) }}</span>
           </div>
-          <div class="medal-box">
-            <IconBase name="medal" class="medal-icon medal-gold" />
+          <div class="medal-box medal-box-gold">
+            <IconBase name="medal-gold" class="medal-icon medal-gold" />
             <span class="medal-name">{{ getStepName(game, 2) || '미설정' }}</span>
             <span class="medal-score">{{ getStepRange(game, 2) }}</span>
           </div>
@@ -87,8 +87,8 @@
                 
                 <div class="input-row">
                   <!-- Medal Name Input -->
-                  <div class="input-group-medal">
-                    <IconBase name="medal" :class="getMedalClass(index)" />
+                  <div class="input-group-medal" :class="getMedalBoxClass(index)">
+                    <IconBase :name="getMedalIconName(index)" :class="getMedalClass(index)" />
                     <input type="text" v-model="step.name" placeholder="등급 이름 (예: 동메달)">
                   </div>
                   <!-- Score Range Input -->
@@ -259,6 +259,20 @@ function getMedalClass(index: number): string {
   return 'medal-default'
 }
 
+function getMedalIconName(index: number): string {
+  if (index === 0) return 'medal-bronze'
+  if (index === 1) return 'medal-silver'
+  if (index === 2) return 'medal-gold'
+  return 'medal'
+}
+
+function getMedalBoxClass(index: number): string {
+  if (index === 0) return 'input-medal-bronze'
+  if (index === 1) return 'input-medal-silver'
+  if (index === 2) return 'input-medal-gold'
+  return ''
+}
+
 // Helpers for Read-only Summary
 function getStepName(game: GameBenefit, index: number) {
   return game.steps[index]?.name
@@ -367,19 +381,46 @@ onMounted(() => {
 }
 .btn-collapse:hover { background: #e5e5ea; color: #1d1d1f; }
 
-/* Summary Medals */
+/* Summary Medals - 3D 리본 스타일 */
 .summary-medals { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
 .medal-box {
-  background: #f5f5f7; padding: 16px 8px; border-radius: 12px; flex: 1;
+  padding: 16px 8px; border-radius: 14px; flex: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
 }
-.medal-icon { font-size: 24px; width: 24px; height: 24px; margin-bottom: 8px; }
-.medal-bronze { color: #bf8970; }
-.medal-silver { color: #98989d; }
-.medal-gold { color: #ffcc00; }
+.medal-box:hover { transform: translateY(-2px); }
+
+/* 동메달 박스 스타일 */
+.medal-box-bronze {
+  background: linear-gradient(145deg, #fdf4f0 0%, #f5e6df 100%);
+  border-color: #e8cfc4;
+}
+.medal-box-bronze:hover { box-shadow: 0 6px 20px rgba(205, 127, 50, 0.2); }
+
+/* 은메달 박스 스타일 */
+.medal-box-silver {
+  background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+  border-color: #dee2e6;
+}
+.medal-box-silver:hover { box-shadow: 0 6px 20px rgba(192, 192, 192, 0.25); }
+
+/* 금메달 박스 스타일 */
+.medal-box-gold {
+  background: linear-gradient(145deg, #fffdf0 0%, #fff8d6 100%);
+  border-color: #ffe066;
+}
+.medal-box-gold:hover { box-shadow: 0 6px 20px rgba(255, 215, 0, 0.25); }
+
+.medal-icon { font-size: 32px; width: 32px; height: 32px; margin-bottom: 10px; }
+
+/* 메달 색상 - 그라데이션 효과 */
+.medal-bronze { color: #cd7f32; filter: drop-shadow(0 2px 3px rgba(205, 127, 50, 0.3)); }
+.medal-silver { color: #a8a8a8; filter: drop-shadow(0 2px 3px rgba(168, 168, 168, 0.3)); }
+.medal-gold { color: #ffd700; filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.4)); }
 .medal-default { color: #86868b; }
 
-.medal-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; color: #1d1d1f; }
+.medal-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: #1d1d1f; }
 .medal-score { font-size: 12px; color: #86868b; font-weight: 500; }
 
 /* Card Content & Animation */
@@ -428,13 +469,32 @@ onMounted(() => {
 .input-group-medal {
   display: flex; align-items: center; border: 1px solid #d2d2d7;
   border-radius: 10px; padding: 0 12px; height: 44px; background: white; flex: 1.5;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 .input-group-medal:focus-within { border-color: #0071e3; }
-.input-group-medal :deep(svg) { margin-right: 10px; font-size: 18px; width: 18px; height: 18px; }
-.input-group-medal input { 
-  border: none; outline: none; width: 100%; font-size: 14px; font-weight: 600; color: #1d1d1f; 
+.input-group-medal :deep(svg) { margin-right: 10px; font-size: 22px; width: 22px; height: 22px; }
+.input-group-medal input {
+  border: none; outline: none; width: 100%; font-size: 14px; font-weight: 600; color: #1d1d1f;
 }
+
+/* 입력 필드 메달 스타일 */
+.input-medal-bronze {
+  border-color: #e8cfc4;
+  background: linear-gradient(90deg, #fdf4f0 0%, white 30%);
+}
+.input-medal-bronze :deep(svg) { color: #cd7f32; filter: drop-shadow(0 1px 2px rgba(205, 127, 50, 0.3)); }
+
+.input-medal-silver {
+  border-color: #dee2e6;
+  background: linear-gradient(90deg, #f8f9fa 0%, white 30%);
+}
+.input-medal-silver :deep(svg) { color: #a8a8a8; filter: drop-shadow(0 1px 2px rgba(168, 168, 168, 0.3)); }
+
+.input-medal-gold {
+  border-color: #ffe066;
+  background: linear-gradient(90deg, #fffdf0 0%, white 30%);
+}
+.input-medal-gold :deep(svg) { color: #ffd700; filter: drop-shadow(0 1px 2px rgba(255, 215, 0, 0.4)); }
 
 .input-group-score { display: flex; align-items: center; gap: 8px; flex: 1.2; }
 .input-score { 
