@@ -259,12 +259,25 @@ const triggerFileInput = () => {
   fileInput.value?.click()
 }
 
-const handleFileUpload = (event: Event) => {
+const handleFileUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
-    // Mock upload: Create a fake URL
-    // TODO: Upload to server/S3/Firebase Storage
-    form.value.imageUrl = 'https://via.placeholder.com/300x200?text=' + encodeURIComponent(form.value.name || 'Image')
+    const file = target.files[0]
+
+    // 파일을 Base64로 변환하여 미리보기 표시
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      form.value.imageUrl = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+
+    // TODO: 실제 서버 업로드 구현 시 아래 코드 사용
+    // const formData = new FormData()
+    // formData.append('file', file)
+    // const response = await fetch(`${API_URL}/api/upload`, { method: 'POST', body: formData })
+    // const { url } = await response.json()
+    // form.value.imageUrl = url
+
     // Reset input to allow re-selecting same file
     target.value = ''
   }
