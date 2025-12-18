@@ -1,10 +1,21 @@
 <template>
   <div class="game-view">
-    <div class="header">
-      <h2>{{ gameTitle }}</h2>
-      <button @click="goBack" class="btn-back">← 뒤로가기</button>
-    </div>
-    <div id="game-container" ref="gameContainer"></div>
+    <!-- 핀볼 게임: 새로운 Pixi.js + Rapier 기반 -->
+    <HyperPinball
+      v-if="isPinball"
+      :qr-code="qrCode"
+      @game-over="handleGameOver"
+      @exit="goBack"
+    />
+
+    <!-- 다른 게임: Phaser 기반 -->
+    <template v-else>
+      <div class="header">
+        <h2>{{ gameTitle }}</h2>
+        <button @click="goBack" class="btn-back">← 뒤로가기</button>
+      </div>
+      <div id="game-container" ref="gameContainer"></div>
+    </template>
   </div>
 </template>
 
@@ -13,12 +24,16 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { gameManager } from '../game/GameManager'
 import type { GameType } from '../game/config'
+import HyperPinball from '../game/pinball/components/HyperPinball.vue'
 
 const route = useRoute()
 const router = useRouter()
 const gameContainer = ref<HTMLElement>()
 
 const gameType = computed(() => (route.params.type as string).toUpperCase() as GameType)
+const qrCode = computed(() => route.query.qr as string | undefined)
+const isPinball = computed(() => gameType.value === 'PINBALL')
+
 const gameTitle = computed(() => {
   const titles: Record<GameType, string> = {
     PINBALL: '핀볼 게임',
@@ -30,11 +45,11 @@ const gameTitle = computed(() => {
 })
 
 onMounted(() => {
-  if (gameContainer.value) {
+  // 핀볼이 아닌 경우에만 Phaser 게임 초기화
+  if (!isPinball.value && gameContainer.value) {
     try {
-      const qrCode = route.query.qr as string | undefined
-      console.log('GameView QR Code:', qrCode)
-      gameManager.initGame(gameType.value, 'game-container', qrCode)
+      console.log('GameView QR Code:', qrCode.value)
+      gameManager.initGame(gameType.value, 'game-container', qrCode.value)
     } catch (error) {
       console.error('게임 초기화 실패:', error)
     }
@@ -42,8 +57,16 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  gameManager.destroyGame()
+  // 핀볼이 아닌 경우에만 Phaser 게임 정리
+  if (!isPinball.value) {
+    gameManager.destroyGame()
+  }
 })
+
+function handleGameOver(finalScore: number) {
+  console.log('Game Over! Final Score:', finalScore)
+  // TODO: 점수 저장 API 호출
+}
 
 function goBack() {
   router.back()
