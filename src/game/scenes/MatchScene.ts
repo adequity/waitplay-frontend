@@ -96,7 +96,9 @@ export class MatchScene extends Phaser.Scene {
   private async loadGameAssets() {
     try {
       console.log('[MatchScene] Fetching game assets...');
-      this.gameAssets = await getMatchGameAssets(this.TOTAL_PAIRS);
+      const qrCode = gameManager.getQrCode();
+      console.log('[MatchScene] QR Code:', qrCode);
+      this.gameAssets = await getMatchGameAssets(this.TOTAL_PAIRS, qrCode);
 
       if (this.gameAssets.length >= this.TOTAL_PAIRS) {
         console.log(`[MatchScene] Found ${this.gameAssets.length} assets, loading images...`);
