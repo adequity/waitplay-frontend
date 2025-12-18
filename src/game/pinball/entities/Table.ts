@@ -64,36 +64,121 @@ export class Table {
    * 배경 생성
    */
   private createBackground(): void {
-    // 메인 테이블 배경
+    const { TABLE_LEFT, TABLE_RIGHT, TABLE_TOP, TABLE_BOTTOM } = VIEWPORT;
+    const centerX = (TABLE_LEFT + TABLE_RIGHT) / 2;
+
+    // 메인 테이블 배경 (그라데이션 효과)
     const tableBg = new PIXI.Graphics();
     tableBg.rect(
-      VIEWPORT.TABLE_LEFT,
-      VIEWPORT.TABLE_TOP,
-      VIEWPORT.TABLE_RIGHT - VIEWPORT.TABLE_LEFT,
-      VIEWPORT.TABLE_BOTTOM - VIEWPORT.TABLE_TOP
+      TABLE_LEFT - 20,
+      TABLE_TOP - 20,
+      TABLE_RIGHT - TABLE_LEFT + 40,
+      TABLE_BOTTOM - TABLE_TOP + 40
     );
-    tableBg.fill({ color: 0x1e3a8a, alpha: 0.9 });
+    tableBg.fill({ color: 0x0f172a });
     this.renderer.addToGame(tableBg);
 
-    // 테이블 테두리 장식
+    // 플레이 영역 배경
+    const playArea = new PIXI.Graphics();
+    playArea.rect(
+      TABLE_LEFT,
+      TABLE_TOP,
+      TABLE_RIGHT - TABLE_LEFT - 100, // 발사대 레인 제외
+      TABLE_BOTTOM - TABLE_TOP
+    );
+    playArea.fill({ color: 0x1e3a8a, alpha: 0.95 });
+    this.renderer.addToGame(playArea);
+
+    // 테이블 테두리 (네온 효과)
     const border = new PIXI.Graphics();
     border.rect(
-      VIEWPORT.TABLE_LEFT,
-      VIEWPORT.TABLE_TOP,
-      VIEWPORT.TABLE_RIGHT - VIEWPORT.TABLE_LEFT,
-      VIEWPORT.TABLE_BOTTOM - VIEWPORT.TABLE_TOP
+      TABLE_LEFT,
+      TABLE_TOP,
+      TABLE_RIGHT - TABLE_LEFT - 100,
+      TABLE_BOTTOM - TABLE_TOP
     );
-    border.stroke({ color: 0x60a5fa, width: 8 });
+    border.stroke({ color: 0x60a5fa, width: 6 });
     this.renderer.addToGame(border);
 
-    // 플레이 영역 내부 장식선
-    const innerLines = new PIXI.Graphics();
-    innerLines.moveTo(VIEWPORT.TABLE_LEFT + 50, VIEWPORT.TABLE_TOP + 100);
-    innerLines.lineTo(VIEWPORT.TABLE_LEFT + 50, VIEWPORT.TABLE_BOTTOM - 300);
-    innerLines.moveTo(VIEWPORT.TABLE_RIGHT - 150, VIEWPORT.TABLE_TOP + 100);
-    innerLines.lineTo(VIEWPORT.TABLE_RIGHT - 150, VIEWPORT.TABLE_BOTTOM - 300);
-    innerLines.stroke({ color: 0x3b82f6, width: 3, alpha: 0.5 });
-    this.renderer.addToGame(innerLines);
+    // 외부 글로우 테두리
+    const outerGlow = new PIXI.Graphics();
+    outerGlow.rect(
+      TABLE_LEFT - 5,
+      TABLE_TOP - 5,
+      TABLE_RIGHT - TABLE_LEFT - 90,
+      TABLE_BOTTOM - TABLE_TOP + 10
+    );
+    outerGlow.stroke({ color: 0x3b82f6, width: 3, alpha: 0.4 });
+    this.renderer.addToGame(outerGlow);
+
+    // 중앙 장식 패턴
+    const centerPattern = new PIXI.Graphics();
+    // 큰 원
+    centerPattern.circle(centerX - 50, TABLE_TOP + 950, 120);
+    centerPattern.stroke({ color: 0x4f46e5, width: 4, alpha: 0.3 });
+    // 중간 원
+    centerPattern.circle(centerX - 50, TABLE_TOP + 950, 80);
+    centerPattern.stroke({ color: 0x6366f1, width: 3, alpha: 0.4 });
+    // 작은 원
+    centerPattern.circle(centerX - 50, TABLE_TOP + 950, 40);
+    centerPattern.fill({ color: 0x4f46e5, alpha: 0.2 });
+    this.renderer.addToGame(centerPattern);
+
+    // 상단 로고 영역
+    const logoArea = new PIXI.Graphics();
+    logoArea.roundRect(centerX - 150, TABLE_TOP + 50, 200, 80, 15);
+    logoArea.fill({ color: 0x1e1b4b, alpha: 0.8 });
+    logoArea.stroke({ color: 0x6366f1, width: 2 });
+    this.renderer.addToGame(logoArea);
+
+    // 로고 텍스트
+    const logoText = new PIXI.Text({
+      text: 'PINBALL',
+      style: {
+        fontFamily: 'Arial Black, Arial',
+        fontSize: 36,
+        fontWeight: 'bold',
+        fill: 0xfbbf24,
+        letterSpacing: 4,
+      },
+    });
+    logoText.anchor.set(0.5);
+    logoText.position.set(centerX - 50, TABLE_TOP + 90);
+    this.renderer.addToGame(logoText);
+
+    // 플리퍼 영역 바닥 강조
+    const flipperZone = new PIXI.Graphics();
+    flipperZone.rect(
+      TABLE_LEFT + 50,
+      TABLE_BOTTOM - 250,
+      TABLE_RIGHT - TABLE_LEFT - 200,
+      200
+    );
+    flipperZone.fill({ color: 0x172554, alpha: 0.6 });
+    this.renderer.addToGame(flipperZone);
+
+    // 사이드 장식 라인
+    const sideLines = new PIXI.Graphics();
+    // 좌측 레인 라인
+    sideLines.moveTo(TABLE_LEFT + 115, TABLE_TOP + 150);
+    sideLines.lineTo(TABLE_LEFT + 115, TABLE_BOTTOM - 400);
+    sideLines.stroke({ color: 0x22d3ee, width: 3, alpha: 0.5 });
+    // 우측 레인 라인
+    sideLines.moveTo(TABLE_RIGHT - 195, TABLE_TOP + 150);
+    sideLines.lineTo(TABLE_RIGHT - 195, TABLE_BOTTOM - 400);
+    sideLines.stroke({ color: 0x22d3ee, width: 3, alpha: 0.5 });
+    this.renderer.addToGame(sideLines);
+
+    // 점수 배수 영역 표시
+    const multiplierZones = new PIXI.Graphics();
+    for (let i = 0; i < 3; i++) {
+      const y = TABLE_TOP + 300 + i * 150;
+      multiplierZones.roundRect(TABLE_LEFT + 130, y, 50, 25, 5);
+      multiplierZones.fill({ color: 0xf59e0b, alpha: 0.3 });
+      multiplierZones.roundRect(TABLE_RIGHT - 280, y, 50, 25, 5);
+      multiplierZones.fill({ color: 0xf59e0b, alpha: 0.3 });
+    }
+    this.renderer.addToGame(multiplierZones);
   }
 
   /**
@@ -101,64 +186,131 @@ export class Table {
    */
   private createWalls(): void {
     const { TABLE_LEFT, TABLE_RIGHT, TABLE_TOP, TABLE_BOTTOM } = VIEWPORT;
-    const wallThickness = 30;
+    const wallThickness = 25;
+    const plungerLaneWidth = 80; // 발사대 레인 너비
+    const plungerLaneX = TABLE_RIGHT - plungerLaneWidth / 2 - 10;
+
+    // ===== 외벽 =====
 
     // 상단 벽
     this.createWall(
       (TABLE_LEFT + TABLE_RIGHT) / 2,
-      TABLE_TOP,
+      TABLE_TOP - wallThickness / 2,
       TABLE_RIGHT - TABLE_LEFT,
       wallThickness
     );
 
-    // 좌측 벽 (상단부)
+    // 좌측 전체 벽
     this.createWall(
-      TABLE_LEFT,
-      (TABLE_TOP + TABLE_BOTTOM * 0.6) / 2,
+      TABLE_LEFT - wallThickness / 2,
+      (TABLE_TOP + TABLE_BOTTOM) / 2,
       wallThickness,
-      TABLE_BOTTOM * 0.6 - TABLE_TOP
+      TABLE_BOTTOM - TABLE_TOP
     );
 
-    // 우측 벽 (발사대 영역 제외)
+    // 우측 벽 (상단 - 발사대 입구까지)
     this.createWall(
-      TABLE_RIGHT - 100,
-      (TABLE_TOP + TABLE_BOTTOM * 0.5) / 2,
+      TABLE_RIGHT + wallThickness / 2,
+      (TABLE_TOP + 300) / 2 + TABLE_TOP / 2,
       wallThickness,
-      TABLE_BOTTOM * 0.5 - TABLE_TOP
+      300
     );
 
-    // 좌측 하단 경사 벽 (플리퍼로 유도)
-    this.createAngledWall(
-      TABLE_LEFT + 80,
-      TABLE_BOTTOM - 350,
-      200,
-      wallThickness,
-      -0.6 // 약 -35도
-    );
+    // ===== 발사대 레인 벽 =====
 
-    // 우측 하단 경사 벽 (플리퍼로 유도)
-    this.createAngledWall(
-      TABLE_RIGHT - 180,
-      TABLE_BOTTOM - 350,
-      200,
-      wallThickness,
-      0.6 // 약 35도
-    );
-
-    // 플리퍼 사이 중앙 작은 벽
+    // 발사대 왼쪽 세로 벽 (메인 영역과 분리)
     this.createWall(
-      (TABLE_LEFT + TABLE_RIGHT) / 2,
-      TABLE_BOTTOM - 120,
-      80,
+      plungerLaneX - plungerLaneWidth / 2,
+      TABLE_TOP + 600,
+      wallThickness,
+      TABLE_BOTTOM - TABLE_TOP - 400
+    );
+
+    // 발사대 오른쪽 벽
+    this.createWall(
+      TABLE_RIGHT + wallThickness / 2,
+      (TABLE_TOP + 300 + TABLE_BOTTOM) / 2,
+      wallThickness,
+      TABLE_BOTTOM - TABLE_TOP - 300
+    );
+
+    // 발사대 레인 하단 막음벽 (공이 아래로 빠지지 않게)
+    this.createWall(
+      plungerLaneX,
+      TABLE_BOTTOM - wallThickness / 2 + 20,
+      plungerLaneWidth + wallThickness,
       wallThickness
     );
 
-    // 발사대 왼쪽 벽
-    this.createWall(
-      TABLE_RIGHT - 100,
-      TABLE_BOTTOM - 200,
+    // 발사대 레인 상단 곡선 입구 (좌측으로 꺾이는 벽)
+    this.createAngledWall(
+      plungerLaneX - plungerLaneWidth / 2 - 30,
+      TABLE_TOP + 280,
+      120,
       wallThickness,
-      400
+      0.8
+    );
+
+    // ===== 플리퍼 영역 벽 =====
+
+    // 좌측 하단 경사 벽 (플리퍼로 유도)
+    this.createAngledWall(
+      TABLE_LEFT + 130,
+      TABLE_BOTTOM - 320,
+      280,
+      wallThickness,
+      -0.55
+    );
+
+    // 우측 하단 경사 벽 (플리퍼로 유도) - 발사대 앞까지
+    this.createAngledWall(
+      plungerLaneX - plungerLaneWidth / 2 - 160,
+      TABLE_BOTTOM - 320,
+      250,
+      wallThickness,
+      0.55
+    );
+
+    // 좌측 플리퍼 옆 작은 벽 (아웃레인 방지)
+    this.createWall(
+      TABLE_LEFT + wallThickness,
+      TABLE_BOTTOM - 150,
+      wallThickness,
+      150
+    );
+
+    // 우측 플리퍼 옆 작은 벽 (아웃레인 방지)
+    this.createWall(
+      plungerLaneX - plungerLaneWidth / 2 - wallThickness * 2,
+      TABLE_BOTTOM - 150,
+      wallThickness,
+      150
+    );
+
+    // 플리퍼 사이 중앙 삼각 구조물
+    this.createWall(
+      540,
+      TABLE_BOTTOM - 80,
+      60,
+      25
+    );
+
+    // ===== 상단 레인 벽 =====
+
+    // 좌측 상단 안쪽 벽 (레인 형성)
+    this.createWall(
+      TABLE_LEFT + 100,
+      TABLE_TOP + 350,
+      wallThickness,
+      500
+    );
+
+    // 우측 상단 안쪽 벽 (레인 형성)
+    this.createWall(
+      plungerLaneX - plungerLaneWidth / 2 - 80,
+      TABLE_TOP + 350,
+      wallThickness,
+      500
     );
 
     console.log('[Table] Walls created:', this.walls.length);
@@ -365,50 +517,64 @@ export class Table {
    */
   private createPlungerLane(): void {
     const { PLUNGER, BALL_START } = TABLE_LAYOUT;
+    const plungerLaneWidth = 80;
+    const plungerLaneX = VIEWPORT.TABLE_RIGHT - plungerLaneWidth / 2 - 10;
 
-    // 발사대 배경
+    // 발사대 레인 배경
     const laneBg = new PIXI.Graphics();
     laneBg.rect(
-      VIEWPORT.TABLE_RIGHT - 90,
-      VIEWPORT.TABLE_TOP + 200,
-      80,
-      VIEWPORT.TABLE_BOTTOM - VIEWPORT.TABLE_TOP - 250
+      plungerLaneX - plungerLaneWidth / 2 + 12,
+      VIEWPORT.TABLE_TOP + 280,
+      plungerLaneWidth - 24,
+      VIEWPORT.TABLE_BOTTOM - VIEWPORT.TABLE_TOP - 300
     );
-    laneBg.fill({ color: 0x1e293b, alpha: 0.8 });
+    laneBg.fill({ color: 0x0f172a, alpha: 0.9 });
     this.renderer.addToGame(laneBg);
 
     // 발사대 스프링 표시
     const spring = new PIXI.Graphics();
-    for (let i = 0; i < 8; i++) {
-      spring.rect(PLUNGER.x - 20, PLUNGER.y - 100 + i * 20, 40, 3);
-      spring.fill({ color: RENDER.COLORS.WARNING, alpha: 0.6 });
+    for (let i = 0; i < 6; i++) {
+      const yPos = PLUNGER.y - 60 + i * 15;
+      spring.rect(PLUNGER.x - 15, yPos, 30, 4);
+      spring.fill({ color: RENDER.COLORS.WARNING, alpha: 0.7 - i * 0.08 });
     }
     this.renderer.addToGame(spring);
 
-    // 발사 방향 화살표
-    const arrow = new PIXI.Graphics();
-    arrow.moveTo(BALL_START.x, BALL_START.y - 80);
-    arrow.lineTo(BALL_START.x - 15, BALL_START.y - 50);
-    arrow.lineTo(BALL_START.x + 15, BALL_START.y - 50);
-    arrow.closePath();
-    arrow.fill({ color: RENDER.COLORS.WARNING, alpha: 0.7 });
-    this.renderer.addToGame(arrow);
+    // 발사 방향 화살표 (여러 개)
+    const arrowContainer = new PIXI.Container();
+    for (let i = 0; i < 3; i++) {
+      const arrow = new PIXI.Graphics();
+      const yOffset = i * 40;
+      arrow.moveTo(BALL_START.x, BALL_START.y - 120 - yOffset);
+      arrow.lineTo(BALL_START.x - 12, BALL_START.y - 90 - yOffset);
+      arrow.lineTo(BALL_START.x + 12, BALL_START.y - 90 - yOffset);
+      arrow.closePath();
+      arrow.fill({ color: RENDER.COLORS.WARNING, alpha: 0.8 - i * 0.2 });
+      arrowContainer.addChild(arrow);
+    }
+    this.renderer.addToGame(arrowContainer);
 
     // 화살표 깜빡임 애니메이션
-    let alpha = 0.7;
+    let alpha = 0.8;
     let increasing = false;
     const animateArrow = () => {
       if (increasing) {
-        alpha += 0.02;
+        alpha += 0.015;
         if (alpha >= 0.9) increasing = false;
       } else {
-        alpha -= 0.02;
-        if (alpha <= 0.3) increasing = true;
+        alpha -= 0.015;
+        if (alpha <= 0.4) increasing = true;
       }
-      arrow.alpha = alpha;
+      arrowContainer.alpha = alpha;
       requestAnimationFrame(animateArrow);
     };
     animateArrow();
+
+    // 공 시작 위치 표시
+    const startMarker = new PIXI.Graphics();
+    startMarker.circle(BALL_START.x, BALL_START.y, 25);
+    startMarker.stroke({ color: RENDER.COLORS.ACCENT, width: 2, alpha: 0.5 });
+    this.renderer.addToGame(startMarker);
   }
 
   /**
