@@ -71,6 +71,13 @@
 
         <!-- Actions -->
         <div class="game-actions">
+          <button
+            v-if="isAssetGame(game.id)"
+            class="btn-asset-setting"
+            @click="openAssetModal(game.id)"
+          >
+            <IconBase name="image" class="btn-icon" /> 에셋 설정
+          </button>
           <button class="btn-benefit-setting" @click="switchToBenefits">
             <IconBase name="gift" class="btn-icon" /> 혜택 설정
           </button>
@@ -116,6 +123,14 @@
         마켓플레이스 바로가기 <IconBase name="arrow-right" class="btn-icon-right" />
       </button>
     </div>
+
+    <!-- Asset Select Modal -->
+    <GameAssetSelectModal
+      :isOpen="showAssetModal"
+      :gameId="selectedGameId"
+      @close="showAssetModal = false"
+      @saved="onAssetsSaved"
+    />
   </div>
 </template>
 
@@ -125,6 +140,7 @@ import { useAuthStore } from '@/stores/auth'
 import gameSettingsService from '@/services/gameSettingsService'
 import type { GameOrderDto } from '@/services/gameSettingsService'
 import IconBase from '@/components/IconBase.vue'
+import GameAssetSelectModal from '@/components/GameAssetSelectModal.vue'
 
 interface Game {
   id: string
@@ -185,6 +201,25 @@ const games = ref<Game[]>([])
 const isLoading = ref(true)
 const isSaving = ref(false)
 const qrCodeId = ref<string>('')
+
+// Asset Modal State
+const showAssetModal = ref(false)
+const selectedGameId = ref('')
+
+// Games that support asset settings (memory card games, spot-difference, etc.)
+const assetSupportedGames = ['memory', 'spot-difference']
+
+const isAssetGame = (gameId: string) => assetSupportedGames.includes(gameId)
+
+const openAssetModal = (gameId: string) => {
+  selectedGameId.value = gameId
+  showAssetModal.value = true
+}
+
+const onAssetsSaved = () => {
+  console.log('Assets saved for game:', selectedGameId.value)
+  // Optionally refresh or show success message
+}
 
 // Initialize games with default stats
 const initializeGames = (enabledGames: string[] = []) => {
@@ -538,6 +573,29 @@ input:checked + .slider:before {
 
 .btn-benefit-setting:hover {
   background: #3a3a3c;
+  transform: translateY(-1px);
+}
+
+.btn-asset-setting {
+  background: #0071e3;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 0;
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+}
+
+.btn-asset-setting:hover {
+  background: #0077ed;
   transform: translateY(-1px);
 }
 

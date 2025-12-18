@@ -176,7 +176,7 @@ import IconBase from '@/components/IconBase.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
-const API_URL = import.meta.env.VITE_API_URL || 'https://brandflow-backend-production-99ae.up.railway.app'
+const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
 interface Asset {
   id: string
