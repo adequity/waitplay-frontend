@@ -14,7 +14,62 @@
         <!-- Info Banner -->
         <div class="info-banner">
           <IconBase name="info" class="info-icon" />
-          <p>게임에서 사용할 이미지를 선택하세요. 선택한 이미지가 게임 카드로 표시됩니다.</p>
+          <p>게임에서 사용할 이미지를 선택하거나 새로 업로드하세요.</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+          <button class="btn-upload" @click="showUploadForm = !showUploadForm">
+            <IconBase name="plus" class="btn-icon" />
+            {{ showUploadForm ? '업로드 취소' : '새 에셋 업로드' }}
+          </button>
+        </div>
+
+        <!-- Upload Form (Collapsible) -->
+        <div v-if="showUploadForm" class="upload-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">에셋 이름</label>
+              <input type="text" v-model="uploadForm.name" class="form-input" placeholder="예: 햄버거">
+            </div>
+            <div class="form-group">
+              <label class="form-label">카테고리</label>
+              <select v-model="uploadForm.category" class="form-select">
+                <option value="음식">음식</option>
+                <option value="음료">음료</option>
+                <option value="디저트">디저트</option>
+                <option value="기타">기타</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">사용 게임</label>
+            <div class="game-type-display">{{ gameLabel }}</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">이미지</label>
+            <div class="upload-area" @click="triggerFileInput">
+              <div v-if="uploadForm.imageUrl" class="upload-preview">
+                <img :src="uploadForm.imageUrl" alt="Preview">
+                <button class="btn-remove-img" @click.stop="removeUploadImage">✕</button>
+              </div>
+              <div v-else class="upload-placeholder">
+                <IconBase name="image" class="upload-icon" />
+                <p>클릭하여 이미지 업로드</p>
+              </div>
+              <input
+                type="file"
+                ref="fileInput"
+                class="file-input"
+                accept="image/*"
+                @change="handleFileUpload"
+                hidden
+              >
+            </div>
+          </div>
+          <button class="btn-add-asset" @click="addAsset" :disabled="isUploading">
+            {{ isUploading ? '업로드 중...' : '에셋 추가' }}
+          </button>
         </div>
 
         <!-- Loading State -->
@@ -24,14 +79,14 @@
         </div>
 
         <!-- No Assets -->
-        <div v-else-if="assets.length === 0" class="empty-state">
+        <div v-else-if="assets.length === 0 && !showUploadForm" class="empty-state">
           <IconBase name="image" class="empty-icon" />
           <p>등록된 에셋이 없습니다.</p>
-          <span class="empty-hint">SuperAdmin에게 에셋 등록을 요청하세요.</span>
+          <span class="empty-hint">위의 '새 에셋 업로드' 버튼을 클릭하여 에셋을 등록하세요.</span>
         </div>
 
         <!-- Asset Grid -->
-        <div v-else class="asset-grid">
+        <div v-else-if="assets.length > 0" class="asset-grid">
           <div
             v-for="asset in assets"
             :key="asset.id"
@@ -84,6 +139,8 @@ import {
   type AdminAsset
 } from '@/services/adminAssetService'
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
+
 const props = defineProps<{
   isOpen: boolean
   gameId: string
@@ -98,8 +155,18 @@ const authStore = useAuthStore()
 
 const isLoading = ref(false)
 const isSaving = ref(false)
+const isUploading = ref(false)
 const assets = ref<AdminAsset[]>([])
 const selectedIds = ref<string[]>([])
+const showUploadForm = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+// Upload form state
+const uploadForm = ref({
+  name: '',
+  category: '음식',
+  imageUrl: ''
+})
 
 const gameLabel = computed(() => {
   const labels: Record<string, string> = {
@@ -116,6 +183,8 @@ const gameType = computed(() => getGameTypeLabel(props.gameId))
 // Watch for modal open
 watch(() => props.isOpen, async (newVal) => {
   if (newVal) {
+    showUploadForm.value = false
+    resetUploadForm()
     await loadAssets()
   }
 })
@@ -160,6 +229,86 @@ const clearSelection = () => {
 
 const close = () => {
   emit('close')
+}
+
+// Upload form functions
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      uploadForm.value.imageUrl = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+    target.value = ''
+  }
+}
+
+const removeUploadImage = () => {
+  uploadForm.value.imageUrl = ''
+}
+
+const resetUploadForm = () => {
+  uploadForm.value = {
+    name: '',
+    category: '음식',
+    imageUrl: ''
+  }
+}
+
+const addAsset = async () => {
+  if (!uploadForm.value.name) {
+    alert('에셋 이름을 입력해주세요.')
+    return
+  }
+  if (!uploadForm.value.imageUrl) {
+    alert('이미지를 업로드해주세요.')
+    return
+  }
+
+  isUploading.value = true
+
+  try {
+    const token = authStore.accessToken
+    if (!token) {
+      alert('인증이 필요합니다.')
+      return
+    }
+
+    const response = await fetch(`${API_URL}/api/admin/assets/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: uploadForm.value.name,
+        category: uploadForm.value.category,
+        gameType: gameType.value,
+        imageUrl: uploadForm.value.imageUrl
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || '에셋 업로드에 실패했습니다.')
+    }
+
+    alert('에셋이 등록되었습니다.')
+    resetUploadForm()
+    showUploadForm.value = false
+    await loadAssets()
+  } catch (error: any) {
+    console.error('Failed to upload asset:', error)
+    alert(error.message || '에셋 업로드에 실패했습니다.')
+  } finally {
+    isUploading.value = false
+  }
 }
 
 const save = async () => {
@@ -280,6 +429,189 @@ const save = async () => {
   font-size: 14px;
   color: #0071e3;
   margin: 0;
+}
+
+/* Upload Section */
+.upload-section {
+  margin-bottom: 20px;
+}
+
+.btn-upload {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #f5f5f7;
+  border: 1px dashed #d2d2d7;
+  border-radius: 10px;
+  color: #1d1d1f;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-upload:hover {
+  background: #e8f2ff;
+  border-color: #0071e3;
+  color: #0071e3;
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Upload Form */
+.upload-form {
+  background: #f9f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e5ea;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-group {
+  flex: 1;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 8px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1d1d1f;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: #0071e3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+}
+
+.game-type-display {
+  padding: 10px 14px;
+  background: #e8f2ff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0071e3;
+  border: 1px solid rgba(0, 113, 227, 0.2);
+}
+
+.upload-area {
+  position: relative;
+  height: 150px;
+  border: 2px dashed #d2d2d7;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+  background: white;
+  overflow: hidden;
+}
+
+.upload-area:hover {
+  border-color: #0071e3;
+  background: #f0f7ff;
+}
+
+.upload-placeholder {
+  text-align: center;
+  color: #86868b;
+}
+
+.upload-icon {
+  width: 32px;
+  height: 32px;
+  color: #d2d2d7;
+  margin-bottom: 8px;
+}
+
+.upload-placeholder p {
+  font-size: 13px;
+  margin: 0;
+}
+
+.upload-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.upload-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: white;
+}
+
+.btn-remove-img {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: 0.2s;
+}
+
+.btn-remove-img:hover {
+  background: rgba(239, 68, 68, 0.9);
+}
+
+.btn-add-asset {
+  width: 100%;
+  padding: 12px;
+  background: #0071e3;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.btn-add-asset:hover:not(:disabled) {
+  background: #0077ed;
+}
+
+.btn-add-asset:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .loading-state,
