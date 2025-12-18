@@ -124,6 +124,9 @@ export class Application {
       this.setState('ready');
       this.callbacks.onReady?.();
 
+      // ready 상태가 되면 자동으로 게임 시작
+      this.start();
+
       console.log('[Application] Initialized successfully');
     } catch (error) {
       console.error('[Application] Initialization failed:', error);
@@ -136,9 +139,9 @@ export class Application {
    */
   private setupInputCallbacks(): void {
     this.inputManager.setCallbacks({
-      // 플리퍼 제어
+      // 플리퍼 제어 (playing 또는 ready 상태에서 작동)
       onLeftFlipperDown: () => {
-        if (this.state === 'playing') {
+        if (this.state === 'playing' || this.state === 'ready') {
           this.leftFlipper?.press();
         }
       },
@@ -146,7 +149,7 @@ export class Application {
         this.leftFlipper?.release();
       },
       onRightFlipperDown: () => {
-        if (this.state === 'playing') {
+        if (this.state === 'playing' || this.state === 'ready') {
           this.rightFlipper?.press();
         }
       },
@@ -191,6 +194,12 @@ export class Application {
    * 게임 시작
    */
   start(): void {
+    // loading 상태면 ready가 될 때까지 대기
+    if (this.state === 'loading') {
+      console.log('[Application] Still loading, will auto-start when ready');
+      return;
+    }
+
     if (this.state !== 'ready' && this.state !== 'paused') {
       console.warn('[Application] Cannot start game in current state:', this.state);
       return;

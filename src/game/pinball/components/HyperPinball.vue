@@ -150,11 +150,8 @@ onMounted(async () => {
       },
     });
 
-    // 초기화 (WASM 로딩 포함)
+    // 초기화 (WASM 로딩 포함) - init() 내부에서 자동으로 start() 호출됨
     await app.init(canvasRef.value);
-
-    // 자동 시작
-    app.start();
   } catch (error) {
     console.error('Game initialization failed:', error);
     gameState.value = 'loading'; // 에러 상태 처리 필요
