@@ -89,11 +89,31 @@ export class MatchScene extends Phaser.Scene {
   }
 
   preload() {
-    // 이미지 에셋을 동적으로 로드
-    this.loadGameAssets();
+    // preload에서는 아무것도 하지 않음
+    // 에셋 로딩은 create에서 비동기로 처리
   }
 
-  private async loadGameAssets() {
+  create() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
+    // 그라데이션 배경
+    this.createBackground(W, H);
+
+    // UI 패널
+    this.createUIPanel(W, H);
+
+    // 로딩 화면 표시
+    this.loadingText = this.add.text(W * 0.5, H * 0.5, '🔄 이미지 로딩 중...', {
+      fontSize: Math.floor(H * 0.04) + 'px',
+      color: '#ffffff'
+    }).setOrigin(0.5);
+
+    // 에셋 로딩 후 게임 초기화
+    this.loadGameAssetsAndInit(W, H);
+  }
+
+  private async loadGameAssetsAndInit(W: number, H: number) {
     try {
       console.log('[MatchScene] Fetching game assets...');
       const qrCode = gameManager.getQrCode();
@@ -115,10 +135,7 @@ export class MatchScene extends Phaser.Scene {
         this.load.once('complete', () => {
           console.log('[MatchScene] All asset images loaded');
           this.assetsLoaded = true;
-          if (this.loadingText) {
-            this.loadingText.destroy();
-            this.loadingText = undefined;
-          }
+          this.finishInit(W, H);
         });
 
         this.load.start();
@@ -126,29 +143,30 @@ export class MatchScene extends Phaser.Scene {
         console.log('[MatchScene] Not enough assets, using emoji theme');
         this.useImageAssets = false;
         this.assetsLoaded = true;
+        this.finishInit(W, H);
       }
     } catch (error) {
       console.error('[MatchScene] Failed to load game assets:', error);
       this.useImageAssets = false;
       this.assetsLoaded = true;
+      this.finishInit(W, H);
     }
   }
 
-  create() {
-    const W = this.sys.game.config.width as number;
-    const H = this.sys.game.config.height as number;
-
-    // 그라데이션 배경
-    this.createBackground(W, H);
-
-    // UI 패널
-    this.createUIPanel(W, H);
+  private finishInit(W: number, H: number) {
+    // 로딩 텍스트 제거
+    if (this.loadingText) {
+      this.loadingText.destroy();
+      this.loadingText = undefined;
+    }
 
     // 타이틀 화면
     this.createTitleScreen(W, H);
 
     // 카드 생성 (숨김 상태)
     this.createCards(W, H);
+
+    console.log('[MatchScene] Game initialized with useImageAssets:', this.useImageAssets);
   }
 
   private createBackground(W: number, H: number) {
