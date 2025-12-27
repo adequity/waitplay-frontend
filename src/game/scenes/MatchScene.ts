@@ -487,28 +487,15 @@ export class MatchScene extends Phaser.Scene {
     let frontImage: Phaser.GameObjects.Image | undefined;
 
     if (isImageCard && this.textures.exists(value)) {
-      // 이미지 카드 - 카드에 꽉 차게 표시 (여백 없음)
+      // 이미지 카드 - 카드에 꽉 차게 표시
       frontImage = this.add.image(0, 0, value);
 
-      // 이미지를 카드 크기에 꽉 차게 조절 (cover 방식)
-      const scaleX = width / frontImage.width;
-      const scaleY = height / frontImage.height;
-      // 더 큰 스케일을 사용하여 카드를 꽉 채움
-      const scale = Math.max(scaleX, scaleY);
+      // 이미지를 카드 크기에 맞게 조절 (contain 방식 - 카드 안에 맞춤)
+      const scaleX = (width * 0.9) / frontImage.width;
+      const scaleY = (height * 0.9) / frontImage.height;
+      const scale = Math.min(scaleX, scaleY);
       frontImage.setScale(scale);
-
-      // 마스크 생성 - 카드 영역을 벗어나는 부분 자르기
-      const maskGraphics = this.add.graphics();
-      maskGraphics.fillStyle(0xffffff);
-      maskGraphics.fillRoundedRect(
-        x - width / 2,
-        y - height / 2,
-        width,
-        height,
-        4
-      );
-      const mask = maskGraphics.createGeometryMask();
-      frontImage.setMask(mask);
+      frontImage.setOrigin(0.5, 0.5);
 
       frontImage.setVisible(false);
       container.add([back, starPattern, backIcon, front, frontImage]);
