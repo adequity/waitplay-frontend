@@ -125,15 +125,43 @@ export class MatchScene extends Phaser.Scene {
         this.useImageAssets = true;
 
         // 이미지 로드
+        let loadedCount = 0;
         this.gameAssets.forEach((asset, index) => {
           if (asset.imageUrl) {
-            this.load.image(`asset_${index}`, asset.imageUrl);
+            const key = `asset_${index}`;
+            console.log(`[MatchScene] Loading image: ${key}`);
+            this.load.image(key, asset.imageUrl);
+            loadedCount++;
           }
+        });
+
+        if (loadedCount === 0) {
+          console.log('[MatchScene] No valid image URLs, using emoji theme');
+          this.useImageAssets = false;
+          this.assetsLoaded = true;
+          this.finishInit(W, H);
+          return;
+        }
+
+        // 로드 에러 처리
+        this.load.on('loaderror', (file: Phaser.Loader.File) => {
+          const url = typeof file.url === 'string' ? file.url.substring(0, 100) : 'unknown';
+          console.error('[MatchScene] Failed to load image:', file.key, url);
         });
 
         // 로드 완료 이벤트
         this.load.once('complete', () => {
-          console.log('[MatchScene] All asset images loaded');
+          // 실제로 로드된 텍스처 확인
+          const loadedTextures = this.gameAssets.filter((_, i) =>
+            this.textures.exists(`asset_${i}`)
+          ).length;
+          console.log(`[MatchScene] Loaded textures: ${loadedTextures}/${this.TOTAL_PAIRS}`);
+
+          if (loadedTextures < this.TOTAL_PAIRS) {
+            console.log('[MatchScene] Not enough textures loaded, using emoji theme');
+            this.useImageAssets = false;
+          }
+
           this.assetsLoaded = true;
           this.finishInit(W, H);
         });
@@ -458,41 +486,42 @@ export class MatchScene extends Phaser.Scene {
     let frontText: Phaser.GameObjects.Text | undefined;
     let frontImage: Phaser.GameObjects.Image | undefined;
 
-    if (isImageCard) {
+    if (isImageCard && this.textures.exists(value)) {
       // 이미지 카드 - 카드에 꽉 차게 표시 (여백 없음)
-      try {
-        frontImage = this.add.image(0, 0, value);
+      frontImage = this.add.image(0, 0, value);
 
-        // 이미지를 카드 크기에 꽉 차게 조절 (cover 방식)
-        const scaleX = width / frontImage.width;
-        const scaleY = height / frontImage.height;
-        // 더 큰 스케일을 사용하여 카드를 꽉 채움
-        const scale = Math.max(scaleX, scaleY);
-        frontImage.setScale(scale);
+      // 이미지를 카드 크기에 꽉 차게 조절 (cover 방식)
+      const scaleX = width / frontImage.width;
+      const scaleY = height / frontImage.height;
+      // 더 큰 스케일을 사용하여 카드를 꽉 채움
+      const scale = Math.max(scaleX, scaleY);
+      frontImage.setScale(scale);
 
-        // 마스크 생성 - 카드 영역을 벗어나는 부분 자르기
-        const maskGraphics = this.add.graphics();
-        maskGraphics.fillStyle(0xffffff);
-        maskGraphics.fillRoundedRect(
-          x - width / 2,
-          y - height / 2,
-          width,
-          height,
-          4
-        );
-        const mask = maskGraphics.createGeometryMask();
-        frontImage.setMask(mask);
+      // 마스크 생성 - 카드 영역을 벗어나는 부분 자르기
+      const maskGraphics = this.add.graphics();
+      maskGraphics.fillStyle(0xffffff);
+      maskGraphics.fillRoundedRect(
+        x - width / 2,
+        y - height / 2,
+        width,
+        height,
+        4
+      );
+      const mask = maskGraphics.createGeometryMask();
+      frontImage.setMask(mask);
 
-        frontImage.setVisible(false);
-        container.add([back, starPattern, backIcon, front, frontImage]);
-      } catch (e) {
-        // 이미지 로드 실패 시 폴백
-        console.warn(`Failed to load image: ${value}`);
-        frontText = this.add.text(0, 0, '🖼️', {
-          fontSize: Math.floor(height * 0.5) + 'px'
-        }).setOrigin(0.5).setVisible(false);
-        container.add([back, starPattern, backIcon, front, frontText]);
-      }
+      frontImage.setVisible(false);
+      container.add([back, starPattern, backIcon, front, frontImage]);
+    } else if (isImageCard) {
+      // 텍스처가 없는 경우 폴백 이모지
+      console.warn(`[MatchScene] Texture not found: ${value}, using fallback emoji`);
+      const themeEmojis = THEMES[this.currentTheme] || THEMES.animals;
+      const emojiIndex = index % themeEmojis.length;
+      const fallbackEmoji = themeEmojis[emojiIndex] || '🖼️';
+      frontText = this.add.text(0, 0, fallbackEmoji, {
+        fontSize: Math.floor(height * 0.55) + 'px'
+      }).setOrigin(0.5).setVisible(false);
+      container.add([back, starPattern, backIcon, front, frontText]);
     } else {
       // 이모지 카드 - 크게 표시
       frontText = this.add.text(0, 0, value, {
