@@ -1,0 +1,23 @@
+{
+  "testAdmin": {
+    "email": "test@example.com",
+    "password": "testPassword123!",
+    "nickname": "테스트관리자",
+    "role": "admin"
+  },
+  "testUser": {
+    "email": "user@example.com",
+    "password": "userPassword123!",
+    "nickname": "테스트사용자",
+    "role": "user"
+  },
+  "invalidUser": {
+    "email": "invalid@example.com",
+    "password": "wrongPassword"
+  },
+  "newUser": {
+    "email": "newuser@example.com",
+    "password": "newPassword123!",
+    "name": "신규사용자"
+  }
+}
