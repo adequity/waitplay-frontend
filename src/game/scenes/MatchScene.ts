@@ -6,10 +6,9 @@
  */
 
 import * as Phaser from 'phaser';
-import { COLORS } from '../config';
 import { submitGameScore } from '../../services/gameScoreService';
 import { gameManager } from '../GameManager';
-import { getMatchGameAssets, extractImageUrls, type GameAsset } from '../../services/gameAssetService';
+import { getMatchGameAssets, type GameAsset } from '../../services/gameAssetService';
 
 interface Card {
   container: Phaser.GameObjects.Container;
@@ -170,70 +169,131 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createBackground(W: number, H: number) {
-    // 배경 그라데이션 효과 (사각형 레이어링)
-    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x0f0f23);
+    // 우주 배경 - 깊은 우주 색상
+    const bg = this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x0a0a1a);
 
-    // 장식 원
-    const decorCircle1 = this.add.circle(W * 0.1, H * 0.1, 100, 0x667eea, 0.1);
-    const decorCircle2 = this.add.circle(W * 0.9, H * 0.9, 150, 0x764ba2, 0.1);
-    const decorCircle3 = this.add.circle(W * 0.8, H * 0.2, 80, 0x4facfe, 0.08);
+    // 성운 효과 - 큰 발광 원들
+    this.add.circle(W * 0.15, H * 0.2, 120, 0x4c1d95, 0.15); // 보라색 성운
+    this.add.circle(W * 0.85, H * 0.15, 100, 0x1e3a8a, 0.12); // 파란 성운
+    this.add.circle(W * 0.9, H * 0.75, 140, 0x7c3aed, 0.1); // 보라색 성운
+    this.add.circle(W * 0.1, H * 0.85, 90, 0x0ea5e9, 0.08); // 청록색 성운
+
+    // 별 생성 - 여러 크기와 밝기
+    const starCount = 60;
+    for (let i = 0; i < starCount; i++) {
+      const x = Math.random() * W;
+      const y = Math.random() * H;
+      const size = Math.random() * 2.5 + 0.5;
+      const alpha = Math.random() * 0.6 + 0.3;
+
+      // 별 색상 (흰색, 연한 파랑, 연한 노랑)
+      const colors = [0xffffff, 0xe0f2fe, 0xfef3c7, 0xddd6fe];
+      const color = colors[Math.floor(Math.random() * colors.length)] || 0xffffff;
+
+      const star = this.add.circle(x, y, size, color, alpha);
+
+      // 일부 별에 깜빡임 애니메이션
+      if (Math.random() > 0.6) {
+        this.tweens.add({
+          targets: star,
+          alpha: alpha * 0.3,
+          duration: 1000 + Math.random() * 2000,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
+    }
+
+    // 큰 밝은 별 몇 개
+    const brightStars = [
+      { x: W * 0.2, y: H * 0.1 },
+      { x: W * 0.7, y: H * 0.05 },
+      { x: W * 0.95, y: H * 0.4 },
+      { x: W * 0.05, y: H * 0.6 }
+    ];
+
+    brightStars.forEach(pos => {
+      // 별 광채
+      this.add.circle(pos.x, pos.y, 8, 0xffffff, 0.1);
+      this.add.circle(pos.x, pos.y, 4, 0xffffff, 0.3);
+      const brightStar = this.add.circle(pos.x, pos.y, 2, 0xffffff, 0.9);
+
+      // 밝은 별 깜빡임
+      this.tweens.add({
+        targets: brightStar,
+        alpha: 0.5,
+        scale: 0.7,
+        duration: 1500 + Math.random() * 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    });
   }
 
   private createUIPanel(W: number, H: number) {
-    // 상단 UI 패널
-    const panelBg = this.add.rectangle(W * 0.5, H * 0.05, W * 0.95, H * 0.08, 0x1a1a2e, 0.9);
-    panelBg.setStrokeStyle(2, 0x667eea, 0.5);
+    // 상단 UI 패널 - 우주 테마
+    const panelBg = this.add.rectangle(W * 0.5, H * 0.05, W * 0.98, H * 0.08, 0x0f172a, 0.95);
+    panelBg.setStrokeStyle(2, 0x7c3aed, 0.6);
 
     // 이동 수
-    this.movesText = this.add.text(W * 0.05, H * 0.05, '🎯 0', {
-      fontSize: Math.floor(H * 0.035) + 'px',
-      color: COLORS.white,
+    this.movesText = this.add.text(W * 0.05, H * 0.05, '🚀 0', {
+      fontSize: Math.floor(H * 0.032) + 'px',
+      color: '#e0f2fe',
       fontStyle: 'bold'
     }).setOrigin(0, 0.5);
 
     // 매치 수
-    this.matchesText = this.add.text(W * 0.35, H * 0.05, '✅ 0/' + this.TOTAL_PAIRS, {
-      fontSize: Math.floor(H * 0.035) + 'px',
-      color: COLORS.white,
+    this.matchesText = this.add.text(W * 0.35, H * 0.05, '⭐ 0/' + this.TOTAL_PAIRS, {
+      fontSize: Math.floor(H * 0.032) + 'px',
+      color: '#fef3c7',
       fontStyle: 'bold'
     }).setOrigin(0, 0.5);
 
     // 시간
-    this.timeText = this.add.text(W * 0.65, H * 0.05, '⏱️ 0초', {
-      fontSize: Math.floor(H * 0.035) + 'px',
-      color: COLORS.white,
+    this.timeText = this.add.text(W * 0.68, H * 0.05, '🕐 0초', {
+      fontSize: Math.floor(H * 0.032) + 'px',
+      color: '#ddd6fe',
       fontStyle: 'bold'
     }).setOrigin(0, 0.5);
 
     // 콤보 텍스트 (숨김 상태로 시작)
-    this.comboText = this.add.text(W * 0.5, H * 0.12, '', {
-      fontSize: Math.floor(H * 0.05) + 'px',
-      color: COLORS.warning,
+    this.comboText = this.add.text(W * 0.5, H * 0.11, '', {
+      fontSize: Math.floor(H * 0.045) + 'px',
+      color: '#fbbf24',
       fontStyle: 'bold'
     }).setOrigin(0.5).setAlpha(0);
   }
 
   private createTitleScreen(W: number, H: number) {
-    // 타이틀
-    const title = this.add.text(W * 0.5, H * 0.2, '🎴 같은 그림 찾기', {
+    // 타이틀 - 우주 테마
+    const title = this.add.text(W * 0.5, H * 0.2, '🌌 우주 카드 매치', {
       fontSize: Math.floor(H * 0.055) + 'px',
-      color: COLORS.primary,
+      color: '#c4b5fd',
       fontStyle: 'bold'
     }).setOrigin(0.5);
     this.titleElements.push(title);
 
+    // 부제목
+    const subtitle = this.add.text(W * 0.5, H * 0.26, '✨ 별들 사이에서 같은 그림을 찾아보세요 ✨', {
+      fontSize: Math.floor(H * 0.022) + 'px',
+      color: '#a5b4fc'
+    }).setOrigin(0.5);
+    this.titleElements.push(subtitle);
+
     // 에셋 또는 테마 표시
     if (this.useImageAssets && this.gameAssets.length > 0) {
       // 관리자 등록 이미지 사용
-      const assetLabel = this.add.text(W * 0.5, H * 0.28, '🖼️ 커스텀 이미지 모드', {
-        fontSize: Math.floor(H * 0.03) + 'px',
-        color: COLORS.success
+      const assetLabel = this.add.text(W * 0.5, H * 0.32, '🖼️ 커스텀 이미지 모드', {
+        fontSize: Math.floor(H * 0.028) + 'px',
+        color: '#34d399'
       }).setOrigin(0.5);
       this.titleElements.push(assetLabel);
 
-      const assetCount = this.add.text(W * 0.5, H * 0.34, `${this.gameAssets.length}개의 이미지로 플레이`, {
-        fontSize: Math.floor(H * 0.025) + 'px',
-        color: COLORS.white
+      const assetCount = this.add.text(W * 0.5, H * 0.37, `${this.gameAssets.length}개의 이미지로 플레이`, {
+        fontSize: Math.floor(H * 0.022) + 'px',
+        color: '#e0f2fe'
       }).setOrigin(0.5);
       this.titleElements.push(assetCount);
     } else {
@@ -241,53 +301,53 @@ export class MatchScene extends Phaser.Scene {
       const themeEmojis = THEMES[this.currentTheme];
       const themeDisplay = themeEmojis ? themeEmojis.slice(0, 4).join(' ') : '🎮';
 
-      const themeLabel = this.add.text(W * 0.5, H * 0.28, `테마: ${this.getThemeName()}`, {
-        fontSize: Math.floor(H * 0.03) + 'px',
-        color: COLORS.accent
+      const themeLabel = this.add.text(W * 0.5, H * 0.32, `테마: ${this.getThemeName()}`, {
+        fontSize: Math.floor(H * 0.028) + 'px',
+        color: '#22d3ee'
       }).setOrigin(0.5);
       this.titleElements.push(themeLabel);
 
-      const themeSample = this.add.text(W * 0.5, H * 0.34, themeDisplay, {
-        fontSize: Math.floor(H * 0.06) + 'px'
+      const themeSample = this.add.text(W * 0.5, H * 0.38, themeDisplay, {
+        fontSize: Math.floor(H * 0.055) + 'px'
       }).setOrigin(0.5);
       this.titleElements.push(themeSample);
     }
 
     // 게임 설명
-    const instructions = this.add.text(W * 0.5, H * 0.42,
-      '같은 그림 카드를 찾아 매칭하세요!\n연속으로 맞추면 콤보 보너스!', {
-      fontSize: Math.floor(H * 0.028) + 'px',
-      color: COLORS.white,
+    const instructions = this.add.text(W * 0.5, H * 0.46,
+      '🪐 같은 그림 카드를 찾아 매칭하세요!\n⚡ 연속으로 맞추면 콤보 보너스!', {
+      fontSize: Math.floor(H * 0.025) + 'px',
+      color: '#e0f2fe',
       align: 'center',
-      lineSpacing: 8
+      lineSpacing: 10
     }).setOrigin(0.5);
     this.titleElements.push(instructions);
 
-    // 시작 버튼
-    const startButtonBg = this.add.rectangle(W * 0.5, H * 0.88, 200, 60, 0x667eea);
-    startButtonBg.setStrokeStyle(3, 0x764ba2);
+    // 시작 버튼 - 우주 테마
+    const startButtonBg = this.add.rectangle(W * 0.5, H * 0.88, 220, 65, 0x7c3aed);
+    startButtonBg.setStrokeStyle(3, 0xa78bfa);
     startButtonBg.setInteractive({ useHandCursor: true });
     this.titleElements.push(startButtonBg);
 
-    const startButtonText = this.add.text(W * 0.5, H * 0.88, '🎮 게임 시작', {
+    const startButtonText = this.add.text(W * 0.5, H * 0.88, '🚀 게임 시작', {
       fontSize: Math.floor(H * 0.04) + 'px',
-      color: COLORS.white,
+      color: '#ffffff',
       fontStyle: 'bold'
     }).setOrigin(0.5);
     this.titleElements.push(startButtonText);
 
     // 버튼 호버 효과
     startButtonBg.on('pointerover', () => {
-      startButtonBg.setFillStyle(0x764ba2);
+      startButtonBg.setFillStyle(0x8b5cf6);
       this.tweens.add({
         targets: [startButtonBg, startButtonText],
-        scale: 1.05,
+        scale: 1.08,
         duration: 100
       });
     });
 
     startButtonBg.on('pointerout', () => {
-      startButtonBg.setFillStyle(0x667eea);
+      startButtonBg.setFillStyle(0x7c3aed);
       this.tweens.add({
         targets: [startButtonBg, startButtonText],
         scale: 1,
@@ -328,17 +388,37 @@ export class MatchScene extends Phaser.Scene {
     // 카드 섞기
     this.shuffleArray(cardValues);
 
-    // 4x4 그리드 설정
+    // 4x4 그리드 설정 - 전체화면에 맞게 크기 조정
     const cols = 4;
     const rows = 4;
-    const cardWidth = Math.min(W * 0.2, 80);
-    const cardHeight = cardWidth * 1.3;
-    const totalWidth = cols * cardWidth + (cols - 1) * (W * 0.03);
-    const totalHeight = rows * cardHeight + (rows - 1) * (H * 0.02);
+
+    // UI 영역(상단 패널) 고려한 게임 영역 계산
+    const gameAreaTop = H * 0.12; // UI 패널 아래
+    const gameAreaBottom = H * 0.98; // 하단 여백
+    const gameAreaHeight = gameAreaBottom - gameAreaTop;
+    const gameAreaWidth = W * 0.95;
+
+    // 카드 크기 계산 - 여백 포함하여 화면에 꽉 차게
+    const gapRatio = 0.08; // 카드 간 간격 비율
+    const availableWidth = gameAreaWidth / (cols + (cols - 1) * gapRatio);
+    const availableHeight = gameAreaHeight / (rows + (rows - 1) * gapRatio);
+
+    // 카드 크기 (정사각형에 가깝게)
+    const cardSize = Math.min(availableWidth, availableHeight * 0.85);
+    const cardWidth = cardSize;
+    const cardHeight = cardSize * 1.15; // 약간 세로로 길게
+
+    // 간격 계산
+    const spacingX = cardWidth * (1 + gapRatio);
+    const spacingY = cardHeight * (1 + gapRatio);
+
+    // 그리드 전체 크기
+    const totalWidth = cols * cardWidth + (cols - 1) * cardWidth * gapRatio;
+    const totalHeight = rows * cardHeight + (rows - 1) * cardHeight * gapRatio;
+
+    // 시작 위치 (중앙 정렬)
     const startX = (W - totalWidth) / 2 + cardWidth / 2;
-    const startY = H * 0.52;
-    const spacingX = cardWidth + W * 0.03;
-    const spacingY = cardHeight + H * 0.02;
+    const startY = gameAreaTop + (gameAreaHeight - totalHeight) / 2 + cardHeight / 2;
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
@@ -362,48 +442,69 @@ export class MatchScene extends Phaser.Scene {
     const H = this.sys.game.config.height as number;
     const container = this.add.container(x, y);
 
-    // 카드 뒷면
-    const back = this.add.rectangle(0, 0, width, height, 0x667eea);
-    back.setStrokeStyle(3, 0x764ba2);
+    // 카드 뒷면 - 우주 테마 색상
+    const back = this.add.rectangle(0, 0, width, height, 0x1e1b4b);
+    back.setStrokeStyle(3, 0x7c3aed);
 
-    // 뒷면 아이콘 (물음표)
-    const backIcon = this.add.text(0, 0, '❓', {
-      fontSize: Math.floor(height * 0.4) + 'px'
+    // 뒷면 장식 - 별 패턴
+    const starPattern = this.add.text(0, -height * 0.15, '✨', {
+      fontSize: Math.floor(height * 0.2) + 'px'
     }).setOrigin(0.5);
 
-    // 카드 앞면 (숨김)
-    const front = this.add.rectangle(0, 0, width, height, 0xffffff);
-    front.setStrokeStyle(3, 0x10b981);
+    // 뒷면 아이콘 (물음표를 우주 테마로)
+    const backIcon = this.add.text(0, height * 0.1, '🌟', {
+      fontSize: Math.floor(height * 0.35) + 'px'
+    }).setOrigin(0.5);
+
+    // 카드 앞면 (숨김) - 어두운 배경으로 이미지 강조
+    const front = this.add.rectangle(0, 0, width, height, 0x0f172a);
+    front.setStrokeStyle(3, 0x22d3ee);
     front.setVisible(false);
 
     let frontText: Phaser.GameObjects.Text | undefined;
     let frontImage: Phaser.GameObjects.Image | undefined;
 
     if (isImageCard) {
-      // 이미지 카드
+      // 이미지 카드 - 카드에 꽉 차게 표시 (여백 없음)
       try {
         frontImage = this.add.image(0, 0, value);
-        // 이미지를 카드 크기에 맞게 조절
-        const scaleX = (width - 10) / frontImage.width;
-        const scaleY = (height - 10) / frontImage.height;
-        const scale = Math.min(scaleX, scaleY);
+
+        // 이미지를 카드 크기에 꽉 차게 조절 (cover 방식)
+        const scaleX = width / frontImage.width;
+        const scaleY = height / frontImage.height;
+        // 더 큰 스케일을 사용하여 카드를 꽉 채움
+        const scale = Math.max(scaleX, scaleY);
         frontImage.setScale(scale);
+
+        // 마스크 생성 - 카드 영역을 벗어나는 부분 자르기
+        const maskGraphics = this.add.graphics();
+        maskGraphics.fillStyle(0xffffff);
+        maskGraphics.fillRoundedRect(
+          x - width / 2,
+          y - height / 2,
+          width,
+          height,
+          4
+        );
+        const mask = maskGraphics.createGeometryMask();
+        frontImage.setMask(mask);
+
         frontImage.setVisible(false);
-        container.add([back, backIcon, front, frontImage]);
+        container.add([back, starPattern, backIcon, front, frontImage]);
       } catch (e) {
         // 이미지 로드 실패 시 폴백
         console.warn(`Failed to load image: ${value}`);
         frontText = this.add.text(0, 0, '🖼️', {
           fontSize: Math.floor(height * 0.5) + 'px'
         }).setOrigin(0.5).setVisible(false);
-        container.add([back, backIcon, front, frontText]);
+        container.add([back, starPattern, backIcon, front, frontText]);
       }
     } else {
-      // 이모지 카드
+      // 이모지 카드 - 크게 표시
       frontText = this.add.text(0, 0, value, {
-        fontSize: Math.floor(height * 0.5) + 'px'
+        fontSize: Math.floor(height * 0.55) + 'px'
       }).setOrigin(0.5).setVisible(false);
-      container.add([back, backIcon, front, frontText]);
+      container.add([back, starPattern, backIcon, front, frontText]);
     }
 
     // 클릭 이벤트
@@ -498,7 +599,7 @@ export class MatchScene extends Phaser.Scene {
 
   private updateTimer() {
     this.elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
-    this.timeText?.setText(`⏱️ ${this.elapsedTime}초`);
+    this.timeText?.setText(`🕐 ${this.elapsedTime}초`);
   }
 
   private flipCard(card: Card) {
@@ -533,7 +634,7 @@ export class MatchScene extends Phaser.Scene {
     // 두 장의 카드가 뒤집혔을 때
     if (this.flippedCards.length === 2) {
       this.moves++;
-      this.movesText?.setText('🎯 ' + this.moves);
+      this.movesText?.setText('🚀 ' + this.moves);
       this.canFlip = false;
 
       this.time.delayedCall(200, () => {
@@ -551,7 +652,7 @@ export class MatchScene extends Phaser.Scene {
       this.matches++;
       this.consecutiveMatches++;
       this.maxCombo = Math.max(this.maxCombo, this.consecutiveMatches);
-      this.matchesText?.setText('✅ ' + this.matches + '/' + this.TOTAL_PAIRS);
+      this.matchesText?.setText('⭐ ' + this.matches + '/' + this.TOTAL_PAIRS);
 
       card1.isMatched = true;
       card2.isMatched = true;
@@ -681,44 +782,44 @@ export class MatchScene extends Phaser.Scene {
     // 성능 등급
     const grade = this.getGrade(finalScore);
 
-    // 결과 오버레이
-    const overlay = this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x000000, 0.85);
+    // 결과 오버레이 - 우주 테마
+    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x0a0a1a, 0.95);
 
-    // 결과 타이틀
-    this.add.text(W * 0.5, H * 0.2, '🎉 완료!', {
-      fontSize: Math.floor(H * 0.08) + 'px',
-      color: COLORS.success,
+    // 결과 타이틀 - 우주 테마
+    this.add.text(W * 0.5, H * 0.18, '🌟 미션 완료! 🌟', {
+      fontSize: Math.floor(H * 0.065) + 'px',
+      color: '#34d399',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
     // 등급 표시
-    this.add.text(W * 0.5, H * 0.3, grade.emoji + ' ' + grade.text, {
-      fontSize: Math.floor(H * 0.06) + 'px',
+    this.add.text(W * 0.5, H * 0.28, grade.emoji + ' ' + grade.text, {
+      fontSize: Math.floor(H * 0.055) + 'px',
       color: grade.color
     }).setOrigin(0.5);
 
-    // 통계
+    // 통계 - 우주 테마 아이콘
     const statsText = [
-      `⏱️ 시간: ${this.elapsedTime}초`,
-      `🎯 이동 수: ${this.moves}회`,
-      `🔥 최대 콤보: ${this.maxCombo}회`,
-      `⭐ 점수: ${finalScore}점`
+      `🕐 시간: ${this.elapsedTime}초`,
+      `🚀 이동 수: ${this.moves}회`,
+      `⚡ 최대 콤보: ${this.maxCombo}회`,
+      `🌟 점수: ${finalScore}점`
     ].join('\n');
 
-    this.add.text(W * 0.5, H * 0.45, statsText, {
-      fontSize: Math.floor(H * 0.035) + 'px',
-      color: COLORS.white,
+    this.add.text(W * 0.5, H * 0.43, statsText, {
+      fontSize: Math.floor(H * 0.032) + 'px',
+      color: '#e0f2fe',
       align: 'center',
-      lineSpacing: 12
+      lineSpacing: 10
     }).setOrigin(0.5);
 
     // 이름 입력
-    const namePrompt = this.add.text(W * 0.5, H * 0.6, '이름을 입력하세요:', {
-      fontSize: Math.floor(H * 0.03) + 'px',
-      color: COLORS.white
+    const namePrompt = this.add.text(W * 0.5, H * 0.58, '🧑‍🚀 우주 비행사 이름:', {
+      fontSize: Math.floor(H * 0.028) + 'px',
+      color: '#a5b4fc'
     }).setOrigin(0.5);
 
-    // HTML 입력 요소
+    // HTML 입력 요소 - 우주 테마
     const gameContainer = document.getElementById('game-container');
     const inputElement = document.createElement('input');
     inputElement.type = 'text';
@@ -727,29 +828,30 @@ export class MatchScene extends Phaser.Scene {
     inputElement.style.cssText = `
       position: absolute;
       left: 50%;
-      top: ${H * 0.65}px;
+      top: ${H * 0.63}px;
       transform: translateX(-50%);
       width: 250px;
       padding: 12px;
       font-size: 16px;
-      border: 2px solid ${COLORS.primary};
+      border: 2px solid #7c3aed;
       border-radius: 10px;
       text-align: center;
-      background: rgba(255,255,255,0.95);
+      background: rgba(15, 23, 42, 0.95);
+      color: #e0f2fe;
     `;
     gameContainer?.appendChild(inputElement);
     inputElement.focus();
 
     const submitButton = document.createElement('button');
-    submitButton.textContent = '🏆 점수 제출';
+    submitButton.textContent = '🚀 점수 제출';
     submitButton.style.cssText = `
       position: absolute;
       left: 50%;
-      top: ${H * 0.73}px;
+      top: ${H * 0.71}px;
       transform: translateX(-50%);
       padding: 12px 30px;
       font-size: 16px;
-      background: linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary});
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
       color: white;
       border: none;
       border-radius: 10px;
@@ -762,7 +864,7 @@ export class MatchScene extends Phaser.Scene {
       const playerName = inputElement.value.trim() || '익명';
 
       submitButton.disabled = true;
-      submitButton.textContent = '제출 중...';
+      submitButton.textContent = '전송 중...';
 
       const qrCode = gameManager.getQrCode();
       const success = await submitGameScore({
@@ -777,21 +879,21 @@ export class MatchScene extends Phaser.Scene {
 
       if (success) {
         namePrompt.setText('✅ 점수가 제출되었습니다!');
-        namePrompt.setColor(COLORS.success);
+        namePrompt.setColor('#34d399');
       } else {
         namePrompt.setText('❌ 점수 제출 실패');
-        namePrompt.setColor(COLORS.danger);
+        namePrompt.setColor('#f87171');
       }
 
-      // 재시작 버튼
+      // 재시작 버튼 - 우주 테마
       this.time.delayedCall(1500, () => {
-        const restartBg = this.add.rectangle(W * 0.5, H * 0.85, 180, 50, 0x667eea);
-        restartBg.setStrokeStyle(2, 0x764ba2);
+        const restartBg = this.add.rectangle(W * 0.5, H * 0.85, 200, 55, 0x7c3aed);
+        restartBg.setStrokeStyle(2, 0xa78bfa);
         restartBg.setInteractive({ useHandCursor: true });
 
-        const restartText = this.add.text(W * 0.5, H * 0.85, '🔄 다시 시작', {
+        this.add.text(W * 0.5, H * 0.85, '🔄 다시 도전', {
           fontSize: Math.floor(H * 0.035) + 'px',
-          color: COLORS.white,
+          color: '#ffffff',
           fontStyle: 'bold'
         }).setOrigin(0.5);
 
@@ -818,10 +920,11 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private getGrade(score: number): { emoji: string; text: string; color: string } {
-    if (score >= 900) return { emoji: '🏆', text: 'S 랭크', color: '#fbbf24' };
-    if (score >= 750) return { emoji: '🥇', text: 'A 랭크', color: '#10b981' };
-    if (score >= 600) return { emoji: '🥈', text: 'B 랭크', color: '#60a5fa' };
-    if (score >= 450) return { emoji: '🥉', text: 'C 랭크', color: '#a78bfa' };
-    return { emoji: '📝', text: 'D 랭크', color: '#9ca3af' };
+    // 우주 테마 등급
+    if (score >= 900) return { emoji: '🌟', text: '전설의 탐험가', color: '#fbbf24' };
+    if (score >= 750) return { emoji: '🚀', text: '우주 비행사', color: '#34d399' };
+    if (score >= 600) return { emoji: '🛸', text: '스타 파일럿', color: '#60a5fa' };
+    if (score >= 450) return { emoji: '🌙', text: '우주 여행자', color: '#a78bfa' };
+    return { emoji: '✨', text: '별 수집가', color: '#9ca3af' };
   }
 }
