@@ -14,6 +14,7 @@ interface Card {
   container: Phaser.GameObjects.Container;
   back: Phaser.GameObjects.Rectangle;
   backIcon: Phaser.GameObjects.Text;
+  starPattern: Phaser.GameObjects.Text;
   front: Phaser.GameObjects.Rectangle;
   frontText?: Phaser.GameObjects.Text;
   frontImage?: Phaser.GameObjects.Image;
@@ -392,33 +393,27 @@ export class MatchScene extends Phaser.Scene {
     const cols = 4;
     const rows = 4;
 
-    // UI 영역(상단 패널) 고려한 게임 영역 계산
-    const gameAreaTop = H * 0.12; // UI 패널 아래
-    const gameAreaBottom = H * 0.98; // 하단 여백
+    // UI 영역(상단 패널) 고려한 게임 영역 계산 - 여백 최소화
+    const gameAreaTop = H * 0.10; // UI 패널 아래
+    const gameAreaBottom = H; // 하단 여백 없음
     const gameAreaHeight = gameAreaBottom - gameAreaTop;
-    const gameAreaWidth = W * 0.95;
+    const gameAreaWidth = W; // 좌우 여백 없음
 
-    // 카드 크기 계산 - 여백 포함하여 화면에 꽉 차게
-    const gapRatio = 0.08; // 카드 간 간격 비율
-    const availableWidth = gameAreaWidth / (cols + (cols - 1) * gapRatio);
-    const availableHeight = gameAreaHeight / (rows + (rows - 1) * gapRatio);
+    // 카드 간격 (최소화)
+    const gapX = W * 0.015; // 가로 간격
+    const gapY = H * 0.01; // 세로 간격
 
-    // 카드 크기 (정사각형에 가깝게)
-    const cardSize = Math.min(availableWidth, availableHeight * 0.85);
-    const cardWidth = cardSize;
-    const cardHeight = cardSize * 1.15; // 약간 세로로 길게
+    // 카드 크기 계산 - 화면에 꽉 차게
+    const cardWidth = (gameAreaWidth - gapX * (cols + 1)) / cols;
+    const cardHeight = (gameAreaHeight - gapY * (rows + 1)) / rows;
+
+    // 시작 위치
+    const startX = gapX + cardWidth / 2;
+    const startY = gameAreaTop + gapY + cardHeight / 2;
 
     // 간격 계산
-    const spacingX = cardWidth * (1 + gapRatio);
-    const spacingY = cardHeight * (1 + gapRatio);
-
-    // 그리드 전체 크기
-    const totalWidth = cols * cardWidth + (cols - 1) * cardWidth * gapRatio;
-    const totalHeight = rows * cardHeight + (rows - 1) * cardHeight * gapRatio;
-
-    // 시작 위치 (중앙 정렬)
-    const startX = (W - totalWidth) / 2 + cardWidth / 2;
-    const startY = gameAreaTop + (gameAreaHeight - totalHeight) / 2 + cardHeight / 2;
+    const spacingX = cardWidth + gapX;
+    const spacingY = cardHeight + gapY;
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
@@ -439,7 +434,6 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createSingleCard(x: number, y: number, width: number, height: number, value: string, index: number, isImageCard: boolean = false): Card {
-    const H = this.sys.game.config.height as number;
     const container = this.add.container(x, y);
 
     // 카드 뒷면 - 우주 테마 색상
@@ -515,6 +509,7 @@ export class MatchScene extends Phaser.Scene {
       container,
       back,
       backIcon,
+      starPattern,
       front,
       frontText,
       frontImage,
@@ -568,6 +563,7 @@ export class MatchScene extends Phaser.Scene {
     this.cards.forEach(card => {
       card.back.setVisible(false);
       card.backIcon.setVisible(false);
+      card.starPattern.setVisible(false);
       card.front.setVisible(true);
       if (card.frontText) card.frontText.setVisible(true);
       if (card.frontImage) card.frontImage.setVisible(true);
@@ -578,6 +574,7 @@ export class MatchScene extends Phaser.Scene {
       this.cards.forEach(card => {
         card.back.setVisible(true);
         card.backIcon.setVisible(true);
+        card.starPattern.setVisible(true);
         card.front.setVisible(false);
         if (card.frontText) card.frontText.setVisible(false);
         if (card.frontImage) card.frontImage.setVisible(false);
@@ -617,6 +614,7 @@ export class MatchScene extends Phaser.Scene {
       onComplete: () => {
         card.back.setVisible(false);
         card.backIcon.setVisible(false);
+        card.starPattern.setVisible(false);
         card.front.setVisible(true);
         if (card.frontText) card.frontText.setVisible(true);
         if (card.frontImage) card.frontImage.setVisible(true);
@@ -715,6 +713,7 @@ export class MatchScene extends Phaser.Scene {
               card.isFlipped = false;
               card.back.setVisible(true);
               card.backIcon.setVisible(true);
+              card.starPattern.setVisible(true);
               card.front.setVisible(false);
               if (card.frontText) card.frontText.setVisible(false);
               if (card.frontImage) card.frontImage.setVisible(false);
