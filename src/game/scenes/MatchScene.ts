@@ -325,30 +325,46 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createTitleScreen(W: number, H: number) {
+    // 로고 표시 (있으면)
+    let logoYOffset = 0;
+    if (this.hasLogo) {
+      const logo = this.add.image(W * 0.5, H * 0.18, 'store_logo');
+      // 로고 크기 조절
+      const logoMaxWidth = W * 0.35;
+      const logoMaxHeight = H * 0.15;
+      const logoScaleX = logoMaxWidth / logo.width;
+      const logoScaleY = logoMaxHeight / logo.height;
+      const logoScale = Math.min(logoScaleX, logoScaleY);
+      logo.setScale(logoScale);
+      logo.setOrigin(0.5, 0.5);
+      this.titleElements.push(logo);
+      logoYOffset = H * 0.08;
+    }
+
     // 타이틀 - 매장명이 있으면 매장명, 없으면 기본
     const titleText = this.storeName || '카드 매치';
-    const title = this.add.text(W * 0.5, H * 0.25, titleText, {
-      fontSize: Math.floor(H * 0.06) + 'px',
-      color: '#c4b5fd',
+    const title = this.add.text(W * 0.5, H * 0.28 + logoYOffset, titleText, {
+      fontSize: Math.floor(H * 0.055) + 'px',
+      color: '#ffffff',
       fontStyle: 'bold'
     }).setOrigin(0.5);
     this.titleElements.push(title);
 
     // 부제목 - 같은 그림 찾기
-    const subtitle = this.add.text(W * 0.5, H * 0.32, '같은 그림 찾기', {
-      fontSize: Math.floor(H * 0.035) + 'px',
-      color: '#a5b4fc'
+    const subtitle = this.add.text(W * 0.5, H * 0.34 + logoYOffset, '같은 그림 찾기', {
+      fontSize: Math.floor(H * 0.032) + 'px',
+      color: '#94a3b8'
     }).setOrigin(0.5);
     this.titleElements.push(subtitle);
 
-    // 시작 버튼
-    const startButtonBg = this.add.rectangle(W * 0.5, H * 0.88, 220, 65, 0x7c3aed);
-    startButtonBg.setStrokeStyle(3, 0xa78bfa);
+    // 시작 버튼 - 더 밝고 깔끔한 색상
+    const startButtonBg = this.add.rectangle(W * 0.5, H * 0.88, 200, 56, 0x6366f1);
+    startButtonBg.setStrokeStyle(2, 0x818cf8);
     startButtonBg.setInteractive({ useHandCursor: true });
     this.titleElements.push(startButtonBg);
 
     const startButtonText = this.add.text(W * 0.5, H * 0.88, '게임 시작', {
-      fontSize: Math.floor(H * 0.04) + 'px',
+      fontSize: Math.floor(H * 0.035) + 'px',
       color: '#ffffff',
       fontStyle: 'bold'
     }).setOrigin(0.5);
