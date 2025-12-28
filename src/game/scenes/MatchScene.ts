@@ -15,6 +15,7 @@ interface Card {
   back: Phaser.GameObjects.Rectangle;
   backIcon: Phaser.GameObjects.Text;
   starPattern: Phaser.GameObjects.Text;
+  backLogo?: Phaser.GameObjects.Image;
   front: Phaser.GameObjects.Rectangle;
   frontText?: Phaser.GameObjects.Text;
   frontImage?: Phaser.GameObjects.Image;
@@ -62,6 +63,8 @@ export class MatchScene extends Phaser.Scene {
   private assetsLoaded: boolean = false;
   private loadingText?: Phaser.GameObjects.Text;
   private storeName?: string;
+  private logoUrl?: string;
+  private hasLogo: boolean = false;
 
   constructor() {
     super({ key: 'MatchScene' });
@@ -122,7 +125,13 @@ export class MatchScene extends Phaser.Scene {
       const result = await getMatchGameAssets(this.TOTAL_PAIRS, qrCode);
       this.gameAssets = result.assets;
       this.storeName = result.storeName;
-      console.log('[MatchScene] Store name:', this.storeName);
+      this.logoUrl = result.logoUrl;
+      console.log('[MatchScene] Store name:', this.storeName, 'Logo:', this.logoUrl);
+
+      // 로고 이미지 로드 (있으면)
+      if (this.logoUrl) {
+        this.load.image('store_logo', this.logoUrl);
+      }
 
       if (this.gameAssets.length >= this.TOTAL_PAIRS) {
         console.log(`[MatchScene] Found ${this.gameAssets.length} assets, loading images...`);
@@ -166,6 +175,10 @@ export class MatchScene extends Phaser.Scene {
             this.useImageAssets = false;
           }
 
+          // 로고 로드 확인
+          this.hasLogo = this.textures.exists('store_logo');
+          console.log(`[MatchScene] Logo loaded: ${this.hasLogo}`);
+
           this.assetsLoaded = true;
           this.finishInit(W, H);
         });
@@ -174,8 +187,20 @@ export class MatchScene extends Phaser.Scene {
       } else {
         console.log('[MatchScene] Not enough assets, using emoji theme');
         this.useImageAssets = false;
-        this.assetsLoaded = true;
-        this.finishInit(W, H);
+
+        // 에셋이 부족해도 로고는 로드 시도
+        if (this.logoUrl) {
+          this.load.once('complete', () => {
+            this.hasLogo = this.textures.exists('store_logo');
+            console.log(`[MatchScene] Logo loaded (fallback): ${this.hasLogo}`);
+            this.assetsLoaded = true;
+            this.finishInit(W, H);
+          });
+          this.load.start();
+        } else {
+          this.assetsLoaded = true;
+          this.finishInit(W, H);
+        }
       }
     } catch (error) {
       console.error('[MatchScene] Failed to load game assets:', error);
@@ -478,15 +503,29 @@ export class MatchScene extends Phaser.Scene {
     const back = this.add.rectangle(0, 0, width, height, 0x1e1b4b);
     back.setStrokeStyle(3, 0x7c3aed);
 
-    // 뒷면 장식 - 별 패턴
+    // 뒷면 장식 - 별 패턴 (로고가 없을 때만 표시)
     const starPattern = this.add.text(0, -height * 0.15, '✨', {
       fontSize: Math.floor(height * 0.2) + 'px'
     }).setOrigin(0.5);
+    starPattern.setVisible(!this.hasLogo);
 
-    // 뒷면 아이콘 (물음표를 우주 테마로)
+    // 뒷면 아이콘 (로고가 없을 때만 표시)
     const backIcon = this.add.text(0, height * 0.1, '🌟', {
       fontSize: Math.floor(height * 0.35) + 'px'
     }).setOrigin(0.5);
+    backIcon.setVisible(!this.hasLogo);
+
+    // 뒷면 로고 이미지 (로고가 있을 때만 표시)
+    let backLogo: Phaser.GameObjects.Image | undefined;
+    if (this.hasLogo) {
+      backLogo = this.add.image(0, 0, 'store_logo');
+      // 로고를 카드 크기에 맞게 조절 (contain 방식)
+      const logoScaleX = (width * 0.7) / backLogo.width;
+      const logoScaleY = (height * 0.7) / backLogo.height;
+      const logoScale = Math.min(logoScaleX, logoScaleY);
+      backLogo.setScale(logoScale);
+      backLogo.setOrigin(0.5, 0.5);
+    }
 
     // 카드 앞면 (숨김) - 어두운 배경으로 이미지 강조
     const front = this.add.rectangle(0, 0, width, height, 0x0f172a);
@@ -495,6 +534,12 @@ export class MatchScene extends Phaser.Scene {
 
     let frontText: Phaser.GameObjects.Text | undefined;
     let frontImage: Phaser.GameObjects.Image | undefined;
+
+    // 컨테이너에 뒷면 요소 추가 (로고가 있으면 로고도 추가)
+    const backElements: Phaser.GameObjects.GameObject[] = [back, starPattern, backIcon];
+    if (backLogo) {
+      backElements.push(backLogo);
+    }
 
     if (isImageCard && this.textures.exists(value)) {
       // 이미지 카드 - 카드에 꽉 차게 표시
@@ -508,7 +553,7 @@ export class MatchScene extends Phaser.Scene {
       frontImage.setOrigin(0.5, 0.5);
 
       frontImage.setVisible(false);
-      container.add([back, starPattern, backIcon, front, frontImage]);
+      container.add([...backElements, front, frontImage]);
     } else if (isImageCard) {
       // 텍스처가 없는 경우 폴백 이모지
       console.warn(`[MatchScene] Texture not found: ${value}, using fallback emoji`);
@@ -518,13 +563,13 @@ export class MatchScene extends Phaser.Scene {
       frontText = this.add.text(0, 0, fallbackEmoji, {
         fontSize: Math.floor(height * 0.55) + 'px'
       }).setOrigin(0.5).setVisible(false);
-      container.add([back, starPattern, backIcon, front, frontText]);
+      container.add([...backElements, front, frontText]);
     } else {
       // 이모지 카드 - 크게 표시
       frontText = this.add.text(0, 0, value, {
         fontSize: Math.floor(height * 0.55) + 'px'
       }).setOrigin(0.5).setVisible(false);
-      container.add([back, starPattern, backIcon, front, frontText]);
+      container.add([...backElements, front, frontText]);
     }
 
     // 클릭 이벤트
@@ -536,6 +581,7 @@ export class MatchScene extends Phaser.Scene {
       back,
       backIcon,
       starPattern,
+      backLogo,
       front,
       frontText,
       frontImage,
@@ -590,6 +636,7 @@ export class MatchScene extends Phaser.Scene {
       card.back.setVisible(false);
       card.backIcon.setVisible(false);
       card.starPattern.setVisible(false);
+      if (card.backLogo) card.backLogo.setVisible(false);
       card.front.setVisible(true);
       if (card.frontText) card.frontText.setVisible(true);
       if (card.frontImage) card.frontImage.setVisible(true);
@@ -599,8 +646,9 @@ export class MatchScene extends Phaser.Scene {
       // 카드 다시 뒤집기
       this.cards.forEach(card => {
         card.back.setVisible(true);
-        card.backIcon.setVisible(true);
-        card.starPattern.setVisible(true);
+        card.backIcon.setVisible(!this.hasLogo);
+        card.starPattern.setVisible(!this.hasLogo);
+        if (card.backLogo) card.backLogo.setVisible(true);
         card.front.setVisible(false);
         if (card.frontText) card.frontText.setVisible(false);
         if (card.frontImage) card.frontImage.setVisible(false);
@@ -641,6 +689,7 @@ export class MatchScene extends Phaser.Scene {
         card.back.setVisible(false);
         card.backIcon.setVisible(false);
         card.starPattern.setVisible(false);
+        if (card.backLogo) card.backLogo.setVisible(false);
         card.front.setVisible(true);
         if (card.frontText) card.frontText.setVisible(true);
         if (card.frontImage) card.frontImage.setVisible(true);
@@ -738,8 +787,9 @@ export class MatchScene extends Phaser.Scene {
             onComplete: () => {
               card.isFlipped = false;
               card.back.setVisible(true);
-              card.backIcon.setVisible(true);
-              card.starPattern.setVisible(true);
+              card.backIcon.setVisible(!this.hasLogo);
+              card.starPattern.setVisible(!this.hasLogo);
+              if (card.backLogo) card.backLogo.setVisible(true);
               card.front.setVisible(false);
               if (card.frontText) card.frontText.setVisible(false);
               if (card.frontImage) card.frontImage.setVisible(false);

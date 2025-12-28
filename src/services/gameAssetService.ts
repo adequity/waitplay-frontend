@@ -21,6 +21,7 @@ export interface GameAssetResponse {
   total: number
   qrCodeId?: string
   storeName?: string
+  logoUrl?: string
 }
 
 export type GameAssetType = '틀린그림찾기' | '기억력게임' | '같은그림찾기'
@@ -52,7 +53,8 @@ export async function getGameAssetsByQrCode(
       assets: data.assets || [],
       total: data.total || 0,
       qrCodeId: data.qrCodeId,
-      storeName: data.storeName
+      storeName: data.storeName,
+      logoUrl: data.logoUrl
     }
   } catch (error) {
     console.error('Error fetching game assets by QR code:', error)
@@ -90,6 +92,7 @@ export async function getGameAssets(
 export interface MatchGameAssetsResult {
   assets: GameAsset[]
   storeName?: string
+  logoUrl?: string
 }
 
 /**
@@ -103,11 +106,13 @@ export async function getMatchGameAssets(pairCount: number = 8, qrCode?: string)
   let storeName: string | undefined
 
   // QR코드가 있으면 Admin이 선택한 에셋 조회
+  let logoUrl: string | undefined
   if (qrCode) {
     const response = await getGameAssetsByQrCode(qrCode, '같은그림찾기', pairCount)
     assets = response.assets
     storeName = response.storeName
-    console.log(`[getMatchGameAssets] QR코드 기반 에셋 ${assets.length}개 조회됨, 매장명: ${storeName}`)
+    logoUrl = response.logoUrl
+    console.log(`[getMatchGameAssets] QR코드 기반 에셋 ${assets.length}개 조회됨, 매장명: ${storeName}, 로고: ${logoUrl}`)
   }
 
   // QR코드가 없거나 에셋이 부족하면 전체 에셋에서 조회 (fallback)
@@ -118,7 +123,8 @@ export async function getMatchGameAssets(pairCount: number = 8, qrCode?: string)
 
   return {
     assets: assets.slice(0, pairCount),
-    storeName
+    storeName,
+    logoUrl
   }
 }
 
