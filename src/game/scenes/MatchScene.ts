@@ -61,6 +61,7 @@ export class MatchScene extends Phaser.Scene {
   private useImageAssets: boolean = false;
   private assetsLoaded: boolean = false;
   private loadingText?: Phaser.GameObjects.Text;
+  private storeName?: string;
 
   constructor() {
     super({ key: 'MatchScene' });
@@ -118,7 +119,10 @@ export class MatchScene extends Phaser.Scene {
       console.log('[MatchScene] Fetching game assets...');
       const qrCode = gameManager.getQrCode();
       console.log('[MatchScene] QR Code:', qrCode);
-      this.gameAssets = await getMatchGameAssets(this.TOTAL_PAIRS, qrCode);
+      const result = await getMatchGameAssets(this.TOTAL_PAIRS, qrCode);
+      this.gameAssets = result.assets;
+      this.storeName = result.storeName;
+      console.log('[MatchScene] Store name:', this.storeName);
 
       if (this.gameAssets.length >= this.TOTAL_PAIRS) {
         console.log(`[MatchScene] Found ${this.gameAssets.length} assets, loading images...`);
@@ -296,17 +300,23 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createTitleScreen(W: number, H: number) {
-    // 타이틀 - 우주 테마
-    const title = this.add.text(W * 0.5, H * 0.2, '🌌 우주 카드 매치', {
+    // 타이틀 - 매장명이 있으면 커스텀, 없으면 기본 우주 테마
+    const titleText = this.storeName
+      ? `🎮 ${this.storeName}`
+      : '🌌 우주 카드 매치';
+    const title = this.add.text(W * 0.5, H * 0.2, titleText, {
       fontSize: Math.floor(H * 0.055) + 'px',
       color: '#c4b5fd',
       fontStyle: 'bold'
     }).setOrigin(0.5);
     this.titleElements.push(title);
 
-    // 부제목
-    const subtitle = this.add.text(W * 0.5, H * 0.26, '✨ 별들 사이에서 같은 그림을 찾아보세요 ✨', {
-      fontSize: Math.floor(H * 0.022) + 'px',
+    // 부제목 - 매장명이 있으면 "같은 그림 찾기", 없으면 기존 문구
+    const subtitleText = this.storeName
+      ? '🎴 같은 그림 찾기'
+      : '✨ 별들 사이에서 같은 그림을 찾아보세요 ✨';
+    const subtitle = this.add.text(W * 0.5, H * 0.26, subtitleText, {
+      fontSize: Math.floor(H * (this.storeName ? 0.035 : 0.022)) + 'px',
       color: '#a5b4fc'
     }).setOrigin(0.5);
     this.titleElements.push(subtitle);
