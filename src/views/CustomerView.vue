@@ -307,7 +307,11 @@ onMounted(async () => {
   const storeId = route.query.storeId as string
   const qrCode = route.query.qr as string
 
-  // Store QR code for guestbook
+  // Store QR code for games and guestbook (early assignment)
+  if (qrCode) {
+    qrCodeId.value = qrCode
+    console.log('QR code set for games:', qrCode)
+  }
 
   // API URL
   const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -357,9 +361,6 @@ onMounted(async () => {
     try {
     // 이미 위에서 가져온 qrData 재사용 (중복 API 호출 방지)
     const fetchedQrCodeId = qrData.id
-
-    // Store QR code (Code 문자열) for guestbook
-    qrCodeId.value = qrCode  // QR Code 문자열 저장 (예: "5YWF8V2X")
 
     // Fetch layout from API
     const layoutResponse = await fetch(`${API_URL}/api/landingpage/layout/${fetchedQrCodeId}`)
