@@ -325,75 +325,29 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createTitleScreen(W: number, H: number) {
-    // 타이틀 - 매장명이 있으면 커스텀, 없으면 기본 우주 테마
-    const titleText = this.storeName
-      ? `🎮 ${this.storeName}`
-      : '🌌 우주 카드 매치';
-    const title = this.add.text(W * 0.5, H * 0.2, titleText, {
-      fontSize: Math.floor(H * 0.055) + 'px',
+    // 타이틀 - 매장명이 있으면 매장명, 없으면 기본
+    const titleText = this.storeName || '카드 매치';
+    const title = this.add.text(W * 0.5, H * 0.25, titleText, {
+      fontSize: Math.floor(H * 0.06) + 'px',
       color: '#c4b5fd',
       fontStyle: 'bold'
     }).setOrigin(0.5);
     this.titleElements.push(title);
 
-    // 부제목 - 매장명이 있으면 "같은 그림 찾기", 없으면 기존 문구
-    const subtitleText = this.storeName
-      ? '🎴 같은 그림 찾기'
-      : '✨ 별들 사이에서 같은 그림을 찾아보세요 ✨';
-    const subtitle = this.add.text(W * 0.5, H * 0.26, subtitleText, {
-      fontSize: Math.floor(H * (this.storeName ? 0.035 : 0.022)) + 'px',
+    // 부제목 - 같은 그림 찾기
+    const subtitle = this.add.text(W * 0.5, H * 0.32, '같은 그림 찾기', {
+      fontSize: Math.floor(H * 0.035) + 'px',
       color: '#a5b4fc'
     }).setOrigin(0.5);
     this.titleElements.push(subtitle);
 
-    // 에셋 또는 테마 표시
-    if (this.useImageAssets && this.gameAssets.length > 0) {
-      // 관리자 등록 이미지 사용
-      const assetLabel = this.add.text(W * 0.5, H * 0.32, '🖼️ 커스텀 이미지 모드', {
-        fontSize: Math.floor(H * 0.028) + 'px',
-        color: '#34d399'
-      }).setOrigin(0.5);
-      this.titleElements.push(assetLabel);
-
-      const assetCount = this.add.text(W * 0.5, H * 0.37, `${this.gameAssets.length}개의 이미지로 플레이`, {
-        fontSize: Math.floor(H * 0.022) + 'px',
-        color: '#e0f2fe'
-      }).setOrigin(0.5);
-      this.titleElements.push(assetCount);
-    } else {
-      // 이모지 테마 사용
-      const themeEmojis = THEMES[this.currentTheme];
-      const themeDisplay = themeEmojis ? themeEmojis.slice(0, 4).join(' ') : '🎮';
-
-      const themeLabel = this.add.text(W * 0.5, H * 0.32, `테마: ${this.getThemeName()}`, {
-        fontSize: Math.floor(H * 0.028) + 'px',
-        color: '#22d3ee'
-      }).setOrigin(0.5);
-      this.titleElements.push(themeLabel);
-
-      const themeSample = this.add.text(W * 0.5, H * 0.38, themeDisplay, {
-        fontSize: Math.floor(H * 0.055) + 'px'
-      }).setOrigin(0.5);
-      this.titleElements.push(themeSample);
-    }
-
-    // 게임 설명
-    const instructions = this.add.text(W * 0.5, H * 0.46,
-      '🪐 같은 그림 카드를 찾아 매칭하세요!\n⚡ 연속으로 맞추면 콤보 보너스!', {
-      fontSize: Math.floor(H * 0.025) + 'px',
-      color: '#e0f2fe',
-      align: 'center',
-      lineSpacing: 10
-    }).setOrigin(0.5);
-    this.titleElements.push(instructions);
-
-    // 시작 버튼 - 우주 테마
+    // 시작 버튼
     const startButtonBg = this.add.rectangle(W * 0.5, H * 0.88, 220, 65, 0x7c3aed);
     startButtonBg.setStrokeStyle(3, 0xa78bfa);
     startButtonBg.setInteractive({ useHandCursor: true });
     this.titleElements.push(startButtonBg);
 
-    const startButtonText = this.add.text(W * 0.5, H * 0.88, '🚀 게임 시작', {
+    const startButtonText = this.add.text(W * 0.5, H * 0.88, '게임 시작', {
       fontSize: Math.floor(H * 0.04) + 'px',
       color: '#ffffff',
       fontStyle: 'bold'
