@@ -328,69 +328,102 @@ export class MatchScene extends Phaser.Scene {
     // 로고 표시 (있으면)
     let logoYOffset = 0;
     if (this.hasLogo) {
-      const logo = this.add.image(W * 0.5, H * 0.18, 'store_logo');
-      // 로고 크기 조절
-      const logoMaxWidth = W * 0.35;
-      const logoMaxHeight = H * 0.15;
+      const logo = this.add.image(W * 0.5, H * 0.20, 'store_logo');
+      // 로고 크기 조절 - 더 크게
+      const logoMaxWidth = W * 0.45;
+      const logoMaxHeight = H * 0.18;
       const logoScaleX = logoMaxWidth / logo.width;
       const logoScaleY = logoMaxHeight / logo.height;
       const logoScale = Math.min(logoScaleX, logoScaleY);
       logo.setScale(logoScale);
       logo.setOrigin(0.5, 0.5);
       this.titleElements.push(logo);
-      logoYOffset = H * 0.08;
+      logoYOffset = H * 0.10;
     }
 
-    // 타이틀 - 매장명이 있으면 매장명, 없으면 기본
+    // 타이틀 - Apple SF Pro 스타일 (크고 가볍게)
     const titleText = this.storeName || '카드 매치';
-    const title = this.add.text(W * 0.5, H * 0.28 + logoYOffset, titleText, {
-      fontSize: Math.floor(H * 0.055) + 'px',
+    const title = this.add.text(W * 0.5, H * 0.32 + logoYOffset, titleText, {
+      fontSize: Math.floor(H * 0.065) + 'px',
       color: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
+    // 텍스트 그림자 효과
+    title.setShadow(0, 2, 'rgba(0,0,0,0.3)', 4);
     this.titleElements.push(title);
 
-    // 부제목 - 같은 그림 찾기
-    const subtitle = this.add.text(W * 0.5, H * 0.34 + logoYOffset, '같은 그림 찾기', {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#94a3b8'
+    // 부제목 - 더 세련된 회색
+    const subtitle = this.add.text(W * 0.5, H * 0.39 + logoYOffset, '같은 그림 찾기', {
+      fontSize: Math.floor(H * 0.028) + 'px',
+      color: '#8e8e93',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
     this.titleElements.push(subtitle);
 
-    // 시작 버튼 - 더 밝고 깔끔한 색상
-    const startButtonBg = this.add.rectangle(W * 0.5, H * 0.88, 200, 56, 0x6366f1);
-    startButtonBg.setStrokeStyle(2, 0x818cf8);
+    // Apple 스타일 버튼 - 둥근 모서리, 그라데이션 효과
+    const buttonWidth = W * 0.7;
+    const buttonHeight = 54;
+    const buttonY = H * 0.85;
+
+    // 버튼 외곽 글로우 효과
+    const buttonGlow = this.add.rectangle(W * 0.5, buttonY, buttonWidth + 8, buttonHeight + 8, 0x007aff, 0.15);
+    buttonGlow.setStrokeStyle(0);
+    this.titleElements.push(buttonGlow);
+
+    // 메인 버튼 배경 - Apple Blue
+    const startButtonBg = this.add.rectangle(W * 0.5, buttonY, buttonWidth, buttonHeight, 0x007aff);
+    startButtonBg.setStrokeStyle(0);
     startButtonBg.setInteractive({ useHandCursor: true });
     this.titleElements.push(startButtonBg);
 
-    const startButtonText = this.add.text(W * 0.5, H * 0.88, '게임 시작', {
-      fontSize: Math.floor(H * 0.035) + 'px',
+    // 버튼 하이라이트 (상단)
+    const buttonHighlight = this.add.rectangle(W * 0.5, buttonY - buttonHeight * 0.25, buttonWidth - 4, buttonHeight * 0.4, 0x3395ff, 0.3);
+    this.titleElements.push(buttonHighlight);
+
+    // 버튼 텍스트 - Apple 스타일
+    const startButtonText = this.add.text(W * 0.5, buttonY, '게임 시작', {
+      fontSize: Math.floor(H * 0.032) + 'px',
       color: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
     this.titleElements.push(startButtonText);
 
-    // 버튼 호버 효과
+    // 버튼 호버 효과 - Apple 스타일 (미세한 밝기 변화)
     startButtonBg.on('pointerover', () => {
-      startButtonBg.setFillStyle(0x8b5cf6);
+      startButtonBg.setFillStyle(0x0a84ff);
+      buttonHighlight.setFillStyle(0x5eb5ff, 0.4);
       this.tweens.add({
-        targets: [startButtonBg, startButtonText],
-        scale: 1.08,
-        duration: 100
+        targets: [startButtonBg, startButtonText, buttonHighlight, buttonGlow],
+        scale: 1.02,
+        duration: 150,
+        ease: 'Cubic.easeOut'
       });
     });
 
     startButtonBg.on('pointerout', () => {
-      startButtonBg.setFillStyle(0x7c3aed);
+      startButtonBg.setFillStyle(0x007aff);
+      buttonHighlight.setFillStyle(0x3395ff, 0.3);
       this.tweens.add({
-        targets: [startButtonBg, startButtonText],
+        targets: [startButtonBg, startButtonText, buttonHighlight, buttonGlow],
         scale: 1,
-        duration: 100
+        duration: 150,
+        ease: 'Cubic.easeOut'
       });
     });
 
     startButtonBg.on('pointerdown', () => {
-      this.startGame();
+      // 눌림 효과
+      this.tweens.add({
+        targets: [startButtonBg, startButtonText, buttonHighlight, buttonGlow],
+        scale: 0.97,
+        duration: 80,
+        yoyo: true,
+        onComplete: () => {
+          this.startGame();
+        }
+      });
     });
   }
 
