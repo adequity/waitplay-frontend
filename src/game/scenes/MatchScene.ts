@@ -217,7 +217,7 @@ export class MatchScene extends Phaser.Scene {
       this.loadingText = undefined;
     }
 
-    // 타이틀 화면
+    // 타이틀 화면 (상단 UI 패널 없이)
     this.createTitleScreen(W, H);
 
     // 카드 생성 (숨김 상태)
@@ -452,12 +452,12 @@ export class MatchScene extends Phaser.Scene {
         ease: 'Sine.easeInOut'
       });
 
-      // 로고 이미지
+      // 로고 이미지 (원형 영역에 맞춤)
       const logo = this.add.image(W * 0.5, logoY, 'store_logo');
-      const logoMaxWidth = W * 0.35;
-      const logoMaxHeight = H * 0.14;
-      const logoScaleX = logoMaxWidth / logo.width;
-      const logoScaleY = logoMaxHeight / logo.height;
+      // 원형 내부에 꽉 차게 - logoRadius * 1.6 (지름의 80%)
+      const logoMaxSize = logoRadius * 1.6;
+      const logoScaleX = logoMaxSize / logo.width;
+      const logoScaleY = logoMaxSize / logo.height;
       const logoScale = Math.min(logoScaleX, logoScaleY);
       logo.setScale(logoScale);
       logo.setOrigin(0.5, 0.5);
@@ -768,6 +768,9 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private startGame() {
+    const W = this.sys.game.config.width as number;
+    const H = this.sys.game.config.height as number;
+
     // 타이틀 요소 제거
     this.titleElements.forEach(elem => {
       this.tweens.add({
@@ -779,6 +782,9 @@ export class MatchScene extends Phaser.Scene {
       });
     });
     this.titleElements = [];
+
+    // 게임 시작 시 상단 UI 패널 생성
+    this.createUIPanel(W, H);
 
     // 카드 표시 애니메이션
     this.time.delayedCall(300, () => {
