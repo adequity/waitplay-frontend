@@ -61,7 +61,7 @@ export class MatchScene extends Phaser.Scene {
   private gameAssets: GameAsset[] = [];
   private useImageAssets: boolean = false;
   private assetsLoaded: boolean = false;
-  private loadingText?: Phaser.GameObjects.Text;
+  private loadingContainer?: Phaser.GameObjects.Container;
   private storeName?: string;
   private logoUrl?: string;
   private hasLogo: boolean = false;
@@ -106,11 +106,8 @@ export class MatchScene extends Phaser.Scene {
 
     // UI 패널은 게임 시작 시 생성 (startGame에서 호출)
 
-    // 로딩 화면 표시
-    this.loadingText = this.add.text(W * 0.5, H * 0.5, '🔄 이미지 로딩 중...', {
-      fontSize: Math.floor(H * 0.04) + 'px',
-      color: '#ffffff'
-    }).setOrigin(0.5);
+    // 로딩 스피너 표시
+    this.createLoadingSpinner(W, H);
 
     // 에셋 로딩 후 게임 초기화
     this.loadGameAssetsAndInit(W, H);
@@ -210,10 +207,10 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private finishInit(W: number, H: number) {
-    // 로딩 텍스트 제거
-    if (this.loadingText) {
-      this.loadingText.destroy();
-      this.loadingText = undefined;
+    // 로딩 스피너 제거
+    if (this.loadingContainer) {
+      this.loadingContainer.destroy();
+      this.loadingContainer = undefined;
     }
 
     // 타이틀 화면 (상단 UI 패널 없이)
@@ -223,6 +220,50 @@ export class MatchScene extends Phaser.Scene {
     this.createCards(W, H);
 
     console.log('[MatchScene] Game initialized with useImageAssets:', this.useImageAssets);
+  }
+
+  private createLoadingSpinner(W: number, H: number) {
+    // 로딩 컨테이너
+    this.loadingContainer = this.add.container(W * 0.5, H * 0.5);
+
+    // 스피너 배경 원 (연한 색)
+    const bgCircle = this.add.circle(0, 0, 32, 0xfecdd3, 0.3);
+    this.loadingContainer.add(bgCircle);
+
+    // 스피너 아크 (회전하는 부분)
+    const spinnerGraphics = this.add.graphics();
+    spinnerGraphics.lineStyle(4, 0xf43f5e, 1); // rose-500
+    spinnerGraphics.beginPath();
+    spinnerGraphics.arc(0, 0, 28, Phaser.Math.DegToRad(0), Phaser.Math.DegToRad(270), false);
+    spinnerGraphics.strokePath();
+    this.loadingContainer.add(spinnerGraphics);
+
+    // 회전 애니메이션
+    this.tweens.add({
+      targets: spinnerGraphics,
+      angle: 360,
+      duration: 1000,
+      repeat: -1,
+      ease: 'Linear'
+    });
+
+    // 로딩 텍스트
+    const loadingText = this.add.text(0, 55, '로딩 중...', {
+      fontSize: Math.floor(H * 0.022) + 'px',
+      color: '#9ca3af',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0.5);
+    this.loadingContainer.add(loadingText);
+
+    // 텍스트 펄스 애니메이션
+    this.tweens.add({
+      targets: loadingText,
+      alpha: 0.5,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
   }
 
   private createBackground(W: number, H: number) {
