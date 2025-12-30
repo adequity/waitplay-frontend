@@ -534,7 +534,7 @@ export class MatchScene extends Phaser.Scene {
     });
 
     // 버튼 텍스트
-    const startButtonText = this.add.text(0, 0, '게임 시작하기  🍴', {
+    const startButtonText = this.add.text(0, 0, '게임 시작하기', {
       fontSize: Math.floor(H * 0.036) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
