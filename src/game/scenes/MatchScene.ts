@@ -451,15 +451,25 @@ export class MatchScene extends Phaser.Scene {
         ease: 'Sine.easeInOut'
       });
 
-      // 로고 이미지 (원형 영역에 꽉 차게)
+      // 로고 이미지 (원형 마스크 적용)
       const logo = this.add.image(W * 0.5, logoY, 'store_logo');
-      // 원형 지름의 90%로 설정 (logoRadius * 2 = 지름)
-      const logoMaxSize = logoRadius * 1.85;
-      const logoScaleX = logoMaxSize / logo.width;
-      const logoScaleY = logoMaxSize / logo.height;
-      const logoScale = Math.min(logoScaleX, logoScaleY);
+
+      // 로고를 원형 영역에 꽉 차게 (정사각형 기준으로 스케일)
+      const logoSize = logoRadius * 1.9; // 원형 지름의 95%
+      const logoScaleX = logoSize / logo.width;
+      const logoScaleY = logoSize / logo.height;
+      // 정사각형으로 맞추기 위해 큰 쪽 스케일 사용 (원형에 꽉 차게)
+      const logoScale = Math.max(logoScaleX, logoScaleY);
       logo.setScale(logoScale);
       logo.setOrigin(0.5, 0.5);
+
+      // 원형 마스크 생성
+      const maskGraphics = this.make.graphics({ x: 0, y: 0 });
+      maskGraphics.fillStyle(0xffffff);
+      maskGraphics.fillCircle(W * 0.5, logoY, logoRadius * 0.92);
+      const mask = maskGraphics.createGeometryMask();
+      logo.setMask(mask);
+
       this.titleElements.push(logo);
 
       contentY = H * 0.42;
