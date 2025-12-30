@@ -458,62 +458,82 @@ export class MatchScene extends Phaser.Scene {
     const rightLine = this.add.rectangle(W * 0.8, subtitleY, W * 0.12, 2, 0xd1d5db, 0.5);
     this.titleElements.push(rightLine);
 
-    // ==================== 글래스모피즘 버튼 ====================
-    const buttonWidth = W * 0.75;
-    const buttonHeight = 56;
+    // ==================== 둥근 버튼 (rounded-3xl 스타일) ====================
+    const buttonWidth = W * 0.72;
+    const buttonHeight = 64;
     const buttonY = H * 0.72;
+    const borderRadius = 32; // rounded-3xl
 
-    // 버튼 그림자
-    const btnShadow = this.add.rectangle(W * 0.5, buttonY + 4, buttonWidth, buttonHeight, 0x000000, 0.15);
-    this.titleElements.push(btnShadow);
+    // 버튼 컨테이너
+    const btnContainer = this.add.container(W * 0.5, buttonY);
+    this.titleElements.push(btnContainer);
 
-    // 버튼 배경
-    const btnBase = this.add.rectangle(W * 0.5, buttonY, buttonWidth, buttonHeight, 0xf43f5e);
-    btnBase.setInteractive({ useHandCursor: true });
-    this.titleElements.push(btnBase);
+    // 버튼 그림자 (둥근 모서리)
+    const shadowGraphics = this.add.graphics();
+    shadowGraphics.fillStyle(0xfda4af, 0.5); // shadow-rose-300/50
+    shadowGraphics.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2 + 6, buttonWidth, buttonHeight, borderRadius);
+    btnContainer.add(shadowGraphics);
 
-    // 버튼 상단 하이라이트 (글래스 효과)
-    const btnHighlight = this.add.rectangle(W * 0.5, buttonY - buttonHeight * 0.18, buttonWidth * 0.92, buttonHeight * 0.35, 0xffffff, 0.25);
-    this.titleElements.push(btnHighlight);
+    // 버튼 배경 (둥근 모서리)
+    const btnGraphics = this.add.graphics();
+    btnGraphics.fillStyle(0xf43f5e, 1); // rose-500
+    btnGraphics.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, borderRadius);
+    btnContainer.add(btnGraphics);
 
-    // 시머 효과 (버튼 위로 지나가는 빛)
-    const shimmer = this.add.rectangle(W * 0.5 - buttonWidth * 0.6, buttonY, buttonWidth * 0.3, buttonHeight, 0xffffff, 0.2);
-    this.titleElements.push(shimmer);
+    // 시머 효과용 마스크 영역
+    const shimmerGraphics = this.add.graphics();
+    shimmerGraphics.fillStyle(0xffffff, 0.2);
+    shimmerGraphics.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth * 0.3, buttonHeight, borderRadius);
+    shimmerGraphics.setX(-buttonWidth * 0.5);
+    btnContainer.add(shimmerGraphics);
 
-    // 시머 애니메이션
+    // 시머 애니메이션 (왼쪽에서 오른쪽으로)
     this.tweens.add({
-      targets: shimmer,
-      x: W * 0.5 + buttonWidth * 0.6,
-      duration: 2000,
+      targets: shimmerGraphics,
+      x: buttonWidth * 0.5,
+      duration: 700,
       repeat: -1,
-      repeatDelay: 1500,
+      repeatDelay: 2000,
       ease: 'Sine.easeInOut'
     });
 
     // 버튼 텍스트
-    const startButtonText = this.add.text(W * 0.5, buttonY, '🎮 게임 시작', {
-      fontSize: Math.floor(H * 0.034) + 'px',
+    const startButtonText = this.add.text(0, 0, '게임 시작하기  🍴', {
+      fontSize: Math.floor(H * 0.036) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
-    this.titleElements.push(startButtonText);
+    btnContainer.add(startButtonText);
+
+    // 히트 영역 (투명한 인터랙티브 영역)
+    const hitArea = this.add.rectangle(0, 0, buttonWidth, buttonHeight, 0x000000, 0);
+    hitArea.setInteractive({ useHandCursor: true });
+    btnContainer.add(hitArea);
 
     // 버튼 호버 효과
-    btnBase.on('pointerover', () => {
-      btnBase.setFillStyle(0xfb7185);
-      btnHighlight.setAlpha(0.35);
-    });
-
-    btnBase.on('pointerout', () => {
-      btnBase.setFillStyle(0xf43f5e);
-      btnHighlight.setAlpha(0.25);
-    });
-
-    btnBase.on('pointerdown', () => {
+    hitArea.on('pointerover', () => {
       this.tweens.add({
-        targets: [btnBase, btnHighlight, startButtonText, btnShadow, shimmer],
-        scale: 0.96,
+        targets: btnContainer,
+        scale: 1.05,
+        duration: 150,
+        ease: 'Back.easeOut'
+      });
+    });
+
+    hitArea.on('pointerout', () => {
+      this.tweens.add({
+        targets: btnContainer,
+        scale: 1,
+        duration: 150,
+        ease: 'Sine.easeOut'
+      });
+    });
+
+    hitArea.on('pointerdown', () => {
+      this.tweens.add({
+        targets: btnContainer,
+        scale: 0.95,
         duration: 80,
         yoyo: true,
         onComplete: () => {
