@@ -260,63 +260,99 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createUIPanel(W: number, H: number) {
-    // 상단 UI 패널 - 글래스모피즘 효과
-    const panelHeight = H * 0.07;
-    const panelY = H * 0.045;
+    // ==================== 상단 UI 패널 (Neumorphism 스타일) ====================
+    const panelWidth = W * 0.94;
+    const panelHeight = H * 0.10;
+    const panelY = H * 0.06;
+    const borderRadius = 16;
 
-    // 글래스 배경 (다중 레이어)
-    const panelShadow = this.add.rectangle(W * 0.5, panelY + 2, W * 0.94, panelHeight, 0x000000, 0.05);
-    panelShadow.setStrokeStyle(0);
-    (panelShadow as any).setRoundedRectRadius?.(16) || null;
+    // 패널 컨테이너
+    const panelContainer = this.add.container(W * 0.5, panelY);
 
-    const panelBg = this.add.rectangle(W * 0.5, panelY, W * 0.94, panelHeight, 0xffffff, 0.85);
-    panelBg.setStrokeStyle(1.5, 0xfecdd3, 0.8);
+    // 패널 그림자 (shadow-lg shadow-slate-200/50)
+    const shadowGraphics = this.add.graphics();
+    shadowGraphics.fillStyle(0xcbd5e1, 0.3); // slate-300
+    shadowGraphics.fillRoundedRect(-panelWidth / 2, -panelHeight / 2 + 4, panelWidth, panelHeight, borderRadius);
+    panelContainer.add(shadowGraphics);
 
-    // 상단 하이라이트 (글래스 반사 효과)
-    this.add.rectangle(W * 0.5, panelY - panelHeight * 0.2, W * 0.9, panelHeight * 0.3, 0xffffff, 0.4);
+    // 패널 배경 (Neumorphism)
+    const panelGraphics = this.add.graphics();
+    panelGraphics.fillStyle(0xfff7ed, 1); // orange-50 계열
+    panelGraphics.fillRoundedRect(-panelWidth / 2, -panelHeight / 2, panelWidth, panelHeight, borderRadius);
+    panelGraphics.lineStyle(1, 0xfed7aa, 0.8); // orange-200 테두리
+    panelGraphics.strokeRoundedRect(-panelWidth / 2, -panelHeight / 2, panelWidth, panelHeight, borderRadius);
+    panelContainer.add(panelGraphics);
 
-    // 각 스탯을 개별 글래스 박스에 담기
-    const statWidth = W * 0.28;
-    const statHeight = panelHeight * 0.7;
-    const statY = panelY;
+    // 각 스탯 영역 간격
+    const statSpacing = panelWidth / 3;
 
-    // 이동 수 박스
-    const moveBox = this.add.rectangle(W * 0.17, statY, statWidth, statHeight, 0xfff1f2, 0.6);
-    moveBox.setStrokeStyle(1, 0xfda4af, 0.5);
+    // ========== MOVES (이동 수) ==========
+    const movesX = -statSpacing;
 
-    this.movesText = this.add.text(W * 0.17, statY, '🎯 0', {
-      fontSize: Math.floor(H * 0.028) + 'px',
-      color: '#e11d48',
+    // 라벨
+    const movesLabel = this.add.text(movesX, -panelHeight * 0.25, 'MOVES', {
+      fontSize: Math.floor(H * 0.016) + 'px',
+      color: '#94a3b8', // slate-400
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
+    panelContainer.add(movesLabel);
 
-    // 매치 수 박스
-    const matchBox = this.add.rectangle(W * 0.5, statY, statWidth, statHeight, 0xfdf2f8, 0.6);
-    matchBox.setStrokeStyle(1, 0xf9a8d4, 0.5);
-
-    this.matchesText = this.add.text(W * 0.5, statY, '💖 0/' + this.TOTAL_PAIRS, {
-      fontSize: Math.floor(H * 0.028) + 'px',
-      color: '#db2777',
+    // 값 (⚡ 아이콘 + 숫자)
+    this.movesText = this.add.text(movesX, panelHeight * 0.12, '⚡ 0', {
+      fontSize: Math.floor(H * 0.032) + 'px',
+      color: '#f97316', // orange-500 (textMoves)
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
+    panelContainer.add(this.movesText);
 
-    // 시간 박스
-    const timeBox = this.add.rectangle(W * 0.83, statY, statWidth, statHeight, 0xf5f3ff, 0.6);
-    timeBox.setStrokeStyle(1, 0xc4b5fd, 0.5);
+    // ========== MATCHES (매치 수) ==========
+    const matchesX = 0;
 
-    this.timeText = this.add.text(W * 0.83, statY, '⏱️ 0초', {
-      fontSize: Math.floor(H * 0.028) + 'px',
-      color: '#7c3aed',
+    // 라벨
+    const matchesLabel = this.add.text(matchesX, -panelHeight * 0.25, 'MATCHES', {
+      fontSize: Math.floor(H * 0.016) + 'px',
+      color: '#94a3b8',
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
+    panelContainer.add(matchesLabel);
 
-    // 콤보 텍스트 (숨김 상태로 시작)
-    this.comboText = this.add.text(W * 0.5, H * 0.10, '', {
-      fontSize: Math.floor(H * 0.04) + 'px',
-      color: '#f43f5e',
+    // 값 (⭐ 아이콘 + 숫자)
+    this.matchesText = this.add.text(matchesX, panelHeight * 0.12, '⭐ 0/' + this.TOTAL_PAIRS, {
+      fontSize: Math.floor(H * 0.032) + 'px',
+      color: '#ec4899', // pink-500 (textMatches)
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0.5);
+    panelContainer.add(this.matchesText);
+
+    // ========== TIME (시간) ==========
+    const timeX = statSpacing;
+
+    // 라벨
+    const timeLabel = this.add.text(timeX, -panelHeight * 0.25, 'TIME', {
+      fontSize: Math.floor(H * 0.016) + 'px',
+      color: '#94a3b8',
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0.5);
+    panelContainer.add(timeLabel);
+
+    // 값 (🕐 아이콘 + 숫자)
+    this.timeText = this.add.text(timeX, panelHeight * 0.12, '🕐 0s', {
+      fontSize: Math.floor(H * 0.032) + 'px',
+      color: '#8b5cf6', // violet-500 (textTime)
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0.5);
+    panelContainer.add(this.timeText);
+
+    // ==================== 콤보 텍스트 ====================
+    this.comboText = this.add.text(W * 0.5, H * 0.135, '', {
+      fontSize: Math.floor(H * 0.038) + 'px',
+      color: '#f43f5e', // rose-500 (textCombo)
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5).setAlpha(0);
@@ -993,95 +1029,286 @@ export class MatchScene extends Phaser.Scene {
     // 성능 등급
     const grade = this.getGrade(finalScore);
 
-    // 결과 오버레이 - Sweet Match 파스텔 테마
-    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0xfff1eb, 0.97);
+    // ==================== 결과 오버레이 (밝은 모달 스타일) ====================
+    // 배경 블러 오버레이 (bg-white/60 backdrop-blur-md)
+    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0xffffff, 0.6);
 
-    // 결과 타이틀
-    this.add.text(W * 0.5, H * 0.18, '🎉 축하해요! 🎉', {
-      fontSize: Math.floor(H * 0.06) + 'px',
-      color: '#f43f5e',
+    // 모달 컨테이너 위치
+    const modalCenterY = H * 0.48;
+    const modalWidth = Math.min(W * 0.88, 340);
+    const modalHeight = H * 0.72;
+    const modalRadius = 24;
+
+    // 모달 그림자 (shadow-2xl)
+    const shadowGraphics = this.add.graphics();
+    shadowGraphics.fillStyle(0x94a3b8, 0.25);
+    shadowGraphics.fillRoundedRect(
+      W * 0.5 - modalWidth / 2 + 4,
+      modalCenterY - modalHeight / 2 + 8,
+      modalWidth,
+      modalHeight,
+      modalRadius
+    );
+
+    // 모달 배경 (bg-white rounded-3xl border border-slate-100)
+    const modalGraphics = this.add.graphics();
+    modalGraphics.fillStyle(0xffffff, 1);
+    modalGraphics.fillRoundedRect(
+      W * 0.5 - modalWidth / 2,
+      modalCenterY - modalHeight / 2,
+      modalWidth,
+      modalHeight,
+      modalRadius
+    );
+    modalGraphics.lineStyle(1, 0xf1f5f9, 1); // slate-100
+    modalGraphics.strokeRoundedRect(
+      W * 0.5 - modalWidth / 2,
+      modalCenterY - modalHeight / 2,
+      modalWidth,
+      modalHeight,
+      modalRadius
+    );
+
+    // ========== 타이틀 (미션 완료! 🎉) ==========
+    const titleY = modalCenterY - modalHeight * 0.38;
+    this.add.text(W * 0.5, titleY, '미션 완료! 🎉', {
+      fontSize: Math.floor(H * 0.042) + 'px',
+      color: '#1e293b', // slate-800
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
 
-    // 등급 표시
-    this.add.text(W * 0.5, H * 0.28, grade.emoji + ' ' + grade.text, {
-      fontSize: Math.floor(H * 0.05) + 'px',
+    // ========== 등급 표시 (바운스 애니메이션) ==========
+    const gradeY = modalCenterY - modalHeight * 0.22;
+    const gradeEmoji = this.add.text(W * 0.5, gradeY, grade.emoji, {
+      fontSize: Math.floor(H * 0.10) + 'px',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0.5);
+
+    // 바운스 애니메이션
+    this.tweens.add({
+      targets: gradeEmoji,
+      y: gradeY - 8,
+      duration: 600,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    const gradeTextY = gradeY + H * 0.07;
+    this.add.text(W * 0.5, gradeTextY, grade.text, {
+      fontSize: Math.floor(H * 0.032) + 'px',
       color: grade.color,
+      fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
 
-    // 통계 - Sweet Match 테마 아이콘
-    const statsText = [
-      `⏱️ 시간: ${this.elapsedTime}초`,
-      `🍰 이동 수: ${this.moves}회`,
-      `⚡ 최대 콤보: ${this.maxCombo}회`,
-      `💖 점수: ${finalScore}점`
-    ].join('\n');
+    // ========== 통계 패널 (bg-slate-50 rounded-2xl) ==========
+    const statsY = modalCenterY + modalHeight * 0.02;
+    const statsWidth = modalWidth * 0.85;
+    const statsHeight = H * 0.14;
+    const statsRadius = 16;
 
-    this.add.text(W * 0.5, H * 0.43, statsText, {
-      fontSize: Math.floor(H * 0.03) + 'px',
-      color: '#374151',
-      align: 'center',
-      lineSpacing: 10,
+    // 통계 패널 배경
+    const statsGraphics = this.add.graphics();
+    statsGraphics.fillStyle(0xf8fafc, 1); // slate-50
+    statsGraphics.fillRoundedRect(
+      W * 0.5 - statsWidth / 2,
+      statsY - statsHeight / 2,
+      statsWidth,
+      statsHeight,
+      statsRadius
+    );
+    statsGraphics.lineStyle(1, 0xf1f5f9, 1); // slate-100
+    statsGraphics.strokeRoundedRect(
+      W * 0.5 - statsWidth / 2,
+      statsY - statsHeight / 2,
+      statsWidth,
+      statsHeight,
+      statsRadius
+    );
+
+    // 통계 항목들
+    const statLineHeight = H * 0.032;
+    const statStartY = statsY - statsHeight * 0.32;
+    const statLeftX = W * 0.5 - statsWidth * 0.38;
+    const statRightX = W * 0.5 + statsWidth * 0.38;
+
+    // 시간
+    this.add.text(statLeftX, statStartY, '🕐 시간', {
+      fontSize: Math.floor(H * 0.022) + 'px',
+      color: '#64748b', // slate-500
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
+    }).setOrigin(0, 0.5);
+    this.add.text(statRightX, statStartY, `${this.elapsedTime}초`, {
+      fontSize: Math.floor(H * 0.022) + 'px',
+      color: '#64748b',
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(1, 0.5);
 
-    // 이름 입력
-    const namePrompt = this.add.text(W * 0.5, H * 0.58, '🎀 닉네임을 입력하세요:', {
+    // 콤보
+    this.add.text(statLeftX, statStartY + statLineHeight, '⚡ 콤보', {
+      fontSize: Math.floor(H * 0.022) + 'px',
+      color: '#64748b',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0, 0.5);
+    this.add.text(statRightX, statStartY + statLineHeight, `${this.maxCombo}회`, {
+      fontSize: Math.floor(H * 0.022) + 'px',
+      color: '#64748b',
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(1, 0.5);
+
+    // 구분선 (h-px bg-slate-200)
+    const dividerY = statStartY + statLineHeight * 1.7;
+    this.add.rectangle(W * 0.5, dividerY, statsWidth * 0.9, 1, 0xe2e8f0, 1); // slate-200
+
+    // 점수 (rose-500)
+    const scoreY = statStartY + statLineHeight * 2.4;
+    this.add.text(statLeftX, scoreY, '🌟 점수', {
       fontSize: Math.floor(H * 0.026) + 'px',
+      color: '#f43f5e', // rose-500
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0, 0.5);
+    this.add.text(statRightX, scoreY, `${finalScore}점`, {
+      fontSize: Math.floor(H * 0.026) + 'px',
+      color: '#f43f5e',
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(1, 0.5);
+
+    // ========== 상태 메시지 영역 ==========
+    const statusY = modalCenterY + modalHeight * 0.22;
+    const statusText = this.add.text(W * 0.5, statusY, '', {
+      fontSize: Math.floor(H * 0.022) + 'px',
       color: '#6b7280',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
 
-    // HTML 입력 요소 - Sweet Match 테마
+    // ========== HTML 이름 입력 필드 ==========
     const gameContainer = document.getElementById('game-container');
+    const inputY = modalCenterY + modalHeight * 0.17;
+
     const inputElement = document.createElement('input');
     inputElement.type = 'text';
-    inputElement.placeholder = '플레이어 이름';
+    inputElement.placeholder = '이름을 입력하세요';
     inputElement.maxLength = 20;
     inputElement.style.cssText = `
       position: absolute;
       left: 50%;
-      top: ${H * 0.63}px;
+      top: ${inputY}px;
       transform: translateX(-50%);
-      width: 250px;
-      padding: 12px;
-      font-size: 16px;
-      border: 2px solid #fda4af;
+      width: ${modalWidth * 0.8}px;
+      padding: 14px 16px;
+      font-size: 15px;
+      border: 2px solid transparent;
       border-radius: 12px;
       text-align: center;
-      background: rgba(255, 255, 255, 0.95);
-      color: #374151;
+      background: #f1f5f9;
+      color: #1e293b;
+      font-weight: 500;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      outline: none;
+      transition: all 0.2s ease;
     `;
+    inputElement.onfocus = () => {
+      inputElement.style.background = '#ffffff';
+      inputElement.style.borderColor = '#fb7185'; // rose-400
+    };
+    inputElement.onblur = () => {
+      inputElement.style.background = '#f1f5f9';
+      inputElement.style.borderColor = 'transparent';
+    };
     gameContainer?.appendChild(inputElement);
     inputElement.focus();
 
+    // ========== 제출 버튼 (둥근 스타일 + 그림자) ==========
+    const submitBtnY = modalCenterY + modalHeight * 0.30;
+
     const submitButton = document.createElement('button');
-    submitButton.textContent = '💖 점수 제출';
+    submitButton.innerHTML = '✈️ 점수 제출';
     submitButton.style.cssText = `
       position: absolute;
       left: 50%;
-      top: ${H * 0.71}px;
+      top: ${submitBtnY}px;
       transform: translateX(-50%);
-      padding: 12px 30px;
-      font-size: 16px;
-      background: linear-gradient(135deg, #f43f5e, #fb7185);
+      width: ${modalWidth * 0.8}px;
+      padding: 14px 24px;
+      font-size: 15px;
+      background: #f43f5e;
       color: white;
       border: none;
       border-radius: 12px;
       cursor: pointer;
       font-weight: bold;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      box-shadow: 0 8px 20px rgba(253, 164, 175, 0.5);
+      transition: transform 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     `;
+    submitButton.onmouseover = () => {
+      submitButton.style.transform = 'translateX(-50%) scale(1.03)';
+    };
+    submitButton.onmouseout = () => {
+      submitButton.style.transform = 'translateX(-50%) scale(1)';
+    };
+    submitButton.onmousedown = () => {
+      submitButton.style.transform = 'translateX(-50%) scale(0.97)';
+    };
+    submitButton.onmouseup = () => {
+      submitButton.style.transform = 'translateX(-50%) scale(1.03)';
+    };
     gameContainer?.appendChild(submitButton);
+
+    // ========== 다시 하기 버튼 ==========
+    const restartBtnY = modalCenterY + modalHeight * 0.41;
+
+    const restartButton = document.createElement('button');
+    restartButton.innerHTML = '🔄 다시 하기';
+    restartButton.style.cssText = `
+      position: absolute;
+      left: 50%;
+      top: ${restartBtnY}px;
+      transform: translateX(-50%);
+      padding: 8px 16px;
+      font-size: 14px;
+      background: transparent;
+      color: #94a3b8;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: color 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    `;
+    restartButton.onmouseover = () => {
+      restartButton.style.color = '#64748b';
+    };
+    restartButton.onmouseout = () => {
+      restartButton.style.color = '#94a3b8';
+    };
+    gameContainer?.appendChild(restartButton);
+
+    restartButton.onclick = () => {
+      inputElement.remove();
+      submitButton.remove();
+      restartButton.remove();
+      this.scene.restart();
+    };
 
     const submitScore = async () => {
       const playerName = inputElement.value.trim() || '익명';
 
       submitButton.disabled = true;
-      submitButton.textContent = '전송 중...';
+      submitButton.innerHTML = '전송 중...';
+      submitButton.style.opacity = '0.7';
 
       const qrCode = gameManager.getQrCode();
       const success = await submitGameScore({
@@ -1095,38 +1322,12 @@ export class MatchScene extends Phaser.Scene {
       submitButton.remove();
 
       if (success) {
-        namePrompt.setText('✅ 점수가 제출되었습니다!');
-        namePrompt.setColor('#34d399');
+        statusText.setText('✅ 점수가 제출되었습니다!');
+        statusText.setColor('#34d399'); // green-400
       } else {
-        namePrompt.setText('❌ 점수 제출 실패');
-        namePrompt.setColor('#f87171');
+        statusText.setText('❌ 점수 제출 실패');
+        statusText.setColor('#f87171'); // red-400
       }
-
-      // 재시작 버튼 - Sweet Match 테마
-      this.time.delayedCall(1500, () => {
-        const restartBg = this.add.rectangle(W * 0.5, H * 0.85, 200, 55, 0xf43f5e);
-        restartBg.setStrokeStyle(0);
-        restartBg.setInteractive({ useHandCursor: true });
-
-        this.add.text(W * 0.5, H * 0.85, '🔄 다시 도전', {
-          fontSize: Math.floor(H * 0.032) + 'px',
-          color: '#ffffff',
-          fontStyle: 'bold',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        }).setOrigin(0.5);
-
-        restartBg.on('pointerdown', () => {
-          this.scene.restart();
-        });
-
-        restartBg.on('pointerover', () => {
-          restartBg.setFillStyle(0xfb7185);
-        });
-
-        restartBg.on('pointerout', () => {
-          restartBg.setFillStyle(0xf43f5e);
-        });
-      });
     };
 
     submitButton.onclick = submitScore;
