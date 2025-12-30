@@ -227,162 +227,258 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createBackground(W: number, H: number) {
-    // 우주 배경 - 깊은 우주 색상
-    const bg = this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x0a0a1a);
+    // Sweet Match 파스텔 그라데이션 배경
+    // 상단: #fff1eb (연한 살구), 하단: #ace0f9 (연한 하늘)
+    const bgTop = this.add.rectangle(W * 0.5, H * 0.25, W, H * 0.5, 0xfff1eb);
+    const bgBottom = this.add.rectangle(W * 0.5, H * 0.75, W, H * 0.5, 0xace0f9);
 
-    // 성운 효과 - 큰 발광 원들
-    this.add.circle(W * 0.15, H * 0.2, 120, 0x4c1d95, 0.15); // 보라색 성운
-    this.add.circle(W * 0.85, H * 0.15, 100, 0x1e3a8a, 0.12); // 파란 성운
-    this.add.circle(W * 0.9, H * 0.75, 140, 0x7c3aed, 0.1); // 보라색 성운
-    this.add.circle(W * 0.1, H * 0.85, 90, 0x0ea5e9, 0.08); // 청록색 성운
+    // 그라데이션 효과를 위한 중간 레이어
+    const bgMid1 = this.add.rectangle(W * 0.5, H * 0.4, W, H * 0.2, 0xffecd2, 0.5);
+    const bgMid2 = this.add.rectangle(W * 0.5, H * 0.6, W, H * 0.2, 0xc5e8f7, 0.5);
 
-    // 별 생성 - 여러 크기와 밝기
-    const starCount = 60;
-    for (let i = 0; i < starCount; i++) {
+    // 컨페티 파티클 생성 - 디저트 테마 색상
+    const confettiColors = [0xfda4af, 0xfb7185, 0xf472b6, 0xa78bfa, 0x60a5fa, 0xfbbf24, 0x34d399];
+    const confettiCount = 35;
+
+    for (let i = 0; i < confettiCount; i++) {
       const x = Math.random() * W;
       const y = Math.random() * H;
-      const size = Math.random() * 2.5 + 0.5;
-      const alpha = Math.random() * 0.6 + 0.3;
+      const size = Math.random() * 6 + 3;
+      const alpha = Math.random() * 0.4 + 0.2;
+      const color = confettiColors[Math.floor(Math.random() * confettiColors.length)] || 0xfda4af;
 
-      // 별 색상 (흰색, 연한 파랑, 연한 노랑)
-      const colors = [0xffffff, 0xe0f2fe, 0xfef3c7, 0xddd6fe];
-      const color = colors[Math.floor(Math.random() * colors.length)] || 0xffffff;
+      // 다양한 모양의 컨페티
+      const shapeType = Math.floor(Math.random() * 3);
+      let confetti: Phaser.GameObjects.Shape;
 
-      const star = this.add.circle(x, y, size, color, alpha);
+      if (shapeType === 0) {
+        // 원형
+        confetti = this.add.circle(x, y, size, color, alpha);
+      } else if (shapeType === 1) {
+        // 사각형
+        confetti = this.add.rectangle(x, y, size * 1.5, size, color, alpha);
+        confetti.setAngle(Math.random() * 360);
+      } else {
+        // 작은 원
+        confetti = this.add.circle(x, y, size * 0.6, color, alpha);
+      }
 
-      // 일부 별에 깜빡임 애니메이션
-      if (Math.random() > 0.6) {
+      // 떠다니는 애니메이션
+      const floatDuration = 3000 + Math.random() * 3000;
+      const floatRange = 15 + Math.random() * 20;
+
+      this.tweens.add({
+        targets: confetti,
+        y: y - floatRange,
+        alpha: alpha * 0.5,
+        duration: floatDuration,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        delay: Math.random() * 2000
+      });
+
+      // 천천히 회전 (사각형만)
+      if (shapeType === 1) {
         this.tweens.add({
-          targets: star,
-          alpha: alpha * 0.3,
-          duration: 1000 + Math.random() * 2000,
-          yoyo: true,
+          targets: confetti,
+          angle: '+=360',
+          duration: 8000 + Math.random() * 4000,
           repeat: -1,
-          ease: 'Sine.easeInOut'
+          ease: 'Linear'
         });
       }
     }
-
-    // 큰 밝은 별 몇 개
-    const brightStars = [
-      { x: W * 0.2, y: H * 0.1 },
-      { x: W * 0.7, y: H * 0.05 },
-      { x: W * 0.95, y: H * 0.4 },
-      { x: W * 0.05, y: H * 0.6 }
-    ];
-
-    brightStars.forEach(pos => {
-      // 별 광채
-      this.add.circle(pos.x, pos.y, 8, 0xffffff, 0.1);
-      this.add.circle(pos.x, pos.y, 4, 0xffffff, 0.3);
-      const brightStar = this.add.circle(pos.x, pos.y, 2, 0xffffff, 0.9);
-
-      // 밝은 별 깜빡임
-      this.tweens.add({
-        targets: brightStar,
-        alpha: 0.5,
-        scale: 0.7,
-        duration: 1500 + Math.random() * 1000,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-      });
-    });
   }
 
   private createUIPanel(W: number, H: number) {
-    // 상단 UI 패널 - 우주 테마
-    const panelBg = this.add.rectangle(W * 0.5, H * 0.05, W * 0.98, H * 0.08, 0x0f172a, 0.95);
-    panelBg.setStrokeStyle(2, 0x7c3aed, 0.6);
+    // 상단 UI 패널 - Sweet Match 파스텔 테마
+    const panelBg = this.add.rectangle(W * 0.5, H * 0.05, W * 0.98, H * 0.08, 0xffffff, 0.9);
+    panelBg.setStrokeStyle(2, 0xfda4af, 0.6);
 
-    // 이동 수
-    this.movesText = this.add.text(W * 0.05, H * 0.05, '🚀 0', {
+    // 이동 수 - 디저트 테마 아이콘
+    this.movesText = this.add.text(W * 0.05, H * 0.05, '🍰 0', {
       fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#e0f2fe',
-      fontStyle: 'bold'
+      color: '#f43f5e',
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0, 0.5);
 
     // 매치 수
-    this.matchesText = this.add.text(W * 0.35, H * 0.05, '⭐ 0/' + this.TOTAL_PAIRS, {
+    this.matchesText = this.add.text(W * 0.35, H * 0.05, '💖 0/' + this.TOTAL_PAIRS, {
       fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#fef3c7',
-      fontStyle: 'bold'
+      color: '#f472b6',
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0, 0.5);
 
     // 시간
-    this.timeText = this.add.text(W * 0.68, H * 0.05, '🕐 0초', {
+    this.timeText = this.add.text(W * 0.68, H * 0.05, '⏱️ 0초', {
       fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#ddd6fe',
-      fontStyle: 'bold'
+      color: '#8b5cf6',
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0, 0.5);
 
     // 콤보 텍스트 (숨김 상태로 시작)
     this.comboText = this.add.text(W * 0.5, H * 0.11, '', {
       fontSize: Math.floor(H * 0.045) + 'px',
-      color: '#fbbf24',
-      fontStyle: 'bold'
+      color: '#f43f5e',
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5).setAlpha(0);
   }
 
   private createTitleScreen(W: number, H: number) {
+    // 장식용 배경 카드들 (로고 뒤에 배치)
+    const decorativeCards = [
+      { x: W * 0.25, y: H * 0.18, rotation: -15, emoji: '🍰' },
+      { x: W * 0.75, y: H * 0.18, rotation: 15, emoji: '🍩' },
+      { x: W * 0.15, y: H * 0.28, rotation: -25, emoji: '🍪' },
+      { x: W * 0.85, y: H * 0.28, rotation: 25, emoji: '☕' }
+    ];
+
+    decorativeCards.forEach((cardInfo, i) => {
+      // 카드 배경
+      const cardBg = this.add.rectangle(cardInfo.x, cardInfo.y, W * 0.18, H * 0.1, 0xffffff, 0.7);
+      cardBg.setStrokeStyle(2, 0xfda4af, 0.5);
+      cardBg.setAngle(cardInfo.rotation);
+      this.titleElements.push(cardBg);
+
+      // 카드 이모지
+      const cardEmoji = this.add.text(cardInfo.x, cardInfo.y, cardInfo.emoji, {
+        fontSize: Math.floor(H * 0.04) + 'px'
+      }).setOrigin(0.5);
+      cardEmoji.setAngle(cardInfo.rotation);
+      this.titleElements.push(cardEmoji);
+
+      // 떠다니는 애니메이션
+      this.tweens.add({
+        targets: [cardBg, cardEmoji],
+        y: cardInfo.y - 8,
+        duration: 2000 + i * 300,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    });
+
     // 로고 표시 (있으면)
     let logoYOffset = 0;
     if (this.hasLogo) {
-      const logo = this.add.image(W * 0.5, H * 0.20, 'store_logo');
-      // 로고 크기 조절 - 더 크게
-      const logoMaxWidth = W * 0.45;
-      const logoMaxHeight = H * 0.18;
+      // 로고 배경 원
+      const logoBg = this.add.circle(W * 0.5, H * 0.22, W * 0.18, 0xffffff, 0.9);
+      logoBg.setStrokeStyle(3, 0xfda4af, 0.5);
+      this.titleElements.push(logoBg);
+
+      const logo = this.add.image(W * 0.5, H * 0.22, 'store_logo');
+      const logoMaxWidth = W * 0.28;
+      const logoMaxHeight = H * 0.14;
       const logoScaleX = logoMaxWidth / logo.width;
       const logoScaleY = logoMaxHeight / logo.height;
       const logoScale = Math.min(logoScaleX, logoScaleY);
       logo.setScale(logoScale);
       logo.setOrigin(0.5, 0.5);
       this.titleElements.push(logo);
-      logoYOffset = H * 0.10;
+      logoYOffset = H * 0.08;
     }
 
-    // 타이틀 - Apple SF Pro 스타일 (크고 가볍게)
-    const titleText = this.storeName || '카드 매치';
-    const title = this.add.text(W * 0.5, H * 0.32 + logoYOffset, titleText, {
-      fontSize: Math.floor(H * 0.065) + 'px',
-      color: '#ffffff',
+    // 떠다니는 디저트 아이콘들
+    const floatingIcons = ['🍰', '🍔', '🍕', '🍩', '🍦', '🍪', '🍫', '☕'];
+    const iconPositions = [
+      { x: W * 0.08, y: H * 0.45 },
+      { x: W * 0.92, y: H * 0.50 },
+      { x: W * 0.12, y: H * 0.60 },
+      { x: W * 0.88, y: H * 0.65 },
+      { x: W * 0.06, y: H * 0.75 },
+      { x: W * 0.94, y: H * 0.78 }
+    ];
+
+    iconPositions.forEach((pos, i) => {
+      const icon = this.add.text(pos.x, pos.y, floatingIcons[i % floatingIcons.length] || '🍰', {
+        fontSize: Math.floor(H * 0.035) + 'px'
+      }).setOrigin(0.5).setAlpha(0.6);
+      this.titleElements.push(icon);
+
+      this.tweens.add({
+        targets: icon,
+        y: pos.y - 12,
+        alpha: 0.8,
+        duration: 2500 + i * 200,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    });
+
+    // 타이틀 - Sweet Match 스타일 (로즈 컬러)
+    const titleText = this.storeName || 'Sweet Match';
+    const title = this.add.text(W * 0.5, H * 0.36 + logoYOffset, titleText, {
+      fontSize: Math.floor(H * 0.055) + 'px',
+      color: '#1f2937',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
-    // 텍스트 그림자 효과
-    title.setShadow(0, 2, 'rgba(0,0,0,0.3)', 4);
+    title.setShadow(0, 2, 'rgba(244, 63, 94, 0.2)', 4);
     this.titleElements.push(title);
 
-    // 부제목 - 더 세련된 회색
-    const subtitle = this.add.text(W * 0.5, H * 0.39 + logoYOffset, '같은 그림 찾기', {
-      fontSize: Math.floor(H * 0.028) + 'px',
-      color: '#8e8e93',
+    // 부제목
+    const subtitle = this.add.text(W * 0.5, H * 0.42 + logoYOffset, '같은 그림 찾기', {
+      fontSize: Math.floor(H * 0.024) + 'px',
+      color: '#6b7280',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
     this.titleElements.push(subtitle);
 
-    // Apple 스타일 버튼 - 둥근 모서리, 그라데이션 효과
-    const buttonWidth = W * 0.7;
-    const buttonHeight = 54;
-    const buttonY = H * 0.85;
+    // 기능 뱃지들
+    const badges = [
+      { emoji: '🏆', text: '기록 도전', color: '#f59e0b' },
+      { emoji: '⚡', text: '콤보 액션', color: '#8b5cf6' },
+      { emoji: '🎯', text: '랭킹전', color: '#10b981' }
+    ];
 
-    // 버튼 외곽 글로우 효과
-    const buttonGlow = this.add.rectangle(W * 0.5, buttonY, buttonWidth + 8, buttonHeight + 8, 0x007aff, 0.15);
-    buttonGlow.setStrokeStyle(0);
+    const badgeY = H * 0.50 + logoYOffset;
+    const badgeSpacing = W * 0.28;
+    const badgeStartX = W * 0.5 - badgeSpacing;
+
+    badges.forEach((badge, i) => {
+      const badgeX = badgeStartX + i * badgeSpacing;
+
+      // 뱃지 배경
+      const badgeBg = this.add.rectangle(badgeX, badgeY, W * 0.22, H * 0.055, 0xffffff, 0.85);
+      badgeBg.setStrokeStyle(1, 0xe5e7eb);
+      this.titleElements.push(badgeBg);
+
+      // 뱃지 내용
+      const badgeText = this.add.text(badgeX, badgeY, `${badge.emoji} ${badge.text}`, {
+        fontSize: Math.floor(H * 0.018) + 'px',
+        color: badge.color,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontStyle: 'bold'
+      }).setOrigin(0.5);
+      this.titleElements.push(badgeText);
+    });
+
+    // Rose 스타일 버튼
+    const buttonWidth = W * 0.75;
+    const buttonHeight = 56;
+    const buttonY = H * 0.82;
+
+    // 버튼 외곽 글로우 효과 - 로즈 색상
+    const buttonGlow = this.add.rectangle(W * 0.5, buttonY, buttonWidth + 10, buttonHeight + 10, 0xf43f5e, 0.2);
     this.titleElements.push(buttonGlow);
 
-    // 메인 버튼 배경 - Apple Blue
-    const startButtonBg = this.add.rectangle(W * 0.5, buttonY, buttonWidth, buttonHeight, 0x007aff);
-    startButtonBg.setStrokeStyle(0);
+    // 메인 버튼 배경 - Rose (#f43f5e)
+    const startButtonBg = this.add.rectangle(W * 0.5, buttonY, buttonWidth, buttonHeight, 0xf43f5e);
     startButtonBg.setInteractive({ useHandCursor: true });
     this.titleElements.push(startButtonBg);
 
-    // 버튼 하이라이트 (상단)
-    const buttonHighlight = this.add.rectangle(W * 0.5, buttonY - buttonHeight * 0.25, buttonWidth - 4, buttonHeight * 0.4, 0x3395ff, 0.3);
+    // 버튼 하이라이트 (상단 쉬머 효과)
+    const buttonHighlight = this.add.rectangle(W * 0.5, buttonY - buttonHeight * 0.25, buttonWidth - 6, buttonHeight * 0.35, 0xfb7185, 0.4);
     this.titleElements.push(buttonHighlight);
 
-    // 버튼 텍스트 - Apple 스타일
-    const startButtonText = this.add.text(W * 0.5, buttonY, '게임 시작', {
+    // 버튼 텍스트
+    const startButtonText = this.add.text(W * 0.5, buttonY, '🎮 게임 시작', {
       fontSize: Math.floor(H * 0.032) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -390,21 +486,40 @@ export class MatchScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.titleElements.push(startButtonText);
 
-    // 버튼 호버 효과 - Apple 스타일 (미세한 밝기 변화)
+    // 쉬머 애니메이션 효과
+    this.tweens.add({
+      targets: buttonHighlight,
+      alpha: { from: 0.2, to: 0.5 },
+      duration: 1500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    // 버튼 펄스 애니메이션
+    this.tweens.add({
+      targets: buttonGlow,
+      alpha: { from: 0.15, to: 0.35 },
+      scale: { from: 1, to: 1.02 },
+      duration: 1200,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    // 버튼 호버 효과
     startButtonBg.on('pointerover', () => {
-      startButtonBg.setFillStyle(0x0a84ff);
-      buttonHighlight.setFillStyle(0x5eb5ff, 0.4);
+      startButtonBg.setFillStyle(0xfb7185);
       this.tweens.add({
         targets: [startButtonBg, startButtonText, buttonHighlight, buttonGlow],
-        scale: 1.02,
+        scale: 1.03,
         duration: 150,
         ease: 'Cubic.easeOut'
       });
     });
 
     startButtonBg.on('pointerout', () => {
-      startButtonBg.setFillStyle(0x007aff);
-      buttonHighlight.setFillStyle(0x3395ff, 0.3);
+      startButtonBg.setFillStyle(0xf43f5e);
       this.tweens.add({
         targets: [startButtonBg, startButtonText, buttonHighlight, buttonGlow],
         scale: 1,
@@ -414,10 +529,9 @@ export class MatchScene extends Phaser.Scene {
     });
 
     startButtonBg.on('pointerdown', () => {
-      // 눌림 효과
       this.tweens.add({
         targets: [startButtonBg, startButtonText, buttonHighlight, buttonGlow],
-        scale: 0.97,
+        scale: 0.96,
         duration: 80,
         yoyo: true,
         onComplete: () => {
@@ -425,6 +539,14 @@ export class MatchScene extends Phaser.Scene {
         }
       });
     });
+
+    // 하단 힌트 텍스트
+    const hintText = this.add.text(W * 0.5, H * 0.92, '카드를 뒤집어 같은 그림을 찾아보세요!', {
+      fontSize: Math.floor(H * 0.02) + 'px',
+      color: '#9ca3af',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0.5);
+    this.titleElements.push(hintText);
   }
 
   private getThemeName(): string {
@@ -502,19 +624,19 @@ export class MatchScene extends Phaser.Scene {
   private createSingleCard(x: number, y: number, width: number, height: number, value: string, index: number, isImageCard: boolean = false): Card {
     const container = this.add.container(x, y);
 
-    // 카드 뒷면 - 우주 테마 색상
-    const back = this.add.rectangle(0, 0, width, height, 0x1e1b4b);
-    back.setStrokeStyle(3, 0x7c3aed);
+    // 카드 뒷면 - Sweet Match 흰색/파스텔 테마
+    const back = this.add.rectangle(0, 0, width, height, 0xffffff);
+    back.setStrokeStyle(2, 0xfda4af);
 
-    // 뒷면 장식 - 별 패턴 (로고가 없을 때만 표시)
-    const starPattern = this.add.text(0, -height * 0.15, '✨', {
-      fontSize: Math.floor(height * 0.2) + 'px'
+    // 뒷면 장식 - 로즈 패턴 (로고가 없을 때만 표시)
+    const starPattern = this.add.text(0, -height * 0.15, '💖', {
+      fontSize: Math.floor(height * 0.18) + 'px'
     }).setOrigin(0.5);
     starPattern.setVisible(!this.hasLogo);
 
     // 뒷면 아이콘 (로고가 없을 때만 표시)
-    const backIcon = this.add.text(0, height * 0.1, '🌟', {
-      fontSize: Math.floor(height * 0.35) + 'px'
+    const backIcon = this.add.text(0, height * 0.1, '🎀', {
+      fontSize: Math.floor(height * 0.3) + 'px'
     }).setOrigin(0.5);
     backIcon.setVisible(!this.hasLogo);
 
@@ -522,7 +644,6 @@ export class MatchScene extends Phaser.Scene {
     let backLogo: Phaser.GameObjects.Image | undefined;
     if (this.hasLogo) {
       backLogo = this.add.image(0, 0, 'store_logo');
-      // 로고를 카드 크기에 맞게 조절 (contain 방식)
       const logoScaleX = (width * 0.7) / backLogo.width;
       const logoScaleY = (height * 0.7) / backLogo.height;
       const logoScale = Math.min(logoScaleX, logoScaleY);
@@ -530,9 +651,9 @@ export class MatchScene extends Phaser.Scene {
       backLogo.setOrigin(0.5, 0.5);
     }
 
-    // 카드 앞면 (숨김) - 어두운 배경으로 이미지 강조
-    const front = this.add.rectangle(0, 0, width, height, 0x0f172a);
-    front.setStrokeStyle(3, 0x22d3ee);
+    // 카드 앞면 (숨김) - 밝은 파스텔 배경
+    const front = this.add.rectangle(0, 0, width, height, 0xfff1eb);
+    front.setStrokeStyle(2, 0xf472b6);
     front.setVisible(false);
 
     let frontText: Phaser.GameObjects.Text | undefined;
@@ -745,13 +866,13 @@ export class MatchScene extends Phaser.Scene {
         duration: 150,
         yoyo: true,
         onComplete: () => {
-          // 성공 색상으로 변경
-          card1.front.setStrokeStyle(4, 0x10b981);
-          card2.front.setStrokeStyle(4, 0x10b981);
+          // 성공 색상으로 변경 - Sweet Match 테마
+          card1.front.setStrokeStyle(3, 0x34d399);
+          card2.front.setStrokeStyle(3, 0x34d399);
 
           this.tweens.add({
             targets: [card1.container, card2.container],
-            alpha: 0.6,
+            alpha: 0.7,
             duration: 300
           });
         }
@@ -813,7 +934,7 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private showCombo() {
-    const comboEmoji = this.consecutiveMatches >= 4 ? '🔥' : this.consecutiveMatches >= 3 ? '⚡' : '✨';
+    const comboEmoji = this.consecutiveMatches >= 4 ? '🎉' : this.consecutiveMatches >= 3 ? '💖' : '✨';
     this.comboText?.setText(`${comboEmoji} ${this.consecutiveMatches} 콤보!`);
     this.comboText?.setAlpha(1);
 
@@ -860,44 +981,48 @@ export class MatchScene extends Phaser.Scene {
     // 성능 등급
     const grade = this.getGrade(finalScore);
 
-    // 결과 오버레이 - 우주 테마
-    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0x0a0a1a, 0.95);
+    // 결과 오버레이 - Sweet Match 파스텔 테마
+    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0xfff1eb, 0.97);
 
-    // 결과 타이틀 - 우주 테마
-    this.add.text(W * 0.5, H * 0.18, '🌟 미션 완료! 🌟', {
-      fontSize: Math.floor(H * 0.065) + 'px',
-      color: '#34d399',
-      fontStyle: 'bold'
+    // 결과 타이틀
+    this.add.text(W * 0.5, H * 0.18, '🎉 축하해요! 🎉', {
+      fontSize: Math.floor(H * 0.06) + 'px',
+      color: '#f43f5e',
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
 
     // 등급 표시
     this.add.text(W * 0.5, H * 0.28, grade.emoji + ' ' + grade.text, {
-      fontSize: Math.floor(H * 0.055) + 'px',
-      color: grade.color
+      fontSize: Math.floor(H * 0.05) + 'px',
+      color: grade.color,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
 
-    // 통계 - 우주 테마 아이콘
+    // 통계 - Sweet Match 테마 아이콘
     const statsText = [
-      `🕐 시간: ${this.elapsedTime}초`,
-      `🚀 이동 수: ${this.moves}회`,
+      `⏱️ 시간: ${this.elapsedTime}초`,
+      `🍰 이동 수: ${this.moves}회`,
       `⚡ 최대 콤보: ${this.maxCombo}회`,
-      `🌟 점수: ${finalScore}점`
+      `💖 점수: ${finalScore}점`
     ].join('\n');
 
     this.add.text(W * 0.5, H * 0.43, statsText, {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#e0f2fe',
+      fontSize: Math.floor(H * 0.03) + 'px',
+      color: '#374151',
       align: 'center',
-      lineSpacing: 10
+      lineSpacing: 10,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
 
     // 이름 입력
-    const namePrompt = this.add.text(W * 0.5, H * 0.58, '🧑‍🚀 우주 비행사 이름:', {
-      fontSize: Math.floor(H * 0.028) + 'px',
-      color: '#a5b4fc'
+    const namePrompt = this.add.text(W * 0.5, H * 0.58, '🎀 닉네임을 입력하세요:', {
+      fontSize: Math.floor(H * 0.026) + 'px',
+      color: '#6b7280',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
 
-    // HTML 입력 요소 - 우주 테마
+    // HTML 입력 요소 - Sweet Match 테마
     const gameContainer = document.getElementById('game-container');
     const inputElement = document.createElement('input');
     inputElement.type = 'text';
@@ -911,17 +1036,18 @@ export class MatchScene extends Phaser.Scene {
       width: 250px;
       padding: 12px;
       font-size: 16px;
-      border: 2px solid #7c3aed;
-      border-radius: 10px;
+      border: 2px solid #fda4af;
+      border-radius: 12px;
       text-align: center;
-      background: rgba(15, 23, 42, 0.95);
-      color: #e0f2fe;
+      background: rgba(255, 255, 255, 0.95);
+      color: #374151;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     `;
     gameContainer?.appendChild(inputElement);
     inputElement.focus();
 
     const submitButton = document.createElement('button');
-    submitButton.textContent = '🚀 점수 제출';
+    submitButton.textContent = '💖 점수 제출';
     submitButton.style.cssText = `
       position: absolute;
       left: 50%;
@@ -929,12 +1055,13 @@ export class MatchScene extends Phaser.Scene {
       transform: translateX(-50%);
       padding: 12px 30px;
       font-size: 16px;
-      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      background: linear-gradient(135deg, #f43f5e, #fb7185);
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       font-weight: bold;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     `;
     gameContainer?.appendChild(submitButton);
 
@@ -963,16 +1090,17 @@ export class MatchScene extends Phaser.Scene {
         namePrompt.setColor('#f87171');
       }
 
-      // 재시작 버튼 - 우주 테마
+      // 재시작 버튼 - Sweet Match 테마
       this.time.delayedCall(1500, () => {
-        const restartBg = this.add.rectangle(W * 0.5, H * 0.85, 200, 55, 0x7c3aed);
-        restartBg.setStrokeStyle(2, 0xa78bfa);
+        const restartBg = this.add.rectangle(W * 0.5, H * 0.85, 200, 55, 0xf43f5e);
+        restartBg.setStrokeStyle(0);
         restartBg.setInteractive({ useHandCursor: true });
 
         this.add.text(W * 0.5, H * 0.85, '🔄 다시 도전', {
-          fontSize: Math.floor(H * 0.035) + 'px',
+          fontSize: Math.floor(H * 0.032) + 'px',
           color: '#ffffff',
-          fontStyle: 'bold'
+          fontStyle: 'bold',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         }).setOrigin(0.5);
 
         restartBg.on('pointerdown', () => {
@@ -980,11 +1108,11 @@ export class MatchScene extends Phaser.Scene {
         });
 
         restartBg.on('pointerover', () => {
-          restartBg.setFillStyle(0x764ba2);
+          restartBg.setFillStyle(0xfb7185);
         });
 
         restartBg.on('pointerout', () => {
-          restartBg.setFillStyle(0x667eea);
+          restartBg.setFillStyle(0xf43f5e);
         });
       });
     };
@@ -998,11 +1126,11 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private getGrade(score: number): { emoji: string; text: string; color: string } {
-    // 우주 테마 등급
-    if (score >= 900) return { emoji: '🌟', text: '전설의 탐험가', color: '#fbbf24' };
-    if (score >= 750) return { emoji: '🚀', text: '우주 비행사', color: '#34d399' };
-    if (score >= 600) return { emoji: '🛸', text: '스타 파일럿', color: '#60a5fa' };
-    if (score >= 450) return { emoji: '🌙', text: '우주 여행자', color: '#a78bfa' };
-    return { emoji: '✨', text: '별 수집가', color: '#9ca3af' };
+    // Sweet Match 디저트 테마 등급
+    if (score >= 900) return { emoji: '🏆', text: '파티시에 마스터', color: '#f59e0b' };
+    if (score >= 750) return { emoji: '🍰', text: '케이크 장인', color: '#f43f5e' };
+    if (score >= 600) return { emoji: '🧁', text: '컵케이크 메이커', color: '#ec4899' };
+    if (score >= 450) return { emoji: '🍪', text: '쿠키 베이커', color: '#8b5cf6' };
+    return { emoji: '🍬', text: '캔디 수집가', color: '#6b7280' };
   }
 }
