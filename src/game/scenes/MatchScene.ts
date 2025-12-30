@@ -323,11 +323,60 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createTitleScreen(W: number, H: number) {
-    // 로고 표시 (있으면)
+    // ==================== 떠다니는 장식 아이콘 ====================
+    const floatingIcons = [
+      { emoji: '🍬', x: W * 0.12, y: H * 0.08, size: 0.045, duration: 2500 },
+      { emoji: '🍭', x: W * 0.88, y: H * 0.15, size: 0.05, duration: 3000 },
+      { emoji: '🧁', x: W * 0.1, y: H * 0.65, size: 0.04, duration: 4000 }
+    ];
+
+    floatingIcons.forEach((icon, i) => {
+      const floatIcon = this.add.text(icon.x, icon.y, icon.emoji, {
+        fontSize: Math.floor(H * icon.size) + 'px'
+      }).setOrigin(0.5);
+      this.titleElements.push(floatIcon);
+
+      // 바운스 애니메이션
+      this.tweens.add({
+        targets: floatIcon,
+        y: icon.y - 15,
+        duration: icon.duration,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        delay: i * 300
+      });
+    });
+
+    // ==================== 로고 영역 + 데코레이션 카드 ====================
     let contentY = H * 0.35;
+    const logoY = H * 0.22;
+
     if (this.hasLogo) {
-      const logoY = H * 0.22;
       const logoRadius = W * 0.22;
+
+      // 뒤에 숨어있는 카드 장식 (Match 느낌 강조)
+      // 왼쪽 카드
+      const leftCard = this.add.rectangle(W * 0.5 - logoRadius * 0.7, logoY + 8, W * 0.22, W * 0.22, 0xffffff);
+      leftCard.setStrokeStyle(1, 0xfecdd3);
+      leftCard.setAngle(-12);
+      this.titleElements.push(leftCard);
+
+      const leftCardIcon = this.add.text(W * 0.5 - logoRadius * 0.7, logoY + 8, '🍰', {
+        fontSize: Math.floor(H * 0.035) + 'px'
+      }).setOrigin(0.5).setAlpha(0.5).setAngle(-12);
+      this.titleElements.push(leftCardIcon);
+
+      // 오른쪽 카드
+      const rightCard = this.add.rectangle(W * 0.5 + logoRadius * 0.7, logoY + 8, W * 0.22, W * 0.22, 0xffffff);
+      rightCard.setStrokeStyle(1, 0xfecdd3);
+      rightCard.setAngle(12);
+      this.titleElements.push(rightCard);
+
+      const rightCardIcon = this.add.text(W * 0.5 + logoRadius * 0.7, logoY + 8, '🍩', {
+        fontSize: Math.floor(H * 0.035) + 'px'
+      }).setOrigin(0.5).setAlpha(0.5).setAngle(12);
+      this.titleElements.push(rightCardIcon);
 
       // 로고 배경 - 그라데이션 입체감 (다중 원 레이어)
       // 외곽 그림자
@@ -350,6 +399,23 @@ export class MatchScene extends Phaser.Scene {
       const innerGlow = this.add.circle(W * 0.5, logoY + logoRadius * 0.1, logoRadius * 0.85, 0xfff1f2, 0.3);
       this.titleElements.push(innerGlow);
 
+      // 반짝임 효과
+      const sparkle = this.add.text(W * 0.5 + logoRadius * 0.6, logoY - logoRadius * 0.5, '✨', {
+        fontSize: Math.floor(H * 0.03) + 'px'
+      }).setOrigin(0.5);
+      this.titleElements.push(sparkle);
+
+      // 반짝임 애니메이션
+      this.tweens.add({
+        targets: sparkle,
+        alpha: 0.3,
+        scale: 1.2,
+        duration: 1500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+
       // 로고 이미지
       const logo = this.add.image(W * 0.5, logoY, 'store_logo');
       const logoMaxWidth = W * 0.35;
@@ -364,7 +430,7 @@ export class MatchScene extends Phaser.Scene {
       contentY = H * 0.42;
     }
 
-    // 매장명
+    // ==================== 타이틀 섹션 ====================
     const titleText = this.storeName || '카드 매치';
     const title = this.add.text(W * 0.5, contentY, titleText, {
       fontSize: Math.floor(H * 0.05) + 'px',
@@ -374,15 +440,25 @@ export class MatchScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.titleElements.push(title);
 
-    // 부제목
-    const subtitle = this.add.text(W * 0.5, contentY + H * 0.055, '같은 그림 찾기', {
-      fontSize: Math.floor(H * 0.026) + 'px',
+    // 부제목 (구분선 포함)
+    const subtitleY = contentY + H * 0.055;
+
+    // 왼쪽 구분선
+    const leftLine = this.add.rectangle(W * 0.2, subtitleY, W * 0.12, 2, 0xd1d5db, 0.5);
+    this.titleElements.push(leftLine);
+
+    const subtitle = this.add.text(W * 0.5, subtitleY, '같은 그림 찾기', {
+      fontSize: Math.floor(H * 0.024) + 'px',
       color: '#6b7280',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
     this.titleElements.push(subtitle);
 
-    // 글래스모피즘 버튼
+    // 오른쪽 구분선
+    const rightLine = this.add.rectangle(W * 0.8, subtitleY, W * 0.12, 2, 0xd1d5db, 0.5);
+    this.titleElements.push(rightLine);
+
+    // ==================== 글래스모피즘 버튼 ====================
     const buttonWidth = W * 0.75;
     const buttonHeight = 56;
     const buttonY = H * 0.72;
@@ -391,7 +467,7 @@ export class MatchScene extends Phaser.Scene {
     const btnShadow = this.add.rectangle(W * 0.5, buttonY + 4, buttonWidth, buttonHeight, 0x000000, 0.15);
     this.titleElements.push(btnShadow);
 
-    // 버튼 배경 (그라데이션 효과를 위한 다중 레이어)
+    // 버튼 배경
     const btnBase = this.add.rectangle(W * 0.5, buttonY, buttonWidth, buttonHeight, 0xf43f5e);
     btnBase.setInteractive({ useHandCursor: true });
     this.titleElements.push(btnBase);
@@ -400,8 +476,22 @@ export class MatchScene extends Phaser.Scene {
     const btnHighlight = this.add.rectangle(W * 0.5, buttonY - buttonHeight * 0.18, buttonWidth * 0.92, buttonHeight * 0.35, 0xffffff, 0.25);
     this.titleElements.push(btnHighlight);
 
+    // 시머 효과 (버튼 위로 지나가는 빛)
+    const shimmer = this.add.rectangle(W * 0.5 - buttonWidth * 0.6, buttonY, buttonWidth * 0.3, buttonHeight, 0xffffff, 0.2);
+    this.titleElements.push(shimmer);
+
+    // 시머 애니메이션
+    this.tweens.add({
+      targets: shimmer,
+      x: W * 0.5 + buttonWidth * 0.6,
+      duration: 2000,
+      repeat: -1,
+      repeatDelay: 1500,
+      ease: 'Sine.easeInOut'
+    });
+
     // 버튼 텍스트
-    const startButtonText = this.add.text(W * 0.5, buttonY, '게임 시작', {
+    const startButtonText = this.add.text(W * 0.5, buttonY, '🎮 게임 시작', {
       fontSize: Math.floor(H * 0.034) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -422,7 +512,7 @@ export class MatchScene extends Phaser.Scene {
 
     btnBase.on('pointerdown', () => {
       this.tweens.add({
-        targets: [btnBase, btnHighlight, startButtonText, btnShadow],
+        targets: [btnBase, btnHighlight, startButtonText, btnShadow, shimmer],
         scale: 0.96,
         duration: 80,
         yoyo: true,
@@ -430,6 +520,24 @@ export class MatchScene extends Phaser.Scene {
           this.startGame();
         }
       });
+    });
+
+    // ==================== 하단 힌트 텍스트 ====================
+    const hintText = this.add.text(W * 0.5, H * 0.82, '최고 기록에 도전하세요!', {
+      fontSize: Math.floor(H * 0.02) + 'px',
+      color: '#9ca3af',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0.5);
+    this.titleElements.push(hintText);
+
+    // 힌트 펄스 애니메이션
+    this.tweens.add({
+      targets: hintText,
+      alpha: 0.5,
+      duration: 1500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
     });
   }
 
