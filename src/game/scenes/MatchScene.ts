@@ -104,8 +104,7 @@ export class MatchScene extends Phaser.Scene {
     // 그라데이션 배경
     this.createBackground(W, H);
 
-    // UI 패널
-    this.createUIPanel(W, H);
+    // UI 패널은 게임 시작 시 생성 (startGame에서 호출)
 
     // 로딩 화면 표시
     this.loadingText = this.add.text(W * 0.5, H * 0.5, '🔄 이미지 로딩 중...', {
