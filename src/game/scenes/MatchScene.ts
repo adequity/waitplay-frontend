@@ -260,37 +260,62 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createUIPanel(W: number, H: number) {
-    // 상단 UI 패널 - Sweet Match 파스텔 테마
-    const panelBg = this.add.rectangle(W * 0.5, H * 0.05, W * 0.98, H * 0.08, 0xffffff, 0.9);
-    panelBg.setStrokeStyle(2, 0xfda4af, 0.6);
+    // 상단 UI 패널 - 글래스모피즘 효과
+    const panelHeight = H * 0.07;
+    const panelY = H * 0.045;
 
-    // 이동 수 - 디저트 테마 아이콘
-    this.movesText = this.add.text(W * 0.05, H * 0.05, '🍰 0', {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#f43f5e',
+    // 글래스 배경 (다중 레이어)
+    const panelShadow = this.add.rectangle(W * 0.5, panelY + 2, W * 0.94, panelHeight, 0x000000, 0.05);
+    panelShadow.setStrokeStyle(0);
+    (panelShadow as any).setRoundedRectRadius?.(16) || null;
+
+    const panelBg = this.add.rectangle(W * 0.5, panelY, W * 0.94, panelHeight, 0xffffff, 0.85);
+    panelBg.setStrokeStyle(1.5, 0xfecdd3, 0.8);
+
+    // 상단 하이라이트 (글래스 반사 효과)
+    this.add.rectangle(W * 0.5, panelY - panelHeight * 0.2, W * 0.9, panelHeight * 0.3, 0xffffff, 0.4);
+
+    // 각 스탯을 개별 글래스 박스에 담기
+    const statWidth = W * 0.28;
+    const statHeight = panelHeight * 0.7;
+    const statY = panelY;
+
+    // 이동 수 박스
+    const moveBox = this.add.rectangle(W * 0.17, statY, statWidth, statHeight, 0xfff1f2, 0.6);
+    moveBox.setStrokeStyle(1, 0xfda4af, 0.5);
+
+    this.movesText = this.add.text(W * 0.17, statY, '🎯 0', {
+      fontSize: Math.floor(H * 0.028) + 'px',
+      color: '#e11d48',
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0, 0.5);
+    }).setOrigin(0.5);
 
-    // 매치 수
-    this.matchesText = this.add.text(W * 0.35, H * 0.05, '💖 0/' + this.TOTAL_PAIRS, {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#f472b6',
+    // 매치 수 박스
+    const matchBox = this.add.rectangle(W * 0.5, statY, statWidth, statHeight, 0xfdf2f8, 0.6);
+    matchBox.setStrokeStyle(1, 0xf9a8d4, 0.5);
+
+    this.matchesText = this.add.text(W * 0.5, statY, '💖 0/' + this.TOTAL_PAIRS, {
+      fontSize: Math.floor(H * 0.028) + 'px',
+      color: '#db2777',
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0, 0.5);
+    }).setOrigin(0.5);
 
-    // 시간
-    this.timeText = this.add.text(W * 0.68, H * 0.05, '⏱️ 0초', {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#8b5cf6',
+    // 시간 박스
+    const timeBox = this.add.rectangle(W * 0.83, statY, statWidth, statHeight, 0xf5f3ff, 0.6);
+    timeBox.setStrokeStyle(1, 0xc4b5fd, 0.5);
+
+    this.timeText = this.add.text(W * 0.83, statY, '⏱️ 0초', {
+      fontSize: Math.floor(H * 0.028) + 'px',
+      color: '#7c3aed',
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0, 0.5);
+    }).setOrigin(0.5);
 
     // 콤보 텍스트 (숨김 상태로 시작)
-    this.comboText = this.add.text(W * 0.5, H * 0.11, '', {
-      fontSize: Math.floor(H * 0.045) + 'px',
+    this.comboText = this.add.text(W * 0.5, H * 0.10, '', {
+      fontSize: Math.floor(H * 0.04) + 'px',
       color: '#f43f5e',
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -301,49 +326,83 @@ export class MatchScene extends Phaser.Scene {
     // 로고 표시 (있으면)
     let contentY = H * 0.35;
     if (this.hasLogo) {
-      const logo = this.add.image(W * 0.5, H * 0.22, 'store_logo');
-      const logoMaxWidth = W * 0.5;
-      const logoMaxHeight = H * 0.18;
+      const logoY = H * 0.22;
+      const logoRadius = W * 0.22;
+
+      // 로고 배경 - 그라데이션 입체감 (다중 원 레이어)
+      // 외곽 그림자
+      const shadowOuter = this.add.circle(W * 0.5, logoY + 4, logoRadius + 8, 0x000000, 0.08);
+      this.titleElements.push(shadowOuter);
+
+      // 외곽 링 (테두리 효과)
+      const outerRing = this.add.circle(W * 0.5, logoY, logoRadius + 6, 0xfecdd3, 0.6);
+      this.titleElements.push(outerRing);
+
+      // 메인 배경 원
+      const bgCircle = this.add.circle(W * 0.5, logoY, logoRadius, 0xffffff, 0.95);
+      this.titleElements.push(bgCircle);
+
+      // 상단 하이라이트 (빛 반사 효과)
+      const highlightTop = this.add.ellipse(W * 0.5, logoY - logoRadius * 0.35, logoRadius * 1.2, logoRadius * 0.5, 0xffffff, 0.5);
+      this.titleElements.push(highlightTop);
+
+      // 내부 그라데이션 효과 (부드러운 음영)
+      const innerGlow = this.add.circle(W * 0.5, logoY + logoRadius * 0.1, logoRadius * 0.85, 0xfff1f2, 0.3);
+      this.titleElements.push(innerGlow);
+
+      // 로고 이미지
+      const logo = this.add.image(W * 0.5, logoY, 'store_logo');
+      const logoMaxWidth = W * 0.35;
+      const logoMaxHeight = H * 0.14;
       const logoScaleX = logoMaxWidth / logo.width;
       const logoScaleY = logoMaxHeight / logo.height;
       const logoScale = Math.min(logoScaleX, logoScaleY);
       logo.setScale(logoScale);
       logo.setOrigin(0.5, 0.5);
       this.titleElements.push(logo);
+
       contentY = H * 0.42;
     }
 
     // 매장명
     const titleText = this.storeName || '카드 매치';
     const title = this.add.text(W * 0.5, contentY, titleText, {
-      fontSize: Math.floor(H * 0.055) + 'px',
-      color: '#374151',
+      fontSize: Math.floor(H * 0.05) + 'px',
+      color: '#1f2937',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       fontStyle: 'bold'
     }).setOrigin(0.5);
     this.titleElements.push(title);
 
     // 부제목
-    const subtitle = this.add.text(W * 0.5, contentY + H * 0.06, '같은 그림 찾기', {
-      fontSize: Math.floor(H * 0.028) + 'px',
-      color: '#9ca3af',
+    const subtitle = this.add.text(W * 0.5, contentY + H * 0.055, '같은 그림 찾기', {
+      fontSize: Math.floor(H * 0.026) + 'px',
+      color: '#6b7280',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
     this.titleElements.push(subtitle);
 
-    // 심플한 버튼
-    const buttonWidth = W * 0.7;
-    const buttonHeight = 54;
-    const buttonY = H * 0.75;
+    // 글래스모피즘 버튼
+    const buttonWidth = W * 0.75;
+    const buttonHeight = 56;
+    const buttonY = H * 0.72;
 
-    // 메인 버튼
-    const startButtonBg = this.add.rectangle(W * 0.5, buttonY, buttonWidth, buttonHeight, 0xf43f5e);
-    startButtonBg.setInteractive({ useHandCursor: true });
-    this.titleElements.push(startButtonBg);
+    // 버튼 그림자
+    const btnShadow = this.add.rectangle(W * 0.5, buttonY + 4, buttonWidth, buttonHeight, 0x000000, 0.15);
+    this.titleElements.push(btnShadow);
+
+    // 버튼 배경 (그라데이션 효과를 위한 다중 레이어)
+    const btnBase = this.add.rectangle(W * 0.5, buttonY, buttonWidth, buttonHeight, 0xf43f5e);
+    btnBase.setInteractive({ useHandCursor: true });
+    this.titleElements.push(btnBase);
+
+    // 버튼 상단 하이라이트 (글래스 효과)
+    const btnHighlight = this.add.rectangle(W * 0.5, buttonY - buttonHeight * 0.18, buttonWidth * 0.92, buttonHeight * 0.35, 0xffffff, 0.25);
+    this.titleElements.push(btnHighlight);
 
     // 버튼 텍스트
     const startButtonText = this.add.text(W * 0.5, buttonY, '게임 시작', {
-      fontSize: Math.floor(H * 0.032) + 'px',
+      fontSize: Math.floor(H * 0.034) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       fontStyle: 'bold'
@@ -351,17 +410,19 @@ export class MatchScene extends Phaser.Scene {
     this.titleElements.push(startButtonText);
 
     // 버튼 호버 효과
-    startButtonBg.on('pointerover', () => {
-      startButtonBg.setFillStyle(0xfb7185);
+    btnBase.on('pointerover', () => {
+      btnBase.setFillStyle(0xfb7185);
+      btnHighlight.setAlpha(0.35);
     });
 
-    startButtonBg.on('pointerout', () => {
-      startButtonBg.setFillStyle(0xf43f5e);
+    btnBase.on('pointerout', () => {
+      btnBase.setFillStyle(0xf43f5e);
+      btnHighlight.setAlpha(0.25);
     });
 
-    startButtonBg.on('pointerdown', () => {
+    btnBase.on('pointerdown', () => {
       this.tweens.add({
-        targets: [startButtonBg, startButtonText],
+        targets: [btnBase, btnHighlight, startButtonText, btnShadow],
         scale: 0.96,
         duration: 80,
         yoyo: true,
