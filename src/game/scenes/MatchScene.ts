@@ -12,13 +12,14 @@ import { getMatchGameAssets, type GameAsset } from '../../services/gameAssetServ
 
 interface Card {
   container: Phaser.GameObjects.Container;
-  back: Phaser.GameObjects.Rectangle;
+  back: Phaser.GameObjects.Graphics;
   backIcon: Phaser.GameObjects.Text;
   starPattern: Phaser.GameObjects.Text;
   backLogo?: Phaser.GameObjects.Image;
-  front: Phaser.GameObjects.Rectangle;
+  front: Phaser.GameObjects.Graphics;
   frontText?: Phaser.GameObjects.Text;
   frontImage?: Phaser.GameObjects.Image;
+  hitArea: Phaser.GameObjects.Rectangle;
   value: string;
   isFlipped: boolean;
   isMatched: boolean;
@@ -679,22 +680,22 @@ export class MatchScene extends Phaser.Scene {
     const cols = 4;
     const rows = 4;
 
-    // UI 영역(상단 패널) 고려한 게임 영역 계산 - 여백 최소화
-    const gameAreaTop = H * 0.10; // UI 패널 아래
-    const gameAreaBottom = H; // 하단 여백 없음
+    // UI 영역(상단 패널) 고려한 게임 영역 계산 - 적절한 여백 추가
+    const gameAreaTop = H * 0.14; // UI 패널 아래 여백 추가
+    const gameAreaBottom = H * 0.98; // 하단 여백
     const gameAreaHeight = gameAreaBottom - gameAreaTop;
-    const gameAreaWidth = W; // 좌우 여백 없음
+    const gameAreaWidth = W * 0.96; // 좌우 여백 추가
 
-    // 카드 간격 (최소화)
-    const gapX = W * 0.015; // 가로 간격
-    const gapY = H * 0.01; // 세로 간격
+    // 카드 간격 (부드러운 느낌)
+    const gapX = W * 0.025; // 가로 간격
+    const gapY = H * 0.015; // 세로 간격
 
     // 카드 크기 계산 - 화면에 꽉 차게
     const cardWidth = (gameAreaWidth - gapX * (cols + 1)) / cols;
     const cardHeight = (gameAreaHeight - gapY * (rows + 1)) / rows;
 
-    // 시작 위치
-    const startX = gapX + cardWidth / 2;
+    // 시작 위치 (좌우 여백 고려)
+    const startX = (W - gameAreaWidth) / 2 + gapX + cardWidth / 2;
     const startY = gameAreaTop + gapY + cardHeight / 2;
 
     // 간격 계산
@@ -722,9 +723,15 @@ export class MatchScene extends Phaser.Scene {
   private createSingleCard(x: number, y: number, width: number, height: number, value: string, index: number, isImageCard: boolean = false): Card {
     const container = this.add.container(x, y);
 
-    // 카드 뒷면 - Sweet Match 흰색/파스텔 테마
-    const back = this.add.rectangle(0, 0, width, height, 0xffffff);
-    back.setStrokeStyle(2, 0xfda4af);
+    // 둥근 모서리 반경 (카드 크기의 15% - 부드러운 느낌)
+    const cornerRadius = Math.min(width, height) * 0.15;
+
+    // 카드 뒷면 - Sweet Match 흰색/파스텔 테마 (둥근 모서리)
+    const back = this.add.graphics();
+    back.fillStyle(0xffffff, 1);
+    back.fillRoundedRect(-width / 2, -height / 2, width, height, cornerRadius);
+    back.lineStyle(2, 0xfda4af, 1);
+    back.strokeRoundedRect(-width / 2, -height / 2, width, height, cornerRadius);
 
     // 뒷면 장식 - 로즈 패턴 (로고가 없을 때만 표시)
     const starPattern = this.add.text(0, -height * 0.15, '💖', {
@@ -749,10 +756,16 @@ export class MatchScene extends Phaser.Scene {
       backLogo.setOrigin(0.5, 0.5);
     }
 
-    // 카드 앞면 (숨김) - 밝은 파스텔 배경
-    const front = this.add.rectangle(0, 0, width, height, 0xfff1eb);
-    front.setStrokeStyle(2, 0xf472b6);
+    // 카드 앞면 (숨김) - 밝은 파스텔 배경 (둥근 모서리)
+    const front = this.add.graphics();
+    front.fillStyle(0xfff1eb, 1);
+    front.fillRoundedRect(-width / 2, -height / 2, width, height, cornerRadius);
+    front.lineStyle(2, 0xf472b6, 1);
+    front.strokeRoundedRect(-width / 2, -height / 2, width, height, cornerRadius);
     front.setVisible(false);
+
+    // 클릭 이벤트를 위한 투명 히트 영역
+    const hitArea = this.add.rectangle(0, 0, width, height, 0xffffff, 0);
 
     let frontText: Phaser.GameObjects.Text | undefined;
     let frontImage: Phaser.GameObjects.Image | undefined;
@@ -775,7 +788,7 @@ export class MatchScene extends Phaser.Scene {
       frontImage.setOrigin(0.5, 0.5);
 
       frontImage.setVisible(false);
-      container.add([...backElements, front, frontImage]);
+      container.add([...backElements, front, frontImage, hitArea]);
     } else if (isImageCard) {
       // 텍스처가 없는 경우 폴백 이모지
       console.warn(`[MatchScene] Texture not found: ${value}, using fallback emoji`);
@@ -785,18 +798,18 @@ export class MatchScene extends Phaser.Scene {
       frontText = this.add.text(0, 0, fallbackEmoji, {
         fontSize: Math.floor(height * 0.55) + 'px'
       }).setOrigin(0.5).setVisible(false);
-      container.add([...backElements, front, frontText]);
+      container.add([...backElements, front, frontText, hitArea]);
     } else {
       // 이모지 카드 - 크게 표시
       frontText = this.add.text(0, 0, value, {
         fontSize: Math.floor(height * 0.55) + 'px'
       }).setOrigin(0.5).setVisible(false);
-      container.add([...backElements, front, frontText]);
+      container.add([...backElements, front, frontText, hitArea]);
     }
 
-    // 클릭 이벤트
-    back.setInteractive({ useHandCursor: true });
-    back.on('pointerdown', () => this.flipCard(card));
+    // 클릭 이벤트 (투명 히트 영역 사용)
+    hitArea.setInteractive({ useHandCursor: true });
+    hitArea.on('pointerdown', () => this.flipCard(card));
 
     const card: Card = {
       container,
@@ -807,6 +820,7 @@ export class MatchScene extends Phaser.Scene {
       front,
       frontText,
       frontImage,
+      hitArea,
       value,
       isFlipped: false,
       isMatched: false,
