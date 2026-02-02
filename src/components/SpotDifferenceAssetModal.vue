@@ -11,22 +11,28 @@
 
       <!-- Modal Body -->
       <div class="modal-body">
-        <!-- Tabs -->
-        <div class="tabs">
-          <button
-            class="tab-btn"
-            :class="{ active: activeTab === 'list' }"
-            @click="activeTab = 'list'"
-          >
-            에셋 목록
-          </button>
-          <button
-            class="tab-btn"
-            :class="{ active: activeTab === 'create' }"
-            @click="activeTab = 'create'"
-          >
-            새 에셋 만들기
-          </button>
+        <!-- Tabs & Counter -->
+        <div class="tabs-container">
+          <div class="tabs">
+            <button
+              class="tab-btn"
+              :class="{ active: activeTab === 'list' }"
+              @click="activeTab = 'list'"
+            >
+              에셋 목록
+            </button>
+            <button
+              class="tab-btn"
+              :class="{ active: activeTab === 'create' }"
+              @click="activeTab = 'create'"
+              :disabled="totalAssets >= assetLimit"
+            >
+              새 에셋 만들기
+            </button>
+          </div>
+          <div class="asset-counter" :class="{ full: totalAssets >= assetLimit }">
+            {{ totalAssets }} / {{ assetLimit }} 세트
+          </div>
         </div>
 
         <!-- List Tab -->
@@ -282,6 +288,8 @@ const activeTab = ref<'list' | 'create'>('list')
 const isLoading = ref(false)
 const isCreating = ref(false)
 const assets = ref<SpotDifferenceAsset[]>([])
+const assetLimit = ref(20)
+const totalAssets = ref(0)
 
 // File inputs
 const originalFileInput = ref<HTMLInputElement | null>(null)
@@ -324,7 +332,10 @@ const loadAssets = async () => {
     const token = authStore.accessToken
     if (!token) return
 
-    assets.value = await getMySpotDifferenceAssets(token)
+    const result = await getMySpotDifferenceAssets(token)
+    assets.value = result.assets
+    totalAssets.value = result.total
+    assetLimit.value = result.limit
   } catch (error) {
     console.error('Failed to load assets:', error)
   } finally {
@@ -561,12 +572,32 @@ const close = () => {
 }
 
 /* Tabs */
-.tabs {
+.tabs-container {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
   border-bottom: 1px solid #e5e5ea;
   padding-bottom: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.asset-counter {
+  font-size: 14px;
+  font-weight: 600;
+  color: #86868b;
+  padding: 6px 12px;
+  background: #f5f5f7;
+  border-radius: 20px;
+}
+
+.asset-counter.full {
+  background: #fee2e2;
+  color: #ef4444;
 }
 
 .tab-btn {

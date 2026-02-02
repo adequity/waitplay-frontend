@@ -126,11 +126,20 @@ export async function getSpotDifferenceById(assetId: string): Promise<SpotDiffer
 }
 
 /**
+ * 에셋 목록 응답
+ */
+export interface SpotDifferenceAssetsResponse {
+  assets: SpotDifferenceAsset[]
+  total: number
+  limit: number
+}
+
+/**
  * 내 틀린그림찾기 에셋 목록 조회 (Admin용)
  * @param token JWT 토큰
- * @returns 에셋 목록
+ * @returns 에셋 목록 및 제한 정보
  */
-export async function getMySpotDifferenceAssets(token: string): Promise<SpotDifferenceAsset[]> {
+export async function getMySpotDifferenceAssets(token: string): Promise<SpotDifferenceAssetsResponse> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/spot-difference/admin/assets`, {
       headers: {
@@ -140,14 +149,18 @@ export async function getMySpotDifferenceAssets(token: string): Promise<SpotDiff
 
     if (!response.ok) {
       console.error('[SpotDifference] Failed to fetch admin assets:', await response.text())
-      return []
+      return { assets: [], total: 0, limit: 20 }
     }
 
     const data = await response.json()
-    return data.assets || []
+    return {
+      assets: data.assets || [],
+      total: data.total || 0,
+      limit: data.limit || 20
+    }
   } catch (error) {
     console.error('[SpotDifference] Error fetching admin assets:', error)
-    return []
+    return { assets: [], total: 0, limit: 20 }
   }
 }
 
