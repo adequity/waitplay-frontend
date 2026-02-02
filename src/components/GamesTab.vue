@@ -124,10 +124,17 @@
       </button>
     </div>
 
-    <!-- Asset Select Modal -->
+    <!-- Asset Select Modal (같은그림찾기용) -->
     <GameAssetSelectModal
-      :isOpen="showAssetModal"
+      :isOpen="showAssetModal && selectedGameId === 'memory'"
       :gameId="selectedGameId"
+      @close="showAssetModal = false"
+      @saved="onAssetsSaved"
+    />
+
+    <!-- Spot Difference Asset Modal (틀린그림찾기용) -->
+    <SpotDifferenceAssetModal
+      :isOpen="showAssetModal && selectedGameId === 'spot-difference'"
       @close="showAssetModal = false"
       @saved="onAssetsSaved"
     />
@@ -141,6 +148,7 @@ import gameSettingsService from '@/services/gameSettingsService'
 import type { GameOrderDto } from '@/services/gameSettingsService'
 import IconBase from '@/components/IconBase.vue'
 import GameAssetSelectModal from '@/components/GameAssetSelectModal.vue'
+import SpotDifferenceAssetModal from '@/components/SpotDifferenceAssetModal.vue'
 
 interface Game {
   id: string
