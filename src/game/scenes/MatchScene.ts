@@ -984,9 +984,9 @@ export class MatchScene extends Phaser.Scene {
         duration: 150,
         yoyo: true,
         onComplete: () => {
-          // 성공 색상으로 변경 - Sweet Match 테마
-          card1.front.setStrokeStyle(3, 0x34d399);
-          card2.front.setStrokeStyle(3, 0x34d399);
+          // 성공 효과 - 녹색 틴트 적용
+          card1.front.setAlpha(0.8);
+          card2.front.setAlpha(0.8);
 
           this.tweens.add({
             targets: [card1.container, card2.container],
