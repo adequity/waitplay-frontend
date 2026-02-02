@@ -38,12 +38,19 @@ apiClient.interceptors.response.use(
     const isAuthEndpoint = originalRequest?.url?.includes('/auth/refresh') ||
                            originalRequest?.url?.includes('/auth/me')
 
+    // If 401 on auth endpoint, logout immediately
+    if (error.response?.status === 401 && isAuthEndpoint) {
+      const authStore = useAuthStore()
+      authStore.logout()
+      window.location.href = '/login'
+      return Promise.reject(error)
+    }
+
     // If 401, not an auth endpoint, not already retrying, and not currently refreshing
     if (
       error.response?.status === 401 &&
       originalRequest &&
       !originalRequest._retry &&
-      !isAuthEndpoint &&
       !isRefreshing
     ) {
       originalRequest._retry = true
@@ -56,6 +63,9 @@ apiClient.interceptors.response.use(
         if (refreshed && originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`
           return apiClient(originalRequest)
+        } else {
+          // Refresh failed, redirect to login
+          window.location.href = '/login'
         }
       } finally {
         isRefreshing = false
