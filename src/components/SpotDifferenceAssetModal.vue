@@ -161,18 +161,86 @@
               </div>
             </div>
 
+            <!-- Auto Detection Button -->
+            <div v-if="form.originalImageUrl && form.modifiedImageUrl" class="auto-detect-section">
+              <button
+                class="btn-auto-detect"
+                @click="autoDetectDifferences"
+                :disabled="isDetecting"
+              >
+                {{ isDetecting ? '🔍 분석 중...' : '🤖 차이점 자동 감지' }}
+              </button>
+              <p class="auto-detect-hint">
+                두 이미지를 비교하여 차이점을 자동으로 찾습니다.
+              </p>
+            </div>
+
             <!-- Difference Points Editor -->
             <div class="form-group">
               <label class="form-label">
-                차이점 위치 지정 ({{ form.differences.length }}개)
+                차이점 위치 ({{ form.differences.length }}개)
+                <span v-if="form.differences.length > 0" class="label-hint">
+                  - 클릭하여 삭제, 드래그하여 수정
+                </span>
               </label>
-              <p class="form-hint">
-                차이점 이미지를 클릭하여 차이점 위치를 지정하세요.
-              </p>
+
+              <!-- Preview Mode Toggle -->
+              <div v-if="form.differences.length > 0" class="preview-toggle">
+                <button
+                  class="btn-preview"
+                  :class="{ active: showPreview }"
+                  @click="showPreview = !showPreview"
+                >
+                  {{ showPreview ? '👁️ 미리보기 ON' : '👁️ 미리보기' }}
+                </button>
+              </div>
 
               <!-- Click Area -->
               <div v-if="form.modifiedImageUrl" class="difference-editor">
-                <div class="editor-image-container" ref="editorContainer">
+                <!-- Side by Side Preview -->
+                <div v-if="showPreview && form.originalImageUrl" class="preview-container">
+                  <div class="preview-image-box">
+                    <span class="preview-label">원본</span>
+                    <div class="preview-image-wrapper">
+                      <img :src="form.originalImageUrl" alt="원본" />
+                      <div
+                        v-for="(point, idx) in form.differences"
+                        :key="'orig-' + idx"
+                        class="preview-marker"
+                        :style="{
+                          left: `${point.x * 100}%`,
+                          top: `${point.y * 100}%`,
+                          width: `${point.radius * 200}%`,
+                          height: `${point.radius * 200}%`
+                        }"
+                      >
+                        <span class="marker-number">{{ idx + 1 }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="preview-image-box">
+                    <span class="preview-label">차이점</span>
+                    <div class="preview-image-wrapper">
+                      <img :src="form.modifiedImageUrl" alt="차이점" />
+                      <div
+                        v-for="(point, idx) in form.differences"
+                        :key="'mod-' + idx"
+                        class="preview-marker"
+                        :style="{
+                          left: `${point.x * 100}%`,
+                          top: `${point.y * 100}%`,
+                          width: `${point.radius * 200}%`,
+                          height: `${point.radius * 200}%`
+                        }"
+                      >
+                        <span class="marker-number">{{ idx + 1 }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Editor (when not in preview mode) -->
+                <div v-else class="editor-image-container" ref="editorContainer">
                   <img
                     :src="form.modifiedImageUrl"
                     alt="차이점 지정"
@@ -196,14 +264,18 @@
                     <span class="marker-remove">×</span>
                   </div>
                 </div>
+
                 <div class="editor-controls">
-                  <button class="btn-clear-points" @click="form.differences = []">
+                  <span v-if="!showPreview" class="editor-hint">
+                    이미지를 클릭하여 차이점 추가
+                  </span>
+                  <button class="btn-clear-points" @click="form.differences = []" v-if="form.differences.length > 0">
                     모두 지우기
                   </button>
                 </div>
               </div>
               <div v-else class="no-image-hint">
-                차이점 이미지를 먼저 업로드하세요.
+                이미지를 먼저 업로드하세요.
               </div>
             </div>
 
@@ -271,6 +343,7 @@ import {
   type SpotDifferenceAsset,
   type DifferencePoint
 } from '@/services/spotDifferenceService'
+import { detectDifferences } from '@/utils/imageDiffDetector'
 
 const props = defineProps<{
   isOpen: boolean
@@ -287,6 +360,8 @@ const authStore = useAuthStore()
 const activeTab = ref<'list' | 'create'>('list')
 const isLoading = ref(false)
 const isCreating = ref(false)
+const isDetecting = ref(false)
+const showPreview = ref(false)
 const assets = ref<SpotDifferenceAsset[]>([])
 const assetLimit = ref(20)
 const totalAssets = ref(0)
@@ -423,6 +498,41 @@ const addDifferencePoint = (event: MouseEvent) => {
 
 const removeDifferencePoint = (index: number) => {
   form.value.differences.splice(index, 1)
+}
+
+const autoDetectDifferences = async () => {
+  if (!form.value.originalImageUrl || !form.value.modifiedImageUrl) {
+    alert('원본 이미지와 차이점 이미지를 먼저 업로드하세요.')
+    return
+  }
+
+  isDetecting.value = true
+  try {
+    const detected = await detectDifferences(
+      form.value.originalImageUrl,
+      form.value.modifiedImageUrl,
+      {
+        threshold: 25,       // 픽셀 차이 임계값
+        minGroupSize: 50,    // 최소 그룹 크기
+        maxDifferences: 10,  // 최대 차이점 개수
+        radiusPadding: 1.8   // 반경 패딩
+      }
+    )
+
+    if (detected.length === 0) {
+      alert('차이점을 찾을 수 없습니다. 두 이미지가 동일하거나 차이가 너무 작습니다.')
+      return
+    }
+
+    form.value.differences = detected
+    showPreview.value = true
+    alert(`${detected.length}개의 차이점을 자동으로 감지했습니다. 미리보기에서 확인하세요.`)
+  } catch (error) {
+    console.error('Auto detection failed:', error)
+    alert('차이점 감지 중 오류가 발생했습니다.')
+  } finally {
+    isDetecting.value = false
+  }
 }
 
 const createAsset = async () => {
@@ -965,6 +1075,160 @@ const close = () => {
   color: #86868b;
   background: #f5f5f7;
   border-radius: 12px;
+}
+
+/* Auto Detect Section */
+.auto-detect-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%);
+  border-radius: 12px;
+  border: 1px solid #cce5ff;
+  text-align: center;
+}
+
+.btn-auto-detect {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #0071e3 0%, #0077ed 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+}
+
+.btn-auto-detect:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.4);
+}
+
+.btn-auto-detect:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auto-detect-hint {
+  font-size: 12px;
+  color: #5a9cff;
+  margin: 8px 0 0 0;
+}
+
+/* Preview Toggle */
+.preview-toggle {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-preview {
+  padding: 8px 16px;
+  border: 1px solid #d2d2d7;
+  background: white;
+  color: #86868b;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-preview:hover {
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.btn-preview.active {
+  background: #10b981;
+  border-color: #10b981;
+  color: white;
+}
+
+/* Preview Container */
+.preview-container {
+  display: flex;
+  gap: 16px;
+  background: #1d1d1f;
+  border-radius: 12px 12px 0 0;
+  padding: 16px;
+}
+
+.preview-image-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.preview-image-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2d2d2f;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.preview-image-wrapper img {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.preview-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 2px solid #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 185, 129, 0.2);
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+}
+
+.preview-marker .marker-number {
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Editor Hint */
+.editor-hint {
+  font-size: 13px;
+  color: #86868b;
+  margin-right: auto;
+}
+
+.label-hint {
+  font-weight: 400;
+  color: #86868b;
+  font-size: 12px;
 }
 
 /* Settings Row */
