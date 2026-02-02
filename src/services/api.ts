@@ -25,22 +25,40 @@ apiClient.interceptors.request.use(
   }
 )
 
+// Flag to prevent multiple refresh attempts
+let isRefreshing = false
+
 // Response interceptor to handle token refresh
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config
 
-    // If 401 and we haven't tried refreshing yet
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    // Skip refresh logic for auth endpoints to prevent infinite loops
+    const isAuthEndpoint = originalRequest?.url?.includes('/auth/refresh') ||
+                           originalRequest?.url?.includes('/auth/me')
+
+    // If 401, not an auth endpoint, not already retrying, and not currently refreshing
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isAuthEndpoint &&
+      !isRefreshing
+    ) {
       originalRequest._retry = true
+      isRefreshing = true
 
-      const authStore = useAuthStore()
-      const refreshed = await authStore.refreshAccessToken()
+      try {
+        const authStore = useAuthStore()
+        const refreshed = await authStore.refreshAccessToken()
 
-      if (refreshed && originalRequest.headers) {
-        originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`
-        return apiClient(originalRequest)
+        if (refreshed && originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`
+          return apiClient(originalRequest)
+        }
+      } finally {
+        isRefreshing = false
       }
     }
 
