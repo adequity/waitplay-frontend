@@ -3,7 +3,7 @@
     <div class="modal-card">
       <!-- Modal Header -->
       <div class="modal-header">
-        <h2>🔍 틀린그림찾기 에셋 설정</h2>
+        <h2><IconBase name="search" :size="20" /> 틀린그림찾기 에셋 설정</h2>
         <button class="btn-close" @click="close">
           <IconBase name="close" />
         </button>
@@ -45,7 +45,7 @@
 
           <!-- Empty -->
           <div v-else-if="assets.length === 0" class="empty-state">
-            <div class="empty-icon">🖼️</div>
+            <div class="empty-icon"><IconBase name="image" :size="48" /></div>
             <p>등록된 틀린그림찾기 에셋이 없습니다.</p>
             <button class="btn-create" @click="activeTab = 'create'">
               새 에셋 만들기
@@ -123,7 +123,7 @@
                 >
                   <img v-if="form.originalImageUrl" :src="form.originalImageUrl" alt="원본" />
                   <div v-else class="upload-placeholder">
-                    <span class="upload-icon">📷</span>
+                    <IconBase name="camera" :size="32" class="upload-icon-svg" />
                     <p>클릭 또는 드래그</p>
                   </div>
                 </div>
@@ -147,7 +147,7 @@
                 >
                   <img v-if="form.modifiedImageUrl" :src="form.modifiedImageUrl" alt="차이점" />
                   <div v-else class="upload-placeholder">
-                    <span class="upload-icon">🖼️</span>
+                    <IconBase name="image" :size="32" class="upload-icon-svg" />
                     <p>클릭 또는 드래그</p>
                   </div>
                 </div>
@@ -168,7 +168,8 @@
                 @click="autoDetectDifferences"
                 :disabled="isDetecting"
               >
-                {{ isDetecting ? '🔍 분석 중...' : '🤖 차이점 자동 감지' }}
+                <IconBase :name="isDetecting ? 'loader' : 'sparkles'" :size="16" />
+                {{ isDetecting ? '분석 중...' : '차이점 자동 감지' }}
               </button>
               <p class="auto-detect-hint">
                 두 이미지를 비교하여 차이점을 자동으로 찾습니다.
@@ -191,7 +192,8 @@
                   :class="{ active: showPreview }"
                   @click="showPreview = !showPreview"
                 >
-                  {{ showPreview ? '👁️ 미리보기 ON' : '👁️ 미리보기' }}
+                  <IconBase name="eye" :size="14" />
+                  {{ showPreview ? '미리보기 ON' : '미리보기' }}
                 </button>
               </div>
 
