@@ -339,18 +339,19 @@ onMounted(async () => {
       }
     }
 
-    // Fetch landing page settings
-    const endpoint = qrCode
-      ? `${API_URL}/api/landingpage/settings/qr/${encodeURIComponent(qrCode)}`
-      : `${API_URL}/api/landingpage/settings`
+    // Fetch landing page settings (only if QR code exists)
+    if (qrCode) {
+      const endpoint = `${API_URL}/api/landingpage/settings/qr/${encodeURIComponent(qrCode)}`
+      const response = await fetch(endpoint)
 
-    const response = await fetch(endpoint)
-    const settings = await response.json()
-
-    if (settings && settings.storeName) {
-      logoUrl = settings.logoUrl || ''
-      storeName = settings.storeName
-      welcomeMessage = settings.welcomeMessage || welcomeMessage
+      if (response.ok) {
+        const settings = await response.json()
+        if (settings && settings.storeName) {
+          logoUrl = settings.logoUrl || ''
+          storeName = settings.storeName
+          welcomeMessage = settings.welcomeMessage || welcomeMessage
+        }
+      }
     }
   } catch (error) {
     console.warn('Failed to load landing page settings from API, using defaults:', error)
