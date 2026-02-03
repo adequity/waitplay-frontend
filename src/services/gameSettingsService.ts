@@ -21,7 +21,15 @@ export interface UpdateGameSettingsDto {
 
 const gameSettingsService = {
   /**
-   * Get game settings by QR code ID
+   * Get game settings by QR code ID (public - no auth required)
+   */
+  async getGameSettingsPublic(qrCodeId: string): Promise<GameSettingsDto> {
+    const response = await api.get(`/api/games/settings/public/${qrCodeId}`)
+    return response.data
+  },
+
+  /**
+   * Get game settings by QR code ID (requires auth)
    */
   async getGameSettings(qrCodeId: string): Promise<GameSettingsDto> {
     const response = await api.get(`/api/games/settings/${qrCodeId}`)

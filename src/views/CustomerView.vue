@@ -394,9 +394,9 @@ onMounted(async () => {
       headerBlock.data.welcomeMessage = welcomeMessage
     }
 
-    // Load game settings and update games_carousel block
+    // Load game settings and update games_carousel block (using public endpoint - no auth required)
     try {
-      const gameSettings = await gameSettingsService.getGameSettings(fetchedQrCodeId)
+      const gameSettings = await gameSettingsService.getGameSettingsPublic(fetchedQrCodeId)
       const gamesCarouselBlock = blocks.value.find(b => b.type === 'games_carousel')
 
       if (gamesCarouselBlock && gamesCarouselBlock.data) {
