@@ -312,10 +312,8 @@ export class SpotScene extends Phaser.Scene {
     const imgWidth = frame.width;
     const imgHeight = frame.height;
 
-    // 스케일 계산 (이미지가 화면에 맞도록)
-    const scaleX = (W - 20) / imgWidth;
-    const scaleY = imageHeight / imgHeight;
-    const scale = Math.min(scaleX, scaleY);
+    // 스케일 계산 (높이 기준으로 맞춤 - 좌우는 잘릴 수 있음)
+    const scale = imageHeight / imgHeight;
 
     this.imageWidth = imgWidth * scale;
     this.imageHeight = imgHeight * scale;

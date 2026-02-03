@@ -29,6 +29,15 @@
             >
               새 에셋 만들기
             </button>
+            <button
+              class="tab-btn"
+              :class="{ active: activeTab === 'bulk' }"
+              @click="activeTab = 'bulk'"
+              :disabled="totalAssets >= assetLimit"
+            >
+              <IconBase name="clone" :size="14" />
+              다중 추가
+            </button>
           </div>
           <div class="asset-counter" :class="{ full: totalAssets >= assetLimit }">
             {{ totalAssets }} / {{ assetLimit }} 세트
@@ -53,44 +62,78 @@
           </div>
 
           <!-- Asset List -->
-          <div v-else class="asset-list">
-            <div
-              v-for="asset in assets"
-              :key="asset.id"
-              class="asset-card"
-              :class="{ inactive: !asset.isActive }"
-            >
-              <div class="asset-images">
-                <div class="image-box">
-                  <img :src="asset.originalImageUrl" alt="원본" />
-                  <span class="image-label">원본</span>
-                </div>
-                <div class="image-box">
-                  <img :src="asset.modifiedImageUrl" alt="차이점" />
-                  <span class="image-label">차이점</span>
-                </div>
-              </div>
-              <div class="asset-info">
-                <div class="asset-name">{{ asset.name }}</div>
-                <div class="asset-meta">
-                  <span>차이점 {{ asset.differences.length }}개</span>
-                  <span>•</span>
-                  <span>난이도 {{ ['쉬움', '보통', '어려움'][asset.difficulty - 1] }}</span>
-                  <span>•</span>
-                  <span>{{ asset.usageCount }}회 사용</span>
-                </div>
-              </div>
-              <div class="asset-actions">
+          <div v-else class="asset-list-container">
+            <!-- Selection Bar -->
+            <div class="selection-bar" :class="{ active: selectedAssets.size > 0 }">
+              <label class="select-all-checkbox">
+                <input
+                  type="checkbox"
+                  :checked="isAllSelected"
+                  :indeterminate="isPartiallySelected"
+                  @change="toggleSelectAll"
+                />
+                <span>전체 선택</span>
+              </label>
+              <div v-if="selectedAssets.size > 0" class="selection-actions">
+                <span class="selection-count">{{ selectedAssets.size }}개 선택됨</span>
                 <button
-                  class="btn-toggle"
-                  :class="{ active: asset.isActive }"
-                  @click="toggleAsset(asset)"
+                  class="btn-delete-selected"
+                  @click="deleteSelectedAssets"
+                  :disabled="isDeleting"
                 >
-                  {{ asset.isActive ? 'ON' : 'OFF' }}
+                  <IconBase :name="isDeleting ? 'loader' : 'trash'" :size="14" />
+                  {{ isDeleting ? '삭제 중...' : '선택 삭제' }}
                 </button>
-                <button class="btn-delete" @click="deleteAsset(asset.id)">
-                  삭제
-                </button>
+              </div>
+            </div>
+
+            <!-- Asset Cards -->
+            <div class="asset-list">
+              <div
+                v-for="asset in assets"
+                :key="asset.id"
+                class="asset-card"
+                :class="{ inactive: !asset.isActive, selected: selectedAssets.has(asset.id) }"
+              >
+                <label class="asset-checkbox" @click.stop>
+                  <input
+                    type="checkbox"
+                    :checked="selectedAssets.has(asset.id)"
+                    @change="toggleAssetSelection(asset.id)"
+                  />
+                </label>
+                <div class="asset-images">
+                  <div class="image-box">
+                    <img :src="asset.originalImageUrl" alt="원본" />
+                    <span class="image-label">원본</span>
+                  </div>
+                  <div class="image-box">
+                    <img :src="asset.modifiedImageUrl" alt="차이점" />
+                    <span class="image-label">차이점</span>
+                  </div>
+                </div>
+                <div class="asset-info">
+                  <div class="asset-name">{{ asset.name }}</div>
+                  <div class="asset-meta">
+                    <span>차이점 {{ asset.differences.length }}개</span>
+                    <span>•</span>
+                    <span>난이도 {{ ['쉬움', '보통', '어려움'][asset.difficulty - 1] }}</span>
+                    <span>•</span>
+                    <span>{{ asset.usageCount }}회 사용</span>
+                  </div>
+                </div>
+                <div class="asset-actions">
+                  <button
+                    class="btn-toggle"
+                    :class="{ active: asset.isActive }"
+                    @click="toggleAsset(asset)"
+                  >
+                    {{ asset.isActive ? 'ON' : 'OFF' }}
+                  </button>
+                  <button class="btn-delete" @click="deleteAsset(asset.id)">
+                    삭제
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -99,6 +142,16 @@
         <!-- Create Tab -->
         <div v-if="activeTab === 'create'" class="tab-content">
           <div class="create-form">
+            <!-- Image Size Recommendation -->
+            <div class="size-recommendation">
+              <div class="recommendation-icon">💡</div>
+              <div class="recommendation-content">
+                <strong>권장 이미지 크기</strong>
+                <p>세로로 긴 이미지 권장 (9:16 비율, 예: 1080×1920px)</p>
+                <p class="recommendation-note">모바일 화면에 최적화되며, 가로가 넓은 이미지는 좌우가 잘릴 수 있습니다.</p>
+              </div>
+            </div>
+
             <!-- Name -->
             <div class="form-group">
               <label class="form-label">에셋 이름</label>
@@ -323,6 +376,150 @@
             </button>
           </div>
         </div>
+
+        <!-- Bulk Upload Tab -->
+        <div v-if="activeTab === 'bulk'" class="tab-content">
+          <div class="bulk-upload-container">
+            <!-- Instructions -->
+            <div class="bulk-instructions">
+              <h3><IconBase name="clone" :size="18" /> 다중 에셋 추가</h3>
+              <p>여러 이미지 쌍을 한 번에 업로드하여 에셋을 생성합니다.</p>
+              <ul>
+                <li>원본 이미지와 차이점 이미지를 쌍으로 추가하세요</li>
+                <li>각 쌍에 대해 자동 감지를 실행하거나 수동으로 차이점을 지정할 수 있습니다</li>
+                <li>최대 {{ Math.min(10, assetLimit - totalAssets) }}개까지 한 번에 추가 가능</li>
+                <li><strong>권장 크기:</strong> 세로로 긴 이미지 (9:16 비율, 예: 1080×1920px)</li>
+              </ul>
+            </div>
+
+            <!-- Bulk Items List -->
+            <div class="bulk-items-list">
+              <div
+                v-for="(item, index) in bulkItems"
+                :key="index"
+                class="bulk-item"
+                :class="{ 'has-error': item.error, 'is-ready': item.isReady }"
+              >
+                <div class="bulk-item-header">
+                  <span class="bulk-item-number">{{ index + 1 }}</span>
+                  <input
+                    type="text"
+                    v-model="item.name"
+                    class="bulk-item-name"
+                    :placeholder="`에셋 ${index + 1}`"
+                  />
+                  <button class="btn-remove-item" @click="removeBulkItem(index)">
+                    <IconBase name="close" :size="14" />
+                  </button>
+                </div>
+
+                <div class="bulk-item-images">
+                  <!-- Original Image -->
+                  <div
+                    class="bulk-upload-box"
+                    @click="triggerBulkFileInput(index, 'original')"
+                    @dragover.prevent
+                    @drop.prevent="handleBulkDrop($event, index, 'original')"
+                  >
+                    <img v-if="item.originalImageUrl" :src="item.originalImageUrl" alt="원본" />
+                    <div v-else class="bulk-placeholder">
+                      <IconBase name="camera" :size="24" />
+                      <span>원본</span>
+                    </div>
+                  </div>
+
+                  <!-- Modified Image -->
+                  <div
+                    class="bulk-upload-box"
+                    @click="triggerBulkFileInput(index, 'modified')"
+                    @dragover.prevent
+                    @drop.prevent="handleBulkDrop($event, index, 'modified')"
+                  >
+                    <img v-if="item.modifiedImageUrl" :src="item.modifiedImageUrl" alt="차이점" />
+                    <div v-else class="bulk-placeholder">
+                      <IconBase name="image" :size="24" />
+                      <span>차이점</span>
+                    </div>
+                  </div>
+
+                  <!-- Status / Actions -->
+                  <div class="bulk-item-status">
+                    <template v-if="item.isDetecting">
+                      <IconBase name="loader" :size="16" />
+                      <span>분석 중...</span>
+                    </template>
+                    <template v-else-if="item.differences.length > 0">
+                      <span class="status-ready">
+                        <IconBase name="check" :size="14" />
+                        {{ item.differences.length }}개 감지
+                      </span>
+                    </template>
+                    <template v-else-if="item.originalImageUrl && item.modifiedImageUrl">
+                      <button class="btn-detect-single" @click="detectSingleItem(index)">
+                        <IconBase name="sparkles" :size="14" />
+                        감지
+                      </button>
+                    </template>
+                    <template v-else>
+                      <span class="status-pending">이미지 필요</span>
+                    </template>
+                  </div>
+                </div>
+
+                <div v-if="item.error" class="bulk-item-error">
+                  {{ item.error }}
+                </div>
+              </div>
+
+              <!-- Add More Button -->
+              <button
+                v-if="bulkItems.length < Math.min(10, assetLimit - totalAssets)"
+                class="btn-add-bulk-item"
+                @click="addBulkItem"
+              >
+                <IconBase name="plus" :size="20" />
+                이미지 쌍 추가
+              </button>
+            </div>
+
+            <!-- Hidden file inputs for bulk upload -->
+            <input
+              ref="bulkFileInput"
+              type="file"
+              accept="image/*"
+              hidden
+              @change="handleBulkFileChange"
+            />
+
+            <!-- Bulk Actions -->
+            <div class="bulk-actions">
+              <button
+                class="btn-detect-all"
+                @click="detectAllItems"
+                :disabled="!canDetectAll || isBulkDetecting"
+              >
+                <IconBase :name="isBulkDetecting ? 'loader' : 'sparkles'" :size="16" />
+                {{ isBulkDetecting ? '분석 중...' : '전체 자동 감지' }}
+              </button>
+              <button
+                class="btn-create-all"
+                @click="createAllAssets"
+                :disabled="!canCreateAll || isBulkCreating"
+              >
+                <IconBase :name="isBulkCreating ? 'loader' : 'check'" :size="16" />
+                {{ isBulkCreating ? `생성 중 (${bulkProgress}/${readyItemsCount})...` : `${readyItemsCount}개 에셋 생성` }}
+              </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div v-if="isBulkCreating" class="bulk-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" :style="{ width: `${(bulkProgress / readyItemsCount) * 100}%` }"></div>
+              </div>
+              <span class="progress-text">{{ bulkProgress }} / {{ readyItemsCount }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Modal Footer -->
@@ -359,7 +556,7 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 
 // State
-const activeTab = ref<'list' | 'create'>('list')
+const activeTab = ref<'list' | 'create' | 'bulk'>('list')
 const isLoading = ref(false)
 const isCreating = ref(false)
 const isDetecting = ref(false)
@@ -367,6 +564,29 @@ const showPreview = ref(false)
 const assets = ref<SpotDifferenceAsset[]>([])
 const assetLimit = ref(20)
 const totalAssets = ref(0)
+
+// Multi-select delete state
+const selectedAssets = ref<Set<string>>(new Set())
+const isDeleting = ref(false)
+
+// Bulk upload state
+interface BulkItem {
+  name: string
+  originalImageUrl: string
+  modifiedImageUrl: string
+  differences: DifferencePoint[]
+  isDetecting: boolean
+  isReady: boolean
+  error: string
+}
+
+const bulkItems = ref<BulkItem[]>([])
+const bulkFileInput = ref<HTMLInputElement | null>(null)
+const currentBulkIndex = ref(-1)
+const currentBulkType = ref<'original' | 'modified'>('original')
+const isBulkDetecting = ref(false)
+const isBulkCreating = ref(false)
+const bulkProgress = ref(0)
 
 // File inputs
 const originalFileInput = ref<HTMLInputElement | null>(null)
@@ -394,11 +614,36 @@ const canSubmit = computed(() => {
   )
 })
 
+// Bulk computed
+const readyItemsCount = computed(() => {
+  return bulkItems.value.filter(item => item.isReady).length
+})
+
+const canDetectAll = computed(() => {
+  return bulkItems.value.some(
+    item => item.originalImageUrl && item.modifiedImageUrl && item.differences.length === 0
+  )
+})
+
+const canCreateAll = computed(() => {
+  return readyItemsCount.value > 0
+})
+
+// Multi-select computed
+const isAllSelected = computed(() => {
+  return assets.value.length > 0 && selectedAssets.value.size === assets.value.length
+})
+
+const isPartiallySelected = computed(() => {
+  return selectedAssets.value.size > 0 && selectedAssets.value.size < assets.value.length
+})
+
 // Watch for modal open
 watch(() => props.isOpen, async (newVal) => {
   if (newVal) {
     activeTab.value = 'list'
     resetForm()
+    resetBulkItems()
     await loadAssets()
   }
 })
@@ -602,14 +847,282 @@ const deleteAsset = async (assetId: string) => {
     const success = await deleteSpotDifferenceAsset(token, assetId)
     if (success) {
       assets.value = assets.value.filter(a => a.id !== assetId)
+      selectedAssets.value.delete(assetId)
     }
   } catch (error) {
     console.error('Failed to delete asset:', error)
   }
 }
 
+// ==================== Multi-Select Functions ====================
+
+const toggleAssetSelection = (assetId: string) => {
+  if (selectedAssets.value.has(assetId)) {
+    selectedAssets.value.delete(assetId)
+  } else {
+    selectedAssets.value.add(assetId)
+  }
+}
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedAssets.value.clear()
+  } else {
+    assets.value.forEach(asset => {
+      selectedAssets.value.add(asset.id)
+    })
+  }
+}
+
+const deleteSelectedAssets = async () => {
+  const count = selectedAssets.value.size
+  if (count === 0) return
+
+  if (!confirm(`선택한 ${count}개의 에셋을 삭제하시겠습니까?`)) return
+
+  isDeleting.value = true
+  try {
+    const token = authStore.accessToken
+    if (!token) return
+
+    const idsToDelete = Array.from(selectedAssets.value)
+    let deletedCount = 0
+
+    for (const assetId of idsToDelete) {
+      try {
+        const success = await deleteSpotDifferenceAsset(token, assetId)
+        if (success) {
+          assets.value = assets.value.filter(a => a.id !== assetId)
+          selectedAssets.value.delete(assetId)
+          deletedCount++
+        }
+      } catch (error) {
+        console.error(`Failed to delete asset ${assetId}:`, error)
+      }
+    }
+
+    if (deletedCount > 0) {
+      totalAssets.value -= deletedCount
+      alert(`${deletedCount}개의 에셋이 삭제되었습니다.`)
+    }
+  } catch (error) {
+    console.error('Failed to delete selected assets:', error)
+  } finally {
+    isDeleting.value = false
+  }
+}
+
 const close = () => {
   emit('close')
+}
+
+// ==================== Bulk Upload Functions ====================
+
+const resetBulkItems = () => {
+  bulkItems.value = []
+  addBulkItem() // Start with one empty item
+  addBulkItem() // Add second item
+  bulkProgress.value = 0
+}
+
+const createEmptyBulkItem = (): BulkItem => ({
+  name: '',
+  originalImageUrl: '',
+  modifiedImageUrl: '',
+  differences: [],
+  isDetecting: false,
+  isReady: false,
+  error: ''
+})
+
+const addBulkItem = () => {
+  const maxItems = Math.min(10, assetLimit.value - totalAssets.value)
+  if (bulkItems.value.length < maxItems) {
+    bulkItems.value.push(createEmptyBulkItem())
+  }
+}
+
+const removeBulkItem = (index: number) => {
+  bulkItems.value.splice(index, 1)
+  if (bulkItems.value.length === 0) {
+    addBulkItem()
+  }
+}
+
+const triggerBulkFileInput = (index: number, type: 'original' | 'modified') => {
+  currentBulkIndex.value = index
+  currentBulkType.value = type
+  bulkFileInput.value?.click()
+}
+
+const handleBulkFileChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    const file = target.files[0]
+    processBulkFile(file, currentBulkIndex.value, currentBulkType.value)
+    target.value = ''
+  }
+}
+
+const handleBulkDrop = (event: DragEvent, index: number, type: 'original' | 'modified') => {
+  const files = event.dataTransfer?.files
+  if (files && files[0]) {
+    const file = files[0]
+    if (!file.type.startsWith('image/')) return
+    processBulkFile(file, index, type)
+  }
+}
+
+const processBulkFile = (file: File, index: number, type: 'original' | 'modified') => {
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const dataUrl = e.target?.result as string
+    const item = bulkItems.value[index]
+    if (!item) return
+
+    if (type === 'original') {
+      item.originalImageUrl = dataUrl
+    } else {
+      item.modifiedImageUrl = dataUrl
+      // Clear differences when modified image changes
+      item.differences = []
+      item.isReady = false
+    }
+    item.error = ''
+    updateBulkItemReadyState(index)
+  }
+  reader.readAsDataURL(file)
+}
+
+const updateBulkItemReadyState = (index: number) => {
+  const item = bulkItems.value[index]
+  if (!item) return
+
+  item.isReady = !!(
+    item.originalImageUrl &&
+    item.modifiedImageUrl &&
+    item.differences.length > 0
+  )
+}
+
+const detectSingleItem = async (index: number) => {
+  const item = bulkItems.value[index]
+  if (!item || !item.originalImageUrl || !item.modifiedImageUrl) return
+
+  item.isDetecting = true
+  item.error = ''
+
+  try {
+    const detected = await detectDifferences(
+      item.originalImageUrl,
+      item.modifiedImageUrl,
+      {
+        threshold: 25,
+        minGroupSize: 50,
+        maxDifferences: 10,
+        radiusPadding: 1.8
+      }
+    )
+
+    if (detected.length === 0) {
+      item.error = '차이점을 찾을 수 없습니다'
+      item.differences = []
+    } else {
+      item.differences = detected
+    }
+    updateBulkItemReadyState(index)
+  } catch (error) {
+    item.error = '감지 실패'
+    console.error('Detection failed for item', index, error)
+  } finally {
+    item.isDetecting = false
+  }
+}
+
+const detectAllItems = async () => {
+  isBulkDetecting.value = true
+
+  for (let i = 0; i < bulkItems.value.length; i++) {
+    const item = bulkItems.value[i]
+    if (item && item.originalImageUrl && item.modifiedImageUrl && item.differences.length === 0) {
+      await detectSingleItem(i)
+    }
+  }
+
+  isBulkDetecting.value = false
+}
+
+const createAllAssets = async () => {
+  const readyItems = bulkItems.value.filter(item => item.isReady)
+  if (readyItems.length === 0) return
+
+  isBulkCreating.value = true
+  bulkProgress.value = 0
+
+  const token = authStore.accessToken
+  if (!token) {
+    alert('인증이 필요합니다.')
+    isBulkCreating.value = false
+    return
+  }
+
+  let successCount = 0
+  let failCount = 0
+
+  for (let i = 0; i < bulkItems.value.length; i++) {
+    const item = bulkItems.value[i]
+    if (!item || !item.isReady) continue
+
+    try {
+      const result = await createSpotDifferenceAsset(token, {
+        name: item.name || `에셋 ${i + 1}`,
+        originalImageUrl: item.originalImageUrl,
+        modifiedImageUrl: item.modifiedImageUrl,
+        differences: item.differences,
+        difficulty: 2,
+        timeLimit: 60,
+        hintsAllowed: 3
+      })
+
+      if (result) {
+        successCount++
+        // Mark as created by clearing ready state
+        item.isReady = false
+        item.originalImageUrl = ''
+        item.modifiedImageUrl = ''
+        item.differences = []
+        item.name = ''
+      } else {
+        failCount++
+        item.error = '생성 실패'
+      }
+    } catch (error) {
+      failCount++
+      item.error = '생성 중 오류'
+      console.error('Failed to create asset', i, error)
+    }
+
+    bulkProgress.value++
+  }
+
+  isBulkCreating.value = false
+
+  if (successCount > 0) {
+    alert(`${successCount}개 에셋이 생성되었습니다.${failCount > 0 ? ` (${failCount}개 실패)` : ''}`)
+    await loadAssets()
+    emit('saved')
+
+    // Clean up empty items and add new ones
+    bulkItems.value = bulkItems.value.filter(
+      item => item.originalImageUrl || item.modifiedImageUrl
+    )
+    if (bulkItems.value.length === 0) {
+      addBulkItem()
+      addBulkItem()
+    }
+  } else {
+    alert('에셋 생성에 실패했습니다.')
+  }
 }
 </script>
 
@@ -781,6 +1294,82 @@ const close = () => {
   cursor: pointer;
 }
 
+/* Asset List Container */
+.asset-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Selection Bar */
+.selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #f5f5f7;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.selection-bar.active {
+  background: #e8f4fd;
+  border: 1px solid #0071e3;
+}
+
+.select-all-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.select-all-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #0071e3;
+  cursor: pointer;
+}
+
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.selection-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0071e3;
+}
+
+.btn-delete-selected {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #ff3b30;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete-selected:hover:not(:disabled) {
+  background: #e0332b;
+}
+
+.btn-delete-selected:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Asset List */
 .asset-list {
   display: flex;
@@ -795,6 +1384,26 @@ const close = () => {
   padding: 16px;
   border: 1px solid #e5e5ea;
   border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.asset-card.selected {
+  border-color: #0071e3;
+  background: #f0f7ff;
+}
+
+.asset-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.asset-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #0071e3;
+  cursor: pointer;
   background: white;
   transition: all 0.2s;
 }
@@ -899,6 +1508,46 @@ const close = () => {
 .create-form {
   max-width: 700px;
   margin: 0 auto;
+}
+
+/* Image Size Recommendation */
+.size-recommendation {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.recommendation-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.recommendation-content {
+  flex: 1;
+}
+
+.recommendation-content strong {
+  font-size: 14px;
+  color: #92400e;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.recommendation-content p {
+  font-size: 13px;
+  color: #a16207;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.recommendation-content .recommendation-note {
+  font-size: 12px;
+  color: #b45309;
+  margin-top: 4px;
 }
 
 .form-group {
@@ -1287,6 +1936,330 @@ const close = () => {
   background: #f5f5f7;
 }
 
+/* ==================== Bulk Upload Styles ==================== */
+.bulk-upload-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.bulk-instructions {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%);
+  border: 1px solid #cce5ff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.bulk-instructions h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bulk-instructions p {
+  font-size: 14px;
+  color: #424245;
+  margin: 0 0 12px 0;
+}
+
+.bulk-instructions ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #86868b;
+}
+
+.bulk-instructions li {
+  margin-bottom: 4px;
+}
+
+.bulk-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.bulk-item {
+  border: 1px solid #e5e5ea;
+  border-radius: 12px;
+  padding: 16px;
+  background: white;
+  transition: all 0.2s;
+}
+
+.bulk-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.bulk-item.has-error {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.bulk-item.is-ready {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.bulk-item-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bulk-item-number {
+  width: 28px;
+  height: 28px;
+  background: #0071e3;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.bulk-item.is-ready .bulk-item-number {
+  background: #10b981;
+}
+
+.bulk-item-name {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1d1d1f;
+  outline: none;
+}
+
+.bulk-item-name:focus {
+  border-color: #0071e3;
+}
+
+.btn-remove-item {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #f5f5f7;
+  color: #86868b;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-remove-item:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.bulk-item-images {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.bulk-upload-box {
+  width: 120px;
+  height: 90px;
+  border: 2px dashed #d2d2d7;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafafa;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.bulk-upload-box:hover {
+  border-color: #0071e3;
+  background: #f0f7ff;
+}
+
+.bulk-upload-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bulk-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #86868b;
+}
+
+.bulk-placeholder span {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.bulk-item-status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #86868b;
+}
+
+.status-ready {
+  color: #10b981;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-pending {
+  color: #86868b;
+}
+
+.btn-detect-single {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #0071e3 0%, #0077ed 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-detect-single:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+}
+
+.bulk-item-error {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #ef4444;
+}
+
+.btn-add-bulk-item {
+  width: 100%;
+  padding: 16px;
+  border: 2px dashed #d2d2d7;
+  border-radius: 12px;
+  background: transparent;
+  color: #86868b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-add-bulk-item:hover {
+  border-color: #0071e3;
+  color: #0071e3;
+  background: #f0f7ff;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.btn-detect-all,
+.btn-create-all {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-detect-all {
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.btn-detect-all:hover:not(:disabled) {
+  background: #e5e5ea;
+}
+
+.btn-create-all {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.btn-create-all:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-detect-all:disabled,
+.btn-create-all:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.bulk-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e5e5ea;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #86868b;
+  min-width: 60px;
+  text-align: right;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .images-row {
@@ -1308,6 +2281,28 @@ const close = () => {
 
   .asset-actions {
     justify-content: flex-end;
+  }
+
+  .bulk-item-images {
+    flex-wrap: wrap;
+  }
+
+  .bulk-upload-box {
+    width: calc(50% - 6px);
+  }
+
+  .bulk-item-status {
+    width: 100%;
+    margin-top: 12px;
+    justify-content: flex-start;
+  }
+
+  .bulk-actions {
+    flex-direction: column;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
   }
 }
 </style>
