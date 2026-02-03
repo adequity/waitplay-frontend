@@ -38,11 +38,19 @@ apiClient.interceptors.response.use(
     const isAuthEndpoint = originalRequest?.url?.includes('/auth/refresh') ||
                            originalRequest?.url?.includes('/auth/me')
 
-    // If 401 on auth endpoint, logout immediately
+    // If 401 on auth endpoint, logout and only redirect if on protected page
     if (error.response?.status === 401 && isAuthEndpoint) {
       const authStore = useAuthStore()
       authStore.logout()
-      window.location.href = '/login'
+
+      // Only redirect to login if on a protected page (not customer/game pages)
+      const currentPath = window.location.pathname
+      const publicPaths = ['/customer', '/game', '/login', '/signup', '/forgot-password']
+      const isPublicPage = publicPaths.some(path => currentPath.startsWith(path))
+
+      if (!isPublicPage) {
+        window.location.href = '/login'
+      }
       return Promise.reject(error)
     }
 
@@ -64,8 +72,14 @@ apiClient.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`
           return apiClient(originalRequest)
         } else {
-          // Refresh failed, redirect to login
-          window.location.href = '/login'
+          // Refresh failed, only redirect if on a protected page
+          const currentPath = window.location.pathname
+          const publicPaths = ['/customer', '/game', '/login', '/signup', '/forgot-password']
+          const isPublicPage = publicPaths.some(path => currentPath.startsWith(path))
+
+          if (!isPublicPage) {
+            window.location.href = '/login'
+          }
         }
       } finally {
         isRefreshing = false
