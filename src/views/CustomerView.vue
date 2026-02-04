@@ -188,18 +188,36 @@
                 <div
                   v-for="message in myGuestbookMessages"
                   :key="message.id"
-                  class="guestbook-item"
+                  class="guestbook-card"
                 >
-                  <img
-                    v-if="message.imageUrl"
-                    :src="message.imageUrl"
-                    alt="방명록 이미지"
-                    class="guestbook-thumbnail"
-                  />
-                  <div class="guestbook-info">
-                    <p class="guestbook-store">{{ message.storeName }}</p>
-                    <p class="guestbook-date">{{ formatDate(message.createdAt) }}</p>
-                    <button class="delete-btn" @click="deleteGuestbook(message.id)">삭제</button>
+                  <div class="guestbook-header">
+                    <div class="guestbook-store-badge">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span>{{ message.storeName }}</span>
+                    </div>
+                    <span class="guestbook-date">{{ formatDate(message.createdAt) }}</span>
+                  </div>
+                  <div class="guestbook-body">
+                    <img
+                      v-if="message.imageUrl"
+                      :src="message.imageUrl"
+                      alt="방명록 이미지"
+                      class="guestbook-image"
+                    />
+                    <p v-if="message.message" class="guestbook-message">{{ message.message }}</p>
+                    <p v-if="!message.imageUrl && !message.message" class="guestbook-empty">
+                      (내용 없음)
+                    </p>
+                  </div>
+                  <div class="guestbook-footer">
+                    <button class="delete-btn" @click="deleteGuestbook(message.id)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      삭제
+                    </button>
                   </div>
                 </div>
               </div>
@@ -922,51 +940,81 @@ onMounted(async () => {
   gap: 1rem;
 }
 
-.guestbook-item {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f9f9f9;
+.guestbook-card {
+  background: white;
   border-radius: 12px;
   border: 1px solid #e0e0e0;
+  overflow: hidden;
 }
 
-.guestbook-thumbnail {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.guestbook-info {
-  flex: 1;
+.guestbook-header {
   display: flex;
-  flex-direction: column;
   justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f9f9f9;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.guestbook-store {
-  font-size: 0.9375rem;
+.guestbook-store-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #667eea;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 0.25rem 0;
 }
 
 .guestbook-date {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: #757575;
-  margin: 0 0 0.5rem 0;
+}
+
+.guestbook-body {
+  padding: 1rem;
+}
+
+.guestbook-image {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f5f5f5;
+}
+
+.guestbook-message {
+  font-size: 0.9375rem;
+  color: #1a1a1a;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.guestbook-empty {
+  font-size: 0.875rem;
+  color: #9e9e9e;
+  margin: 0;
+  font-style: italic;
+}
+
+.guestbook-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .delete-btn {
-  align-self: flex-start;
-  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
   background: white;
   border: 1px solid #d32f2f;
   border-radius: 6px;
   color: #d32f2f;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
