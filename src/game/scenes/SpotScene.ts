@@ -391,8 +391,16 @@ export class SpotScene extends Phaser.Scene {
     const rightLine = this.add.rectangle(W * 0.8, subtitleY, W * 0.12, 2, 0xd1d5db, 0.5);
     this.titleElements.push(rightLine);
 
-    // ==================== 게임 정보 패널 ====================
-    const infoY = contentY + H * 0.13;
+    // ==================== 버튼 위치 계산 (먼저 계산) ====================
+    const buttonWidth = W * 0.72;
+    const buttonHeight = 64;
+    const buttonY = H * 0.82;
+
+    // ==================== 게임 정보 패널 (타이틀과 버튼 사이 중앙 배치) ====================
+    // 타이틀 하단(subtitleY)과 버튼 상단(buttonY) 사이의 중앙
+    const infoPanelTop = subtitleY + H * 0.04;
+    const infoPanelBottom = buttonY - buttonHeight / 2 - H * 0.04;
+    const infoY = (infoPanelTop + infoPanelBottom) / 2;
     const infoWidth = W * 0.8;
     const infoHeight = H * 0.12;
     const infoRadius = 16;
@@ -461,39 +469,7 @@ export class SpotScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.titleElements.push(hintValText);
 
-    // ==================== 미리보기 이미지 (작게) ====================
-    const previewY = H * 0.68;
-
-    if (this.textures.exists('spot-original')) {
-      // 미리보기 컨테이너 배경
-      const previewBg = this.add.graphics();
-      previewBg.fillStyle(0xffffff, 0.9);
-      previewBg.fillRoundedRect(W * 0.5 - W * 0.35, previewY - H * 0.08, W * 0.7, H * 0.14, 12);
-      previewBg.lineStyle(1, 0xe2e8f0, 1);
-      previewBg.strokeRoundedRect(W * 0.5 - W * 0.35, previewY - H * 0.08, W * 0.7, H * 0.14, 12);
-      this.titleElements.push(previewBg);
-
-      const preview = this.add.image(W / 2, previewY, 'spot-original');
-      const frame = this.textures.getFrame('spot-original');
-      if (frame) {
-        const scale = Math.min((W * 0.6) / frame.width, (H * 0.12) / frame.height);
-        preview.setScale(scale);
-      }
-      this.titleElements.push(preview);
-
-      // 미리보기 라벨
-      const previewLabel = this.add.text(W * 0.5, previewY + H * 0.08, '미리보기', {
-        fontSize: Math.floor(H * 0.016) + 'px',
-        color: '#94a3b8',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-      }).setOrigin(0.5);
-      this.titleElements.push(previewLabel);
-    }
-
     // ==================== 둥근 버튼 (rounded-3xl 스타일) ====================
-    const buttonWidth = W * 0.72;
-    const buttonHeight = 64;
-    const buttonY = H * 0.86;
     const borderRadius = 32;
 
     const btnContainer = this.add.container(W * 0.5, buttonY);
