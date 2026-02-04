@@ -17,9 +17,9 @@
         <img :src="data.logoUrl" alt="매장 로고" class="store-logo" />
       </div>
 
-      <h1 class="store-name">{{ data.storeName }}</h1>
+      <h1 class="store-name" :style="titleStyle">{{ data.storeName }}</h1>
       <div class="store-info-text">
-        <p v-for="(line, index) in welcomeLines" :key="index" class="info-line">
+        <p v-for="(line, index) in welcomeLines" :key="index" class="info-line" :style="descStyle">
           {{ line }}
         </p>
       </div>
@@ -65,6 +65,32 @@ const gradientStyle = computed(() => {
       rgba(${r}, ${g}, ${b}, ${startOpacity + (endOpacity - startOpacity) * 0.95}) 90%,
       rgba(${r}, ${g}, ${b}, ${endOpacity}) 100%
     )`
+  }
+})
+
+// 폰트 패밀리 매핑
+const fontFamilyMap: Record<string, string> = {
+  'default': '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+  'serif': '"Noto Serif KR", Georgia, serif',
+  'rounded': '"Nanum Gothic", "Apple SD Gothic Neo", sans-serif',
+  'handwriting': '"Gamja Flower", "Nanum Pen Script", cursive'
+}
+
+// 제목 스타일
+const titleStyle = computed(() => {
+  const fontFamily = props.data.titleFontFamily || 'default'
+  const fontSize = props.data.titleFontSize || 32
+  return {
+    fontFamily: fontFamilyMap[fontFamily],
+    fontSize: `${fontSize}px`
+  }
+})
+
+// 설명 스타일
+const descStyle = computed(() => {
+  const fontSize = props.data.descFontSize || 15
+  return {
+    fontSize: `${fontSize}px`
   }
 })
 </script>

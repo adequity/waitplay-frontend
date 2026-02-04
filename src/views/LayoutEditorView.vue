@@ -44,6 +44,7 @@
             ghost-class="sortable-ghost"
             chosen-class="sortable-chosen"
             drag-class="sortable-drag"
+            :move="checkMove"
             @end="onDragEnd"
           >
             <template #item="{ element, index }">
@@ -55,8 +56,18 @@
                 }"
               >
                 <!-- Drag Handle -->
-                <div class="drag-handle" v-if="element.type !== 'header'">
-                  <div class="drag-dot"></div><div class="drag-dot"></div><div class="drag-dot"></div>
+                <div class="drag-handle" :class="{ disabled: element.type === 'header' }">
+                  <svg v-if="element.type !== 'header'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="5" r="1.5" fill="currentColor"/>
+                    <circle cx="15" cy="5" r="1.5" fill="currentColor"/>
+                    <circle cx="9" cy="12" r="1.5" fill="currentColor"/>
+                    <circle cx="15" cy="12" r="1.5" fill="currentColor"/>
+                    <circle cx="9" cy="19" r="1.5" fill="currentColor"/>
+                    <circle cx="15" cy="19" r="1.5" fill="currentColor"/>
+                  </svg>
+                  <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3">
+                    <path d="M12 17v5M18.5 3.5L18 2M5.5 3.5L6 2M3 8h18M5 8v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/>
+                  </svg>
                 </div>
 
                 <!-- Icon -->
@@ -210,6 +221,36 @@
             <div class="form-group">
               <label class="form-label">환영 메시지</label>
               <textarea class="form-textarea" v-model="editForm.welcomeMessage" placeholder="환영 메시지 입력"></textarea>
+            </div>
+
+            <!-- 폰트 스타일 옵션 -->
+            <div class="form-divider"></div>
+            <h4 class="form-section-title">글꼴 설정</h4>
+
+            <div class="form-group">
+              <label class="form-label">제목 폰트</label>
+              <select class="form-input" v-model="editForm.titleFontFamily">
+                <option value="default">기본 (시스템 폰트)</option>
+                <option value="serif">명조체</option>
+                <option value="rounded">둥근 고딕</option>
+                <option value="handwriting">손글씨</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">제목 크기: {{ editForm.titleFontSize || 32 }}px</label>
+              <input type="range" class="form-range" v-model.number="editForm.titleFontSize" min="24" max="48" step="2" />
+              <div class="range-labels">
+                <span>24px</span>
+                <span>48px</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">설명 크기: {{ editForm.descFontSize || 15 }}px</label>
+              <input type="range" class="form-range" v-model.number="editForm.descFontSize" min="12" max="20" step="1" />
+              <div class="range-labels">
+                <span>12px</span>
+                <span>20px</span>
+              </div>
             </div>
           </template>
 
@@ -650,7 +691,33 @@ function getBlockPreview(block: Block): string {
   }
 }
 
+// 드래그 이동 가능 여부 체크 (헤더는 항상 첫 번째)
+function checkMove(evt: any) {
+  const draggedElement = evt.draggedContext.element
+  const targetIndex = evt.draggedContext.futureIndex
+
+  // 헤더 블록은 드래그 불가
+  if (draggedElement.type === 'header') {
+    return false
+  }
+
+  // 다른 블록을 헤더 위로 드래그 불가 (index 0)
+  if (targetIndex === 0) {
+    return false
+  }
+
+  return true
+}
+
 function onDragEnd() {
+  // 헤더가 항상 첫 번째에 오도록 정렬
+  const headerBlock = blocks.value.find(b => b.type === 'header')
+  const otherBlocks = blocks.value.filter(b => b.type !== 'header')
+
+  if (headerBlock) {
+    blocks.value = [headerBlock, ...otherBlocks]
+  }
+
   blocks.value.forEach((block, index) => {
     block.order = index
   })
@@ -729,12 +796,24 @@ async function editBlock(block: Block) {
   editForm.value = JSON.parse(JSON.stringify(block.data))
 
   // Ensure gradientOverlay exists for header blocks
-  if (block.type === 'header' && !editForm.value.gradientOverlay) {
-    editForm.value.gradientOverlay = {
-      enabled: true,
-      startOpacity: 0,
-      endOpacity: 100,
-      color: pageTheme.value.backgroundColor
+  if (block.type === 'header') {
+    if (!editForm.value.gradientOverlay) {
+      editForm.value.gradientOverlay = {
+        enabled: true,
+        startOpacity: 0,
+        endOpacity: 100,
+        color: pageTheme.value.backgroundColor
+      }
+    }
+    // 폰트 기본값 설정
+    if (!editForm.value.titleFontFamily) {
+      editForm.value.titleFontFamily = 'default'
+    }
+    if (!editForm.value.titleFontSize) {
+      editForm.value.titleFontSize = 32
+    }
+    if (!editForm.value.descFontSize) {
+      editForm.value.descFontSize = 15
     }
   }
 
@@ -1215,8 +1294,22 @@ function removeMenuItem(index: number) {
   z-index: 999;
 }
 
-.drag-handle { color: #d2d2d7; display: flex; flex-direction: column; gap: 2px; cursor: grab; }
-.drag-dot { width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
+.drag-handle {
+  width: 24px;
+  height: 40px;
+  color: #86868b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  flex-shrink: 0;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.drag-handle:hover { background: #f5f5f7; color: #1d1d1f; }
+.drag-handle.disabled { cursor: default; color: #d2d2d7; }
+.drag-handle.disabled:hover { background: transparent; color: #d2d2d7; }
+.drag-handle:active { cursor: grabbing; }
 
 .block-icon {
   width: 40px; height: 40px; background: #f5f5f7;
@@ -1401,6 +1494,61 @@ function removeMenuItem(index: number) {
 .form-hint-box {
   padding: 16px; background: #f9fafb; border-radius: 12px;
   color: #6b7280; font-size: 14px; text-align: center;
+}
+
+/* Form Section Styles */
+.form-divider {
+  height: 1px;
+  background: #e5e5ea;
+  margin: 24px 0 16px 0;
+}
+
+.form-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 16px 0;
+}
+
+/* Range Input Styles */
+.form-range {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e5e5ea;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.form-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #0071e3;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #0071e3;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #86868b;
+  margin-top: 4px;
 }
 
 .modal-actions {

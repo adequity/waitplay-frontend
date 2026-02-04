@@ -24,6 +24,10 @@ export interface HeaderBlockData {
     endOpacity: number // 0-100
     color: string // hex color
   }
+  // 폰트 스타일 옵션
+  titleFontFamily?: 'default' | 'serif' | 'rounded' | 'handwriting'
+  titleFontSize?: number // 24-48, default 32
+  descFontSize?: number // 12-20, default 15
 }
 
 // Button Block
