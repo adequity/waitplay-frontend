@@ -47,6 +47,7 @@
       :benefit="eligibleReward"
       :user-id="currentUserId"
       :game-score-id="gameScoreId"
+      :qr-code="qrCodeId"
       @close="handleCouponClose"
     />
   </div>

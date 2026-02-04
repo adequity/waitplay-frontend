@@ -75,6 +75,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import couponsService from '@/services/couponsService'
+import followService from '@/services/followService'
 import IconBase from '@/components/IconBase.vue'
 
 interface Props {
@@ -87,6 +88,7 @@ interface Props {
   }
   userId: string
   gameScoreId?: string
+  qrCode?: string // 팔로우 처리를 위한 QR 코드
 }
 
 const props = defineProps<Props>()
@@ -104,6 +106,7 @@ async function generateCoupon() {
   error.value = ''
 
   try {
+    // 1. 쿠폰 생성
     const response = await couponsService.generateCoupon({
       benefitId: props.benefit.id,
       userId: props.userId,
@@ -112,6 +115,17 @@ async function generateCoupon() {
 
     couponCode.value = response.couponCode
     expiryMinutes.value = response.expiresInMinutes
+
+    // 2. 자동 팔로우 (QR 코드가 있는 경우)
+    if (props.qrCode) {
+      try {
+        await followService.followAdmin(props.qrCode)
+        console.log('Automatically followed admin via QR:', props.qrCode)
+      } catch (followErr) {
+        // 팔로우 실패는 무시 (쿠폰은 이미 생성됨)
+        console.warn('Auto-follow failed (non-critical):', followErr)
+      }
+    }
   } catch (err: any) {
     console.error('Failed to generate coupon:', err)
     error.value = err.response?.data?.message || '쿠폰 생성에 실패했습니다'
