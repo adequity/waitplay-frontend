@@ -996,6 +996,18 @@ export class SpotScene extends Phaser.Scene {
     const W = this.scale.width;
     const H = this.scale.height;
 
+    // 점수 계산 (미리 계산하여 이벤트 발생)
+    const baseScore = success ? 1000 : 0;
+    const timeBonus = success ? Math.max(0, (this.timeLimit > 0 ? this.timeLimit : 120) - this.elapsedTime) * 10 : 0;
+    const hintPenalty = (this.gameData!.hintsAllowed - this.hintsRemaining) * 50;
+    const difficultyBonus = (this.gameData!.difficulty - 1) * 200;
+    const finalScore = Math.max(0, baseScore + timeBonus + difficultyBonus - hintPenalty);
+
+    // Vue 컴포넌트에 게임 종료 이벤트 전달
+    window.dispatchEvent(new CustomEvent('phaser-game-over', {
+      detail: { score: finalScore }
+    }));
+
     // ==================== 결과 오버레이 (밝은 모달 스타일) ====================
     this.add.rectangle(W * 0.5, H * 0.5, W, H, 0xffffff, 0.6);
 
@@ -1070,13 +1082,6 @@ export class SpotScene extends Phaser.Scene {
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
-
-    // ========== 점수 계산 ==========
-    const baseScore = success ? 1000 : 0;
-    const timeBonus = success ? Math.max(0, (this.timeLimit > 0 ? this.timeLimit : 120) - this.elapsedTime) * 10 : 0;
-    const hintPenalty = (this.gameData!.hintsAllowed - this.hintsRemaining) * 50;
-    const difficultyBonus = (this.gameData!.difficulty - 1) * 200;
-    const finalScore = Math.max(0, baseScore + timeBonus + difficultyBonus - hintPenalty);
 
     // ========== 통계 패널 ==========
     const statsY = modalCenterY + modalHeight * 0.02;

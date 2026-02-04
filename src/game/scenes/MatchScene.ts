@@ -1096,6 +1096,11 @@ export class MatchScene extends Phaser.Scene {
     const comboBonus = this.maxCombo * 50;
     const finalScore = Math.max(100, baseScore - movePenalty - timePenalty + comboBonus);
 
+    // Vue 컴포넌트에 게임 종료 이벤트 전달
+    window.dispatchEvent(new CustomEvent('phaser-game-over', {
+      detail: { score: finalScore }
+    }));
+
     // 성능 등급
     const grade = this.getGrade(finalScore);
 

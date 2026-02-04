@@ -19,6 +19,36 @@
       <button v-if="isFullscreen" @click="exitFullscreen" class="btn-exit-fullscreen">✕</button>
       <div id="game-container" ref="gameContainer" :class="{ 'fullscreen-container': isFullscreen }"></div>
     </template>
+
+    <!-- 리워드 제안 모달 (쿠폰화 할지 묻는 팝업) -->
+    <RewardOfferModal
+      v-if="eligibleReward"
+      :is-open="showRewardOffer"
+      :score="finalScore"
+      :reward="eligibleReward"
+      @accept="handleRewardAccept"
+      @decline="handleRewardDecline"
+      @close="showRewardOffer = false"
+    />
+
+    <!-- 로그인/회원가입 모달 -->
+    <AuthModal
+      :is-open="showAuthModal"
+      :qr-code-id="qrCodeId"
+      :reward-info="eligibleReward ? { title: eligibleReward.title, description: eligibleReward.description } : undefined"
+      @success="handleAuthSuccess"
+      @close="showAuthModal = false"
+    />
+
+    <!-- 쿠폰 생성 모달 -->
+    <CouponRewardModal
+      v-if="eligibleReward"
+      :is-open="showCouponModal"
+      :benefit="eligibleReward"
+      :user-id="currentUserId"
+      :game-score-id="gameScoreId"
+      @close="handleCouponClose"
+    />
   </div>
 </template>
 
@@ -27,16 +57,35 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { gameManager } from '../game/GameManager'
 import type { GameType } from '../game/config'
+import { useAuthStore } from '@/stores/auth'
+import benefitsService, { type BenefitDto } from '@/services/benefitsService'
 import HyperPinball from '../game/pinball/components/HyperPinball.vue'
+import RewardOfferModal from '@/components/RewardOfferModal.vue'
+import AuthModal from '@/components/AuthModal.vue'
+import CouponRewardModal from '@/components/CouponRewardModal.vue'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const gameContainer = ref<HTMLElement>()
 const isFullscreen = ref(false)
 
+// Game state
 const gameType = computed(() => (route.params.type as string).toUpperCase() as GameType)
 const qrCode = computed(() => route.query.qr as string | undefined)
 const isPinball = computed(() => gameType.value === 'PINBALL')
+
+// QR Code ID from URL
+const qrCodeId = computed(() => route.query.qr as string | undefined)
+
+// Reward flow state
+const finalScore = ref(0)
+const gameScoreId = ref<string>('')
+const eligibleReward = ref<BenefitDto | null>(null)
+const showRewardOffer = ref(false)
+const showAuthModal = ref(false)
+const showCouponModal = ref(false)
+const currentUserId = ref('')
 
 // 모바일 감지
 const isMobile = computed(() => {
@@ -84,6 +133,100 @@ function exitFullscreen() {
   goBack()
 }
 
+// 게임 종료 시 리워드 플로우 처리
+async function handleGameOver(score: number, scoreId?: string) {
+  console.log('Game Over! Final Score:', score, 'Score ID:', scoreId)
+
+  finalScore.value = score
+  if (scoreId) {
+    gameScoreId.value = scoreId
+  }
+
+  // QR 코드가 없으면 리워드 플로우 스킵
+  if (!qrCodeId.value) {
+    console.log('No QR code, skipping reward flow')
+    return
+  }
+
+  try {
+    // 게임 타입에 맞는 혜택 조회
+    const gameTypeForApi = mapGameTypeForApi(gameType.value)
+    const benefits = await benefitsService.getBenefitsByGame(qrCodeId.value, gameTypeForApi)
+
+    console.log('Available benefits:', benefits)
+
+    // 점수에 맞는 적격 리워드 찾기 (requiredScore 이하인 것 중 가장 높은 것)
+    const eligible = benefits
+      .filter(b => b.isActive && b.requiredScore <= score)
+      .sort((a, b) => b.requiredScore - a.requiredScore)[0]
+
+    if (eligible) {
+      console.log('Eligible reward found:', eligible)
+      eligibleReward.value = eligible
+      showRewardOffer.value = true
+    } else {
+      console.log('No eligible reward for score:', score)
+    }
+  } catch (error) {
+    console.error('Failed to fetch benefits:', error)
+  }
+}
+
+// 게임 타입을 API용으로 변환
+function mapGameTypeForApi(type: GameType): string {
+  const mapping: Record<GameType, string> = {
+    PINBALL: 'pinball',
+    BRICK_BREAKER: 'brick-breaker',
+    MATCH: 'memory',
+    SPOT: 'spot-difference'
+  }
+  return mapping[type] || type.toLowerCase()
+}
+
+// 리워드 수락 처리
+function handleRewardAccept() {
+  showRewardOffer.value = false
+
+  // 로그인 여부 확인
+  if (authStore.isAuthenticated && authStore.user) {
+    // 이미 로그인됨 → 바로 쿠폰 생성
+    currentUserId.value = authStore.user.id
+    showCouponModal.value = true
+  } else {
+    // 비로그인 → 로그인 모달 표시
+    showAuthModal.value = true
+  }
+}
+
+// 리워드 거절 처리
+function handleRewardDecline() {
+  showRewardOffer.value = false
+  eligibleReward.value = null
+}
+
+// 로그인 성공 처리
+function handleAuthSuccess(loggedInUserId: string) {
+  console.log('Auth success, user ID:', loggedInUserId)
+  showAuthModal.value = false
+  currentUserId.value = loggedInUserId
+
+  // 로그인 완료 → 쿠폰 생성 모달 표시
+  showCouponModal.value = true
+}
+
+// 쿠폰 모달 닫기
+function handleCouponClose() {
+  showCouponModal.value = false
+  eligibleReward.value = null
+}
+
+// Phaser 게임 이벤트 리스너
+function handlePhaserGameOver(event: Event) {
+  const customEvent = event as CustomEvent
+  const { score, scoreId } = customEvent.detail
+  handleGameOver(score, scoreId)
+}
+
 onMounted(() => {
   // 핀볼이 아닌 경우에만 Phaser 게임 초기화
   if (!isPinball.value && gameContainer.value) {
@@ -96,6 +239,9 @@ onMounted(() => {
       }
 
       gameManager.initGame(gameType.value, 'game-container', qrCode.value)
+
+      // Phaser 게임 이벤트 리스너 설정
+      window.addEventListener('phaser-game-over', handlePhaserGameOver)
     } catch (error) {
       console.error('게임 초기화 실패:', error)
     }
@@ -112,12 +258,10 @@ onBeforeUnmount(() => {
   if (isFullscreen.value) {
     document.body.style.overflow = ''
   }
-})
 
-function handleGameOver(finalScore: number) {
-  console.log('Game Over! Final Score:', finalScore)
-  // TODO: 점수 저장 API 호출
-}
+  // 이벤트 리스너 제거
+  window.removeEventListener('phaser-game-over', handlePhaserGameOver)
+})
 
 function goBack() {
   router.back()
