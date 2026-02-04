@@ -918,9 +918,10 @@ export class SpotScene extends Phaser.Scene {
     const difficultyBonus = (this.gameData!.difficulty - 1) * 200;
     const finalScore = Math.max(0, baseScore + timeBonus + difficultyBonus - hintPenalty);
 
-    // Vue 컴포넌트에 게임 종료 이벤트 전달
+    // Vue 컴포넌트에 게임 종료 이벤트 전달 (혜택 플로우 시작)
+    // 점수 제출은 Vue에서 혜택 확인 후 처리
     window.dispatchEvent(new CustomEvent('phaser-game-over', {
-      detail: { score: finalScore }
+      detail: { score: finalScore, gameType: 'spot-difference' }
     }));
 
     // ==================== 결과 오버레이 (밝은 모달 스타일) ====================
@@ -1073,94 +1074,58 @@ export class SpotScene extends Phaser.Scene {
     }).setOrigin(1, 0.5);
 
     // ========== 상태 메시지 영역 ==========
-    const statusY = modalCenterY + modalHeight * 0.22;
+    const statusY = modalCenterY + modalHeight * 0.20;
     const statusText = this.add.text(W * 0.5, statusY, '', {
-      fontSize: Math.floor(H * 0.022) + 'px',
+      fontSize: Math.floor(H * 0.020) + 'px',
       color: '#6b7280',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
 
-    // ========== HTML 이름 입력 필드 ==========
+    // ========== HTML 버튼들 ==========
     const gameContainer = document.getElementById('game-container');
-    const inputY = modalCenterY + modalHeight * 0.17;
+    const qrCode = gameManager.getQrCode();
 
-    const inputElement = document.createElement('input');
-    inputElement.type = 'text';
-    inputElement.placeholder = '이름을 입력하세요';
-    inputElement.maxLength = 20;
-    inputElement.style.cssText = `
+    // ========== 혜택 확인 / 점수 제출 버튼 ==========
+    const mainBtnY = modalCenterY + modalHeight * 0.28;
+    const mainButton = document.createElement('button');
+
+    // QR 코드가 있으면 "혜택 확인하기", 없으면 "점수 제출"
+    const hasQrCode = !!qrCode;
+    mainButton.innerHTML = hasQrCode ? '🎁 혜택 확인하기' : '점수 제출';
+    mainButton.style.cssText = `
       position: absolute;
       left: 50%;
-      top: ${inputY}px;
+      top: ${mainBtnY}px;
       transform: translateX(-50%);
       width: ${modalWidth * 0.8}px;
-      padding: 14px 16px;
-      font-size: 15px;
-      border: 2px solid transparent;
-      border-radius: 12px;
-      text-align: center;
-      background: #f1f5f9;
-      color: #1e293b;
-      font-weight: 500;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      outline: none;
-      transition: all 0.2s ease;
-    `;
-    inputElement.onfocus = () => {
-      inputElement.style.background = '#ffffff';
-      inputElement.style.borderColor = '#818cf8';
-    };
-    inputElement.onblur = () => {
-      inputElement.style.background = '#f1f5f9';
-      inputElement.style.borderColor = 'transparent';
-    };
-    gameContainer?.appendChild(inputElement);
-    inputElement.focus();
-
-    // ========== 제출 버튼 ==========
-    const submitBtnY = modalCenterY + modalHeight * 0.30;
-
-    const submitButton = document.createElement('button');
-    submitButton.innerHTML = '점수 제출';
-    submitButton.style.cssText = `
-      position: absolute;
-      left: 50%;
-      top: ${submitBtnY}px;
-      transform: translateX(-50%);
-      width: ${modalWidth * 0.8}px;
-      padding: 14px 24px;
-      font-size: 15px;
-      background: #6366f1;
+      padding: 16px 24px;
+      font-size: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       cursor: pointer;
       font-weight: bold;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      box-shadow: 0 8px 20px rgba(165, 180, 252, 0.5);
-      transition: transform 0.15s ease;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
     `;
-    submitButton.onmouseover = () => {
-      submitButton.style.transform = 'translateX(-50%) scale(1.03)';
+    mainButton.onmouseover = () => {
+      mainButton.style.transform = 'translateX(-50%) scale(1.03)';
+      mainButton.style.boxShadow = '0 12px 28px rgba(102, 126, 234, 0.5)';
     };
-    submitButton.onmouseout = () => {
-      submitButton.style.transform = 'translateX(-50%) scale(1)';
+    mainButton.onmouseout = () => {
+      mainButton.style.transform = 'translateX(-50%) scale(1)';
+      mainButton.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.4)';
     };
-    submitButton.onmousedown = () => {
-      submitButton.style.transform = 'translateX(-50%) scale(0.97)';
-    };
-    submitButton.onmouseup = () => {
-      submitButton.style.transform = 'translateX(-50%) scale(1.03)';
-    };
-    gameContainer?.appendChild(submitButton);
+    gameContainer?.appendChild(mainButton);
 
     // ========== 다시 하기 버튼 ==========
-    const restartBtnY = modalCenterY + modalHeight * 0.41;
-
+    const restartBtnY = modalCenterY + modalHeight * 0.40;
     const restartButton = document.createElement('button');
     restartButton.innerHTML = '다시 하기';
     restartButton.style.cssText = `
@@ -1168,7 +1133,7 @@ export class SpotScene extends Phaser.Scene {
       left: 50%;
       top: ${restartBtnY}px;
       transform: translateX(-50%);
-      padding: 8px 16px;
+      padding: 10px 20px;
       font-size: 14px;
       background: transparent;
       color: #94a3b8;
@@ -1177,9 +1142,6 @@ export class SpotScene extends Phaser.Scene {
       font-weight: 500;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       transition: color 0.15s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     `;
     restartButton.onmouseover = () => {
       restartButton.style.color = '#64748b';
@@ -1189,43 +1151,47 @@ export class SpotScene extends Phaser.Scene {
     };
     gameContainer?.appendChild(restartButton);
 
+    // 다시 하기 클릭
     restartButton.onclick = () => {
-      inputElement.remove();
-      submitButton.remove();
+      mainButton.remove();
       restartButton.remove();
       this.scene.restart();
     };
 
-    const submitScore = async () => {
-      const playerName = inputElement.value.trim() || '익명';
-
-      submitButton.disabled = true;
-      submitButton.innerHTML = '전송 중...';
-      submitButton.style.opacity = '0.7';
-
-      const qrCode = gameManager.getQrCode();
-      const result = await submitGameScore({
-        gameType: 'spot-difference',
-        playerName,
-        score: finalScore,
-        qrCode
-      });
-
-      inputElement.remove();
-      submitButton.remove();
-
-      if (result) {
-        statusText.setText('✅ 점수가 제출되었습니다!');
-        statusText.setColor('#34d399');
+    // 메인 버튼 클릭 - Vue의 리워드 플로우 트리거
+    mainButton.onclick = async () => {
+      if (hasQrCode) {
+        // QR 코드가 있으면 Vue의 혜택 확인 플로우로 전달
+        // phaser-game-over 이벤트는 이미 발생했으므로,
+        // Vue에서 RewardOfferModal이 표시될 것임
+        // 여기서는 게임 결과 UI만 정리
+        mainButton.remove();
+        restartButton.remove();
+        statusText.setText('혜택을 확인 중입니다...');
+        statusText.setColor('#6366f1');
       } else {
-        statusText.setText('❌ 점수 제출 실패');
-        statusText.setColor('#f87171');
-      }
-    };
+        // QR 코드가 없으면 바로 점수 제출 (익명)
+        mainButton.disabled = true;
+        mainButton.innerHTML = '전송 중...';
+        mainButton.style.opacity = '0.7';
 
-    submitButton.onclick = submitScore;
-    inputElement.onkeydown = (e) => {
-      if (e.key === 'Enter') submitScore();
+        const result = await submitGameScore({
+          gameType: 'spot-difference',
+          playerName: '익명',
+          score: finalScore,
+          qrCode: undefined
+        });
+
+        mainButton.remove();
+
+        if (result) {
+          statusText.setText('✅ 점수가 제출되었습니다!');
+          statusText.setColor('#34d399');
+        } else {
+          statusText.setText('❌ 점수 제출 실패');
+          statusText.setColor('#f87171');
+        }
+      }
     };
   }
 
