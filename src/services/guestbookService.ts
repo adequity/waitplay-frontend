@@ -18,6 +18,17 @@ export interface GuestbookMessageResponse {
   createdAt: string
 }
 
+export interface MyGuestbookMessageResponse {
+  id: string
+  message?: string
+  imageUrl?: string
+  rotation: number
+  color: string
+  createdAt: string
+  storeName: string
+  qrCode: string
+}
+
 class GuestbookService {
   /**
    * Create a new guestbook message
@@ -40,6 +51,14 @@ class GuestbookService {
    */
   async deleteMessage(messageId: string): Promise<void> {
     await apiClient.delete(`/api/guestbook/${messageId}`)
+  }
+
+  /**
+   * Get all guestbook messages created by the current user (across all stores)
+   */
+  async getMyMessages(): Promise<MyGuestbookMessageResponse[]> {
+    const response = await apiClient.get<MyGuestbookMessageResponse[]>('/api/guestbook/my-messages')
+    return response.data
   }
 }
 
