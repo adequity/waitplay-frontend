@@ -174,7 +174,12 @@
                   @dragover.prevent
                   @drop.prevent="handleDrop($event, 'original')"
                 >
-                  <img v-if="form.originalImageUrl" :src="form.originalImageUrl" alt="원본" />
+                  <template v-if="form.originalImageUrl">
+                    <img :src="form.originalImageUrl" alt="원본" ref="originalPreviewImg" @load="updateVisibleAreaOverlay('original')" />
+                    <div class="visible-area-overlay" :style="originalVisibleAreaStyle">
+                      <div class="visible-area-label">게임 화면</div>
+                    </div>
+                  </template>
                   <div v-else class="upload-placeholder">
                     <IconBase name="camera" :size="32" class="upload-icon-svg" />
                     <p>클릭 또는 드래그</p>
@@ -198,7 +203,12 @@
                   @dragover.prevent
                   @drop.prevent="handleDrop($event, 'modified')"
                 >
-                  <img v-if="form.modifiedImageUrl" :src="form.modifiedImageUrl" alt="차이점" />
+                  <template v-if="form.modifiedImageUrl">
+                    <img :src="form.modifiedImageUrl" alt="차이점" ref="modifiedPreviewImg" @load="updateVisibleAreaOverlay('modified')" />
+                    <div class="visible-area-overlay" :style="modifiedVisibleAreaStyle">
+                      <div class="visible-area-label">게임 화면</div>
+                    </div>
+                  </template>
                   <div v-else class="upload-placeholder">
                     <IconBase name="image" :size="32" class="upload-icon-svg" />
                     <p>클릭 또는 드래그</p>
@@ -593,6 +603,93 @@ const originalFileInput = ref<HTMLInputElement | null>(null)
 const modifiedFileInput = ref<HTMLInputElement | null>(null)
 const editorContainer = ref<HTMLDivElement | null>(null)
 const editorImage = ref<HTMLImageElement | null>(null)
+const originalPreviewImg = ref<HTMLImageElement | null>(null)
+const modifiedPreviewImg = ref<HTMLImageElement | null>(null)
+
+// Visible area overlay styles for game preview
+const originalVisibleAreaStyle = ref<Record<string, string>>({})
+const modifiedVisibleAreaStyle = ref<Record<string, string>>({})
+
+// Game screen dimensions (mobile: 390x844 typical)
+const GAME_SCREEN_WIDTH = 390
+const GAME_SCREEN_HEIGHT = 844
+const GAME_IMAGE_AREA_TOP = 90
+const GAME_IMAGE_AREA_BOTTOM = 10
+const GAME_IMAGE_GAP = 20
+const GAME_PADDING = 12
+
+// Calculate visible area overlay position
+function updateVisibleAreaOverlay(type: 'original' | 'modified') {
+  const imgRef = type === 'original' ? originalPreviewImg.value : modifiedPreviewImg.value
+  const styleRef = type === 'original' ? originalVisibleAreaStyle : modifiedVisibleAreaStyle
+
+  if (!imgRef) return
+
+  // Get the actual displayed size in the preview container
+  const containerWidth = 180 // upload-area width minus padding
+  const containerHeight = 180 // upload-area height
+
+  // Get the original image dimensions
+  const imgNaturalWidth = imgRef.naturalWidth
+  const imgNaturalHeight = imgRef.naturalHeight
+
+  if (imgNaturalWidth === 0 || imgNaturalHeight === 0) return
+
+  // Calculate how image is displayed in container (object-fit: contain)
+  const containerAspect = containerWidth / containerHeight
+  const imageAspect = imgNaturalWidth / imgNaturalHeight
+
+  let displayedWidth: number
+  let displayedHeight: number
+  let offsetX: number
+  let offsetY: number
+
+  if (imageAspect > containerAspect) {
+    // Image is wider - fit by width
+    displayedWidth = containerWidth
+    displayedHeight = containerWidth / imageAspect
+    offsetX = 0
+    offsetY = (containerHeight - displayedHeight) / 2
+  } else {
+    // Image is taller - fit by height
+    displayedHeight = containerHeight
+    displayedWidth = containerHeight * imageAspect
+    offsetX = (containerWidth - displayedWidth) / 2
+    offsetY = 0
+  }
+
+  // Calculate game's visible area ratio
+  // Game uses: maxImageWidth = W - padding * 2, maxImageHeight = (H - 90 - 10 - 20) / 2
+  const gameMaxWidth = GAME_SCREEN_WIDTH - GAME_PADDING * 2
+  const gameMaxHeight = (GAME_SCREEN_HEIGHT - GAME_IMAGE_AREA_TOP - GAME_IMAGE_AREA_BOTTOM - GAME_IMAGE_GAP) / 2
+
+  // How the game would scale this image
+  const gameScaleByWidth = gameMaxWidth / imgNaturalWidth
+  const gameScaleByHeight = gameMaxHeight / imgNaturalHeight
+  const gameScale = Math.min(gameScaleByWidth, gameScaleByHeight)
+
+  // The visible portion in original image coordinates
+  const visibleWidth = Math.min(imgNaturalWidth, gameMaxWidth / gameScale)
+  const visibleHeight = Math.min(imgNaturalHeight, gameMaxHeight / gameScale)
+
+  // If image fits completely, no overlay needed (show full border)
+  const fitsCompletely = gameScale === gameScaleByWidth && gameScale === gameScaleByHeight
+
+  // Convert to preview display coordinates
+  const scaleToDisplay = displayedWidth / imgNaturalWidth
+  const overlayWidth = visibleWidth * scaleToDisplay
+  const overlayHeight = visibleHeight * scaleToDisplay
+  const overlayX = offsetX + (displayedWidth - overlayWidth) / 2
+  const overlayY = offsetY + (displayedHeight - overlayHeight) / 2
+
+  styleRef.value = {
+    left: `${overlayX}px`,
+    top: `${overlayY}px`,
+    width: `${overlayWidth}px`,
+    height: `${overlayHeight}px`,
+    display: fitsCompletely ? 'none' : 'block'
+  }
+}
 
 // Form
 const form = ref({
@@ -1604,6 +1701,7 @@ const createAllAssets = async () => {
 }
 
 .upload-area {
+  position: relative;
   height: 180px;
   border: 2px dashed #d2d2d7;
   border-radius: 12px;
@@ -1625,6 +1723,31 @@ const createAllAssets = async () => {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* Visible area overlay for game preview */
+.visible-area-overlay {
+  position: absolute;
+  border: 2px solid #10b981;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.1);
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+}
+
+.visible-area-label {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #10b981;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 .upload-placeholder {

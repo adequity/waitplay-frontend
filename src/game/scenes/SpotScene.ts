@@ -631,7 +631,9 @@ export class SpotScene extends Phaser.Scene {
 
     const imageAreaTop = 90;
     const imageAreaHeight = H - imageAreaTop - 10;
-    const imageHeight = (imageAreaHeight - 20) / 2;
+    const maxImageHeight = (imageAreaHeight - 20) / 2;
+    const padding = 12; // 좌우 여백
+    const maxImageWidth = W - padding * 2;
 
     const frame = this.textures.getFrame('spot-original');
     if (!frame) return;
@@ -639,14 +641,16 @@ export class SpotScene extends Phaser.Scene {
     const imgWidth = frame.width;
     const imgHeight = frame.height;
 
-    // 스케일 계산 (높이 기준으로 맞춤)
-    const scale = imageHeight / imgHeight;
+    // 스케일 계산 (가로/세로 중 작은 쪽에 맞춤 - 화면에 꽉 차게)
+    const scaleByWidth = maxImageWidth / imgWidth;
+    const scaleByHeight = maxImageHeight / imgHeight;
+    const scale = Math.min(scaleByWidth, scaleByHeight);
 
     this.imageWidth = imgWidth * scale;
     this.imageHeight = imgHeight * scale;
 
     // 원본 이미지 (위)
-    const originalY = imageAreaTop + imageHeight / 2;
+    const originalY = imageAreaTop + this.imageHeight / 2;
     this.originalImage = this.add.image(W / 2, originalY, 'spot-original');
     this.originalImage.setScale(scale);
     this.originalImage.setInteractive({ useHandCursor: true });
@@ -675,7 +679,7 @@ export class SpotScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // 차이점 이미지 (아래)
-    const modifiedY = originalY + imageHeight + 20;
+    const modifiedY = originalY + this.imageHeight + 20;
     this.modifiedImage = this.add.image(W / 2, modifiedY, 'spot-modified');
     this.modifiedImage.setScale(scale);
     this.modifiedImage.setInteractive({ useHandCursor: true });
