@@ -257,60 +257,12 @@ export class SpotScene extends Phaser.Scene {
     const W = this.scale.width;
     const H = this.scale.height;
 
-    // ==================== 떠다니는 장식 아이콘 ====================
-    const floatingIcons = [
-      { emoji: '🔍', x: W * 0.12, y: H * 0.08, size: 0.045, duration: 2500 },
-      { emoji: '🎯', x: W * 0.88, y: H * 0.15, size: 0.05, duration: 3000 },
-      { emoji: '✨', x: W * 0.1, y: H * 0.65, size: 0.04, duration: 4000 }
-    ];
-
-    floatingIcons.forEach((icon, i) => {
-      const floatIcon = this.add.text(icon.x, icon.y, icon.emoji, {
-        fontSize: Math.floor(H * icon.size) + 'px'
-      }).setOrigin(0.5);
-      this.titleElements.push(floatIcon);
-
-      // 바운스 애니메이션
-      this.tweens.add({
-        targets: floatIcon,
-        y: icon.y - 15,
-        duration: icon.duration,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-        delay: i * 300
-      });
-    });
-
     // ==================== 로고 영역 + 데코레이션 ====================
     let contentY = H * 0.35;
     const logoY = H * 0.22;
 
     if (this.hasLogo) {
       const logoRadius = W * 0.22;
-
-      // 뒤에 숨어있는 이미지 프레임 장식
-      // 왼쪽 프레임
-      const leftFrame = this.add.rectangle(W * 0.5 - logoRadius * 0.7, logoY + 8, W * 0.22, W * 0.22, 0xffffff);
-      leftFrame.setStrokeStyle(1, 0xc7d2fe);
-      leftFrame.setAngle(-12);
-      this.titleElements.push(leftFrame);
-
-      const leftFrameIcon = this.add.text(W * 0.5 - logoRadius * 0.7, logoY + 8, '🖼️', {
-        fontSize: Math.floor(H * 0.035) + 'px'
-      }).setOrigin(0.5).setAlpha(0.5).setAngle(-12);
-      this.titleElements.push(leftFrameIcon);
-
-      // 오른쪽 프레임
-      const rightFrame = this.add.rectangle(W * 0.5 + logoRadius * 0.7, logoY + 8, W * 0.22, W * 0.22, 0xffffff);
-      rightFrame.setStrokeStyle(1, 0xc7d2fe);
-      rightFrame.setAngle(12);
-      this.titleElements.push(rightFrame);
-
-      const rightFrameIcon = this.add.text(W * 0.5 + logoRadius * 0.7, logoY + 8, '🔎', {
-        fontSize: Math.floor(H * 0.035) + 'px'
-      }).setOrigin(0.5).setAlpha(0.5).setAngle(12);
-      this.titleElements.push(rightFrameIcon);
 
       // 로고 배경 - 그라데이션 입체감 (다중 원 레이어)
       const shadowOuter = this.add.circle(W * 0.5, logoY + 4, logoRadius + 8, 0x000000, 0.08);
@@ -327,22 +279,6 @@ export class SpotScene extends Phaser.Scene {
 
       const innerGlow = this.add.circle(W * 0.5, logoY + logoRadius * 0.1, logoRadius * 0.85, 0xeef2ff, 0.3);
       this.titleElements.push(innerGlow);
-
-      // 반짝임 효과
-      const sparkle = this.add.text(W * 0.5 + logoRadius * 0.6, logoY - logoRadius * 0.5, '✨', {
-        fontSize: Math.floor(H * 0.03) + 'px'
-      }).setOrigin(0.5);
-      this.titleElements.push(sparkle);
-
-      this.tweens.add({
-        targets: sparkle,
-        alpha: 0.3,
-        scale: 1.2,
-        duration: 1500,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-      });
 
       // 로고 이미지 (원형 마스크 적용)
       const logo = this.add.image(W * 0.5, logoY, 'store_logo');
@@ -427,7 +363,7 @@ export class SpotScene extends Phaser.Scene {
 
     const diffText = this.add.text(W * 0.5 - infoSpacing, infoY + 12, `${this.totalDifferences}개`, {
       fontSize: Math.floor(H * 0.028) + 'px',
-      color: '#6366f1',
+      color: '#1f2937',
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
@@ -443,10 +379,9 @@ export class SpotScene extends Phaser.Scene {
     this.titleElements.push(this.children.list[this.children.list.length - 1] as Phaser.GameObjects.Text);
 
     const timeLimitText = this.timeLimit > 0 ? `${this.timeLimit}초` : '무제한';
-    const timeColor = this.timeLimit > 0 ? '#ef4444' : '#10b981';
     const timeValText = this.add.text(W * 0.5, infoY + 12, timeLimitText, {
       fontSize: Math.floor(H * 0.028) + 'px',
-      color: timeColor,
+      color: '#1f2937',
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
@@ -463,7 +398,7 @@ export class SpotScene extends Phaser.Scene {
 
     const hintValText = this.add.text(W * 0.5 + infoSpacing, infoY + 12, `${this.hintsRemaining}회`, {
       fontSize: Math.floor(H * 0.028) + 'px',
-      color: '#f59e0b',
+      color: '#1f2937',
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
