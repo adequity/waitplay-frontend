@@ -92,13 +92,38 @@
           <!-- Menu Tabs (Logged In) -->
           <div v-if="isAuthenticated" class="menu-tabs">
             <button
-              v-for="tab in menuTabs"
-              :key="tab.id"
-              :class="['menu-tab', { active: activeTab === tab.id }]"
-              @click="activeTab = tab.id"
+              :class="['menu-tab', { active: activeTab === 'profile' }]"
+              @click="activeTab = 'profile'"
             >
-              <span class="tab-icon">{{ tab.icon }}</span>
-              <span class="tab-label">{{ tab.label }}</span>
+              <span class="tab-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </span>
+              <span class="tab-label">내 프로필</span>
+            </button>
+            <button
+              :class="['menu-tab', { active: activeTab === 'stores' }]"
+              @click="activeTab = 'stores'"
+            >
+              <span class="tab-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="tab-label">단골 매장</span>
+            </button>
+            <button
+              :class="['menu-tab', { active: activeTab === 'guestbook' }]"
+              @click="activeTab = 'guestbook'"
+            >
+              <span class="tab-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 4H4C3.44772 4 3 4.44772 3 5V19C3 19.5523 3.44772 20 4 20H18C18.5523 20 19 19.5523 19 19V12M17.5 2.5L12 8L11 12L15 11L20.5 5.5C21.0523 4.94772 21.0523 4.05228 20.5 3.5L19.5 2.5C18.9477 1.94772 18.0523 1.94772 17.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="tab-label">내 방명록</span>
             </button>
           </div>
 
@@ -140,7 +165,11 @@
                   :key="store.adminId"
                   class="store-item"
                 >
-                  <div class="store-icon">🏪</div>
+                  <div class="store-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
                   <div class="store-details">
                     <p class="store-name">{{ store.storeName || '알 수 없는 매장' }}</p>
                     <p class="store-date">{{ formatDate(store.followedAt) }}부터 단골</p>
@@ -228,12 +257,7 @@ const isSidebarOpen = ref(false)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const user = computed(() => authStore.user)
 
-// Menu tabs
-const menuTabs = [
-  { id: 'profile', label: '내 프로필', icon: '👤' },
-  { id: 'stores', label: '단골 매장', icon: '🏪' },
-  { id: 'guestbook', label: '내 방명록', icon: '📝' }
-]
+// Active tab state
 const activeTab = ref('profile')
 
 // Followed stores
@@ -705,7 +729,14 @@ onMounted(async () => {
 }
 
 .tab-icon {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #757575;
+}
+
+.menu-tab.active .tab-icon {
+  color: #667eea;
 }
 
 .tab-label {
@@ -842,7 +873,15 @@ onMounted(async () => {
 }
 
 .store-icon {
-  font-size: 2rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+  flex-shrink: 0;
 }
 
 .store-details {
