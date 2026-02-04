@@ -113,6 +113,7 @@ import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
+import followService from '@/services/followService'
 import type { GuestbookBlockData } from '@/types/blocks'
 
 interface Props {
@@ -303,9 +304,38 @@ const submitDrawing = async () => {
 
     // 방명록 목록 새로고침
     await loadMessages()
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to submit drawing:', error)
-    alert('방명록 등록에 실패했습니다.')
+
+    // 팔로우가 필요한 경우 자동 팔로우 후 재시도
+    if (error.response?.data?.requireFollow) {
+      const storeName = error.response.data.storeName || '이 매장'
+      const shouldFollow = confirm(`방명록 작성을 위해 ${storeName}을(를) 단골 등록해야 합니다.\n단골 등록 후 방명록을 작성하시겠습니까?`)
+
+      if (shouldFollow) {
+        try {
+          // 팔로우 시도
+          await followService.followAdmin(props.qrCodeId)
+
+          // 팔로우 성공 후 방명록 다시 제출
+          const resizedImageData = await resizeAndCompressImage(canvasRef.value!)
+          await guestbookService.createMessage({
+            qrCode: props.qrCodeId,
+            imageData: resizedImageData,
+            color: 'yellow'
+          })
+
+          clearCanvas()
+          alert('단골 등록 및 방명록이 등록되었습니다!')
+          await loadMessages()
+        } catch (followError) {
+          console.error('Failed to follow and retry:', followError)
+          alert('단골 등록에 실패했습니다. 다시 시도해주세요.')
+        }
+      }
+    } else {
+      alert('방명록 등록에 실패했습니다.')
+    }
   }
 }
 
