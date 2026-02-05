@@ -611,6 +611,10 @@ onMounted(async () => {
     }
 
     // Load game settings and update games_carousel block (using public endpoint - no auth required)
+    // layoutQrCodeId가 null이면 게임 설정을 로드하지 않음
+    if (!layoutQrCodeId) {
+      console.warn('QR code ID not available, skipping game settings load')
+    } else {
     try {
       const gameSettings = await gameSettingsService.getGameSettingsPublic(layoutQrCodeId)
       const gamesCarouselBlock = blocks.value.find(b => b.type === 'games_carousel')
@@ -642,6 +646,7 @@ onMounted(async () => {
       console.error('Failed to load game settings:', error)
       // Keep default settings from layout if API fails
     }
+    } // end if (layoutQrCodeId)
     } catch (error) {
       console.error('Error loading layout from API:', error)
     }
