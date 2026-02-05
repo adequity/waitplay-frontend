@@ -51,35 +51,57 @@
     </div>
 
     <template v-else>
-      <!-- 미리보기: 최신 5개만 표시 -->
-      <div class="drawings-slider-container">
-        <div class="drawings-slider" ref="sliderRef">
-          <div
-            v-for="message in previewMessages"
-            :key="message.id"
-            class="post-it-slide"
-          >
+      <!-- 포스트잇 모드 -->
+      <template v-if="displayMode === 'postit'">
+        <div class="drawings-slider-container">
+          <div class="drawings-slider" ref="sliderRef">
             <div
-              class="post-it"
-              :class="`post-it--${message.color}`"
-              :style="{ transform: `rotate(${message.rotation}deg)` }"
+              v-for="message in previewMessages"
+              :key="message.id"
+              class="post-it-slide"
             >
-              <div class="post-it-content">
-                <img
-                  v-if="message.imageUrl"
-                  :src="message.imageUrl"
-                  :alt="`${message.userName}의 방명록`"
-                  class="drawing-image"
-                />
-                <div class="message-footer">
-                  <span class="message-author">- {{ message.userName }}</span>
-                  <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+              <div
+                class="post-it"
+                :class="`post-it--${message.color}`"
+                :style="{ transform: `rotate(${message.rotation}deg)` }"
+              >
+                <div class="post-it-content">
+                  <img
+                    v-if="message.imageUrl"
+                    :src="message.imageUrl"
+                    :alt="`${message.userName}의 방명록`"
+                    class="drawing-image"
+                  />
+                  <div class="message-footer">
+                    <span class="message-author">- {{ message.userName }}</span>
+                    <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
+
+      <!-- 낙서 모드 -->
+      <template v-else-if="displayMode === 'graffiti'">
+        <div class="graffiti-wall">
+          <div
+            v-for="(message, index) in previewMessages"
+            :key="message.id"
+            class="graffiti-item"
+            :style="getGraffitiStyle(index, message)"
+          >
+            <img
+              v-if="message.imageUrl"
+              :src="message.imageUrl"
+              :alt="`${message.userName}의 낙서`"
+              class="graffiti-image"
+            />
+            <span class="graffiti-author">{{ message.userName }}</span>
+          </div>
+        </div>
+      </template>
 
       <!-- 전체보기 버튼 (5개 초과 시에만 표시) -->
       <div v-if="totalMessageCount > 5" class="view-all-section">
@@ -110,7 +132,7 @@
             </div>
 
             <!-- 캔버스 영역 -->
-            <div class="modal-canvas-container">
+            <div class="modal-canvas-container" :class="{ 'graffiti-mode': displayMode === 'graffiti' }">
               <div v-if="!hasDrawing" class="canvas-placeholder">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
                   <path d="M12 19l7-7 3 3-7 7-3-3z"/>
@@ -118,10 +140,11 @@
                   <path d="M2 2l7.586 7.586"/>
                   <circle cx="11" cy="11" r="2"/>
                 </svg>
-                <span>여기에 그려주세요</span>
+                <span>{{ displayMode === 'graffiti' ? '벽에 낙서를 남겨보세요!' : '여기에 그려주세요' }}</span>
               </div>
               <canvas
                 ref="canvasRef"
+                :class="{ 'graffiti-canvas': displayMode === 'graffiti' }"
                 @mousedown="startDrawing"
                 @mousemove="draw"
                 @mouseup="stopDrawing"
@@ -209,6 +232,28 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+
+// 표시 모드 (기본값: postit)
+const displayMode = computed(() => props.data.displayMode || 'postit')
+
+// 낙서 모드에서 각 아이템의 위치/회전 스타일 계산
+const getGraffitiStyle = (index: number, message: any) => {
+  // 각 메시지에 고유한 위치와 회전을 부여 (pseudo-random based on index)
+  const positions = [
+    { top: '5%', left: '10%', rotate: -8 },
+    { top: '15%', left: '55%', rotate: 5 },
+    { top: '40%', left: '25%', rotate: -3 },
+    { top: '35%', left: '65%', rotate: 12 },
+    { top: '60%', left: '40%', rotate: -6 },
+  ] as const
+  const pos = positions[index % positions.length]!
+  return {
+    top: pos.top,
+    left: pos.left,
+    transform: `rotate(${message.rotation || pos.rotate}deg)`,
+    zIndex: index + 1
+  }
+}
 
 // 모달 상태
 const isModalOpen = ref(false)
@@ -332,8 +377,13 @@ const initCanvas = () => {
 
     if (ctx.value) {
       // Canvas 초기 설정
-      ctx.value.fillStyle = '#FFFFFF'
-      ctx.value.fillRect(0, 0, canvas.width, canvas.height)
+      // 낙서 모드: 투명 배경 / 포스트잇 모드: 흰색 배경
+      if (displayMode.value === 'graffiti') {
+        ctx.value.clearRect(0, 0, canvas.width, canvas.height)
+      } else {
+        ctx.value.fillStyle = '#FFFFFF'
+        ctx.value.fillRect(0, 0, canvas.width, canvas.height)
+      }
       ctx.value.lineCap = 'round'
       ctx.value.lineJoin = 'round'
     }
@@ -413,8 +463,13 @@ const stopDrawing = () => {
 const clearCanvas = () => {
   if (!ctx.value || !canvasRef.value) return
 
-  ctx.value.fillStyle = '#FFFFFF'
-  ctx.value.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+  // 낙서 모드: 투명 배경 / 포스트잇 모드: 흰색 배경
+  if (displayMode.value === 'graffiti') {
+    ctx.value.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+  } else {
+    ctx.value.fillStyle = '#FFFFFF'
+    ctx.value.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+  }
   hasDrawing.value = false
 }
 
@@ -504,16 +559,21 @@ const resizeAndCompressImage = async (canvas: HTMLCanvasElement): Promise<string
   const ctx = resizedCanvas.getContext('2d')
   if (!ctx) throw new Error('Failed to get canvas context')
 
-  // 흰색 배경 추가 (투명 배경 방지)
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, width, height)
+  // 낙서 모드: 투명 배경 유지 / 포스트잇 모드: 흰색 배경
+  if (displayMode.value !== 'graffiti') {
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, width, height)
+  }
 
   // 이미지 리사이징 (부드러운 스케일링)
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'high'
   ctx.drawImage(canvas, 0, 0, width, height)
 
-  // JPEG로 압축 (PNG보다 파일 크기 훨씬 작음)
+  // 낙서 모드: PNG (투명 배경 유지) / 포스트잇 모드: JPEG (파일 크기 작음)
+  if (displayMode.value === 'graffiti') {
+    return resizedCanvas.toDataURL('image/png')
+  }
   return resizedCanvas.toDataURL('image/jpeg', QUALITY)
 }
 
@@ -684,6 +744,48 @@ const formatDate = (dateString: string): string => {
   background: #f0fffe;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(78, 205, 196, 0.2);
+}
+
+/* 낙서 모드 스타일 */
+.graffiti-wall {
+  position: relative;
+  width: 100%;
+  min-height: 350px;
+  margin-top: 1.5rem;
+  overflow: hidden;
+}
+
+.graffiti-item {
+  position: absolute;
+  transition: all 0.3s ease;
+  max-width: 45%;
+}
+
+.graffiti-item:hover {
+  z-index: 100 !important;
+  transform: scale(1.1) rotate(0deg) !important;
+}
+
+.graffiti-image {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.3));
+  transition: filter 0.2s ease;
+}
+
+.graffiti-item:hover .graffiti-image {
+  filter: drop-shadow(4px 8px 12px rgba(0, 0, 0, 0.4));
+}
+
+.graffiti-author {
+  display: block;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  margin-top: 4px;
+  text-align: center;
+  font-weight: 600;
 }
 
 /* 방명록 슬라이더 */
@@ -946,6 +1048,23 @@ const formatDate = (dateString: string): string => {
   background: white;
   position: relative;
   z-index: 2;
+}
+
+/* 낙서 모드 캔버스 스타일 */
+.modal-canvas-container.graffiti-mode {
+  /* 체커보드 패턴으로 투명 배경 표시 */
+  background:
+    linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
+    linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e0e0e0 75%),
+    linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  background-color: #f0f0f0;
+}
+
+.modal-canvas-container .drawing-canvas.graffiti-canvas {
+  background: transparent;
 }
 
 /* 모달 도구 모음 */

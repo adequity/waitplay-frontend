@@ -126,6 +126,7 @@ export interface GuestbookBlockData {
   buttonImageUrl?: string // 커스텀 버튼 이미지 URL (권장: 300x80px, 투명 PNG)
   buttonImageScale?: number // 버튼 이미지 크기 배율 (0.3 ~ 3.0, 기본값: 1.0)
   backgroundImageUrl?: string // 방명록 영역 배경 이미지 URL
+  displayMode?: 'postit' | 'graffiti' // 표시 모드: 포스트잇(기본) 또는 낙서
 }
 
 // Marquee Block (전광판/티커)

@@ -604,6 +604,32 @@
               <label class="form-label">제목</label>
               <input type="text" class="form-input" v-model="editForm.title" placeholder="방명록">
             </div>
+
+            <!-- 표시 모드 선택 -->
+            <div class="form-group">
+              <label class="form-label">표시 스타일</label>
+              <div class="display-mode-selector">
+                <button
+                  type="button"
+                  :class="['mode-btn', { active: (editForm.displayMode || 'postit') === 'postit' }]"
+                  @click="editForm.displayMode = 'postit'"
+                >
+                  <span class="mode-icon">📝</span>
+                  <span class="mode-label">포스트잇</span>
+                  <span class="mode-desc">컬러풀한 포스트잇 스타일</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['mode-btn', { active: editForm.displayMode === 'graffiti' }]"
+                  @click="editForm.displayMode = 'graffiti'"
+                >
+                  <span class="mode-icon">🎨</span>
+                  <span class="mode-label">낙서</span>
+                  <span class="mode-desc">벽에 그리듯 자유롭게</span>
+                </button>
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">최대 글자 수</label>
               <input type="number" class="form-input" v-model="editForm.maxMessageLength" placeholder="200">
@@ -1410,6 +1436,13 @@ async function editBlock(block: Block) {
   // Ensure links array exists for social_links blocks
   if (block.type === 'social_links' && !editForm.value.links) {
     editForm.value.links = []
+  }
+
+  // Ensure default values for guestbook blocks
+  if (block.type === 'guestbook') {
+    if (!editForm.value.displayMode) {
+      editForm.value.displayMode = 'postit'
+    }
   }
 
   // Ensure videos array exists for video_grid blocks
@@ -3488,6 +3521,57 @@ select.form-input {
 .content-type-selector .type-btn.active {
   border-color: #3b82f6;
   background: #eff6ff;
+  color: #1d4ed8;
+}
+
+/* 방명록 표시 모드 선택기 */
+.display-mode-selector {
+  display: flex;
+  gap: 12px;
+}
+
+.display-mode-selector .mode-btn {
+  flex: 1;
+  padding: 16px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.display-mode-selector .mode-btn:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.display-mode-selector .mode-btn.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.display-mode-selector .mode-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.display-mode-selector .mode-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.display-mode-selector .mode-desc {
+  font-size: 11px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.display-mode-selector .mode-btn.active .mode-label {
   color: #1d4ed8;
 }
 
