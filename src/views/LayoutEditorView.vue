@@ -608,6 +608,17 @@
               <label class="form-label">최대 글자 수</label>
               <input type="number" class="form-input" v-model="editForm.maxMessageLength" placeholder="200">
             </div>
+            <div class="form-group">
+              <label class="form-label">버튼 이미지 (선택)</label>
+              <p class="form-hint">커스텀 버튼 이미지를 업로드하세요. 권장: 가로로 긴 형태, 투명 PNG</p>
+              <input type="file" class="form-input" @change="handleGuestbookButtonImageUpload" accept="image/*" style="margin-bottom: 8px;">
+              <div v-if="editForm.buttonImageUrl" class="button-preview">
+                <img :src="editForm.buttonImageUrl" alt="버튼 미리보기" class="button-preview-image">
+                <button type="button" class="remove-button-image" @click="editForm.buttonImageUrl = ''">
+                  이미지 제거
+                </button>
+              </div>
+            </div>
           </template>
 
           <!-- Marquee Edit -->
@@ -1703,6 +1714,20 @@ async function handleImageUpload(event: Event) {
       editForm.value.imageUrl = url
     } catch (error) {
       console.error('Image upload failed:', error)
+    }
+  }
+}
+
+// 방명록 버튼 이미지 업로드 핸들러
+async function handleGuestbookButtonImageUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    try {
+      const url = await uploadImage(input.files[0])
+      editForm.value.buttonImageUrl = url
+    } catch (error) {
+      console.error('Button image upload failed:', error)
+      alert('버튼 이미지 업로드에 실패했습니다.')
     }
   }
 }
@@ -2968,8 +2993,44 @@ select.form-input {
 .form-hint {
   font-size: 12px;
   color: #8e8e93;
-  margin-top: 8px;
+  margin-top: 4px;
+  margin-bottom: 8px;
   line-height: 1.5;
+}
+
+/* 방명록 버튼 이미지 미리보기 */
+.button-preview {
+  margin-top: 12px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.button-preview-image {
+  max-width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.remove-button-image {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: #fff;
+  color: #ff3b30;
+  border: 1px solid #ff3b30;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.remove-button-image:hover {
+  background: #fff5f5;
 }
 
 .bgm-preview-section {

@@ -4,7 +4,12 @@
 
     <!-- 방명록 작성 버튼 (로그인한 사용자만) -->
     <div v-if="isAuthenticated" class="write-section">
-      <button @click="openDrawingModal" class="write-btn">
+      <!-- 커스텀 버튼 이미지가 있는 경우 -->
+      <button v-if="data.buttonImageUrl" @click="openDrawingModal" class="write-btn-custom">
+        <img :src="data.buttonImageUrl" alt="방명록 남기기" class="custom-button-image" />
+      </button>
+      <!-- 기본 버튼 -->
+      <button v-else @click="openDrawingModal" class="write-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 19l7-7 3 3-7 7-3-3z"/>
           <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
@@ -551,6 +556,33 @@ const formatDate = (dateString: string): string => {
 
 .write-btn:active {
   transform: translateY(0);
+}
+
+/* 커스텀 버튼 이미지 */
+.write-btn-custom {
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.write-btn-custom:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.write-btn-custom:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.custom-button-image {
+  width: 100%;
+  max-height: 100px;
+  object-fit: contain;
+  display: block;
+  border-radius: 12px;
 }
 
 /* 로그인 유도 */

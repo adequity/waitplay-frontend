@@ -123,6 +123,7 @@ export interface GuestbookBlockData {
   messages: GuestbookMessage[]
   maxMessageLength: number // default 200
   textColor?: string // hex color for guestbook text
+  buttonImageUrl?: string // 커스텀 버튼 이미지 URL (권장: 300x80px, 투명 PNG)
 }
 
 // Marquee Block (전광판/티커)
