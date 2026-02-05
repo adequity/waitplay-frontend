@@ -753,6 +753,39 @@
                 </div>
               </div>
             </div>
+
+            <!-- 내부 디자인 설정 -->
+            <div class="form-row" v-if="editForm.contentType !== 'image'">
+              <div class="form-group">
+                <label class="form-label">글자 크기</label>
+                <div class="padding-input-wrapper">
+                  <input
+                    type="number"
+                    class="form-input padding-input"
+                    v-model.number="editForm.fontSize"
+                    min="10"
+                    max="30"
+                    step="1"
+                  />
+                  <span class="padding-unit">px</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">내부 상하 여백</label>
+                <div class="padding-input-wrapper">
+                  <input
+                    type="number"
+                    class="form-input padding-input"
+                    v-model.number="editForm.innerPadding"
+                    min="4"
+                    max="40"
+                    step="2"
+                  />
+                  <span class="padding-unit">px</span>
+                </div>
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">
                 스크롤 속도
@@ -808,7 +841,8 @@
                 class="marquee-preview"
                 :style="{
                   backgroundColor: editForm.backgroundColor || '#ff6b6b',
-                  color: editForm.textColor || '#ffffff'
+                  color: editForm.textColor || '#ffffff',
+                  padding: `${editForm.innerPadding || 8}px 0`
                 }"
               >
                 <div class="marquee-preview-content">
@@ -818,7 +852,11 @@
                     alt="배너"
                     class="marquee-preview-image"
                   />
-                  <span v-if="editForm.contentType === 'text' || editForm.contentType === 'both'" class="marquee-preview-text">
+                  <span
+                    v-if="editForm.contentType === 'text' || editForm.contentType === 'both'"
+                    class="marquee-preview-text"
+                    :style="{ fontSize: `${editForm.fontSize || 14}px` }"
+                  >
                     {{ editForm.text || '공지사항을 입력하세요' }}
                   </span>
                 </div>
@@ -1332,7 +1370,9 @@ function getDefaultBlockData(type: BlockType): any {
         imageUrl: '',
         contentType: 'text', // 'text' | 'image' | 'both'
         paddingTop: 5, // 블록 간 위쪽 여백
-        paddingBottom: 5 // 블록 간 아래쪽 여백
+        paddingBottom: 5, // 블록 간 아래쪽 여백
+        fontSize: 14, // 글자 크기
+        innerPadding: 8 // 내부 상하 여백
       }
     default:
       return {}
@@ -1440,6 +1480,12 @@ async function editBlock(block: Block) {
     if (editForm.value.paddingBottom === undefined || editForm.value.paddingBottom === null) {
       editForm.value.paddingBottom = 5
     }
+    if (editForm.value.fontSize === undefined || editForm.value.fontSize === null) {
+      editForm.value.fontSize = 14
+    }
+    if (editForm.value.innerPadding === undefined || editForm.value.innerPadding === null) {
+      editForm.value.innerPadding = 8
+    }
     if (!editForm.value.contentType) {
       editForm.value.contentType = 'text'
     }
@@ -1499,14 +1545,22 @@ function saveBlockEdit() {
       formData.speed = formData.speed === '' || formData.speed === undefined || formData.speed === null
         ? 15
         : Number(formData.speed)
-      // paddingTop: 빈 값이면 기본값 10, 숫자로 변환
+      // paddingTop: 빈 값이면 기본값 5, 숫자로 변환
       formData.paddingTop = formData.paddingTop === '' || formData.paddingTop === undefined || formData.paddingTop === null
-        ? 10
+        ? 5
         : Number(formData.paddingTop)
-      // paddingBottom: 빈 값이면 기본값 10, 숫자로 변환
+      // paddingBottom: 빈 값이면 기본값 5, 숫자로 변환
       formData.paddingBottom = formData.paddingBottom === '' || formData.paddingBottom === undefined || formData.paddingBottom === null
-        ? 10
+        ? 5
         : Number(formData.paddingBottom)
+      // fontSize: 빈 값이면 기본값 14, 숫자로 변환
+      formData.fontSize = formData.fontSize === '' || formData.fontSize === undefined || formData.fontSize === null
+        ? 14
+        : Number(formData.fontSize)
+      // innerPadding: 빈 값이면 기본값 8, 숫자로 변환
+      formData.innerPadding = formData.innerPadding === '' || formData.innerPadding === undefined || formData.innerPadding === null
+        ? 8
+        : Number(formData.innerPadding)
     }
 
     // Save to block data

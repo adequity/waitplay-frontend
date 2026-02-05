@@ -5,7 +5,8 @@
       backgroundColor: data.backgroundColor || '#ff6b6b',
       color: data.textColor || '#ffffff',
       marginTop: `${data.paddingTop ?? 5}px`,
-      marginBottom: `${data.paddingBottom ?? 5}px`
+      marginBottom: `${data.paddingBottom ?? 5}px`,
+      padding: `${data.innerPadding ?? 8}px 0`
     }"
   >
     <div class="marquee-container">
@@ -25,7 +26,11 @@
             class="marquee-image"
           />
           <!-- 텍스트 (text 또는 both 모드) -->
-          <span v-if="showText" class="marquee-text">
+          <span
+            v-if="showText"
+            class="marquee-text"
+            :style="{ fontSize: `${data.fontSize || 14}px` }"
+          >
             <span v-if="data.emoji" class="marquee-emoji">{{ data.emoji }}</span>
             {{ data.text || '공지사항을 입력하세요' }}
           </span>
@@ -38,7 +43,11 @@
             alt="배너"
             class="marquee-image"
           />
-          <span v-if="showText" class="marquee-text">
+          <span
+            v-if="showText"
+            class="marquee-text"
+            :style="{ fontSize: `${data.fontSize || 14}px` }"
+          >
             <span v-if="data.emoji" class="marquee-emoji">{{ data.emoji }}</span>
             {{ data.text || '공지사항을 입력하세요' }}
           </span>
@@ -59,8 +68,10 @@ interface MarqueeData {
   speed?: number // 초 단위 (낮을수록 빠름)
   imageUrl?: string
   contentType?: 'text' | 'image' | 'both'
-  paddingTop?: number // 위 여백 (px)
-  paddingBottom?: number // 아래 여백 (px)
+  paddingTop?: number // 블록 간 위 여백 (px)
+  paddingBottom?: number // 블록 간 아래 여백 (px)
+  fontSize?: number // 글자 크기 (px)
+  innerPadding?: number // 내부 상하 여백 (px)
 }
 
 const props = defineProps<{
@@ -106,7 +117,6 @@ const showImage = computed(() => contentType.value === 'image' || contentType.va
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.5px;
 }
@@ -138,10 +148,6 @@ const showImage = computed(() => contentType.value === 'image' || contentType.va
 
 /* 반응형 */
 @media (max-width: 640px) {
-  .marquee-text {
-    font-size: 13px;
-  }
-
   .marquee-item {
     padding: 0 30px;
     gap: 12px;
