@@ -2,76 +2,16 @@
   <div class="guestbook-block" :style="{ '--text-color': data.textColor || '#374151' }">
     <h2 class="guestbook-title">{{ data.title }}</h2>
 
-    <!-- 그림판 작성 영역 (로그인한 사용자만) -->
-    <div v-if="isAuthenticated" class="canvas-section">
-      <!-- 캔버스 (상단) -->
-      <div class="canvas-container">
-        <div v-if="!hasDrawing" class="canvas-placeholder">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
-            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-            <path d="M2 2l7.586 7.586"/>
-            <circle cx="11" cy="11" r="2"/>
-          </svg>
-          <span>여기에 그려주세요</span>
-        </div>
-        <canvas
-          ref="canvasRef"
-          @mousedown="startDrawing"
-          @mousemove="draw"
-          @mouseup="stopDrawing"
-          @mouseleave="stopDrawing"
-          @touchstart.prevent="handleTouchStart"
-          @touchmove.prevent="handleTouchMove"
-          @touchend.prevent="stopDrawing"
-          class="drawing-canvas"
-        ></canvas>
-      </div>
-
-      <!-- 도구 모음 (하단) -->
-      <div class="tools-bar">
-        <div class="tools-row">
-          <!-- 색상 피커 -->
-          <div class="color-picker-wrapper">
-            <input
-              type="color"
-              v-model="selectedColor"
-              class="color-picker-input"
-              title="색상 선택"
-            />
-            <div class="color-preview" :style="{ backgroundColor: selectedColor }"></div>
-          </div>
-
-          <!-- 브러시 크기 슬라이더 -->
-          <div class="brush-slider-wrapper">
-            <input
-              type="range"
-              v-model.number="brushSize"
-              :min="minBrushSize"
-              :max="maxBrushSize"
-              step="1"
-              class="brush-slider"
-              title="브러시 크기"
-            />
-            <div class="brush-size-preview" :style="{ width: `${brushSize}px`, height: `${brushSize}px` }"></div>
-          </div>
-
-          <!-- 지우기 버튼 -->
-          <button @click="clearCanvas" class="icon-btn clear-btn" title="지우기">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
-        </div>
-
-        <!-- 완료 버튼 (전체 너비) -->
-        <button @click="submitDrawing" :disabled="!hasDrawing" class="submit-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          완료
-        </button>
-      </div>
+    <!-- 방명록 작성 버튼 (로그인한 사용자만) -->
+    <div v-if="isAuthenticated" class="write-section">
+      <button @click="openDrawingModal" class="write-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+          <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+          <path d="M2 2l7.586 7.586"/>
+        </svg>
+        방명록 남기기
+      </button>
     </div>
 
     <!-- 로그인 유도 -->
@@ -120,11 +60,106 @@
         </div>
       </div>
     </div>
+
+    <!-- 전체화면 그리기 모달 -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="isModalOpen" class="drawing-modal-overlay" @click.self="closeModal">
+          <div class="drawing-modal">
+            <!-- 모달 헤더 -->
+            <div class="modal-header">
+              <button @click="closeModal" class="modal-close-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+              <h3 class="modal-title">방명록 작성</h3>
+              <div class="modal-header-spacer"></div>
+            </div>
+
+            <!-- 캔버스 영역 -->
+            <div class="modal-canvas-container">
+              <div v-if="!hasDrawing" class="canvas-placeholder">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+                  <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                  <path d="M2 2l7.586 7.586"/>
+                  <circle cx="11" cy="11" r="2"/>
+                </svg>
+                <span>여기에 그려주세요</span>
+              </div>
+              <canvas
+                ref="canvasRef"
+                @mousedown="startDrawing"
+                @mousemove="draw"
+                @mouseup="stopDrawing"
+                @mouseleave="stopDrawing"
+                @touchstart.prevent="handleTouchStart"
+                @touchmove.prevent="handleTouchMove"
+                @touchend.prevent="stopDrawing"
+                class="drawing-canvas"
+              ></canvas>
+            </div>
+
+            <!-- 도구 모음 -->
+            <div class="modal-tools">
+              <div class="tools-row">
+                <!-- 색상 피커 -->
+                <div class="color-picker-wrapper">
+                  <input
+                    type="color"
+                    v-model="selectedColor"
+                    class="color-picker-input"
+                    title="색상 선택"
+                  />
+                  <div class="color-preview" :style="{ backgroundColor: selectedColor }"></div>
+                </div>
+
+                <!-- 브러시 크기 슬라이더 -->
+                <div class="brush-slider-wrapper">
+                  <input
+                    type="range"
+                    v-model.number="brushSize"
+                    :min="minBrushSize"
+                    :max="maxBrushSize"
+                    step="1"
+                    class="brush-slider"
+                    title="브러시 크기"
+                  />
+                  <div class="brush-size-preview" :style="{ width: `${brushSize}px`, height: `${brushSize}px` }"></div>
+                </div>
+
+                <!-- 지우기 버튼 -->
+                <button @click="clearCanvas" class="icon-btn clear-btn" title="지우기">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- 완료 버튼 -->
+              <button @click="submitDrawing" :disabled="!hasDrawing || isSubmitting" class="submit-btn">
+                <template v-if="isSubmitting">
+                  <span class="spinner"></span>
+                  등록 중...
+                </template>
+                <template v-else>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  완료
+                </template>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
@@ -142,6 +177,10 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+
+// 모달 상태
+const isModalOpen = ref(false)
+const isSubmitting = ref(false)
 
 // Canvas 관련
 const canvasRef = ref<HTMLCanvasElement | null>(null)
@@ -164,15 +203,52 @@ const messages = ref<any[]>([])
 const isLoadingMessages = ref(false)
 const sliderRef = ref<HTMLElement | null>(null)
 
-onMounted(async () => {
-  if (canvasRef.value && isAuthenticated.value) {
-    initCanvas()
+// 모달 열기
+const openDrawingModal = async () => {
+  isModalOpen.value = true
+  document.body.style.overflow = 'hidden' // 배경 스크롤 방지
+
+  // 히스토리 추가 (뒤로가기 처리)
+  history.pushState({ modal: 'guestbook' }, '')
+
+  await nextTick()
+  initCanvas()
+}
+
+// 모달 닫기
+const closeModal = () => {
+  isModalOpen.value = false
+  document.body.style.overflow = '' // 스크롤 복원
+  hasDrawing.value = false
+
+  // 히스토리 뒤로가기 (모달이 히스토리에 추가됐으면)
+  if (history.state?.modal === 'guestbook') {
+    history.back()
   }
+}
+
+// 뒤로가기 버튼 처리
+const handlePopState = (event: PopStateEvent) => {
+  if (isModalOpen.value) {
+    isModalOpen.value = false
+    document.body.style.overflow = ''
+    hasDrawing.value = false
+  }
+}
+
+onMounted(async () => {
+  // 뒤로가기 이벤트 리스너
+  window.addEventListener('popstate', handlePopState)
 
   // 미리보기 모드에서는 API 호출 스킵 (404 에러 방지)
   if (!props.isPreview) {
     await loadMessages()
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('popstate', handlePopState)
+  document.body.style.overflow = '' // 스크롤 복원
 })
 
 // 방명록 메시지 로드
@@ -198,12 +274,13 @@ const initCanvas = () => {
   const container = canvas.parentElement
 
   if (container) {
-    // 모바일 최적화: 컨테이너 너비에 맞춤
-    const width = container.clientWidth
-    const height = Math.min(width * 0.75, 400) // 3:4 비율, 최대 400px
+    // 모달 내부 캔버스 크기 설정
+    const containerWidth = container.clientWidth
+    const containerHeight = container.clientHeight
 
-    canvas.width = width
-    canvas.height = height
+    // 캔버스를 컨테이너에 맞춤
+    canvas.width = containerWidth
+    canvas.height = containerHeight
 
     ctx.value = canvas.getContext('2d')
 
@@ -296,7 +373,9 @@ const clearCanvas = () => {
 }
 
 const submitDrawing = async () => {
-  if (!canvasRef.value || !hasDrawing.value) return
+  if (!canvasRef.value || !hasDrawing.value || isSubmitting.value) return
+
+  isSubmitting.value = true
 
   try {
     // 이미지 리사이징 및 압축
@@ -309,12 +388,14 @@ const submitDrawing = async () => {
       color: 'yellow' // 기본 색상
     })
 
-    // 성공 후 캔버스 초기화
-    clearCanvas()
-    alert('방명록이 등록되었습니다!')
+    // 성공 후 모달 닫기
+    closeModal()
 
     // 방명록 목록 새로고침
     await loadMessages()
+
+    // 성공 알림
+    alert('방명록이 등록되었습니다!')
   } catch (error: any) {
     console.error('Failed to submit drawing:', error)
 
@@ -336,9 +417,9 @@ const submitDrawing = async () => {
             color: 'yellow'
           })
 
-          clearCanvas()
-          alert('단골 등록 및 방명록이 등록되었습니다!')
+          closeModal()
           await loadMessages()
+          alert('단골 등록 및 방명록이 등록되었습니다!')
         } catch (followError) {
           console.error('Failed to follow and retry:', followError)
           alert('단골 등록에 실패했습니다. 다시 시도해주세요.')
@@ -347,6 +428,8 @@ const submitDrawing = async () => {
     } else {
       alert('방명록 등록에 실패했습니다.')
     }
+  } finally {
+    isSubmitting.value = false
   }
 }
 
@@ -438,214 +521,36 @@ const formatDate = (dateString: string): string => {
   text-align: center;
 }
 
-/* 캔버스 작성 섹션 */
-.canvas-section {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 1rem;
+/* 방명록 작성 버튼 */
+.write-section {
   margin-bottom: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* 캔버스 컨테이너 (상단) */
-.canvas-container {
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fafafa;
-  position: relative;
-  margin-bottom: 1rem;
-  border: 2px solid #f0f0f0;
-}
-
-.canvas-placeholder {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: #9ca3af;
-  font-size: 14px;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.drawing-canvas {
-  width: 100%;
-  height: auto;
-  display: block;
-  cursor: crosshair;
-  touch-action: none;
-  background: white;
-  position: relative;
-  z-index: 2;
-}
-
-/* 도구 모음 (하단) */
-.tools-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.tools-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-/* 색상 피커 */
-.color-picker-wrapper {
-  position: relative;
-  width: 40px;
-  height: 40px;
-}
-
-.color-picker-input {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.color-preview {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 3px solid #e5e7eb;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  pointer-events: none;
-  transition: all 0.2s;
-}
-
-.color-picker-wrapper:hover .color-preview {
-  border-color: #4ECDC4;
-  transform: scale(1.05);
-}
-
-/* 브러시 크기 슬라이더 */
-.brush-slider-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-}
-
-.brush-slider {
-  flex: 1;
-  height: 6px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: #e5e7eb;
-  border-radius: 3px;
-  outline: none;
-  cursor: pointer;
-}
-
-.brush-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: #4ECDC4;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(78, 205, 196, 0.4);
-  transition: all 0.2s;
-}
-
-.brush-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 3px 8px rgba(78, 205, 196, 0.5);
-}
-
-.brush-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: #4ECDC4;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(78, 205, 196, 0.4);
-}
-
-.brush-size-preview {
-  min-width: 20px;
-  min-height: 20px;
-  max-width: 20px;
-  max-height: 20px;
-  background: currentColor;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.brush-size-preview::after {
-  content: '';
-  width: 100%;
-  height: 100%;
-  background: #374151;
-  border-radius: 50%;
-}
-
-/* 아이콘 버튼 */
-.icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.icon-btn.clear-btn {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.icon-btn.clear-btn:hover {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-/* 완료 버튼 */
-.submit-btn {
+.write-btn {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1rem;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #4ECDC4 0%, #44a8a0 100%);
+  color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 16px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  background: #4ECDC4;
-  color: white;
-  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
 }
 
-.submit-btn:hover:not(:disabled) {
-  background: #3dbdb5;
+.write-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(78, 205, 196, 0.4);
+  box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
 }
 
-.submit-btn:disabled {
-  background: #d1d5db;
-  cursor: not-allowed;
-  box-shadow: none;
+.write-btn:active {
+  transform: translateY(0);
 }
 
 /* 로그인 유도 */
@@ -821,12 +726,309 @@ const formatDate = (dateString: string): string => {
   color: #9ca3af;
 }
 
-.empty-state {
+.empty-state,
+.loading-state {
   text-align: center;
   padding: 3rem 1rem;
   color: #9ca3af;
   font-size: 16px;
   font-style: italic;
+}
+
+/* ==================== */
+/* 전체화면 모달 스타일 */
+/* ==================== */
+.drawing-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawing-modal {
+  width: 100%;
+  height: 100%;
+  max-width: 600px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 모달 헤더 */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+
+.modal-close-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.modal-header-spacer {
+  width: 40px;
+}
+
+/* 모달 캔버스 영역 */
+.modal-canvas-container {
+  flex: 1;
+  position: relative;
+  background: #f9fafb;
+  overflow: hidden;
+}
+
+.modal-canvas-container .canvas-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #9ca3af;
+  font-size: 16px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.modal-canvas-container .drawing-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+  background: white;
+  position: relative;
+  z-index: 2;
+}
+
+/* 모달 도구 모음 */
+.modal-tools {
+  padding: 1rem;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.tools-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+/* 색상 피커 */
+.color-picker-wrapper {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+
+.color-picker-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.color-preview {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid #e5e7eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  transition: all 0.2s;
+}
+
+.color-picker-wrapper:hover .color-preview {
+  border-color: #4ECDC4;
+  transform: scale(1.05);
+}
+
+/* 브러시 크기 슬라이더 */
+.brush-slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.brush-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e5e7eb;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.brush-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: #4ECDC4;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(78, 205, 196, 0.4);
+  transition: all 0.2s;
+}
+
+.brush-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(78, 205, 196, 0.5);
+}
+
+.brush-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: #4ECDC4;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(78, 205, 196, 0.4);
+}
+
+.brush-size-preview {
+  min-width: 22px;
+  min-height: 22px;
+  max-width: 22px;
+  max-height: 22px;
+  background: #374151;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 아이콘 버튼 */
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn.clear-btn {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.icon-btn.clear-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* 완료 버튼 */
+.submit-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #4ECDC4;
+  color: white;
+  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #3dbdb5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(78, 205, 196, 0.4);
+}
+
+.submit-btn:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 로딩 스피너 */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 모달 트랜지션 */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-fade-enter-active .drawing-modal,
+.modal-fade-leave-active .drawing-modal {
+  transition: transform 0.3s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .drawing-modal {
+  transform: translateY(100%);
+}
+
+.modal-fade-leave-to .drawing-modal {
+  transform: translateY(100%);
 }
 
 /* 모바일 최적화 */
@@ -835,7 +1037,16 @@ const formatDate = (dateString: string): string => {
     padding: 1.5rem 0.75rem;
   }
 
-  .canvas-section {
+  .drawing-modal {
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    padding: 0.875rem 1rem;
+  }
+
+  .modal-tools {
     padding: 0.875rem;
   }
 
@@ -845,29 +1056,25 @@ const formatDate = (dateString: string): string => {
 
   .color-picker-wrapper,
   .color-preview {
-    width: 36px;
-    height: 36px;
-  }
-
-  .brush-slider {
-    height: 5px;
+    width: 40px;
+    height: 40px;
   }
 
   .brush-slider::-webkit-slider-thumb {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
   }
 
   .brush-size-preview {
-    min-width: 18px;
-    min-height: 18px;
-    max-width: 18px;
-    max-height: 18px;
+    min-width: 20px;
+    min-height: 20px;
+    max-width: 20px;
+    max-height: 20px;
   }
 
   .icon-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
   }
 
   .post-it-slide {
@@ -886,6 +1093,20 @@ const formatDate = (dateString: string): string => {
 @media (min-width: 641px) and (max-width: 1024px) {
   .post-it-slide {
     flex: 0 0 320px;
+  }
+}
+
+/* 데스크탑에서 모달 중앙 정렬 및 크기 제한 */
+@media (min-width: 641px) {
+  .drawing-modal {
+    height: auto;
+    max-height: 90vh;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-canvas-container {
+    height: 400px;
   }
 }
 </style>
