@@ -112,23 +112,25 @@ const allGames = ref<GameData[]>(gameDefinitions.map(game => ({
 // API에서 리더보드 데이터 가져오기
 async function fetchLeaderboard(gameType: string) {
   try {
-    // QR 코드가 있으면 company별 리더보드, 없으면 전체 리더보드
-    // gameScoreService와 동일한 query parameter 방식 사용
-    let url = `${API_BASE_URL}/api/game/score/leaderboard/${gameType}?limit=3`
-    if (props.qrCodeId) {
-      url += `&qrCodeId=${encodeURIComponent(props.qrCodeId)}`
+    // QR 코드가 있으면 company별 리더보드를 가져옴
+    // 백엔드 API: /api/game/score/leaderboard/{gameType}/qr/{qrCode}
+    if (!props.qrCodeId) {
+      // QR 코드 없으면 리더보드 표시 안함
+      return []
     }
+
+    const url = `${API_BASE_URL}/api/game/score/leaderboard/${gameType}/qr/${encodeURIComponent(props.qrCodeId)}?limit=3`
 
     const response = await fetch(url)
     if (!response.ok) {
-      // 404는 API가 아직 구현되지 않은 것이므로 조용히 처리
+      // 404는 데이터가 없는 것이므로 조용히 처리
       return []
     }
 
     const data = await response.json()
     return data.leaderboard || []
   } catch {
-    // 네트워크 에러는 조용히 처리 (API 미구현 시 발생)
+    // 네트워크 에러는 조용히 처리
     return []
   }
 }
