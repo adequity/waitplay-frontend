@@ -1429,6 +1429,22 @@ async function editBlock(block: Block) {
     }
   }
 
+  // Ensure marquee block has default values
+  if (block.type === 'marquee') {
+    if (editForm.value.speed === undefined || editForm.value.speed === null) {
+      editForm.value.speed = 15
+    }
+    if (editForm.value.paddingTop === undefined || editForm.value.paddingTop === null) {
+      editForm.value.paddingTop = 10
+    }
+    if (editForm.value.paddingBottom === undefined || editForm.value.paddingBottom === null) {
+      editForm.value.paddingBottom = 10
+    }
+    if (!editForm.value.contentType) {
+      editForm.value.contentType = 'text'
+    }
+  }
+
   // Convert ISO date to datetime-local format for countdown blocks
   if (block.type === 'countdown' && editForm.value.targetDate) {
     // ISO format: 2024-12-17T12:00:00.000Z
@@ -1475,6 +1491,22 @@ function saveBlockEdit() {
     // Convert datetime-local back to ISO format for countdown blocks
     if (editingBlock.value.type === 'countdown' && formData.targetDate) {
       formData.targetDate = new Date(formData.targetDate).toISOString()
+    }
+
+    // Ensure marquee numeric fields have valid values
+    if (editingBlock.value.type === 'marquee') {
+      // speed: 빈 값이면 기본값 15, 숫자로 변환
+      formData.speed = formData.speed === '' || formData.speed === undefined || formData.speed === null
+        ? 15
+        : Number(formData.speed)
+      // paddingTop: 빈 값이면 기본값 10, 숫자로 변환
+      formData.paddingTop = formData.paddingTop === '' || formData.paddingTop === undefined || formData.paddingTop === null
+        ? 10
+        : Number(formData.paddingTop)
+      // paddingBottom: 빈 값이면 기본값 10, 숫자로 변환
+      formData.paddingBottom = formData.paddingBottom === '' || formData.paddingBottom === undefined || formData.paddingBottom === null
+        ? 10
+        : Number(formData.paddingBottom)
     }
 
     // Save to block data
