@@ -523,17 +523,18 @@ onMounted(async () => {
   let storeName = '테라스 레스토랑'
   let welcomeMessage = '📶 테라스_Guest / terrace1234\n🕐 매일 10:00 - 22:00\n📞 02-1234-5678'
 
-  // QR 코드 데이터를 저장해서 재사용 (중복 호출 방지)
-  let qrData: { id: string } | null = null
+  // QR 코드 데이터를 저장해서 재사용
+  let qrCodeUuid: string | null = null
 
   try {
-    // If QR code is provided, call QR code API to log scan
+    // If QR code is provided, call QR code API to log scan and get UUID
     if (qrCode) {
       try {
         // Call QR code API to increment scan count and log analytics
         const qrResponse = await fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCode)}`)
         if (qrResponse.ok) {
-          qrData = await qrResponse.json()
+          const qrData = await qrResponse.json()
+          qrCodeUuid = qrData.id
           console.log('QR scan logged successfully')
         }
       } catch (err) {
@@ -560,19 +561,25 @@ onMounted(async () => {
   }
 
   // Load layout from API if QR code is provided
-  if (qrCode && qrData) {
+  if (qrCode) {
     try {
-    // 이미 위에서 가져온 qrData 재사용 (중복 API 호출 방지)
-    const fetchedQrCodeId = qrData.id
+    // 새로운 by-code 엔드포인트 사용 (QR 코드 문자열로 직접 레이아웃 조회)
+    // 기존 qrCodeUuid가 있으면 UUID 방식 사용, 없으면 by-code 방식 사용
+    const layoutEndpoint = qrCodeUuid
+      ? `${API_URL}/api/landingpage/layout/${qrCodeUuid}`
+      : `${API_URL}/api/landingpage/layout/by-code/${encodeURIComponent(qrCode)}`
 
     // Fetch layout from API
-    const layoutResponse = await fetch(`${API_URL}/api/landingpage/layout/${fetchedQrCodeId}`)
+    const layoutResponse = await fetch(layoutEndpoint)
     if (!layoutResponse.ok) {
       console.error('Failed to fetch layout data')
       return
     }
 
     const layoutData = await layoutResponse.json()
+
+    // 레이아웃 응답에서 QR 코드 UUID 추출 (게임 설정 로드에 사용)
+    const layoutQrCodeId = layoutData.qrCodeId || qrCodeUuid
 
     // Parse blocks from API response
     if (layoutData.blocksJson) {
@@ -605,7 +612,7 @@ onMounted(async () => {
 
     // Load game settings and update games_carousel block (using public endpoint - no auth required)
     try {
-      const gameSettings = await gameSettingsService.getGameSettingsPublic(fetchedQrCodeId)
+      const gameSettings = await gameSettingsService.getGameSettingsPublic(layoutQrCodeId)
       const gamesCarouselBlock = blocks.value.find(b => b.type === 'games_carousel')
 
       if (gamesCarouselBlock && gamesCarouselBlock.data) {

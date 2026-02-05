@@ -769,6 +769,39 @@
                 한 바퀴 도는 데 {{ editForm.speed || 15 }}초 소요
               </p>
             </div>
+
+            <!-- 여백 설정 -->
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">위 여백</label>
+                <div class="padding-input-wrapper">
+                  <input
+                    type="number"
+                    class="form-input padding-input"
+                    v-model.number="editForm.paddingTop"
+                    min="0"
+                    max="50"
+                    step="2"
+                  />
+                  <span class="padding-unit">px</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">아래 여백</label>
+                <div class="padding-input-wrapper">
+                  <input
+                    type="number"
+                    class="form-input padding-input"
+                    v-model.number="editForm.paddingBottom"
+                    min="0"
+                    max="50"
+                    step="2"
+                  />
+                  <span class="padding-unit">px</span>
+                </div>
+              </div>
+            </div>
+
             <div class="marquee-preview-box">
               <label class="form-label">미리보기</label>
               <div
@@ -1297,7 +1330,9 @@ function getDefaultBlockData(type: BlockType): any {
         textColor: '#ffffff',
         speed: 15,
         imageUrl: '',
-        contentType: 'text' // 'text' | 'image' | 'both'
+        contentType: 'text', // 'text' | 'image' | 'both'
+        paddingTop: 10,
+        paddingBottom: 10
       }
     default:
       return {}
@@ -3122,6 +3157,23 @@ select.form-input {
 .color-value {
   font-size: 13px;
   font-family: monospace;
+  color: #666;
+}
+
+/* 여백 입력 스타일 */
+.padding-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.padding-input {
+  width: 80px;
+  text-align: center;
+}
+
+.padding-unit {
+  font-size: 13px;
   color: #666;
 }
 

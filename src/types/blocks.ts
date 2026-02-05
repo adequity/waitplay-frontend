@@ -141,6 +141,9 @@ export interface MarqueeBlockData {
   // 이미지 배너 옵션
   imageUrl?: string // 배너 이미지 URL (권장: 1200x80px, 가로로 긴 형태)
   contentType: 'text' | 'image' | 'both' // 콘텐츠 타입
+  // 여백 옵션
+  paddingTop?: number // 위 여백 (px, 기본값: 10)
+  paddingBottom?: number // 아래 여백 (px, 기본값: 10)
 }
 
 // Base Block Interface

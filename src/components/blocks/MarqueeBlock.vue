@@ -3,7 +3,9 @@
     class="marquee-block"
     :style="{
       backgroundColor: data.backgroundColor || '#ff6b6b',
-      color: data.textColor || '#ffffff'
+      color: data.textColor || '#ffffff',
+      paddingTop: `${data.paddingTop ?? 10}px`,
+      paddingBottom: `${data.paddingBottom ?? 10}px`
     }"
   >
     <div class="marquee-container">
@@ -57,6 +59,8 @@ interface MarqueeData {
   speed?: number // 초 단위 (낮을수록 빠름)
   imageUrl?: string
   contentType?: 'text' | 'image' | 'both'
+  paddingTop?: number // 위 여백 (px)
+  paddingBottom?: number // 아래 여백 (px)
 }
 
 const props = defineProps<{
@@ -73,7 +77,6 @@ const showImage = computed(() => contentType.value === 'image' || contentType.va
 .marquee-block {
   width: 100%;
   overflow: hidden;
-  padding: 10px 0;
   position: sticky;
   top: 0;
   z-index: 100;
