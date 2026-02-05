@@ -446,12 +446,15 @@ const formatDate = (dateString?: string) => {
 }
 
 // BGM Functions
-const initBgm = () => {
+const preloadBgm = () => {
   if (!bgmUrl.value || bgmAudio.value) return
 
+  // 오디오 미리 로드 (사용자 인터랙션 전에 준비)
   bgmAudio.value = new Audio(bgmUrl.value)
   bgmAudio.value.loop = true
   bgmAudio.value.volume = 0.5
+  bgmAudio.value.preload = 'auto' // 자동 프리로드
+  bgmAudio.value.load() // 즉시 로드 시작
 }
 
 const playBgm = async () => {
@@ -484,7 +487,7 @@ const handleFirstInteraction = () => {
   if (isBgmEnabled.value || !bgmUrl.value) return
 
   isBgmEnabled.value = true
-  initBgm()
+  // 오디오가 미리 로드되어 있으므로 즉시 재생
   playBgm()
 
   // 모든 이벤트 리스너 제거 (한 번만 실행)
@@ -604,10 +607,12 @@ onMounted(async () => {
       const theme = JSON.parse(layoutData.themeJson)
       pageTheme.value = theme
 
-      // BGM URL 로드
+      // BGM URL 로드 및 미리 로드
       if (theme.bgmUrl) {
         bgmUrl.value = theme.bgmUrl
         console.log('BGM URL loaded:', theme.bgmUrl)
+        // 사용자 인터랙션 전에 오디오 미리 로드 (즉시 재생 준비)
+        preloadBgm()
       }
     }
 
