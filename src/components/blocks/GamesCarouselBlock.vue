@@ -53,6 +53,7 @@ import type { GamesCarouselBlockData } from '@/types/blocks'
 interface Props {
   data: GamesCarouselBlockData
   qrCodeId?: string
+  isPreview?: boolean // 편집기 미리보기 모드
 }
 
 interface LeaderboardEntry {
@@ -146,7 +147,10 @@ async function loadAllLeaderboards() {
 }
 
 onMounted(() => {
-  loadAllLeaderboards()
+  // 미리보기 모드에서는 API 호출 스킵 (404 에러 방지)
+  if (!props.isPreview) {
+    loadAllLeaderboards()
+  }
 })
 
 const allowedGames = computed(() => {

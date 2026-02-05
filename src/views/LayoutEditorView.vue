@@ -167,6 +167,7 @@
                 :is="getBlockComponent(block.type)"
                 :data="block.data"
                 :qrCodeId="qrCodeId"
+                :isPreview="true"
               />
 
               <!-- Footer -->

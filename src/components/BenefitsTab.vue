@@ -112,8 +112,12 @@
             <button class="btn-add" @click="addStep(game)">
               <IconBase name="plus" /> 단계 추가
             </button>
-            <button class="btn-save" @click="saveGameBenefits(game)">
-              저장
+            <button
+              class="btn-save"
+              @click="saveGameBenefits(game)"
+              :disabled="saving[game.type]"
+            >
+              {{ saving[game.type] ? '저장 중...' : '저장' }}
             </button>
           </div>
         </div>
@@ -131,6 +135,7 @@ import IconBase from '@/components/IconBase.vue'
 
 // Interfaces
 interface BenefitStep {
+  id?: string
   name: string
   minScore: number
   maxScore: number
@@ -148,6 +153,7 @@ interface GameBenefit {
 const authStore = useAuthStore()
 const gamesList = ref<GameBenefit[]>([])
 const loading = ref(false)
+const saving = ref<Record<string, boolean>>({})
 const collapsedCards = ref<Record<string, boolean>>({})
 
 // Computed property for enabled games only
@@ -176,16 +182,42 @@ async function loadGameSettings() {
     const qrCodeId = authStore.user?.qrCodeId
     if (!qrCodeId) return
 
-    // Load actual settings
-    const settings = await gameSettingsService.getGameSettings(qrCodeId)
-    
-    gamesList.value = Object.entries(gameDefinitions).map(([type, def]) => ({
-      type,
-      name: def.name,
-      icon: def.icon,
-      enabled: settings.enabledGames.includes(type),
-      steps: JSON.parse(JSON.stringify(defaultSteps)) 
-    }))
+    // Load game settings and existing benefits in parallel
+    const [settings, existingBenefits] = await Promise.all([
+      gameSettingsService.getGameSettings(qrCodeId),
+      benefitsService.getBenefits(qrCodeId)
+    ])
+
+    gamesList.value = Object.entries(gameDefinitions).map(([type, def]) => {
+      // Find existing benefits for this game type
+      const gameBenefits = existingBenefits
+        .filter(b => b.gameType === type)
+        .sort((a, b) => a.requiredScore - b.requiredScore)
+
+      // Convert API benefits to steps format
+      const steps: BenefitStep[] = gameBenefits.length > 0
+        ? gameBenefits.map((b, index, arr) => {
+            const nextBenefit = arr[index + 1]
+            return {
+              id: b.id,
+              name: b.title,
+              minScore: b.requiredScore,
+              maxScore: nextBenefit?.requiredScore
+                ? nextBenefit.requiredScore - 1
+                : b.requiredScore + 3,
+              reward: b.description || ''
+            }
+          })
+        : JSON.parse(JSON.stringify(defaultSteps))
+
+      return {
+        type,
+        name: def.name,
+        icon: def.icon,
+        enabled: settings.enabledGames.includes(type),
+        steps
+      }
+    })
 
   } catch (error) {
     console.error('Failed to load game settings:', error)
@@ -221,10 +253,57 @@ function applyTemplate(game: GameBenefit) {
 }
 
 async function saveGameBenefits(game: GameBenefit) {
-  // TODO: Call API to save steps
-  console.log('Saving benefits for', game.type, game.steps)
-  // Here you would typically call benefitsService.updateBenefits(...)
-  alert(`${game.name} 혜택 설정이 저장되었습니다.`)
+  const qrCodeId = authStore.user?.qrCodeId
+  if (!qrCodeId) {
+    alert('QR 코드 정보를 찾을 수 없습니다.')
+    return
+  }
+
+  saving.value[game.type] = true
+
+  try {
+    // Get existing benefits for this game to compare
+    const existingBenefits = await benefitsService.getBenefitsByGame(qrCodeId, game.type)
+    const existingIds = new Set(existingBenefits.map(b => b.id))
+    const currentIds = new Set(game.steps.filter(s => s.id).map(s => s.id))
+
+    // Delete benefits that were removed
+    for (const existing of existingBenefits) {
+      if (!currentIds.has(existing.id)) {
+        await benefitsService.deleteBenefit(existing.id)
+      }
+    }
+
+    // Create or update each step
+    for (const step of game.steps) {
+      if (step.id && existingIds.has(step.id)) {
+        // Update existing benefit
+        await benefitsService.updateBenefit(step.id, {
+          title: step.name,
+          description: step.reward,
+          requiredScore: step.minScore
+        })
+      } else {
+        // Create new benefit
+        const newBenefit = await benefitsService.createBenefit(qrCodeId, {
+          gameType: game.type,
+          title: step.name,
+          description: step.reward,
+          requiredScore: step.minScore,
+          isActive: true
+        })
+        // Update local step with new ID
+        step.id = newBenefit.id
+      }
+    }
+
+    alert(`${game.name} 혜택 설정이 저장되었습니다.`)
+  } catch (error) {
+    console.error('Failed to save benefits:', error)
+    alert('혜택 저장에 실패했습니다. 다시 시도해주세요.')
+  } finally {
+    saving.value[game.type] = false
+  }
 }
 
 function goToGamesTab() {
@@ -527,7 +606,8 @@ onMounted(() => {
   border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 113, 227, 0.3); transition: 0.2s;
 }
-.btn-save:hover { background: #0077ed; transform: translateY(-1px); }
+.btn-save:hover:not(:disabled) { background: #0077ed; transform: translateY(-1px); }
+.btn-save:disabled { background: #86868b; cursor: not-allowed; box-shadow: none; }
 
 /* Responsive */
 @media (max-width: 1200px) {

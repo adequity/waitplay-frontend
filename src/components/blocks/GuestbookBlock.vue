@@ -119,6 +119,7 @@ import type { GuestbookBlockData } from '@/types/blocks'
 interface Props {
   data: GuestbookBlockData
   qrCodeId: string
+  isPreview?: boolean // 편집기 미리보기 모드
 }
 
 const props = defineProps<Props>()
@@ -153,8 +154,10 @@ onMounted(async () => {
     initCanvas()
   }
 
-  // 기존 방명록 데이터 로드
-  await loadMessages()
+  // 미리보기 모드에서는 API 호출 스킵 (404 에러 방지)
+  if (!props.isPreview) {
+    await loadMessages()
+  }
 })
 
 // 방명록 메시지 로드
