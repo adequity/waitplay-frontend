@@ -1689,44 +1689,63 @@ async function uploadAudio(file: File): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)
 
-  try {
-    // 먼저 오디오 전용 엔드포인트 시도
-    const response = await fetch(`${API_BASE_URL}/api/FileUpload/audio`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      },
-      body: formData
-    })
+  const endpoints = [
+    '/api/FileUpload/audio',  // 1순위: 오디오 전용 엔드포인트
+    '/api/FileUpload/file',   // 2순위: 범용 파일 엔드포인트
+    '/api/FileUpload/image'   // 3순위: 이미지 엔드포인트 (임시 해결책)
+  ]
 
-    if (response.ok) {
-      const data = await response.json()
-      return data.fileUrl
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`
+        },
+        body: formData
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log(`[uploadAudio] Success with endpoint: ${endpoint}`)
+        return data.fileUrl
+      }
+
+      // 405 Method Not Allowed는 다음 엔드포인트 시도
+      if (response.status === 405) {
+        console.log(`[uploadAudio] ${endpoint} returned 405, trying next...`)
+        continue
+      }
+
+      // 400 Bad Request (파일 타입 불일치 등)는 다음 엔드포인트 시도
+      if (response.status === 400) {
+        console.log(`[uploadAudio] ${endpoint} returned 400, trying next...`)
+        continue
+      }
+
+      // 401/403은 인증 문제이므로 바로 에러
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('로그인이 필요합니다.')
+      }
+
+      // 413은 파일 크기 문제
+      if (response.status === 413) {
+        throw new Error('파일 크기가 너무 큽니다.')
+      }
+    } catch (error) {
+      // TypeError는 네트워크 에러
+      if (error instanceof TypeError) {
+        throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.')
+      }
+      // 다른 에러는 그대로 전달
+      if (error instanceof Error && error.message !== '') {
+        throw error
+      }
     }
-
-    // 범용 파일 업로드 엔드포인트로 폴백 시도
-    const fallbackResponse = await fetch(`${API_BASE_URL}/api/FileUpload/file`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      },
-      body: formData
-    })
-
-    if (fallbackResponse.ok) {
-      const data = await fallbackResponse.json()
-      return data.fileUrl
-    }
-
-    // 모든 시도 실패
-    throw new Error('서버에서 오디오 업로드를 지원하지 않습니다. 관리자에게 문의하세요.')
-  } catch (error) {
-    // 네트워크 에러나 서버 미구현 시
-    if (error instanceof TypeError) {
-      throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.')
-    }
-    throw error
   }
+
+  // 모든 시도 실패
+  throw new Error('서버에서 오디오 업로드를 지원하지 않습니다. 관리자에게 문의하세요.')
 }
 
 // BGM 파일 선택 핸들러
