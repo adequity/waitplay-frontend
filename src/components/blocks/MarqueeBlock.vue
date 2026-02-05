@@ -4,8 +4,8 @@
     :style="{
       backgroundColor: data.backgroundColor || '#ff6b6b',
       color: data.textColor || '#ffffff',
-      paddingTop: `${data.paddingTop ?? 10}px`,
-      paddingBottom: `${data.paddingBottom ?? 10}px`
+      marginTop: `${data.paddingTop ?? 5}px`,
+      marginBottom: `${data.paddingBottom ?? 5}px`
     }"
   >
     <div class="marquee-container">

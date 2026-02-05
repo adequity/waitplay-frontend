@@ -770,32 +770,32 @@
               </p>
             </div>
 
-            <!-- 여백 설정 -->
+            <!-- 블록 간 여백 설정 -->
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">위 여백</label>
+                <label class="form-label">위쪽 블록과 간격</label>
                 <div class="padding-input-wrapper">
                   <input
                     type="number"
                     class="form-input padding-input"
                     v-model.number="editForm.paddingTop"
                     min="0"
-                    max="50"
-                    step="2"
+                    max="100"
+                    step="5"
                   />
                   <span class="padding-unit">px</span>
                 </div>
               </div>
               <div class="form-group">
-                <label class="form-label">아래 여백</label>
+                <label class="form-label">아래쪽 블록과 간격</label>
                 <div class="padding-input-wrapper">
                   <input
                     type="number"
                     class="form-input padding-input"
                     v-model.number="editForm.paddingBottom"
                     min="0"
-                    max="50"
-                    step="2"
+                    max="100"
+                    step="5"
                   />
                   <span class="padding-unit">px</span>
                 </div>
@@ -1331,8 +1331,8 @@ function getDefaultBlockData(type: BlockType): any {
         speed: 15,
         imageUrl: '',
         contentType: 'text', // 'text' | 'image' | 'both'
-        paddingTop: 10,
-        paddingBottom: 10
+        paddingTop: 5, // 블록 간 위쪽 여백
+        paddingBottom: 5 // 블록 간 아래쪽 여백
       }
     default:
       return {}
@@ -1435,10 +1435,10 @@ async function editBlock(block: Block) {
       editForm.value.speed = 15
     }
     if (editForm.value.paddingTop === undefined || editForm.value.paddingTop === null) {
-      editForm.value.paddingTop = 10
+      editForm.value.paddingTop = 5
     }
     if (editForm.value.paddingBottom === undefined || editForm.value.paddingBottom === null) {
-      editForm.value.paddingBottom = 10
+      editForm.value.paddingBottom = 5
     }
     if (!editForm.value.contentType) {
       editForm.value.contentType = 'text'
