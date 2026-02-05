@@ -479,17 +479,26 @@ const toggleBgm = () => {
   }
 }
 
-// 첫 스크롤 시 BGM 활성화 (모바일 자동재생 정책 우회)
-const handleFirstScroll = () => {
+// 첫 사용자 인터랙션 시 BGM 활성화 (모바일 자동재생 정책 우회)
+const handleFirstInteraction = () => {
   if (isBgmEnabled.value || !bgmUrl.value) return
 
   isBgmEnabled.value = true
   initBgm()
   playBgm()
 
-  // 이벤트 리스너 제거 (한 번만 실행)
-  window.removeEventListener('scroll', handleFirstScroll)
-  window.removeEventListener('touchmove', handleFirstScroll)
+  // 모든 이벤트 리스너 제거 (한 번만 실행)
+  removeInteractionListeners()
+}
+
+// 이벤트 리스너 제거 함수
+const removeInteractionListeners = () => {
+  window.removeEventListener('scroll', handleFirstInteraction)
+  window.removeEventListener('touchstart', handleFirstInteraction)
+  window.removeEventListener('touchmove', handleFirstInteraction)
+  window.removeEventListener('click', handleFirstInteraction)
+  window.removeEventListener('keydown', handleFirstInteraction)
+  window.removeEventListener('wheel', handleFirstInteraction)
 }
 
 // Watch for theme changes and update body background
@@ -652,10 +661,15 @@ onMounted(async () => {
     }
   }
 
-  // BGM 스크롤 이벤트 리스너 등록 (bgmUrl이 있을 때만)
+  // BGM 사용자 인터랙션 이벤트 리스너 등록 (bgmUrl이 있을 때만)
+  // 다양한 인터랙션에 즉시 반응하도록 여러 이벤트 등록
   if (bgmUrl.value) {
-    window.addEventListener('scroll', handleFirstScroll, { passive: true })
-    window.addEventListener('touchmove', handleFirstScroll, { passive: true })
+    window.addEventListener('scroll', handleFirstInteraction, { passive: true })
+    window.addEventListener('touchstart', handleFirstInteraction, { passive: true })
+    window.addEventListener('touchmove', handleFirstInteraction, { passive: true })
+    window.addEventListener('click', handleFirstInteraction, { passive: true })
+    window.addEventListener('keydown', handleFirstInteraction, { passive: true })
+    window.addEventListener('wheel', handleFirstInteraction, { passive: true })
   }
 })
 
@@ -669,8 +683,7 @@ onUnmounted(() => {
   }
 
   // 이벤트 리스너 제거
-  window.removeEventListener('scroll', handleFirstScroll)
-  window.removeEventListener('touchmove', handleFirstScroll)
+  removeInteractionListeners()
 })
 </script>
 
