@@ -529,6 +529,7 @@ const formatDate = (dateString: string): string => {
 /* 방명록 작성 버튼 */
 .write-section {
   margin-bottom: 2rem;
+  text-align: center;
 }
 
 .write-btn {
@@ -560,7 +561,7 @@ const formatDate = (dateString: string): string => {
 
 /* 커스텀 버튼 이미지 */
 .write-btn-custom {
-  width: 100%;
+  display: inline-block;
   padding: 0;
   background: transparent;
   border: none;
@@ -578,7 +579,7 @@ const formatDate = (dateString: string): string => {
 }
 
 .custom-button-image {
-  width: 100%;
+  max-width: 100%;
   max-height: 100px;
   object-fit: contain;
   display: block;
