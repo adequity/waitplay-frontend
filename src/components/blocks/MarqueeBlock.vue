@@ -4,16 +4,16 @@
     :style="{
       backgroundColor: data.backgroundColor || '#ff6b6b',
       color: data.textColor || '#ffffff',
-      marginTop: `${data.paddingTop ?? 5}px`,
-      marginBottom: `${data.paddingBottom ?? 5}px`,
-      padding: `${data.innerPadding ?? 8}px 0`
+      marginTop: `${paddingTop}px`,
+      marginBottom: `${paddingBottom}px`,
+      padding: `${innerPadding}px 0`
     }"
   >
     <div class="marquee-container">
       <div
         class="marquee-content"
         :style="{
-          animationDuration: `${data.speed || 15}s`
+          animationDuration: `${speed}s`
         }"
       >
         <!-- 첫 번째 콘텐츠 -->
@@ -29,7 +29,7 @@
           <span
             v-if="showText"
             class="marquee-text"
-            :style="{ fontSize: `${data.fontSize || 14}px` }"
+            :style="{ fontSize: `${fontSize}px` }"
           >
             <span v-if="data.emoji" class="marquee-emoji">{{ data.emoji }}</span>
             {{ data.text || '공지사항을 입력하세요' }}
@@ -46,7 +46,7 @@
           <span
             v-if="showText"
             class="marquee-text"
-            :style="{ fontSize: `${data.fontSize || 14}px` }"
+            :style="{ fontSize: `${fontSize}px` }"
           >
             <span v-if="data.emoji" class="marquee-emoji">{{ data.emoji }}</span>
             {{ data.text || '공지사항을 입력하세요' }}
@@ -65,18 +65,32 @@ interface MarqueeData {
   emoji?: string
   backgroundColor?: string
   textColor?: string
-  speed?: number // 초 단위 (낮을수록 빠름)
+  speed?: number | string // 초 단위 (낮을수록 빠름)
   imageUrl?: string
   contentType?: 'text' | 'image' | 'both'
-  paddingTop?: number // 블록 간 위 여백 (px)
-  paddingBottom?: number // 블록 간 아래 여백 (px)
-  fontSize?: number // 글자 크기 (px)
-  innerPadding?: number // 내부 상하 여백 (px)
+  paddingTop?: number | string // 블록 간 위 여백 (px)
+  paddingBottom?: number | string // 블록 간 아래 여백 (px)
+  fontSize?: number | string // 글자 크기 (px)
+  innerPadding?: number | string // 내부 상하 여백 (px)
 }
 
 const props = defineProps<{
   data: MarqueeData
 }>()
+
+// 숫자 변환 헬퍼 함수
+const toNumber = (value: number | string | undefined, defaultValue: number): number => {
+  if (value === undefined || value === null || value === '') return defaultValue
+  const num = Number(value)
+  return isNaN(num) ? defaultValue : num
+}
+
+// 숫자 값들을 computed로 안전하게 변환
+const speed = computed(() => toNumber(props.data.speed, 15))
+const paddingTop = computed(() => toNumber(props.data.paddingTop, 5))
+const paddingBottom = computed(() => toNumber(props.data.paddingBottom, 5))
+const fontSize = computed(() => toNumber(props.data.fontSize, 14))
+const innerPadding = computed(() => toNumber(props.data.innerPadding, 8))
 
 // 콘텐츠 타입에 따른 표시 여부
 const contentType = computed(() => props.data.contentType || 'text')
