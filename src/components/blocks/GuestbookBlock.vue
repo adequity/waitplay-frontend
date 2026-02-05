@@ -1,5 +1,13 @@
 <template>
-  <div class="guestbook-block" :style="{ '--text-color': data.textColor || '#374151' }">
+  <div
+    class="guestbook-block"
+    :style="{
+      '--text-color': data.textColor || '#374151',
+      backgroundImage: data.backgroundImageUrl ? `url(${data.backgroundImageUrl})` : 'none',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center'
+    }"
+  >
     <h2 class="guestbook-title">{{ data.title }}</h2>
 
     <!-- 방명록 작성 버튼 (로그인한 사용자만) -->

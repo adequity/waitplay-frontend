@@ -608,6 +608,24 @@
               <label class="form-label">최대 글자 수</label>
               <input type="number" class="form-input" v-model="editForm.maxMessageLength" placeholder="200">
             </div>
+
+            <!-- 배경 이미지 업로드 -->
+            <div class="form-group">
+              <label class="form-label">배경 이미지 (선택)</label>
+              <p class="form-hint">방명록 영역의 배경 이미지를 설정합니다.</p>
+              <input type="file" class="form-input" @change="handleGuestbookBackgroundImageUpload" accept="image/*" style="margin-bottom: 8px;">
+              <div v-if="editForm.backgroundImageUrl" class="background-preview">
+                <img
+                  :src="editForm.backgroundImageUrl"
+                  alt="배경 미리보기"
+                  class="background-preview-image"
+                />
+                <button type="button" class="remove-button-image" @click="editForm.backgroundImageUrl = ''">
+                  배경 제거
+                </button>
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">버튼 이미지 (선택)</label>
               <p class="form-hint">커스텀 버튼 이미지를 업로드하세요. 권장: 가로로 긴 형태, 투명 PNG</p>
@@ -1475,6 +1493,13 @@ async function editBlock(block: Block) {
     }
   }
 
+  // Ensure guestbook block has default values
+  if (block.type === 'guestbook') {
+    if (!editForm.value.buttonImageScale) {
+      editForm.value.buttonImageScale = 1
+    }
+  }
+
   // Convert ISO date to datetime-local format for countdown blocks
   if (block.type === 'countdown' && editForm.value.targetDate) {
     // ISO format: 2024-12-17T12:00:00.000Z
@@ -1745,6 +1770,19 @@ async function handleGuestbookButtonImageUpload(event: Event) {
     } catch (error) {
       console.error('Button image upload failed:', error)
       alert('버튼 이미지 업로드에 실패했습니다.')
+    }
+  }
+}
+
+async function handleGuestbookBackgroundImageUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    try {
+      const url = await uploadImage(input.files[0])
+      editForm.value.backgroundImageUrl = url
+    } catch (error) {
+      console.error('Background image upload failed:', error)
+      alert('배경 이미지 업로드에 실패했습니다.')
     }
   }
 }
@@ -3096,6 +3134,23 @@ select.form-input {
 
 .remove-button-image:hover {
   background: #fff5f5;
+}
+
+/* 방명록 배경 이미지 미리보기 */
+.background-preview {
+  margin-top: 12px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.background-preview-image {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e5ea;
 }
 
 .bgm-preview-section {
