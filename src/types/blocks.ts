@@ -91,12 +91,6 @@ export interface PopularMenuBlockData {
   items: MenuItem[]
 }
 
-// Text Block
-export interface TextBlockData {
-  content: string
-  style: 'normal' | 'callout' | 'quote'
-}
-
 // Image Block
 export interface ImageBlockData {
   imageUrl: string
@@ -186,11 +180,6 @@ export interface PopularMenuBlock extends BaseBlock {
   data: PopularMenuBlockData
 }
 
-export interface TextBlock extends BaseBlock {
-  type: 'text'
-  data: TextBlockData
-}
-
 export interface ImageBlock extends BaseBlock {
   type: 'image'
   data: ImageBlockData
@@ -219,7 +208,6 @@ export type Block =
   | VideoGridBlock
   | GamesCarouselBlock
   | PopularMenuBlock
-  | TextBlock
   | ImageBlock
   | CountdownBlock
   | GuestbookBlock

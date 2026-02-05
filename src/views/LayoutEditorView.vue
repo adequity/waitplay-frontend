@@ -290,7 +290,6 @@
             <ul>
               <li>저작권에 주의하여 음원을 사용하세요.</li>
               <li>용량이 큰 파일은 로딩 시간이 길어질 수 있습니다.</li>
-              <li>설정 후 상단의 <strong>저장</strong> 버튼을 눌러야 적용됩니다.</li>
             </ul>
           </div>
         </div>
@@ -413,42 +412,6 @@
             </div>
           </template>
 
-          <!-- Text Edit -->
-          <template v-if="editingBlock.type === 'text'">
-            <div class="form-group">
-              <label class="form-label">스타일</label>
-              <div class="style-selector">
-                <button
-                  type="button"
-                  :class="['style-btn', { active: editForm.style === 'normal' }]"
-                  @click="editForm.style = 'normal'"
-                >
-                  <span class="style-icon">T</span>
-                  <span class="style-name">기본</span>
-                </button>
-                <button
-                  type="button"
-                  :class="['style-btn', { active: editForm.style === 'callout' }]"
-                  @click="editForm.style = 'callout'"
-                >
-                  <span class="style-icon">!</span>
-                  <span class="style-name">강조</span>
-                </button>
-                <button
-                  type="button"
-                  :class="['style-btn', { active: editForm.style === 'quote' }]"
-                  @click="editForm.style = 'quote'"
-                >
-                  <span class="style-icon">"</span>
-                  <span class="style-name">인용</span>
-                </button>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">텍스트 내용</label>
-              <textarea class="form-textarea" v-model="editForm.content" placeholder="내용을 입력하세요"></textarea>
-            </div>
-          </template>
 
           <!-- Image Edit -->
           <template v-if="editingBlock.type === 'image'">
@@ -985,7 +948,6 @@ import SocialLinksBlock from '@/components/blocks/SocialLinksBlock.vue'
 import VideoGridBlock from '@/components/blocks/VideoGridBlock.vue'
 import GamesCarouselBlock from '@/components/blocks/GamesCarouselBlock.vue'
 import PopularMenuBlock from '@/components/blocks/PopularMenuBlock.vue'
-import TextBlock from '@/components/blocks/TextBlock.vue'
 import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
 import GuestbookBlock from '@/components/blocks/GuestbookBlock.vue'
@@ -1038,7 +1000,6 @@ const availableBlockTypes = [
   { type: 'video_grid', icon: 'V', name: '영상', description: 'YouTube Shorts' },
   { type: 'games_carousel', icon: 'G', name: '게임', description: '게임 캐러셀' },
   { type: 'popular_menu', icon: 'M', name: '메뉴', description: '인기 메뉴' },
-  { type: 'text', icon: 'T', name: '텍스트', description: '자유 텍스트' },
   { type: 'image', icon: 'I', name: '이미지', description: '이미지 추가' },
   { type: 'countdown', icon: 'C', name: '카운트다운', description: '이벤트 타이머' },
   { type: 'guestbook', icon: 'N', name: '방명록', description: '손글씨 방명록' }
@@ -1184,7 +1145,6 @@ function getBlockComponent(type: string): Component | string {
     video_grid: VideoGridBlock,
     games_carousel: GamesCarouselBlock,
     popular_menu: PopularMenuBlock,
-    text: TextBlock,
     image: ImageBlock,
     countdown: CountdownBlock,
     guestbook: GuestbookBlock,
@@ -1201,7 +1161,6 @@ function getBlockIcon(type: string): string {
     video_grid: 'V',
     games_carousel: 'G',
     popular_menu: 'M',
-    text: 'T',
     image: 'I',
     countdown: '⏱',
     guestbook: '✍',
@@ -1218,7 +1177,6 @@ function getBlockTitle(type: string): string {
     video_grid: '영상 그리드',
     games_carousel: '게임 캐러셀',
     popular_menu: '인기 메뉴',
-    text: '텍스트',
     image: '이미지',
     countdown: '카운트다운',
     guestbook: '방명록',
@@ -1342,8 +1300,6 @@ function getDefaultBlockData(type: BlockType): any {
       }
     case 'popular_menu':
       return { title: '인기 메뉴', subtitle: '', items: [] }
-    case 'text':
-      return { content: '', style: 'normal' }
     case 'image':
       return { imageUrl: '', caption: '', aspectRatio: '16:9' }
     case 'countdown':

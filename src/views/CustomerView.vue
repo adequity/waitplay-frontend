@@ -267,7 +267,6 @@ import SocialLinksBlock from '@/components/blocks/SocialLinksBlock.vue'
 import VideoGridBlock from '@/components/blocks/VideoGridBlock.vue'
 import GamesCarouselBlock from '@/components/blocks/GamesCarouselBlock.vue'
 import PopularMenuBlock from '@/components/blocks/PopularMenuBlock.vue'
-import TextBlock from '@/components/blocks/TextBlock.vue'
 import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import MarqueeBlock from '@/components/blocks/MarqueeBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
@@ -327,7 +326,6 @@ function getBlockComponent(type: string): Component | string {
     video_grid: VideoGridBlock,
     games_carousel: GamesCarouselBlock,
     popular_menu: PopularMenuBlock,
-    text: TextBlock,
     image: ImageBlock,
     countdown: CountdownBlock,
     guestbook: GuestbookBlock,

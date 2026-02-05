@@ -4,47 +4,17 @@
 
     <!-- 그림판 작성 영역 (로그인한 사용자만) -->
     <div v-if="isAuthenticated" class="canvas-section">
-      <!-- 도구 모음 -->
-      <div class="tools-bar">
-        <div class="tool-group">
-          <button
-            v-for="color in colors"
-            :key="color"
-            @click="selectColor(color)"
-            :class="['color-btn', { active: selectedColor === color }]"
-            :style="{ backgroundColor: color }"
-          ></button>
-        </div>
-
-        <div class="tool-group">
-          <button
-            v-for="size in brushSizes"
-            :key="size"
-            @click="selectBrushSize(size)"
-            :class="['size-btn', { active: brushSize === size }]"
-          >
-            <div :style="{ width: size + 'px', height: size + 'px' }"></div>
-          </button>
-        </div>
-
-        <div class="tool-group action-buttons">
-          <button @click="clearCanvas" class="action-btn clear-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            지우기
-          </button>
-          <button @click="submitDrawing" :disabled="!hasDrawing" class="action-btn submit-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            완료
-          </button>
-        </div>
-      </div>
-
-      <!-- 캔버스 -->
+      <!-- 캔버스 (상단) -->
       <div class="canvas-container">
+        <div v-if="!hasDrawing" class="canvas-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+            <path d="M2 2l7.586 7.586"/>
+            <circle cx="11" cy="11" r="2"/>
+          </svg>
+          <span>여기에 그려주세요</span>
+        </div>
         <canvas
           ref="canvasRef"
           @mousedown="startDrawing"
@@ -56,6 +26,51 @@
           @touchend.prevent="stopDrawing"
           class="drawing-canvas"
         ></canvas>
+      </div>
+
+      <!-- 도구 모음 (하단) -->
+      <div class="tools-bar">
+        <div class="tools-row">
+          <!-- 색상 피커 -->
+          <div class="color-picker-wrapper">
+            <input
+              type="color"
+              v-model="selectedColor"
+              class="color-picker-input"
+              title="색상 선택"
+            />
+            <div class="color-preview" :style="{ backgroundColor: selectedColor }"></div>
+          </div>
+
+          <!-- 브러시 크기 슬라이더 -->
+          <div class="brush-slider-wrapper">
+            <input
+              type="range"
+              v-model.number="brushSize"
+              :min="minBrushSize"
+              :max="maxBrushSize"
+              step="1"
+              class="brush-slider"
+              title="브러시 크기"
+            />
+            <div class="brush-size-preview" :style="{ width: `${brushSize}px`, height: `${brushSize}px` }"></div>
+          </div>
+
+          <!-- 지우기 버튼 -->
+          <button @click="clearCanvas" class="icon-btn clear-btn" title="지우기">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 완료 버튼 (전체 너비) -->
+        <button @click="submitDrawing" :disabled="!hasDrawing" class="submit-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          완료
+        </button>
       </div>
     </div>
 
@@ -135,8 +150,8 @@ const isDrawing = ref(false)
 const hasDrawing = ref(false)
 
 // 도구 설정
-const colors = ['#000000', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F']
-const brushSizes = [2, 4, 6, 8]
+const minBrushSize = 1
+const maxBrushSize = 20
 const selectedColor = ref('#000000')
 const brushSize = ref(4)
 
@@ -200,14 +215,6 @@ const initCanvas = () => {
       ctx.value.lineJoin = 'round'
     }
   }
-}
-
-const selectColor = (color: string) => {
-  selectedColor.value = color
-}
-
-const selectBrushSize = (size: number) => {
-  brushSize.value = size
 }
 
 const startDrawing = (e: MouseEvent) => {
@@ -434,122 +441,36 @@ const formatDate = (dateString: string): string => {
 /* 캔버스 작성 섹션 */
 .canvas-section {
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 1rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* 도구 모음 */
-.tools-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #f0f0f0;
-}
-
-.tool-group {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.color-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 3px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.color-btn.active {
-  border-color: #4ECDC4;
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.size-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 2px solid #e0e0e0;
-  background: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.size-btn.active {
-  border-color: #4ECDC4;
-  background: #f0fffe;
-}
-
-.size-btn div {
-  background: #333;
-  border-radius: 50%;
-}
-
-.action-buttons {
-  margin-left: auto;
-  gap: 0.75rem;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.clear-btn {
-  background: #f5f5f5;
-  color: #666;
-}
-
-.clear-btn:hover {
-  background: #e0e0e0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.submit-btn {
-  background: #4ECDC4;
-  color: white;
-}
-
-.submit-btn:hover:not(:disabled) {
-  background: #45b7b8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(78, 205, 196, 0.3);
-}
-
-.submit-btn:disabled {
-  background: #d1d5db;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* 캔버스 컨테이너 */
+/* 캔버스 컨테이너 (상단) */
 .canvas-container {
   width: 100%;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
   background: #fafafa;
+  position: relative;
+  margin-bottom: 1rem;
+  border: 2px solid #f0f0f0;
+}
+
+.canvas-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #9ca3af;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .drawing-canvas {
@@ -559,6 +480,172 @@ const formatDate = (dateString: string): string => {
   cursor: crosshair;
   touch-action: none;
   background: white;
+  position: relative;
+  z-index: 2;
+}
+
+/* 도구 모음 (하단) */
+.tools-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tools-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* 색상 피커 */
+.color-picker-wrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.color-picker-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.color-preview {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid #e5e7eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  transition: all 0.2s;
+}
+
+.color-picker-wrapper:hover .color-preview {
+  border-color: #4ECDC4;
+  transform: scale(1.05);
+}
+
+/* 브러시 크기 슬라이더 */
+.brush-slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.brush-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e5e7eb;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.brush-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #4ECDC4;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(78, 205, 196, 0.4);
+  transition: all 0.2s;
+}
+
+.brush-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(78, 205, 196, 0.5);
+}
+
+.brush-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #4ECDC4;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(78, 205, 196, 0.4);
+}
+
+.brush-size-preview {
+  min-width: 20px;
+  min-height: 20px;
+  max-width: 20px;
+  max-height: 20px;
+  background: currentColor;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.brush-size-preview::after {
+  content: '';
+  width: 100%;
+  height: 100%;
+  background: #374151;
+  border-radius: 50%;
+}
+
+/* 아이콘 버튼 */
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn.clear-btn {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.icon-btn.clear-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* 완료 버튼 */
+.submit-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #4ECDC4;
+  color: white;
+  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #3dbdb5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(78, 205, 196, 0.4);
+}
+
+.submit-btn:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* 로그인 유도 */
@@ -748,19 +835,39 @@ const formatDate = (dateString: string): string => {
     padding: 1.5rem 0.75rem;
   }
 
-  .tools-bar {
-    gap: 0.75rem;
+  .canvas-section {
+    padding: 0.875rem;
   }
 
-  .action-buttons {
-    width: 100%;
-    margin-left: 0;
-    justify-content: stretch;
+  .tools-row {
+    gap: 0.5rem;
   }
 
-  .action-btn {
-    flex: 1;
-    justify-content: center;
+  .color-picker-wrapper,
+  .color-preview {
+    width: 36px;
+    height: 36px;
+  }
+
+  .brush-slider {
+    height: 5px;
+  }
+
+  .brush-slider::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  .brush-size-preview {
+    min-width: 18px;
+    min-height: 18px;
+    max-width: 18px;
+    max-height: 18px;
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
   }
 
   .post-it-slide {
