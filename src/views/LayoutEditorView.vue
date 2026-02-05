@@ -288,14 +288,14 @@
           <div class="bgm-info-box">
             <strong>💡 안내</strong>
             <ul>
-              <li>모바일 브라우저 정책으로 인해 사용자가 스크롤해야 음악이 재생됩니다.</li>
-              <li>사용자는 화면의 음악 버튼으로 언제든 끄고 켤 수 있습니다.</li>
               <li>저작권에 주의하여 음원을 사용하세요.</li>
+              <li>용량이 큰 파일은 로딩 시간이 길어질 수 있습니다.</li>
+              <li>설정 후 상단의 <strong>저장</strong> 버튼을 눌러야 적용됩니다.</li>
             </ul>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeBgmModal">닫기</button>
+          <button class="btn-secondary" @click="closeBgmModal">확인</button>
         </div>
       </div>
     </div>
