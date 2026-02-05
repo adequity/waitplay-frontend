@@ -905,6 +905,7 @@ import { useAuthStore } from '@/stores/auth'
 import draggable from 'vuedraggable'
 import type { Block, BlockType } from '@/types/blocks'
 import gameSettingsService from '@/services/gameSettingsService'
+import apiClient from '@/services/api'
 
 // Import block components
 import HeaderBlock from '@/components/blocks/HeaderBlock.vue'
@@ -998,12 +999,10 @@ async function loadLandingPageSettings() {
   if (!qrCodeId.value) return
 
   try {
-    // QR 코드 UUID로 설정 조회 (QRManagement와 동일한 엔드포인트 사용)
-    const response = await fetch(`${API_BASE_URL}/api/landingpage/settings/${encodeURIComponent(qrCodeId.value)}`)
-    if (response.ok) {
-      landingPageSettings.value = await response.json()
-      console.log('Loaded landing page settings:', landingPageSettings.value)
-    }
+    // QR 코드 UUID로 설정 조회 (QRManagement와 동일하게 apiClient 사용)
+    const response = await apiClient.get(`/api/landingpage/settings/${encodeURIComponent(qrCodeId.value)}`)
+    landingPageSettings.value = response.data
+    console.log('Loaded landing page settings:', landingPageSettings.value)
   } catch {
     // 설정 로드 실패 시 조용히 처리 (기본값 사용)
   }
