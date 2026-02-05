@@ -22,6 +22,26 @@
       </p>
     </div>
 
+    <!-- BGM Toggle Button (스크롤로 활성화된 후에만 표시) -->
+    <button
+      v-if="isBgmEnabled && bgmUrl"
+      class="floating-bgm-btn"
+      @click="toggleBgm"
+      :aria-label="isBgmPlaying ? '배경음악 끄기' : '배경음악 켜기'"
+    >
+      <svg v-if="isBgmPlaying" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 음악 재생 중 아이콘 (스피커 + 파동) -->
+        <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 음악 꺼짐 아이콘 (스피커 + X) -->
+        <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+
     <!-- Floating Navigation Button -->
     <button class="floating-nav-btn" @click="toggleSidebar" aria-label="사이드바 열기/닫기">
       <svg
@@ -230,7 +250,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, type Component } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
@@ -249,6 +269,7 @@ import GamesCarouselBlock from '@/components/blocks/GamesCarouselBlock.vue'
 import PopularMenuBlock from '@/components/blocks/PopularMenuBlock.vue'
 import TextBlock from '@/components/blocks/TextBlock.vue'
 import ImageBlock from '@/components/blocks/ImageBlock.vue'
+import MarqueeBlock from '@/components/blocks/MarqueeBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
 import GuestbookBlock from '@/components/blocks/GuestbookBlock.vue'
 
@@ -258,6 +279,12 @@ const authStore = useAuthStore()
 
 // Blocks data (실제로는 API에서 가져와야 함)
 const blocks = ref<Block[]>([])
+
+// BGM (Background Music) state
+const bgmAudio = ref<HTMLAudioElement | null>(null)
+const isBgmPlaying = ref(false)
+const isBgmEnabled = ref(false) // 스크롤로 활성화되면 true
+const bgmUrl = ref<string>('') // API에서 로드될 BGM URL
 
 // Page theme - Default values (will be loaded from API)
 const pageTheme = ref<PageTheme>({
@@ -303,7 +330,8 @@ function getBlockComponent(type: string): Component | string {
     text: TextBlock,
     image: ImageBlock,
     countdown: CountdownBlock,
-    guestbook: GuestbookBlock
+    guestbook: GuestbookBlock,
+    marquee: MarqueeBlock
   }
   return components[type] || 'div'
 }
@@ -417,6 +445,53 @@ const formatDate = (dateString?: string) => {
   })
 }
 
+// BGM Functions
+const initBgm = () => {
+  if (!bgmUrl.value || bgmAudio.value) return
+
+  bgmAudio.value = new Audio(bgmUrl.value)
+  bgmAudio.value.loop = true
+  bgmAudio.value.volume = 0.5
+}
+
+const playBgm = async () => {
+  if (!bgmAudio.value || !bgmUrl.value) return
+
+  try {
+    await bgmAudio.value.play()
+    isBgmPlaying.value = true
+  } catch (error) {
+    console.warn('BGM 재생 실패:', error)
+  }
+}
+
+const pauseBgm = () => {
+  if (!bgmAudio.value) return
+  bgmAudio.value.pause()
+  isBgmPlaying.value = false
+}
+
+const toggleBgm = () => {
+  if (isBgmPlaying.value) {
+    pauseBgm()
+  } else {
+    playBgm()
+  }
+}
+
+// 첫 스크롤 시 BGM 활성화 (모바일 자동재생 정책 우회)
+const handleFirstScroll = () => {
+  if (isBgmEnabled.value || !bgmUrl.value) return
+
+  isBgmEnabled.value = true
+  initBgm()
+  playBgm()
+
+  // 이벤트 리스너 제거 (한 번만 실행)
+  window.removeEventListener('scroll', handleFirstScroll)
+  window.removeEventListener('touchmove', handleFirstScroll)
+}
+
 // Watch for theme changes and update body background
 watch(() => pageTheme.value.backgroundColor, (newBgColor) => {
   if (newBgColor) {
@@ -510,7 +585,14 @@ onMounted(async () => {
 
     // Parse theme from API response
     if (layoutData.themeJson) {
-      pageTheme.value = JSON.parse(layoutData.themeJson)
+      const theme = JSON.parse(layoutData.themeJson)
+      pageTheme.value = theme
+
+      // BGM URL 로드
+      if (theme.bgmUrl) {
+        bgmUrl.value = theme.bgmUrl
+        console.log('BGM URL loaded:', theme.bgmUrl)
+      }
     }
 
     // Update header block with latest API data
@@ -557,6 +639,26 @@ onMounted(async () => {
       console.error('Error loading layout from API:', error)
     }
   }
+
+  // BGM 스크롤 이벤트 리스너 등록 (bgmUrl이 있을 때만)
+  if (bgmUrl.value) {
+    window.addEventListener('scroll', handleFirstScroll, { passive: true })
+    window.addEventListener('touchmove', handleFirstScroll, { passive: true })
+  }
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  // BGM 정리
+  if (bgmAudio.value) {
+    bgmAudio.value.pause()
+    bgmAudio.value.src = ''
+    bgmAudio.value = null
+  }
+
+  // 이벤트 리스너 제거
+  window.removeEventListener('scroll', handleFirstScroll)
+  window.removeEventListener('touchmove', handleFirstScroll)
 })
 </script>
 
@@ -578,6 +680,35 @@ onMounted(async () => {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 12px;
   transition: color 0.3s ease;
+}
+
+/* BGM Toggle Button */
+.floating-bgm-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 6rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(240, 147, 251, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+
+.floating-bgm-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 30px rgba(240, 147, 251, 0.6);
+}
+
+.floating-bgm-btn:active {
+  transform: scale(0.95);
 }
 
 /* Floating Navigation Button */
@@ -1036,6 +1167,13 @@ onMounted(async () => {
 }
 
 @media (max-width: 640px) {
+  .floating-bgm-btn {
+    bottom: 1.5rem;
+    right: 5rem;
+    width: 44px;
+    height: 44px;
+  }
+
   .floating-nav-btn {
     bottom: 1.5rem;
     right: 1.5rem;

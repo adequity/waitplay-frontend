@@ -11,6 +11,7 @@ export type BlockType =
   | 'image'
   | 'countdown'
   | 'guestbook'
+  | 'marquee'
 
 // Header Block
 export interface HeaderBlockData {
@@ -129,6 +130,18 @@ export interface GuestbookBlockData {
   textColor?: string // hex color for guestbook text
 }
 
+// Marquee Block (전광판/티커)
+export interface MarqueeBlockData {
+  text: string
+  emoji?: string
+  backgroundColor: string
+  textColor: string
+  speed: number // 초 단위 (낮을수록 빠름)
+  // 이미지 배너 옵션
+  imageUrl?: string // 배너 이미지 URL (권장: 1200x80px, 가로로 긴 형태)
+  contentType: 'text' | 'image' | 'both' // 콘텐츠 타입
+}
+
 // Base Block Interface
 export interface BaseBlock {
   id: string
@@ -189,6 +202,11 @@ export interface GuestbookBlock extends BaseBlock {
   data: GuestbookBlockData
 }
 
+export interface MarqueeBlock extends BaseBlock {
+  type: 'marquee'
+  data: MarqueeBlockData
+}
+
 // Union type for all blocks
 export type Block =
   | HeaderBlock
@@ -201,6 +219,7 @@ export type Block =
   | ImageBlock
   | CountdownBlock
   | GuestbookBlock
+  | MarqueeBlock
 
 // Landing Page Theme
 export interface PageTheme {

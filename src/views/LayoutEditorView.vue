@@ -137,6 +137,17 @@
             <span style="font-size:12px; font-weight:600; color:#666;">배경색</span>
             <input type="color" v-model="pageTheme.backgroundColor" class="color-dot-input" />
           </div>
+          <div class="bgm-picker">
+            <button class="btn-bgm-settings" @click="showBgmModal = true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/>
+                <circle cx="18" cy="16" r="3"/>
+              </svg>
+              <span>BGM 설정</span>
+              <span v-if="pageTheme.bgmUrl" class="bgm-indicator">●</span>
+            </button>
+          </div>
         </div>
 
         <div class="preview-container" :class="previewDevice">
@@ -171,6 +182,122 @@
     </div>
 
     <!-- 4. Modals (Add / Edit) -->
+
+    <!-- BGM 설정 Modal -->
+    <div v-if="showBgmModal" class="modal-overlay active" @click="showBgmModal = false">
+      <div class="modal-card" @click.stop>
+        <div class="modal-header">
+          <h2>🎵 배경음악(BGM) 설정</h2>
+          <button class="btn-icon-close" @click="closeBgmModal">✕</button>
+        </div>
+        <div class="bgm-modal-content">
+          <!-- 입력 방식 선택 탭 -->
+          <div class="bgm-input-tabs">
+            <button
+              :class="['bgm-tab', { active: bgmInputType === 'file' }]"
+              @click="bgmInputType = 'file'"
+            >
+              📁 파일 업로드
+            </button>
+            <button
+              :class="['bgm-tab', { active: bgmInputType === 'url' }]"
+              @click="bgmInputType = 'url'"
+            >
+              🔗 URL 입력
+            </button>
+          </div>
+
+          <!-- 파일 업로드 방식 -->
+          <div v-if="bgmInputType === 'file'" class="form-group">
+            <label class="form-label">오디오 파일 (MP3, WAV, OGG)</label>
+            <div class="file-upload-area">
+              <input
+                type="file"
+                id="bgm-file-input"
+                accept="audio/mp3,audio/mpeg,audio/wav,audio/ogg,audio/x-m4a,.mp3,.wav,.ogg,.m4a"
+                @change="handleBgmFileUpload"
+                style="display: none;"
+              />
+              <label for="bgm-file-input" class="file-upload-label" :class="{ uploading: bgmFileUploading }">
+                <template v-if="bgmFileUploading">
+                  <span class="upload-spinner"></span>
+                  업로드 중...
+                </template>
+                <template v-else-if="pageTheme.bgmUrl && bgmFileName">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <circle cx="18" cy="16" r="3"/>
+                  </svg>
+                  <span class="file-name">{{ bgmFileName }}</span>
+                  <span class="change-text">클릭하여 변경</span>
+                </template>
+                <template v-else>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <span>클릭하여 오디오 파일 선택</span>
+                  <span class="file-hint">MP3, WAV, OGG, M4A (최대 10MB)</span>
+                </template>
+              </label>
+            </div>
+          </div>
+
+          <!-- URL 입력 방식 -->
+          <div v-else class="form-group">
+            <label class="form-label">음악 URL (MP3, WAV 등)</label>
+            <input
+              type="url"
+              class="form-input"
+              v-model="pageTheme.bgmUrl"
+              placeholder="https://example.com/music.mp3"
+            />
+            <p class="form-hint">
+              직접 링크 가능한 오디오 파일 URL을 입력하세요.
+            </p>
+          </div>
+
+          <div class="bgm-preview-section" v-if="pageTheme.bgmUrl">
+            <label class="form-label">미리듣기</label>
+            <div class="bgm-preview-controls">
+              <button
+                class="btn-preview"
+                @click="toggleBgmPreview"
+              >
+                <svg v-if="!isBgmPreviewing" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16"/>
+                  <rect x="14" y="4" width="4" height="16"/>
+                </svg>
+                {{ isBgmPreviewing ? '정지' : '재생' }}
+              </button>
+              <button
+                class="btn-remove-bgm"
+                @click="removeBgm"
+              >
+                BGM 제거
+              </button>
+            </div>
+          </div>
+
+          <div class="bgm-info-box">
+            <strong>💡 안내</strong>
+            <ul>
+              <li>모바일 브라우저 정책으로 인해 사용자가 스크롤해야 음악이 재생됩니다.</li>
+              <li>사용자는 화면의 음악 버튼으로 언제든 끄고 켤 수 있습니다.</li>
+              <li>저작권에 주의하여 음원을 사용하세요.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="closeBgmModal">닫기</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Add Block Modal -->
     <div v-if="showAddBlockModal" class="modal-overlay active" @click="showAddBlockModal = false">
@@ -329,21 +456,161 @@
             </div>
           </template>
 
+          <!-- Marquee Edit -->
+          <template v-if="editingBlock.type === 'marquee'">
+            <!-- 콘텐츠 타입 선택 -->
+            <div class="form-group">
+              <label class="form-label">콘텐츠 타입</label>
+              <div class="content-type-selector">
+                <button
+                  type="button"
+                  :class="['type-btn', { active: editForm.contentType === 'text' }]"
+                  @click="editForm.contentType = 'text'"
+                >
+                  텍스트만
+                </button>
+                <button
+                  type="button"
+                  :class="['type-btn', { active: editForm.contentType === 'image' }]"
+                  @click="editForm.contentType = 'image'"
+                >
+                  이미지만
+                </button>
+                <button
+                  type="button"
+                  :class="['type-btn', { active: editForm.contentType === 'both' }]"
+                  @click="editForm.contentType = 'both'"
+                >
+                  둘 다
+                </button>
+              </div>
+            </div>
+
+            <!-- 텍스트 입력 (text 또는 both 일 때) -->
+            <div v-if="editForm.contentType === 'text' || editForm.contentType === 'both'" class="form-group">
+              <label class="form-label">공지 텍스트</label>
+              <input
+                type="text"
+                class="form-input"
+                v-model="editForm.text"
+                placeholder="🎉 오늘의 특가! 아메리카노 50% 할인"
+              />
+            </div>
+
+            <!-- 이미지 업로드 (image 또는 both 일 때) -->
+            <div v-if="editForm.contentType === 'image' || editForm.contentType === 'both'" class="form-group">
+              <label class="form-label">배너 이미지</label>
+              <div class="marquee-image-upload">
+                <input
+                  type="file"
+                  id="marquee-image-input"
+                  accept="image/*"
+                  @change="handleMarqueeImageUpload"
+                  style="display: none;"
+                />
+                <label
+                  for="marquee-image-input"
+                  class="marquee-image-upload-label"
+                  :class="{ 'has-image': editForm.imageUrl }"
+                >
+                  <template v-if="editForm.imageUrl">
+                    <img :src="editForm.imageUrl" alt="배너 미리보기" class="marquee-image-preview" />
+                    <span class="change-overlay">클릭하여 변경</span>
+                  </template>
+                  <template v-else>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    <span>클릭하여 이미지 업로드</span>
+                  </template>
+                </label>
+                <button
+                  v-if="editForm.imageUrl"
+                  type="button"
+                  class="btn-remove-image"
+                  @click="editForm.imageUrl = ''"
+                >
+                  이미지 제거
+                </button>
+              </div>
+              <div class="image-spec-info">
+                <strong>권장 규격</strong>
+                <ul>
+                  <li>크기: <code>1200 x 80px</code> (가로로 긴 배너 형태)</li>
+                  <li>비율: <code>15:1</code></li>
+                  <li>형식: PNG, JPG, GIF, WebP</li>
+                  <li>용량: 500KB 이하 권장</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">배경색</label>
+                <div class="color-input-wrapper">
+                  <input type="color" v-model="editForm.backgroundColor" class="color-input" />
+                  <span class="color-value">{{ editForm.backgroundColor }}</span>
+                </div>
+              </div>
+              <div class="form-group" v-if="editForm.contentType !== 'image'">
+                <label class="form-label">글자색</label>
+                <div class="color-input-wrapper">
+                  <input type="color" v-model="editForm.textColor" class="color-input" />
+                  <span class="color-value">{{ editForm.textColor }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                스크롤 속도
+                <span class="speed-badge" :class="getSpeedClass(editForm.speed)">
+                  {{ getSpeedLabel(editForm.speed) }}
+                </span>
+              </label>
+              <input type="range" class="form-range" v-model.number="editForm.speed" min="5" max="30" step="1" />
+              <div class="range-labels">
+                <span>빠름</span>
+                <span>느림</span>
+              </div>
+              <p class="form-hint" style="margin-top: 4px;">
+                한 바퀴 도는 데 {{ editForm.speed || 15 }}초 소요
+              </p>
+            </div>
+            <div class="marquee-preview-box">
+              <label class="form-label">미리보기</label>
+              <div
+                class="marquee-preview"
+                :style="{
+                  backgroundColor: editForm.backgroundColor || '#ff6b6b',
+                  color: editForm.textColor || '#ffffff'
+                }"
+              >
+                <div class="marquee-preview-content">
+                  <img
+                    v-if="(editForm.contentType === 'image' || editForm.contentType === 'both') && editForm.imageUrl"
+                    :src="editForm.imageUrl"
+                    alt="배너"
+                    class="marquee-preview-image"
+                  />
+                  <span v-if="editForm.contentType === 'text' || editForm.contentType === 'both'" class="marquee-preview-text">
+                    {{ editForm.text || '공지사항을 입력하세요' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </template>
+
           <!-- Social Links Edit -->
           <template v-if="editingBlock.type === 'social_links'">
             <div class="form-group">
               <label class="form-label">SNS 링크 관리</label>
-              <div v-for="(link, index) in editForm.links" :key="index" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
-                <div style="flex: 0 0 40px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                  <span v-if="link.type === 'instagram'">📷</span>
-                  <span v-else-if="link.type === 'facebook'">👥</span>
-                  <span v-else-if="link.type === 'youtube'">▶️</span>
-                  <span v-else-if="link.type === 'twitter'">🐦</span>
-                  <span v-else-if="link.type === 'tiktok'">🎵</span>
-                  <span v-else-if="link.type === 'website'">🌐</span>
-                  <span v-else>🔗</span>
+              <div v-for="(link, index) in editForm.links" :key="index" class="sns-link-item">
+                <div class="sns-icon" :class="'sns-' + link.type">
+                  {{ getSnsIcon(link.type) }}
                 </div>
-                <select class="form-input" v-model="link.type" style="flex: 0 0 120px;">
+                <select class="form-input sns-select" v-model="link.type">
                   <option value="instagram">Instagram</option>
                   <option value="facebook">Facebook</option>
                   <option value="youtube">YouTube</option>
@@ -351,9 +618,9 @@
                   <option value="tiktok">TikTok</option>
                   <option value="website">Website</option>
                 </select>
-                <input type="text" class="form-input" v-model="link.url" placeholder="https://..." style="flex: 1;">
-                <button class="btn-icon delete" @click="editForm.links.splice(index, 1)" title="삭제">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <input type="text" class="form-input sns-url-input" v-model="link.url" placeholder="https://...">
+                <button class="btn-delete-sns" @click="editForm.links.splice(index, 1)" title="삭제">
+                  <span>×</span>
                 </button>
               </div>
               <button class="btn-action btn-secondary" @click="editForm.links.push({ type: 'instagram', url: '' })" style="width: 100%; margin-top: 8px;">
@@ -374,27 +641,35 @@
             </div>
             <div class="form-group">
               <label class="form-label">영상 관리</label>
-              <div v-for="(video, index) in editForm.videos" :key="index" style="margin-bottom: 12px; padding: 12px; background: #f9fafb; border-radius: 8px;">
-                <input type="text" class="form-input" v-model="video.title" placeholder="영상 제목" style="margin-bottom: 8px;">
-                <input
-                  type="text"
-                  class="form-input"
-                  v-model="video.url"
-                  @blur="updateVideoThumbnail(video)"
-                  @keyup.enter="updateVideoThumbnail(video)"
-                  placeholder="YouTube URL (예: https://youtube.com/watch?v=...)"
-                  style="margin-bottom: 8px;"
-                >
-                <div v-if="video.thumbnail" style="margin-bottom: 8px;">
-                  <img :src="video.thumbnail" alt="썸네일" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px;">
+              <div class="video-grid-container">
+                <div v-for="(video, index) in editForm.videos" :key="index" class="video-item-card">
+                  <div v-if="video.thumbnail" class="video-thumbnail">
+                    <img :src="video.thumbnail" alt="썸네일">
+                    <button class="btn-delete-video" @click="editForm.videos.splice(index, 1)" title="삭제">
+                      <span>×</span>
+                    </button>
+                  </div>
+                  <div v-else class="video-placeholder" @click="() => {}">
+                    <span class="placeholder-icon">V</span>
+                    <button class="btn-delete-video" @click="editForm.videos.splice(index, 1)" title="삭제">
+                      <span>×</span>
+                    </button>
+                  </div>
+                  <input type="text" class="form-input video-title-input" v-model="video.title" placeholder="제목">
+                  <input
+                    type="text"
+                    class="form-input video-url-input"
+                    v-model="video.url"
+                    @blur="updateVideoThumbnail(video)"
+                    @keyup.enter="updateVideoThumbnail(video)"
+                    placeholder="YouTube URL"
+                  >
                 </div>
-                <button class="btn-icon delete" @click="editForm.videos.splice(index, 1)" title="삭제" style="width: 100%;">
-                  삭제
-                </button>
+                <div class="video-add-card" @click="editForm.videos.push({ title: '', url: '', thumbnail: '' })">
+                  <span class="add-icon">+</span>
+                  <span class="add-text">영상 추가</span>
+                </div>
               </div>
-              <button class="btn-action btn-secondary" @click="editForm.videos.push({ title: '', url: '', thumbnail: '' })" style="width: 100%;">
-                + 영상 추가
-              </button>
             </div>
           </template>
 
@@ -449,6 +724,7 @@ import TextBlock from '@/components/blocks/TextBlock.vue'
 import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
 import GuestbookBlock from '@/components/blocks/GuestbookBlock.vue'
+import MarqueeBlock from '@/components/blocks/MarqueeBlock.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -477,11 +753,21 @@ const backgroundImageUploading = ref(false)
 // Page theme settings - will be loaded from API
 const pageTheme = ref({
   backgroundColor: '#121212',
-  textColor: '#ffffff'
+  textColor: '#ffffff',
+  bgmUrl: '' // 배경음악 URL
 })
+
+// BGM 설정 모달 상태
+const showBgmModal = ref(false)
+const bgmPreviewAudio = ref<HTMLAudioElement | null>(null)
+const isBgmPreviewing = ref(false)
+const bgmInputType = ref<'url' | 'file'>('file') // 기본값: 파일 업로드
+const bgmFileUploading = ref(false)
+const bgmFileName = ref('')
 
 // Available block types
 const availableBlockTypes = [
+  { type: 'marquee', icon: '📢', name: '마퀴(전광판)', description: '흐르는 공지사항' },
   { type: 'button', icon: 'B', name: '버튼', description: '링크 버튼 추가' },
   { type: 'social_links', icon: 'S', name: 'SNS 링크', description: '소셜 미디어 링크' },
   { type: 'video_grid', icon: 'V', name: '영상', description: 'YouTube Shorts' },
@@ -489,8 +775,8 @@ const availableBlockTypes = [
   { type: 'popular_menu', icon: 'M', name: '메뉴', description: '인기 메뉴' },
   { type: 'text', icon: 'T', name: '텍스트', description: '자유 텍스트' },
   { type: 'image', icon: 'I', name: '이미지', description: '이미지 추가' },
-  { type: 'countdown', icon: '⏱', name: '카운트다운', description: '이벤트 타이머' },
-  { type: 'guestbook', icon: '✍', name: '방명록', description: '손글씨 방명록' }
+  { type: 'countdown', icon: 'C', name: '카운트다운', description: '이벤트 타이머' },
+  { type: 'guestbook', icon: 'N', name: '방명록', description: '손글씨 방명록' }
 ]
 
 // Load layout from API on mount
@@ -635,7 +921,8 @@ function getBlockComponent(type: string): Component | string {
     text: TextBlock,
     image: ImageBlock,
     countdown: CountdownBlock,
-    guestbook: GuestbookBlock
+    guestbook: GuestbookBlock,
+    marquee: MarqueeBlock
   }
   return components[type] || 'div'
 }
@@ -651,7 +938,8 @@ function getBlockIcon(type: string): string {
     text: 'T',
     image: 'I',
     countdown: '⏱',
-    guestbook: '✍'
+    guestbook: '✍',
+    marquee: '📢'
   }
   return icons[type] || '□'
 }
@@ -667,9 +955,27 @@ function getBlockTitle(type: string): string {
     text: '텍스트',
     image: '이미지',
     countdown: '카운트다운',
-    guestbook: '방명록'
+    guestbook: '방명록',
+    marquee: '마퀴(전광판)'
   }
   return titles[type] || '블록'
+}
+
+// 마퀴 속도 라벨
+function getSpeedLabel(speed: number): string {
+  if (speed <= 8) return '매우 빠름'
+  if (speed <= 12) return '빠름'
+  if (speed <= 18) return '보통'
+  if (speed <= 24) return '느림'
+  return '매우 느림'
+}
+
+function getSpeedClass(speed: number): string {
+  if (speed <= 8) return 'speed-very-fast'
+  if (speed <= 12) return 'speed-fast'
+  if (speed <= 18) return 'speed-normal'
+  if (speed <= 24) return 'speed-slow'
+  return 'speed-very-slow'
 }
 
 function getBlockPreview(block: Block): string {
@@ -686,6 +992,8 @@ function getBlockPreview(block: Block): string {
       return `${(block.data as any).enabledGames?.length || 0}개 게임`
     case 'popular_menu':
       return `${(block.data as any).items?.length || 0}개 메뉴`
+    case 'marquee':
+      return (block.data as any).text || '공지사항 없음'
     default:
       return ''
   }
@@ -785,6 +1093,16 @@ function getDefaultBlockData(type: BlockType): any {
         messages: [],
         maxMessageLength: 200,
         textColor: '#374151'
+      }
+    case 'marquee':
+      return {
+        text: '🎉 오늘의 특가! 아메리카노 50% 할인',
+        emoji: '',
+        backgroundColor: '#ff6b6b',
+        textColor: '#ffffff',
+        speed: 15,
+        imageUrl: '',
+        contentType: 'text' // 'text' | 'image' | 'both'
       }
     default:
       return {}
@@ -976,6 +1294,19 @@ function generateYouTubeThumbnail(url: string): string {
   return ''
 }
 
+// SNS 아이콘 텍스트 반환
+function getSnsIcon(type: string): string {
+  const icons: Record<string, string> = {
+    instagram: 'IG',
+    facebook: 'FB',
+    youtube: 'YT',
+    twitter: 'X',
+    tiktok: 'TT',
+    website: 'WB'
+  }
+  return icons[type] || 'LK'
+}
+
 // 영상 URL 변경 시 썸네일 자동 생성
 function updateVideoThumbnail(video: any) {
   // 즉시 썸네일 생성 시도
@@ -1037,6 +1368,156 @@ async function handleImageUpload(event: Event) {
 function goBack() {
   // QR 관리 탭으로 리다이렉트
   router.push('/admin?tab=qr')
+}
+
+// BGM 관련 함수들
+function toggleBgmPreview() {
+  if (!pageTheme.value.bgmUrl) return
+
+  if (isBgmPreviewing.value) {
+    // 정지
+    if (bgmPreviewAudio.value) {
+      bgmPreviewAudio.value.pause()
+      bgmPreviewAudio.value.currentTime = 0
+    }
+    isBgmPreviewing.value = false
+  } else {
+    // 재생
+    if (!bgmPreviewAudio.value) {
+      bgmPreviewAudio.value = new Audio(pageTheme.value.bgmUrl)
+      bgmPreviewAudio.value.volume = 0.5
+      bgmPreviewAudio.value.onended = () => {
+        isBgmPreviewing.value = false
+      }
+      bgmPreviewAudio.value.onerror = () => {
+        alert('음악을 재생할 수 없습니다. URL을 확인해주세요.')
+        isBgmPreviewing.value = false
+      }
+    } else {
+      bgmPreviewAudio.value.src = pageTheme.value.bgmUrl
+    }
+    bgmPreviewAudio.value.play()
+    isBgmPreviewing.value = true
+  }
+}
+
+function removeBgm() {
+  if (bgmPreviewAudio.value) {
+    bgmPreviewAudio.value.pause()
+    bgmPreviewAudio.value = null
+  }
+  isBgmPreviewing.value = false
+  pageTheme.value.bgmUrl = ''
+  bgmFileName.value = ''
+}
+
+function closeBgmModal() {
+  if (bgmPreviewAudio.value) {
+    bgmPreviewAudio.value.pause()
+  }
+  isBgmPreviewing.value = false
+  showBgmModal.value = false
+}
+
+// 오디오 파일 업로드
+async function uploadAudio(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/FileUpload/audio`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      },
+      body: formData
+    })
+
+    if (!response.ok) {
+      // 이미지 업로드 엔드포인트로 폴백 시도 (서버가 범용 파일 업로드를 지원하는 경우)
+      const fallbackResponse = await fetch(`${API_BASE_URL}/api/FileUpload/image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`
+        },
+        body: formData
+      })
+
+      if (!fallbackResponse.ok) {
+        const errorData = await fallbackResponse.json()
+        throw new Error(errorData.message || '오디오 업로드 실패')
+      }
+
+      const data = await fallbackResponse.json()
+      return data.fileUrl
+    }
+
+    const data = await response.json()
+    return data.fileUrl
+  } catch (error) {
+    console.error('Audio upload error:', error)
+    throw error
+  }
+}
+
+// BGM 파일 선택 핸들러
+async function handleBgmFileUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  if (!input.files || !input.files[0]) return
+
+  const file = input.files[0]
+
+  // 파일 크기 체크 (10MB)
+  if (file.size > 10 * 1024 * 1024) {
+    alert('파일 크기는 10MB 이하만 가능합니다.')
+    return
+  }
+
+  // 파일 타입 체크
+  const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/x-m4a', 'audio/mp4']
+  if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+    alert('MP3, WAV, OGG, M4A 파일만 업로드 가능합니다.')
+    return
+  }
+
+  bgmFileUploading.value = true
+
+  try {
+    const url = await uploadAudio(file)
+    pageTheme.value.bgmUrl = url
+    bgmFileName.value = file.name
+  } catch (error) {
+    alert('오디오 파일 업로드에 실패했습니다.')
+    console.error('BGM upload failed:', error)
+  } finally {
+    bgmFileUploading.value = false
+    // input 초기화 (같은 파일 다시 선택 가능하게)
+    input.value = ''
+  }
+}
+
+// 마퀴 이미지 업로드 핸들러
+async function handleMarqueeImageUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  if (!input.files || !input.files[0]) return
+
+  const file = input.files[0]
+
+  // 파일 크기 체크 (2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    alert('이미지 파일 크기는 2MB 이하만 가능합니다.')
+    return
+  }
+
+  try {
+    const url = await uploadImage(file)
+    editForm.value.imageUrl = url
+  } catch (error) {
+    alert('이미지 업로드에 실패했습니다.')
+    console.error('Marquee image upload failed:', error)
+  } finally {
+    input.value = ''
+  }
 }
 
 async function saveLayout() {
@@ -1858,5 +2339,694 @@ select.form-input {
   .modal-actions {
     padding: 14px 20px;
   }
+  .video-grid-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Video Grid Editor Styles */
+.video-grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.video-item-card {
+  background: #f9fafb;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e5e5ea;
+}
+
+.video-thumbnail {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  background: #e5e5ea;
+}
+
+.video-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-placeholder {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  background: linear-gradient(135deg, #f0f0f2 0%, #e5e5ea 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-icon {
+  font-size: 28px;
+  font-weight: 700;
+  color: #aeaeb2;
+}
+
+.btn-delete-video {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.btn-delete-video:hover {
+  background: #ff3b30;
+  transform: scale(1.1);
+}
+
+.video-title-input,
+.video-url-input {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.video-title-input {
+  font-weight: 600;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.video-url-input {
+  color: #86868b;
+  font-size: 12px;
+}
+
+.video-add-card {
+  aspect-ratio: 9 / 16;
+  background: #f5f5f7;
+  border: 2px dashed #d1d1d6;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 8px;
+}
+
+.video-add-card:hover {
+  background: #e8f2ff;
+  border-color: #0071e3;
+}
+
+.video-add-card .add-icon {
+  font-size: 32px;
+  color: #86868b;
+  font-weight: 300;
+}
+
+.video-add-card:hover .add-icon {
+  color: #0071e3;
+}
+
+.video-add-card .add-text {
+  font-size: 13px;
+  color: #86868b;
+  font-weight: 500;
+}
+
+.video-add-card:hover .add-text {
+  color: #0071e3;
+}
+
+/* SNS Link Editor Styles */
+.sns-link-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.sns-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.sns-instagram { background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+.sns-facebook { background: #1877f2; }
+.sns-youtube { background: #ff0000; }
+.sns-twitter { background: #000000; }
+.sns-tiktok { background: #000000; }
+.sns-website { background: #6366f1; }
+
+.sns-select {
+  flex: 0 0 110px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.sns-url-input {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.btn-delete-sns {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f5f5f7;
+  border: none;
+  color: #86868b;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-delete-sns:hover {
+  background: #ffebee;
+  color: #ff3b30;
+}
+
+/* BGM 설정 버튼 */
+.bgm-picker {
+  display: flex;
+  align-items: center;
+}
+
+.btn-bgm-settings {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-bgm-settings:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+}
+
+.bgm-indicator {
+  color: #4ade80;
+  font-size: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* BGM 모달 스타일 */
+.bgm-modal-content {
+  padding: 20px 24px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: #8e8e93;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.bgm-preview-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f2;
+}
+
+.bgm-preview-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.btn-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-preview:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-remove-bgm {
+  padding: 10px 20px;
+  background: #f5f5f7;
+  color: #ff3b30;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-remove-bgm:hover {
+  background: #ffebee;
+  border-color: #ff3b30;
+}
+
+.bgm-info-box {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #0369a1;
+}
+
+.bgm-info-box strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.bgm-info-box ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.bgm-info-box li {
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #e5e5ea;
+}
+
+/* BGM 입력 탭 */
+.bgm-input-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.bgm-tab {
+  flex: 1;
+  padding: 12px 16px;
+  background: #f5f5f7;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bgm-tab:hover {
+  background: #e5e5ea;
+}
+
+.bgm-tab.active {
+  background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
+  border-color: #f093fb;
+  color: #d946ef;
+}
+
+/* 파일 업로드 영역 */
+.file-upload-area {
+  margin-top: 8px;
+}
+
+.file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 20px;
+  background: #fafafa;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  color: #6b7280;
+}
+
+.file-upload-label:hover {
+  border-color: #f093fb;
+  background: #fdf4ff;
+}
+
+.file-upload-label.uploading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.file-upload-label .file-name {
+  font-weight: 600;
+  color: #1d1d1f;
+  word-break: break-all;
+}
+
+.file-upload-label .change-text {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.file-upload-label .file-hint {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.upload-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f093fb;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 마퀴 편집 폼 스타일 */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.color-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #f5f5f7;
+  border-radius: 10px;
+  border: 1px solid #e5e5ea;
+}
+
+.color-input {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-input::-webkit-color-swatch {
+  border: 2px solid white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.color-value {
+  font-size: 13px;
+  font-family: monospace;
+  color: #666;
+}
+
+.marquee-preview-box {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f2;
+}
+
+.marquee-preview {
+  margin-top: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.marquee-preview-text {
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  animation: marquee-demo 5s linear infinite;
+}
+
+@keyframes marquee-demo {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* 속도 뱃지 스타일 */
+.speed-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.speed-very-fast {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.speed-fast {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.speed-normal {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.speed-slow {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.speed-very-slow {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+/* 콘텐츠 타입 선택기 */
+.content-type-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.content-type-selector .type-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.content-type-selector .type-btn:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.content-type-selector .type-btn.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+/* 마퀴 이미지 업로드 */
+.marquee-image-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.marquee-image-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 80px;
+}
+
+.marquee-image-upload-label:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.marquee-image-upload-label.has-image {
+  padding: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+}
+
+.marquee-image-preview {
+  width: 100%;
+  height: auto;
+  max-height: 100px;
+  object-fit: contain;
+  display: block;
+}
+
+.change-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.marquee-image-upload-label.has-image:hover .change-overlay {
+  opacity: 1;
+}
+
+.btn-remove-image {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-image:hover {
+  background: #fecaca;
+}
+
+/* 이미지 규격 안내 */
+.image-spec-info {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: #f0f9ff;
+  border-radius: 10px;
+  border: 1px solid #bae6fd;
+}
+
+.image-spec-info strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #0369a1;
+}
+
+.image-spec-info ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: #0c4a6e;
+  line-height: 1.6;
+}
+
+.image-spec-info code {
+  padding: 2px 6px;
+  background: #e0f2fe;
+  border-radius: 4px;
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 11px;
+  color: #0369a1;
+}
+
+/* 마퀴 미리보기 개선 */
+.marquee-preview-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  white-space: nowrap;
+  animation: marquee-demo 5s linear infinite;
+}
+
+.marquee-preview-image {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.marquee-preview-text {
+  font-size: 14px;
+  font-weight: 600;
 }
 </style>
