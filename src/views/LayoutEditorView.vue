@@ -998,8 +998,8 @@ async function loadLandingPageSettings() {
   if (!qrCodeId.value) return
 
   try {
-    // QR 코드 ID로 설정 조회 (CustomerView와 동일한 엔드포인트 사용)
-    const response = await fetch(`${API_BASE_URL}/api/landingpage/settings/qr/${encodeURIComponent(qrCodeId.value)}`)
+    // QR 코드 UUID로 설정 조회 (QRManagement와 동일한 엔드포인트 사용)
+    const response = await fetch(`${API_BASE_URL}/api/landingpage/settings/${encodeURIComponent(qrCodeId.value)}`)
     if (response.ok) {
       landingPageSettings.value = await response.json()
       console.log('Loaded landing page settings:', landingPageSettings.value)
