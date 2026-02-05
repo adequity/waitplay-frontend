@@ -994,14 +994,17 @@ onMounted(async () => {
 
 // Load landing page settings first
 async function loadLandingPageSettings() {
+  if (!qrCodeId.value) return
+
   try {
-    const response = await fetch(`${API_BASE_URL}/api/landingpage/settings`)
+    // QR 코드 ID로 설정 조회 (CustomerView와 동일한 엔드포인트 사용)
+    const response = await fetch(`${API_BASE_URL}/api/landingpage/settings/qr/${encodeURIComponent(qrCodeId.value)}`)
     if (response.ok) {
       landingPageSettings.value = await response.json()
       console.log('Loaded landing page settings:', landingPageSettings.value)
     }
-  } catch (error) {
-    console.error('Error loading landing page settings:', error)
+  } catch {
+    // 설정 로드 실패 시 조용히 처리 (기본값 사용)
   }
 }
 
