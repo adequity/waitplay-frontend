@@ -626,8 +626,8 @@
                     type="range"
                     class="scale-slider"
                     v-model.number="editForm.buttonImageScale"
-                    min="0.5"
-                    max="2"
+                    min="0.3"
+                    max="3"
                     step="0.1"
                   />
                 </div>

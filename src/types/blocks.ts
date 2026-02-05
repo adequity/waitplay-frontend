@@ -124,7 +124,7 @@ export interface GuestbookBlockData {
   maxMessageLength: number // default 200
   textColor?: string // hex color for guestbook text
   buttonImageUrl?: string // 커스텀 버튼 이미지 URL (권장: 300x80px, 투명 PNG)
-  buttonImageScale?: number // 버튼 이미지 크기 배율 (0.5 ~ 2.0, 기본값: 1.0)
+  buttonImageScale?: number // 버튼 이미지 크기 배율 (0.3 ~ 3.0, 기본값: 1.0)
 }
 
 // Marquee Block (전광판/티커)
