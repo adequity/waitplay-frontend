@@ -1564,6 +1564,59 @@ async function uploadImage(file: File): Promise<string> {
   }
 }
 
+// 이미지 리사이징 함수 (썸네일용)
+async function resizeImage(file: File, maxWidth: number, maxHeight: number, quality: number = 0.8): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    img.onload = () => {
+      let { width, height } = img
+
+      // 비율 유지하면서 리사이징
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height)
+        width = Math.floor(width * ratio)
+        height = Math.floor(height * ratio)
+      }
+
+      canvas.width = width
+      canvas.height = height
+
+      if (!ctx) {
+        reject(new Error('Canvas context not available'))
+        return
+      }
+
+      // 고품질 리사이징
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Failed to create blob'))
+            return
+          }
+          // 원본 파일명 유지하면서 새 File 생성
+          const resizedFile = new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          })
+          resolve(resizedFile)
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+
+    img.onerror = () => reject(new Error('Failed to load image'))
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 // 이미지 파일 선택 핸들러
 async function handleImageUpload(event: Event) {
   const input = event.target as HTMLInputElement
@@ -1736,21 +1789,26 @@ async function handleMarqueeImageUpload(event: Event) {
   }
 }
 
-// 메뉴 아이템 이미지 업로드 핸들러
+// 메뉴 아이템 이미지 업로드 핸들러 (썸네일용 리사이징 적용)
 async function handleMenuImageUpload(event: Event, index: number) {
   const input = event.target as HTMLInputElement
   if (!input.files || !input.files[0]) return
 
-  const file = input.files[0]
+  let file = input.files[0]
 
-  // 파일 크기 체크 (2MB)
-  if (file.size > 2 * 1024 * 1024) {
-    alert('이미지 파일 크기는 2MB 이하만 가능합니다.')
+  // 파일 크기 체크 (원본 기준 5MB - 리사이징 후 작아짐)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('이미지 파일 크기는 5MB 이하만 가능합니다.')
     return
   }
 
   try {
-    const url = await uploadImage(file)
+    // 메뉴 썸네일용 리사이징 (144x144 - 72px의 2배 for Retina)
+    // 품질 0.85로 설정하여 용량 절감
+    const resizedFile = await resizeImage(file, 144, 144, 0.85)
+    console.log(`Menu image resized: ${file.size} bytes -> ${resizedFile.size} bytes`)
+
+    const url = await uploadImage(resizedFile)
     if (editForm.value.items && editForm.value.items[index]) {
       editForm.value.items[index].imageUrl = url
     }
