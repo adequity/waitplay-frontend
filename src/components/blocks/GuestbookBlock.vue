@@ -37,34 +37,48 @@
       <p>아직 남겨진 메시지가 없습니다. 첫 메시지를 남겨보세요!</p>
     </div>
 
-    <div v-else class="drawings-slider-container">
-      <div class="drawings-slider" ref="sliderRef">
-        <div
-          v-for="message in messages"
-          :key="message.id"
-          class="post-it-slide"
-        >
+    <template v-else>
+      <!-- 미리보기: 최신 5개만 표시 -->
+      <div class="drawings-slider-container">
+        <div class="drawings-slider" ref="sliderRef">
           <div
-            class="post-it"
-            :class="`post-it--${message.color}`"
-            :style="{ transform: `rotate(${message.rotation}deg)` }"
+            v-for="message in previewMessages"
+            :key="message.id"
+            class="post-it-slide"
           >
-            <div class="post-it-content">
-              <img
-                v-if="message.imageUrl"
-                :src="message.imageUrl"
-                :alt="`${message.userName}의 방명록`"
-                class="drawing-image"
-              />
-              <div class="message-footer">
-                <span class="message-author">- {{ message.userName }}</span>
-                <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+            <div
+              class="post-it"
+              :class="`post-it--${message.color}`"
+              :style="{ transform: `rotate(${message.rotation}deg)` }"
+            >
+              <div class="post-it-content">
+                <img
+                  v-if="message.imageUrl"
+                  :src="message.imageUrl"
+                  :alt="`${message.userName}의 방명록`"
+                  class="drawing-image"
+                />
+                <div class="message-footer">
+                  <span class="message-author">- {{ message.userName }}</span>
+                  <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- 전체보기 버튼 (5개 초과 시에만 표시) -->
+      <div v-if="totalMessageCount > 5" class="view-all-section">
+        <button @click="goToFullGuestbook" class="view-all-btn">
+          <span>전체 방명록 보기</span>
+          <span class="message-count">({{ totalMessageCount }}개)</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </template>
 
     <!-- 전체화면 그리기 모달 -->
     <Teleport to="body">
@@ -207,6 +221,10 @@ let lastY = 0
 const messages = ref<any[]>([])
 const isLoadingMessages = ref(false)
 const sliderRef = ref<HTMLElement | null>(null)
+const totalMessageCount = ref(0)
+
+// 미리보기용 최신 5개 메시지
+const previewMessages = computed(() => messages.value.slice(0, 5))
 
 // 모달 열기
 const openDrawingModal = async () => {
@@ -264,11 +282,21 @@ const loadMessages = async () => {
   try {
     const response = await guestbookService.getMessages(props.qrCodeId)
     messages.value = response
+    totalMessageCount.value = response.length
   } catch {
     // API가 아직 구현되지 않았거나 네트워크 에러 시 조용히 처리
     messages.value = []
+    totalMessageCount.value = 0
   } finally {
     isLoadingMessages.value = false
+  }
+}
+
+// 전체 방명록 페이지로 이동
+const goToFullGuestbook = () => {
+  const currentQr = router.currentRoute.value.query.qr
+  if (currentQr) {
+    router.push(`/guestbook?qr=${currentQr}`)
   }
 }
 
@@ -766,6 +794,42 @@ const formatDate = (dateString: string): string => {
   color: #9ca3af;
   font-size: 16px;
   font-style: italic;
+}
+
+/* 전체보기 버튼 */
+.view-all-section {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-all-btn:hover {
+  background: #f9fafb;
+  border-color: #4ECDC4;
+  color: #4ECDC4;
+}
+
+.view-all-btn .message-count {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.view-all-btn:hover .message-count {
+  color: #4ECDC4;
 }
 
 /* ==================== */

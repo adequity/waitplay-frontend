@@ -43,6 +43,11 @@ const routes: RouteRecordRaw[] = [
     props: true
   },
   {
+    path: '/guestbook',
+    name: 'guestbook',
+    component: () => import('../views/GuestbookFullView.vue')
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('../views/LoginView.vue')
