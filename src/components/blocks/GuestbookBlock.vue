@@ -6,7 +6,12 @@
     <div v-if="isAuthenticated" class="write-section">
       <!-- 커스텀 버튼 이미지가 있는 경우 -->
       <button v-if="data.buttonImageUrl" @click="openDrawingModal" class="write-btn-custom">
-        <img :src="data.buttonImageUrl" alt="방명록 남기기" class="custom-button-image" />
+        <img
+          :src="data.buttonImageUrl"
+          alt="방명록 남기기"
+          class="custom-button-image"
+          :style="{ transform: `scale(${data.buttonImageScale || 1})` }"
+        />
       </button>
       <!-- 기본 버튼 -->
       <button v-else @click="openDrawingModal" class="write-btn">
@@ -608,10 +613,12 @@ const formatDate = (dateString: string): string => {
 
 .custom-button-image {
   max-width: 100%;
-  max-height: 100px;
+  max-height: 150px;
   object-fit: contain;
   display: block;
   border-radius: 12px;
+  transition: transform 0.2s ease;
+  transform-origin: center;
 }
 
 /* 로그인 유도 */

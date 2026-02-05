@@ -613,8 +613,25 @@
               <p class="form-hint">커스텀 버튼 이미지를 업로드하세요. 권장: 가로로 긴 형태, 투명 PNG</p>
               <input type="file" class="form-input" @change="handleGuestbookButtonImageUpload" accept="image/*" style="margin-bottom: 8px;">
               <div v-if="editForm.buttonImageUrl" class="button-preview">
-                <img :src="editForm.buttonImageUrl" alt="버튼 미리보기" class="button-preview-image">
-                <button type="button" class="remove-button-image" @click="editForm.buttonImageUrl = ''">
+                <img
+                  :src="editForm.buttonImageUrl"
+                  alt="버튼 미리보기"
+                  class="button-preview-image"
+                  :style="{ transform: `scale(${editForm.buttonImageScale || 1})` }"
+                />
+                <!-- 버튼 크기 조절 슬라이더 -->
+                <div class="scale-slider-group">
+                  <label class="scale-label">버튼 크기: {{ Math.round((editForm.buttonImageScale || 1) * 100) }}%</label>
+                  <input
+                    type="range"
+                    class="scale-slider"
+                    v-model.number="editForm.buttonImageScale"
+                    min="0.5"
+                    max="2"
+                    step="0.1"
+                  />
+                </div>
+                <button type="button" class="remove-button-image" @click="editForm.buttonImageUrl = ''; editForm.buttonImageScale = 1">
                   이미지 제거
                 </button>
               </div>
@@ -3012,6 +3029,54 @@ select.form-input {
   max-height: 80px;
   object-fit: contain;
   border-radius: 8px;
+  transition: transform 0.2s ease;
+  transform-origin: center;
+}
+
+.scale-slider-group {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f0f0f2;
+  border-radius: 8px;
+}
+
+.scale-label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.scale-slider {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #d1d5db;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.scale-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #4ECDC4;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(78, 205, 196, 0.3);
+}
+
+.scale-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #4ECDC4;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .remove-button-image {
