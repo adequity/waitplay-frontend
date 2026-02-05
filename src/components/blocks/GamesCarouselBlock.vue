@@ -118,14 +118,14 @@ async function fetchLeaderboard(gameType: string) {
 
     const response = await fetch(url)
     if (!response.ok) {
-      console.error(`Failed to fetch leaderboard for ${gameType}`)
+      // 404는 API가 아직 구현되지 않은 것이므로 조용히 처리
       return []
     }
 
     const data = await response.json()
     return data.leaderboard || []
-  } catch (error) {
-    console.error(`Error fetching leaderboard for ${gameType}:`, error)
+  } catch {
+    // 네트워크 에러는 조용히 처리 (API 미구현 시 발생)
     return []
   }
 }

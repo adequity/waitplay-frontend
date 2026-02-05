@@ -1533,15 +1533,30 @@ async function uploadImage(file: File): Promise<string> {
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || '이미지 업로드 실패')
+      // 서버 에러 메시지 파싱 시도
+      let errorMessage = '이미지 업로드 실패'
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.message || errorMessage
+      } catch {
+        // JSON 파싱 실패 시 상태 코드 기반 메시지
+        if (response.status === 400) {
+          errorMessage = '이미지 형식이 올바르지 않습니다.'
+        } else if (response.status === 401) {
+          errorMessage = '로그인이 필요합니다.'
+        } else if (response.status === 413) {
+          errorMessage = '파일 크기가 너무 큽니다.'
+        }
+      }
+      throw new Error(errorMessage)
     }
 
     const data = await response.json()
     return data.fileUrl
   } catch (error) {
-    console.error('Upload error:', error)
-    alert('이미지 업로드에 실패했습니다.')
+    if (error instanceof TypeError) {
+      throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.')
+    }
     throw error
   }
 }
@@ -1619,6 +1634,7 @@ async function uploadAudio(file: File): Promise<string> {
   formData.append('file', file)
 
   try {
+    // 먼저 오디오 전용 엔드포인트 시도
     const response = await fetch(`${API_BASE_URL}/api/FileUpload/audio`, {
       method: 'POST',
       headers: {
@@ -1627,29 +1643,32 @@ async function uploadAudio(file: File): Promise<string> {
       body: formData
     })
 
-    if (!response.ok) {
-      // 이미지 업로드 엔드포인트로 폴백 시도 (서버가 범용 파일 업로드를 지원하는 경우)
-      const fallbackResponse = await fetch(`${API_BASE_URL}/api/FileUpload/image`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`
-        },
-        body: formData
-      })
+    if (response.ok) {
+      const data = await response.json()
+      return data.fileUrl
+    }
 
-      if (!fallbackResponse.ok) {
-        const errorData = await fallbackResponse.json()
-        throw new Error(errorData.message || '오디오 업로드 실패')
-      }
+    // 범용 파일 업로드 엔드포인트로 폴백 시도
+    const fallbackResponse = await fetch(`${API_BASE_URL}/api/FileUpload/file`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      },
+      body: formData
+    })
 
+    if (fallbackResponse.ok) {
       const data = await fallbackResponse.json()
       return data.fileUrl
     }
 
-    const data = await response.json()
-    return data.fileUrl
+    // 모든 시도 실패
+    throw new Error('서버에서 오디오 업로드를 지원하지 않습니다. 관리자에게 문의하세요.')
   } catch (error) {
-    console.error('Audio upload error:', error)
+    // 네트워크 에러나 서버 미구현 시
+    if (error instanceof TypeError) {
+      throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.')
+    }
     throw error
   }
 }

@@ -165,8 +165,9 @@ const loadMessages = async () => {
   try {
     const response = await guestbookService.getMessages(props.qrCodeId)
     messages.value = response
-  } catch (error) {
-    console.error('Failed to load guestbook messages:', error)
+  } catch {
+    // API가 아직 구현되지 않았거나 네트워크 에러 시 조용히 처리
+    messages.value = []
   } finally {
     isLoadingMessages.value = false
   }

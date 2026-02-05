@@ -38,13 +38,13 @@ export async function submitGameScore(data: ScoreSubmission): Promise<boolean> {
     })
 
     if (!response.ok) {
-      console.error('Failed to submit score:', await response.text())
+      // 점수 제출 실패는 사용자 경험에 영향을 주지 않도록 조용히 처리
       return false
     }
 
     return true
-  } catch (error) {
-    console.error('Error submitting score:', error)
+  } catch {
+    // 네트워크 에러 시 조용히 false 반환
     return false
   }
 }
@@ -65,13 +65,13 @@ export async function getLeaderboard(
 
     const response = await fetch(url)
     if (!response.ok) {
-      console.error('Failed to fetch leaderboard')
+      // API 미구현(404) 또는 에러 시 조용히 null 반환
       return null
     }
 
     return await response.json()
-  } catch (error) {
-    console.error('Error fetching leaderboard:', error)
+  } catch {
+    // 네트워크 에러 시 조용히 null 반환
     return null
   }
 }
@@ -94,8 +94,8 @@ export async function getPlayerBestScore(
 
     const data = await response.json()
     return data.score || null
-  } catch (error) {
-    console.error('Error fetching best score:', error)
+  } catch {
+    // 네트워크 에러 시 조용히 null 반환
     return null
   }
 }
