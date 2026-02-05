@@ -2,12 +2,18 @@
   <div class="popular-menu-block">
     <div class="popular-menu-card">
       <h3 class="menu-card-title">{{ data.title }}</h3>
-      <p class="menu-card-subtitle">{{ data.subtitle }}</p>
+      <p v-if="data.subtitle" class="menu-card-subtitle">{{ data.subtitle }}</p>
       <div class="menu-rankings">
-        <div class="menu-rank-item" v-for="item in data.items" :key="item.rank">
-          <span class="rank-number">{{ item.rank }}</span>
+        <div class="menu-rank-item" v-for="(item, index) in data.items" :key="index">
+          <span class="rank-number">{{ index + 1 }}</span>
+          <div v-if="item.imageUrl" class="menu-thumbnail">
+            <img :src="item.imageUrl" :alt="item.name" />
+          </div>
           <div class="menu-info">
-            <span class="menu-name">{{ item.name }}</span>
+            <div class="menu-details">
+              <span class="menu-name">{{ item.name }}</span>
+              <span v-if="item.description" class="menu-description">{{ item.description }}</span>
+            </div>
             <span v-if="item.price" class="menu-price">{{ item.price.toLocaleString() }}원</span>
           </div>
         </div>
@@ -80,8 +86,22 @@ defineProps<Props>()
   font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #ffffff;
+}
+
+.menu-thumbnail {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.menu-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .menu-info {
@@ -89,6 +109,13 @@ defineProps<Props>()
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+
+.menu-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .menu-name {
@@ -98,10 +125,17 @@ defineProps<Props>()
   color: #ffffff;
 }
 
+.menu-description {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .menu-price {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
 }
 </style>

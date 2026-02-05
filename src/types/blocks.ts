@@ -82,6 +82,7 @@ export interface MenuItem {
   name: string
   price?: number
   description?: string
+  imageUrl?: string // 메뉴 썸네일 이미지
 }
 
 export interface PopularMenuBlockData {

@@ -391,10 +391,58 @@
               <label class="form-label">링크 URL</label>
               <input type="text" class="form-input" v-model="editForm.url" placeholder="https://...">
             </div>
+            <div class="form-group">
+              <label class="form-label">버튼 스타일</label>
+              <div class="button-style-selector">
+                <button
+                  type="button"
+                  :class="['btn-style-option', 'primary-style', { active: editForm.style === 'primary' }]"
+                  @click="editForm.style = 'primary'"
+                >
+                  메인 버튼
+                </button>
+                <button
+                  type="button"
+                  :class="['btn-style-option', 'secondary-style', { active: editForm.style === 'secondary' }]"
+                  @click="editForm.style = 'secondary'"
+                >
+                  보조 버튼
+                </button>
+              </div>
+            </div>
           </template>
 
           <!-- Text Edit -->
           <template v-if="editingBlock.type === 'text'">
+            <div class="form-group">
+              <label class="form-label">스타일</label>
+              <div class="style-selector">
+                <button
+                  type="button"
+                  :class="['style-btn', { active: editForm.style === 'normal' }]"
+                  @click="editForm.style = 'normal'"
+                >
+                  <span class="style-icon">T</span>
+                  <span class="style-name">기본</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['style-btn', { active: editForm.style === 'callout' }]"
+                  @click="editForm.style = 'callout'"
+                >
+                  <span class="style-icon">!</span>
+                  <span class="style-name">강조</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['style-btn', { active: editForm.style === 'quote' }]"
+                  @click="editForm.style = 'quote'"
+                >
+                  <span class="style-icon">"</span>
+                  <span class="style-name">인용</span>
+                </button>
+              </div>
+            </div>
             <div class="form-group">
               <label class="form-label">텍스트 내용</label>
               <textarea class="form-textarea" v-model="editForm.content" placeholder="내용을 입력하세요"></textarea>
@@ -408,6 +456,35 @@
               <input type="file" class="form-input" @change="handleImageUpload" accept="image/*" style="margin-bottom: 8px;">
               <div v-if="editForm.imageUrl" style="margin-top: 8px;">
                 <img :src="editForm.imageUrl" alt="미리보기" style="width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; border: 1px solid #e5e5ea;">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">이미지 비율</label>
+              <div class="ratio-selector">
+                <button
+                  type="button"
+                  :class="['ratio-btn', { active: editForm.aspectRatio === '16:9' }]"
+                  @click="editForm.aspectRatio = '16:9'"
+                >
+                  <div class="ratio-preview ratio-16-9"></div>
+                  <span>16:9</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['ratio-btn', { active: editForm.aspectRatio === '4:3' }]"
+                  @click="editForm.aspectRatio = '4:3'"
+                >
+                  <div class="ratio-preview ratio-4-3"></div>
+                  <span>4:3</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['ratio-btn', { active: editForm.aspectRatio === '1:1' }]"
+                  @click="editForm.aspectRatio = '1:1'"
+                >
+                  <div class="ratio-preview ratio-1-1"></div>
+                  <span>1:1</span>
+                </button>
               </div>
             </div>
             <div class="form-group">
@@ -430,6 +507,41 @@
               <label class="form-label">목표 날짜</label>
               <input type="datetime-local" class="form-input" v-model="editForm.targetDate">
             </div>
+            <div class="form-group">
+              <label class="form-label">스타일</label>
+              <div class="countdown-style-selector">
+                <button
+                  type="button"
+                  :class="['countdown-style-btn', { active: editForm.style === 'card' }]"
+                  @click="editForm.style = 'card'"
+                >
+                  <div class="countdown-style-preview card-preview">
+                    <div class="preview-box"></div>
+                  </div>
+                  <span>카드</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['countdown-style-btn', { active: editForm.style === 'minimal' }]"
+                  @click="editForm.style = 'minimal'"
+                >
+                  <div class="countdown-style-preview minimal-preview">
+                    <div class="preview-line"></div>
+                  </div>
+                  <span>미니멀</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['countdown-style-btn', { active: editForm.style === 'banner' }]"
+                  @click="editForm.style = 'banner'"
+                >
+                  <div class="countdown-style-preview banner-preview">
+                    <div class="preview-banner"></div>
+                  </div>
+                  <span>배너</span>
+                </button>
+              </div>
+            </div>
           </template>
 
           <!-- Popular Menu Edit -->
@@ -441,6 +553,84 @@
             <div class="form-group">
               <label class="form-label">부제목 (선택)</label>
               <input type="text" class="form-input" v-model="editForm.subtitle" placeholder="부제목">
+            </div>
+            <div class="form-divider"></div>
+            <div class="form-group">
+              <label class="form-label">메뉴 아이템</label>
+              <div class="menu-items-list">
+                <div
+                  v-for="(item, index) in editForm.items"
+                  :key="index"
+                  class="menu-item-card"
+                >
+                  <div class="menu-item-rank">{{ index + 1 }}</div>
+                  <div class="menu-item-thumbnail">
+                    <input
+                      type="file"
+                      :id="'menu-image-' + index"
+                      accept="image/*"
+                      @change="(e) => handleMenuImageUpload(e, index)"
+                      style="display: none;"
+                    />
+                    <label
+                      :for="'menu-image-' + index"
+                      class="menu-thumbnail-label"
+                      :class="{ 'has-image': item.imageUrl }"
+                    >
+                      <img v-if="item.imageUrl" :src="item.imageUrl" alt="메뉴 이미지" />
+                      <span v-else class="thumbnail-placeholder">+</span>
+                    </label>
+                    <button
+                      v-if="item.imageUrl"
+                      type="button"
+                      class="btn-remove-thumbnail"
+                      @click="item.imageUrl = ''"
+                      title="이미지 제거"
+                    >×</button>
+                  </div>
+                  <div class="menu-item-fields">
+                    <input
+                      type="text"
+                      class="form-input"
+                      v-model="item.name"
+                      placeholder="메뉴명"
+                    />
+                    <div class="menu-item-row">
+                      <input
+                        type="number"
+                        class="form-input menu-price-input"
+                        v-model.number="item.price"
+                        placeholder="가격"
+                      />
+                      <span class="price-unit">원</span>
+                    </div>
+                    <input
+                      type="text"
+                      class="form-input"
+                      v-model="item.description"
+                      placeholder="설명 (선택)"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    class="btn-delete-menu-item"
+                    @click="editForm.items.splice(index, 1)"
+                    title="삭제"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn-add-menu-item"
+                @click="editForm.items.push({ rank: editForm.items.length + 1, name: '', price: null, description: '', imageUrl: '' })"
+              >
+                + 메뉴 추가
+              </button>
             </div>
           </template>
 
@@ -612,10 +802,12 @@
                 </div>
                 <select class="form-input sns-select" v-model="link.type">
                   <option value="instagram">Instagram</option>
+                  <option value="threads">Threads</option>
                   <option value="facebook">Facebook</option>
                   <option value="youtube">YouTube</option>
-                  <option value="twitter">Twitter</option>
+                  <option value="twitter">Twitter (X)</option>
                   <option value="tiktok">TikTok</option>
+                  <option value="naver">네이버 블로그</option>
                   <option value="website">Website</option>
                 </select>
                 <input type="text" class="form-input sns-url-input" v-model="link.url" placeholder="https://...">
@@ -1298,10 +1490,12 @@ function generateYouTubeThumbnail(url: string): string {
 function getSnsIcon(type: string): string {
   const icons: Record<string, string> = {
     instagram: 'IG',
+    threads: 'TH',
     facebook: 'FB',
     youtube: 'YT',
     twitter: 'X',
     tiktok: 'TT',
+    naver: 'NV',
     website: 'WB'
   }
   return icons[type] || 'LK'
@@ -1515,6 +1709,32 @@ async function handleMarqueeImageUpload(event: Event) {
   } catch (error) {
     alert('이미지 업로드에 실패했습니다.')
     console.error('Marquee image upload failed:', error)
+  } finally {
+    input.value = ''
+  }
+}
+
+// 메뉴 아이템 이미지 업로드 핸들러
+async function handleMenuImageUpload(event: Event, index: number) {
+  const input = event.target as HTMLInputElement
+  if (!input.files || !input.files[0]) return
+
+  const file = input.files[0]
+
+  // 파일 크기 체크 (2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    alert('이미지 파일 크기는 2MB 이하만 가능합니다.')
+    return
+  }
+
+  try {
+    const url = await uploadImage(file)
+    if (editForm.value.items && editForm.value.items[index]) {
+      editForm.value.items[index].imageUrl = url
+    }
+  } catch (error) {
+    alert('이미지 업로드에 실패했습니다.')
+    console.error('Menu image upload failed:', error)
   } finally {
     input.value = ''
   }
@@ -3028,5 +3248,420 @@ select.form-input {
 .marquee-preview-text {
   font-size: 14px;
   font-weight: 600;
+}
+
+/* 메뉴 아이템 편집 */
+.menu-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-item-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.menu-item-rank {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  z-index: 1;
+}
+
+.menu-item-thumbnail {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.menu-thumbnail-label {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #d1d5db;
+  border-radius: 10px;
+  background: #f9fafb;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.menu-thumbnail-label:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.menu-thumbnail-label.has-image {
+  border-style: solid;
+  border-color: #e5e7eb;
+}
+
+.menu-thumbnail-label img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-placeholder {
+  font-size: 24px;
+  color: #9ca3af;
+  font-weight: 300;
+}
+
+.btn-remove-thumbnail {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-remove-thumbnail:hover {
+  background: #dc2626;
+}
+
+.menu-item-card {
+  position: relative;
+}
+
+.menu-item-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-price-input {
+  width: 120px !important;
+  flex-shrink: 0;
+}
+
+.price-unit {
+  font-size: 13px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.btn-delete-menu-item {
+  padding: 6px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-delete-menu-item:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.btn-add-menu-item {
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed #d1d5db;
+  border-radius: 10px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.btn-add-menu-item:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+/* 텍스트 스타일 선택기 */
+.style-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.style-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.style-btn:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.style-btn.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.style-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.style-btn.active .style-icon {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.style-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.style-btn.active .style-name {
+  color: #1d4ed8;
+}
+
+/* 버튼 스타일 선택기 */
+.button-style-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-style-option {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-style-option.primary-style {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.btn-style-option.primary-style:not(.active) {
+  background: #eff6ff;
+  color: #3b82f6;
+  border-color: #bfdbfe;
+}
+
+.btn-style-option.secondary-style {
+  background: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.btn-style-option.secondary-style:not(.active) {
+  background: #f9fafb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+.btn-style-option.active {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* 이미지 비율 선택기 */
+.ratio-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.ratio-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ratio-btn:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.ratio-btn.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.ratio-preview {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.ratio-16-9 {
+  width: 48px;
+  height: 27px;
+}
+
+.ratio-4-3 {
+  width: 40px;
+  height: 30px;
+}
+
+.ratio-1-1 {
+  width: 32px;
+  height: 32px;
+}
+
+.ratio-btn.active .ratio-preview {
+  background: #3b82f6;
+}
+
+.ratio-btn span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.ratio-btn.active span {
+  color: #1d4ed8;
+}
+
+/* 카운트다운 스타일 선택기 */
+.countdown-style-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.countdown-style-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.countdown-style-btn:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.countdown-style-btn.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.countdown-style-preview {
+  width: 48px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-preview .preview-box {
+  width: 40px;
+  height: 28px;
+  background: #d1d5db;
+  border-radius: 6px;
+}
+
+.minimal-preview .preview-line {
+  width: 40px;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+.banner-preview .preview-banner {
+  width: 48px;
+  height: 16px;
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.countdown-style-btn.active .preview-box,
+.countdown-style-btn.active .preview-line,
+.countdown-style-btn.active .preview-banner {
+  background: #3b82f6;
+}
+
+.countdown-style-btn span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.countdown-style-btn.active span {
+  color: #1d4ed8;
+}
+
+/* SNS 아이콘 추가 스타일 */
+.sns-threads {
+  background: linear-gradient(45deg, #000000, #333333);
+  color: white;
+}
+
+.sns-naver {
+  background: #03C75A;
+  color: white;
 }
 </style>
