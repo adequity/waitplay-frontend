@@ -49,8 +49,21 @@
               @click="openImageModal(message)"
             />
             <div class="message-footer">
-              <span class="message-author">- {{ message.userName }}</span>
-              <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+              <div class="message-info">
+                <span class="message-author">- {{ message.userName }}</span>
+                <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+              </div>
+              <button
+                class="like-btn"
+                :class="{ 'liked': message.isLikedByMe }"
+                @click.stop="handleLike(message)"
+                :disabled="likingMessageId === message.id"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" :fill="message.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span>{{ message.likeCount || 0 }}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -80,16 +93,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 const messages = ref<any[]>([])
 const isLoading = ref(true)
 const selectedMessage = ref<any>(null)
+const likingMessageId = ref<string | null>(null)
 
 // QR 코드 가져오기
 const qrCode = route.query.qr as string
@@ -155,6 +173,33 @@ const formatFullDate = (dateString: string): string => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// 좋아요 토글 핸들러
+const handleLike = async (message: any) => {
+  if (!isAuthenticated.value) {
+    const shouldLogin = confirm('좋아요를 누르려면 로그인이 필요합니다.\n로그인 하시겠습니까?')
+    if (shouldLogin) {
+      router.push(`/login?qr=${qrCode}`)
+    }
+    return
+  }
+
+  if (likingMessageId.value) return
+
+  likingMessageId.value = message.id
+
+  try {
+    const response = await guestbookService.toggleLike(message.id)
+    // 메시지 상태 업데이트
+    message.isLikedByMe = response.isLiked
+    message.likeCount = response.likeCount
+  } catch (error) {
+    console.error('Failed to toggle like:', error)
+    alert('좋아요 처리에 실패했습니다.')
+  } finally {
+    likingMessageId.value = null
+  }
 }
 </script>
 
@@ -340,10 +385,17 @@ const formatFullDate = (dateString: string): string => {
 
 .message-footer {
   display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+.message-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
 }
 
 .message-author {
@@ -355,6 +407,43 @@ const formatFullDate = (dateString: string): string => {
 .message-date {
   font-size: 11px;
   color: #9ca3af;
+}
+
+/* 좋아요 버튼 */
+.like-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.like-btn:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.like-btn.liked {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.like-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.like-btn svg {
+  flex-shrink: 0;
 }
 
 /* 이미지 확대 모달 */

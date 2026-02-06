@@ -16,6 +16,8 @@ export interface GuestbookMessageResponse {
   rotation: number
   color: string
   createdAt: string
+  likeCount: number
+  isLikedByMe: boolean
 }
 
 export interface MyGuestbookMessageResponse {
@@ -27,6 +29,12 @@ export interface MyGuestbookMessageResponse {
   createdAt: string
   storeName: string
   qrCode: string
+  likeCount: number
+}
+
+export interface ToggleLikeResponse {
+  isLiked: boolean
+  likeCount: number
 }
 
 class GuestbookService {
@@ -58,6 +66,22 @@ class GuestbookService {
    */
   async getMyMessages(): Promise<MyGuestbookMessageResponse[]> {
     const response = await apiClient.get<MyGuestbookMessageResponse[]>('/api/guestbook/my-messages')
+    return response.data
+  }
+
+  /**
+   * Toggle like on a guestbook message
+   */
+  async toggleLike(messageId: string): Promise<ToggleLikeResponse> {
+    const response = await apiClient.post<ToggleLikeResponse>(`/api/guestbook/${messageId}/like`)
+    return response.data
+  }
+
+  /**
+   * Get like status for a message
+   */
+  async getLikeStatus(messageId: string): Promise<{ likeCount: number; isLikedByMe: boolean }> {
+    const response = await apiClient.get<{ likeCount: number; isLikedByMe: boolean }>(`/api/guestbook/${messageId}/like`)
     return response.data
   }
 }

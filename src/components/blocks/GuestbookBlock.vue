@@ -75,8 +75,21 @@
                     decoding="async"
                   />
                   <div class="message-footer">
-                    <span class="message-author">- {{ message.userName }}</span>
-                    <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+                    <div class="message-info">
+                      <span class="message-author">- {{ message.userName }}</span>
+                      <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+                    </div>
+                    <button
+                      class="like-btn"
+                      :class="{ 'liked': message.isLikedByMe }"
+                      @click.stop="handleLike(message)"
+                      :disabled="likingMessageId === message.id"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" :fill="message.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                      </svg>
+                      <span>{{ message.likeCount || 0 }}</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -102,7 +115,20 @@
               loading="lazy"
               decoding="async"
             />
-            <span class="graffiti-author">{{ message.userName }}</span>
+            <div class="graffiti-footer">
+              <span class="graffiti-author">{{ message.userName }}</span>
+              <button
+                class="like-btn like-btn-graffiti"
+                :class="{ 'liked': message.isLikedByMe }"
+                @click.stop="handleLike(message)"
+                :disabled="likingMessageId === message.id"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" :fill="message.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span>{{ message.likeCount || 0 }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </template>
@@ -284,6 +310,9 @@ const messages = ref<any[]>([])
 const isLoadingMessages = ref(false)
 const sliderRef = ref<HTMLElement | null>(null)
 const totalMessageCount = ref(0)
+
+// 좋아요 관련
+const likingMessageId = ref<string | null>(null)
 
 // 미리보기용 최신 5개 메시지
 const previewMessages = computed(() => messages.value.slice(0, 5))
@@ -615,6 +644,33 @@ const formatDate = (dateString: string): string => {
     return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
   }
 }
+
+// 좋아요 토글 핸들러
+const handleLike = async (message: any) => {
+  if (!isAuthenticated.value) {
+    const shouldLogin = confirm('좋아요를 누르려면 로그인이 필요합니다.\n로그인 하시겠습니까?')
+    if (shouldLogin) {
+      goToLogin()
+    }
+    return
+  }
+
+  if (likingMessageId.value) return
+
+  likingMessageId.value = message.id
+
+  try {
+    const response = await guestbookService.toggleLike(message.id)
+    // 메시지 상태 업데이트
+    message.isLikedByMe = response.isLiked
+    message.likeCount = response.likeCount
+  } catch (error) {
+    console.error('Failed to toggle like:', error)
+    alert('좋아요 처리에 실패했습니다.')
+  } finally {
+    likingMessageId.value = null
+  }
+}
 </script>
 
 <style scoped>
@@ -890,11 +946,18 @@ const formatDate = (dateString: string): string => {
 
 .message-footer {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: auto;
   padding-top: 0.75rem;
   border-top: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+.message-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .message-author {
@@ -906,6 +969,69 @@ const formatDate = (dateString: string): string => {
 .message-date {
   font-size: 12px;
   color: #9ca3af;
+}
+
+/* 좋아요 버튼 */
+.like-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.like-btn:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.like-btn.liked {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.like-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.like-btn svg {
+  flex-shrink: 0;
+}
+
+/* 낙서 모드 좋아요 버튼 */
+.graffiti-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.like-btn-graffiti {
+  padding: 4px 8px;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.like-btn-graffiti:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.7);
+  color: white;
+}
+
+.like-btn-graffiti.liked {
+  background: rgba(239, 68, 68, 0.7);
+  color: white;
 }
 
 .empty-state,
