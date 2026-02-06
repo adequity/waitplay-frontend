@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { GamesCarouselBlockData } from '@/types/blocks'
 
@@ -74,7 +74,12 @@ const router = useRouter()
 
 const currentGameIndex = ref(0)
 const gamesSliderRef = ref<HTMLElement | null>(null)
+const blockRef = ref<HTMLElement | null>(null)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
+// ✅ 지연 로딩 상태
+const isLeaderboardLoaded = ref(false)
+let observer: IntersectionObserver | null = null
 
 // 게임 기본 정보
 const gameDefinitions = [
@@ -112,10 +117,7 @@ const allGames = ref<GameData[]>(gameDefinitions.map(game => ({
 // API에서 리더보드 데이터 가져오기
 async function fetchLeaderboard(gameType: string) {
   try {
-    // QR 코드가 있으면 company별 리더보드를 가져옴
-    // 백엔드 API: /api/game/score/leaderboard/{gameType}/qr/{qrCode}
     if (!props.qrCodeId) {
-      // QR 코드 없으면 리더보드 표시 안함
       return []
     }
 
@@ -123,20 +125,21 @@ async function fetchLeaderboard(gameType: string) {
 
     const response = await fetch(url)
     if (!response.ok) {
-      // 404는 데이터가 없는 것이므로 조용히 처리
       return []
     }
 
     const data = await response.json()
     return data.leaderboard || []
   } catch {
-    // 네트워크 에러는 조용히 처리
     return []
   }
 }
 
 // 모든 게임의 리더보드 데이터 로드
 async function loadAllLeaderboards() {
+  if (isLeaderboardLoaded.value) return
+  isLeaderboardLoaded.value = true
+
   const promises = gameDefinitions.map(async (game) => {
     const rankings = await fetchLeaderboard(game.type)
     return {
@@ -149,10 +152,34 @@ async function loadAllLeaderboards() {
 }
 
 onMounted(() => {
-  // 미리보기 모드에서는 API 호출 스킵 (404 에러 방지)
-  if (!props.isPreview) {
+  // 미리보기 모드에서는 API 호출 스킵
+  if (props.isPreview) return
+
+  // ✅ Intersection Observer로 뷰포트에 들어올 때만 리더보드 로드
+  if ('IntersectionObserver' in window) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadAllLeaderboards()
+          observer?.disconnect()
+        }
+      },
+      { rootMargin: '200px' } // 200px 전에 미리 로드
+    )
+
+    // gamesSliderRef가 마운트된 후 관찰 시작
+    const element = gamesSliderRef.value || document.querySelector('.games-carousel-block')
+    if (element) {
+      observer.observe(element)
+    }
+  } else {
+    // Fallback: 즉시 로드
     loadAllLeaderboards()
   }
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
 })
 
 const allowedGames = computed(() => {

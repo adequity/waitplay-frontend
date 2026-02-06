@@ -71,6 +71,8 @@
                     :src="message.imageUrl"
                     :alt="`${message.userName}의 방명록`"
                     class="drawing-image"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div class="message-footer">
                     <span class="message-author">- {{ message.userName }}</span>
@@ -97,6 +99,8 @@
               :src="message.imageUrl"
               :alt="`${message.userName}의 낙서`"
               class="graffiti-image"
+              loading="lazy"
+              decoding="async"
             />
             <span class="graffiti-author">{{ message.userName }}</span>
           </div>

@@ -1,8 +1,11 @@
 <template>
   <div class="header-block">
+    <!-- ✅ 배경 이미지 지연 로딩 적용 -->
     <div
       class="profile-bg"
-      :style="{ backgroundImage: `url(${data.backgroundImage})` }"
+      :class="{ 'bg-loaded': isBgLoaded }"
+      :style="bgStyle"
+      ref="bgRef"
     >
       <div
         v-if="gradientEnabled"
@@ -12,9 +15,17 @@
     </div>
 
     <div class="header-content">
-      <!-- Logo (if provided) -->
+      <!-- Logo (if provided) - 지연 로딩 적용 -->
       <div v-if="data.logoUrl" class="store-logo-container">
-        <img :src="data.logoUrl" alt="매장 로고" class="store-logo" />
+        <img
+          :src="data.logoUrl"
+          alt="매장 로고"
+          class="store-logo"
+          loading="lazy"
+          decoding="async"
+          @load="onLogoLoad"
+          :class="{ 'logo-loaded': isLogoLoaded }"
+        />
       </div>
 
       <h1 class="store-name" :style="titleStyle">{{ data.storeName }}</h1>
@@ -28,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { HeaderBlockData } from '@/types/blocks'
 
 interface Props {
@@ -36,6 +47,65 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// ✅ 이미지 로딩 상태 관리
+const isBgLoaded = ref(false)
+const isLogoLoaded = ref(false)
+const bgRef = ref<HTMLElement | null>(null)
+
+// 배경 이미지 스타일 (지연 로딩 후 적용)
+const bgStyle = computed(() => {
+  if (!isBgLoaded.value) return {}
+  return { backgroundImage: `url(${props.data.backgroundImage})` }
+})
+
+// 로고 로드 완료 핸들러
+const onLogoLoad = () => {
+  isLogoLoaded.value = true
+}
+
+// Intersection Observer로 배경 이미지 지연 로딩
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+  if (!props.data.backgroundImage) {
+    isBgLoaded.value = true
+    return
+  }
+
+  // 배경 이미지 사전 로드
+  const preloadBg = () => {
+    const img = new Image()
+    img.onload = () => {
+      isBgLoaded.value = true
+    }
+    img.onerror = () => {
+      isBgLoaded.value = true // 에러 시에도 표시
+    }
+    img.src = props.data.backgroundImage
+  }
+
+  // Intersection Observer로 뷰포트에 들어오면 로드
+  if ('IntersectionObserver' in window && bgRef.value) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          preloadBg()
+          observer?.disconnect()
+        }
+      },
+      { rootMargin: '100px' } // 100px 전에 미리 로드
+    )
+    observer.observe(bgRef.value)
+  } else {
+    // Fallback: 즉시 로드
+    preloadBg()
+  }
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+})
 
 const welcomeLines = computed(() => {
   return props.data.welcomeMessage.split('\n').filter(line => line.trim())
@@ -116,6 +186,13 @@ const descStyle = computed(() => {
   background-position: center;
   border-radius: 0;
   z-index: 1;
+  background-color: #1a1a1a; /* 로딩 전 플레이스홀더 색상 */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.profile-bg.bg-loaded {
+  opacity: 1;
 }
 
 /* Gradient overlay effect - 사진에서 배경색으로 자연스럽게 페이드 */
@@ -154,6 +231,12 @@ const descStyle = computed(() => {
     0 4px 16px rgba(0, 0, 0, 0.2),
     inset 0 0 0 1px rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.store-logo.logo-loaded {
+  opacity: 1;
 }
 
 .store-name {

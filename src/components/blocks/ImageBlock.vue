@@ -1,7 +1,7 @@
 <template>
   <div class="image-block">
     <div class="image-container" :class="`aspect-ratio--${data.aspectRatio}`">
-      <img :src="data.imageUrl" :alt="data.caption || '이미지'" class="block-image" />
+      <img :src="data.imageUrl" :alt="data.caption || '이미지'" class="block-image" loading="lazy" decoding="async" />
     </div>
     <p v-if="data.caption" class="image-caption">{{ data.caption }}</p>
   </div>

@@ -7,7 +7,7 @@
         <div class="menu-rank-item" v-for="(item, index) in data.items" :key="index">
           <span class="rank-number">{{ index + 1 }}</span>
           <div v-if="item.imageUrl" class="menu-thumbnail">
-            <img :src="item.imageUrl" :alt="item.name" />
+            <img :src="item.imageUrl" :alt="item.name" loading="lazy" decoding="async" />
           </div>
           <div class="menu-info">
             <div class="menu-details">

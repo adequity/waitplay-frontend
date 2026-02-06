@@ -11,7 +11,7 @@
         @click="openVideo(video.url)"
       >
         <div class="carousel-thumbnail">
-          <img :src="video.thumbnail" alt="Video thumbnail" />
+          <img :src="video.thumbnail" alt="Video thumbnail" loading="lazy" decoding="async" />
           <div class="play-button-carousel">▶</div>
         </div>
       </div>
@@ -26,7 +26,7 @@
         @click="openVideo(video.url)"
       >
         <div class="video-thumbnail">
-          <img :src="video.thumbnail" alt="Video thumbnail" />
+          <img :src="video.thumbnail" alt="Video thumbnail" loading="lazy" decoding="async" />
           <div class="play-button-large">▶</div>
         </div>
       </div>
@@ -41,7 +41,7 @@
         @click="openVideo(video.url)"
       >
         <div class="short-thumbnail">
-          <img :src="video.thumbnail" alt="Video thumbnail" />
+          <img :src="video.thumbnail" alt="Video thumbnail" loading="lazy" decoding="async" />
           <div class="play-button-small">▶</div>
         </div>
         <p v-if="video.title" class="video-title">{{ video.title }}</p>
@@ -57,7 +57,7 @@
         @click="openVideo(video.url)"
       >
         <div class="video-thumbnail">
-          <img :src="video.thumbnail" alt="Video thumbnail" />
+          <img :src="video.thumbnail" alt="Video thumbnail" loading="lazy" decoding="async" />
           <div class="play-button-small">▶</div>
         </div>
         <p v-if="video.title" class="video-title">{{ video.title }}</p>
@@ -73,7 +73,7 @@
         @click="openVideo(video.url)"
       >
         <div class="video-thumbnail">
-          <img :src="video.thumbnail" alt="Video thumbnail" />
+          <img :src="video.thumbnail" alt="Video thumbnail" loading="lazy" decoding="async" />
           <div class="play-button-large">▶</div>
         </div>
         <p v-if="video.title" class="video-title">{{ video.title }}</p>
@@ -89,7 +89,7 @@
         @click="openVideo(video.url)"
       >
         <div class="short-thumbnail">
-          <img :src="video.thumbnail" alt="Video thumbnail" />
+          <img :src="video.thumbnail" alt="Video thumbnail" loading="lazy" decoding="async" />
           <div class="play-button-small">▶</div>
         </div>
       </div>

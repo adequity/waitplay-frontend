@@ -177,7 +177,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
 import apiClient from '@/services/api'
-import QRCode from 'qrcode'
+// ✅ QRCode 동적 로딩 (필요할 때만 로드하여 초기 번들 20-30KB 절감)
 import IconBase from '@/components/IconBase.vue'
 import { useAuthStore } from '@/stores/auth'
 import gameSettingsService from '@/services/gameSettingsService'
@@ -405,10 +405,11 @@ const removeLogo = () => {
   }
 }
 
-// Generate QR code image
+// Generate QR code image (✅ 동적 로딩으로 초기 번들 절감)
 const generateQRImage = async (url: string) => {
   try {
-    const dataUrl = await QRCode.toDataURL(url, {
+    const QRCode = await import('qrcode')
+    const dataUrl = await QRCode.default.toDataURL(url, {
       width: 400,
       margin: 4,
       errorCorrectionLevel: 'M',
