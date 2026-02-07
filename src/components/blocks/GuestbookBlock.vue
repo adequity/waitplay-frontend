@@ -75,30 +75,6 @@
                       loading="lazy"
                       decoding="async"
                     />
-                    <!-- 스티커 레이어 -->
-                    <div class="stickers-layer">
-                      <div
-                        v-for="sticker in message.stickers || []"
-                        :key="sticker.id"
-                        class="sticker-item"
-                        :class="{ 'sticker-item--image': sticker.stickerType === 'logo' || sticker.stickerType === 'asset' }"
-                        :style="{
-                          left: `${sticker.positionX}%`,
-                          top: `${sticker.positionY}%`,
-                          transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`
-                        }"
-                      >
-                        <!-- 이미지 타입 스티커 (로고/에셋) -->
-                        <img
-                          v-if="sticker.stickerType === 'logo' || sticker.stickerType === 'asset'"
-                          :src="sticker.stickerContent"
-                          alt="sticker"
-                          class="sticker-image"
-                        />
-                        <!-- 이모지 스티커 -->
-                        <template v-else>{{ sticker.stickerContent }}</template>
-                      </div>
-                    </div>
                     <!-- 액션 버튼들 -->
                     <div class="post-it-actions">
                       <!-- 공유 버튼 -->
@@ -715,18 +691,8 @@ const loadMessages = async () => {
   isLoadingMessages.value = true
   try {
     const response = await guestbookService.getMessages(props.qrCodeId)
-    // 각 메시지에 stickers 배열 초기화 후 스티커 로드
-    const messagesWithStickers = await Promise.all(
-      response.map(async (msg: any) => {
-        try {
-          const stickers = await guestbookService.getStickers(msg.id)
-          return { ...msg, stickers }
-        } catch {
-          return { ...msg, stickers: [] }
-        }
-      })
-    )
-    messages.value = messagesWithStickers
+    // 스티커는 이제 이미지에 합성되어 저장되므로 별도 로드 불필요
+    messages.value = response.map((msg: any) => ({ ...msg, stickers: [] }))
     totalMessageCount.value = response.length
   } catch {
     // API가 아직 구현되지 않았거나 네트워크 에러 시 조용히 처리
@@ -1539,37 +1505,6 @@ const handleLike = async (message: any) => {
 .post-it-image-container {
   position: relative;
   width: 100%;
-}
-
-.stickers-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.sticker-item {
-  position: absolute;
-  font-size: 24px;
-  line-height: 1;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
-}
-
-/* 이미지 스티커 */
-.sticker-item--image {
-  font-size: inherit;
-  text-shadow: none;
-}
-
-.sticker-image {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.2));
 }
 
 /* 포스트잇 액션 버튼들 */
