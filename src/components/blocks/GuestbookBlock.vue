@@ -101,15 +101,6 @@
                     </div>
                     <!-- 액션 버튼들 -->
                     <div class="post-it-actions">
-                      <!-- 스티커 추가 버튼 (본인 방명록만) -->
-                      <button
-                        v-if="isAuthenticated && isMyMessage(message)"
-                        class="action-btn sticker-btn"
-                        @click.stop="openStickerPicker(message)"
-                        title="스티커 추가"
-                      >
-                        😊
-                      </button>
                       <!-- 공유 버튼 -->
                       <button
                         class="action-btn share-btn"
@@ -238,6 +229,38 @@
               ></canvas>
             </div>
 
+            <!-- 캔버스 위에 배치된 스티커들 (작성 중) -->
+            <div class="canvas-stickers-layer" v-if="editingStickers.length > 0">
+              <div
+                v-for="(sticker, index) in editingStickers"
+                :key="index"
+                class="editing-sticker"
+                :class="{ 'selected': selectedEditingStickerIndex === index }"
+                :style="{
+                  left: `${sticker.x}%`,
+                  top: `${sticker.y}%`,
+                  transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`
+                }"
+                @mousedown.stop="selectEditingSticker(index, $event)"
+                @touchstart.stop.prevent="selectEditingStickerTouch(index, $event)"
+              >
+                <img
+                  v-if="sticker.type === 'logo' || sticker.type === 'asset'"
+                  :src="sticker.content"
+                  class="editing-sticker-img"
+                />
+                <span v-else class="editing-sticker-emoji">{{ sticker.content }}</span>
+                <!-- 선택된 스티커 삭제 버튼 -->
+                <button
+                  v-if="selectedEditingStickerIndex === index"
+                  class="sticker-delete-btn"
+                  @click.stop="deleteEditingSticker(index)"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
             <!-- 도구 모음 -->
             <div class="modal-tools">
               <div class="tools-row">
@@ -266,12 +289,45 @@
                   <div class="brush-size-preview" :style="{ width: `${brushSize}px`, height: `${brushSize}px` }"></div>
                 </div>
 
+                <!-- 스티커 추가 버튼 -->
+                <button @click="openEditingStickerPicker" class="icon-btn sticker-add-btn" title="스티커 추가">
+                  😊
+                </button>
+
                 <!-- 지우기 버튼 -->
                 <button @click="clearCanvas" class="icon-btn clear-btn" title="지우기">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                   </svg>
                 </button>
+              </div>
+
+              <!-- 선택된 스티커 조절 패널 -->
+              <div v-if="selectedEditingSticker" class="sticker-edit-controls">
+                <div class="control-row">
+                  <label>크기</label>
+                  <input
+                    type="range"
+                    v-model.number="selectedEditingSticker.scale"
+                    min="0.3"
+                    max="2"
+                    step="0.1"
+                    class="control-slider"
+                  />
+                  <span class="control-value">{{ Math.round(selectedEditingSticker.scale * 100) }}%</span>
+                </div>
+                <div class="control-row">
+                  <label>회전</label>
+                  <input
+                    type="range"
+                    v-model.number="selectedEditingSticker.rotation"
+                    min="-180"
+                    max="180"
+                    step="5"
+                    class="control-slider"
+                  />
+                  <span class="control-value">{{ selectedEditingSticker.rotation }}°</span>
+                </div>
               </div>
 
               <!-- 완료 버튼 -->
@@ -293,14 +349,14 @@
       </Transition>
     </Teleport>
 
-    <!-- 스티커 피커 모달 -->
+    <!-- 작성 모드용 스티커 피커 모달 -->
     <Teleport to="body">
       <Transition name="modal-fade">
-        <div v-if="isStickerPickerOpen" class="sticker-picker-overlay" @click.self="closeStickerPicker">
+        <div v-if="isEditingStickerPickerOpen" class="sticker-picker-overlay" @click.self="closeEditingStickerPicker">
           <div class="sticker-picker-modal">
             <div class="sticker-picker-header">
               <h4>스티커 추가</h4>
-              <button @click="closeStickerPicker" class="sticker-picker-close">
+              <button @click="closeEditingStickerPicker" class="sticker-picker-close">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M18 6L6 18M6 6l12 12"/>
                 </svg>
@@ -310,40 +366,39 @@
             <div class="sticker-tabs">
               <button
                 class="sticker-tab"
-                :class="{ active: stickerTab === 'emoji' }"
-                @click="stickerTab = 'emoji'"
+                :class="{ active: editingStickerTab === 'emoji' }"
+                @click="editingStickerTab = 'emoji'"
               >
                 이모지
               </button>
               <button
                 class="sticker-tab"
-                :class="{ active: stickerTab === 'deco' }"
-                @click="stickerTab = 'deco'"
+                :class="{ active: editingStickerTab === 'deco' }"
+                @click="editingStickerTab = 'deco'"
               >
                 다꾸
               </button>
               <button
                 class="sticker-tab"
-                :class="{ active: stickerTab === 'store' }"
-                @click="stickerTab = 'store'; loadStickerAssets()"
+                :class="{ active: editingStickerTab === 'store' }"
+                @click="editingStickerTab = 'store'; loadStickerAssets()"
               >
                 매장
               </button>
             </div>
             <!-- 이모지 탭 -->
-            <div v-if="stickerTab === 'emoji'" class="sticker-grid">
+            <div v-if="editingStickerTab === 'emoji'" class="sticker-grid">
               <button
                 v-for="emoji in emojiList"
                 :key="emoji"
                 class="sticker-option"
-                @click="selectStickerForPlacement('emoji', emoji)"
-                :disabled="addingStickerMessageId !== null"
+                @click="addEditingSticker('emoji', emoji)"
               >
                 {{ emoji }}
               </button>
             </div>
             <!-- 다꾸 스티커팩 탭 -->
-            <div v-else-if="stickerTab === 'deco'" class="sticker-content">
+            <div v-else-if="editingStickerTab === 'deco'" class="sticker-content">
               <div class="deco-category-tabs">
                 <button
                   v-for="(stickers, category) in decoStickerPacks"
@@ -360,25 +415,22 @@
                   v-for="sticker in decoStickerPacks[selectedDecoCategory]"
                   :key="sticker"
                   class="sticker-option deco-sticker"
-                  @click="selectStickerForPlacement('emoji', sticker)"
-                  :disabled="addingStickerMessageId !== null"
+                  @click="addEditingSticker('emoji', sticker)"
                 >
                   {{ sticker }}
                 </button>
               </div>
             </div>
-            <!-- 매장 스티커 탭 (로고 + 에셋) -->
-            <div v-else-if="stickerTab === 'store'" class="sticker-content">
+            <!-- 매장 스티커 탭 -->
+            <div v-else-if="editingStickerTab === 'store'" class="sticker-content">
               <div v-if="isLoadingStickerAssets" class="sticker-loading">
                 <span class="loading-spinner"></span>
                 불러오는 중...
               </div>
               <div v-else-if="stickerAssets.length === 0" class="sticker-empty">
                 <span>사용 가능한 스티커가 없습니다</span>
-                <span class="sticker-empty-hint">관리자가 로고나 게임 에셋을 등록하면 여기에 표시됩니다</span>
               </div>
               <template v-else>
-                <!-- 로고 섹션 -->
                 <div v-if="logoAssets.length > 0" class="sticker-section">
                   <div class="sticker-section-title">매장 로고</div>
                   <div class="sticker-asset-grid">
@@ -386,16 +438,12 @@
                       v-for="asset in logoAssets"
                       :key="asset.id"
                       class="sticker-asset-option"
-                      @click="selectAssetForPlacement(asset)"
-                      :disabled="addingStickerMessageId !== null"
-                      :title="asset.name"
+                      @click="addEditingSticker(asset.type, asset.imageUrl)"
                     >
                       <img :src="asset.imageUrl" :alt="asset.name" class="sticker-asset-img" />
-                      <span class="sticker-asset-label">{{ asset.name }}</span>
                     </button>
                   </div>
                 </div>
-                <!-- 게임 에셋 섹션 -->
                 <div v-if="gameAssets.length > 0" class="sticker-section">
                   <div class="sticker-section-title">게임 에셋</div>
                   <div class="sticker-asset-grid">
@@ -403,109 +451,13 @@
                       v-for="asset in gameAssets"
                       :key="asset.id"
                       class="sticker-asset-option"
-                      @click="selectAssetForPlacement(asset)"
-                      :disabled="addingStickerMessageId !== null"
-                      :title="asset.name"
+                      @click="addEditingSticker(asset.type, asset.imageUrl)"
                     >
                       <img :src="asset.imageUrl" :alt="asset.name" class="sticker-asset-img" />
-                      <span class="sticker-asset-label">{{ asset.name }}</span>
                     </button>
                   </div>
                 </div>
               </template>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
-    <!-- 스티커 배치 모달 (드래그로 위치 지정) -->
-    <Teleport to="body">
-      <Transition name="modal-fade">
-        <div v-if="isStickerPlacementMode" class="sticker-placement-overlay">
-          <div class="sticker-placement-modal">
-            <div class="placement-header">
-              <h4>스티커 위치 지정</h4>
-              <p class="placement-hint">드래그하여 위치를 정하고, 슬라이더로 크기와 회전을 조절하세요</p>
-            </div>
-
-            <!-- 미리보기 영역 -->
-            <div
-              class="placement-preview"
-              ref="placementContainerRef"
-              @mousedown="startStickerDrag"
-              @mousemove="dragSticker"
-              @mouseup="stopStickerDrag"
-              @mouseleave="stopStickerDrag"
-              @touchstart.prevent="startStickerTouchDrag"
-              @touchmove.prevent="dragStickerTouch"
-              @touchend.prevent="stopStickerDrag"
-            >
-              <!-- 방명록 이미지 배경 -->
-              <img
-                v-if="selectedMessageForSticker?.imageUrl"
-                :src="selectedMessageForSticker.imageUrl"
-                class="placement-bg-image"
-              />
-              <!-- 배치할 스티커 -->
-              <div
-                class="placement-sticker"
-                :style="{
-                  left: `${stickerPlacementPos.x}%`,
-                  top: `${stickerPlacementPos.y}%`,
-                  transform: `translate(-50%, -50%) rotate(${stickerRotation}deg) scale(${stickerScale})`
-                }"
-              >
-                <img
-                  v-if="pendingSticker?.type === 'logo' || pendingSticker?.type === 'asset'"
-                  :src="pendingSticker.content"
-                  class="placement-sticker-img"
-                />
-                <span v-else class="placement-sticker-emoji">{{ pendingSticker?.content }}</span>
-              </div>
-            </div>
-
-            <!-- 조절 컨트롤 -->
-            <div class="placement-controls">
-              <div class="control-row">
-                <label>크기</label>
-                <input
-                  type="range"
-                  v-model.number="stickerScale"
-                  min="0.3"
-                  max="2"
-                  step="0.1"
-                  class="control-slider"
-                />
-                <span class="control-value">{{ Math.round(stickerScale * 100) }}%</span>
-              </div>
-              <div class="control-row">
-                <label>회전</label>
-                <input
-                  type="range"
-                  v-model.number="stickerRotation"
-                  min="-180"
-                  max="180"
-                  step="5"
-                  class="control-slider"
-                />
-                <span class="control-value">{{ stickerRotation }}°</span>
-              </div>
-            </div>
-
-            <!-- 버튼 -->
-            <div class="placement-actions">
-              <button class="placement-cancel" @click="cancelStickerPlacement">취소</button>
-              <button
-                class="placement-confirm"
-                @click="confirmStickerPlacement"
-                :disabled="addingStickerMessageId !== null"
-              >
-                <template v-if="addingStickerMessageId">
-                  <span class="spinner-small"></span>
-                </template>
-                <template v-else>붙이기</template>
-              </button>
             </div>
           </div>
         </div>
@@ -644,22 +596,34 @@ const totalMessageCount = ref(0)
 // 좋아요 관련
 const likingMessageId = ref<string | null>(null)
 
-// 스티커 관련
-const isStickerPickerOpen = ref(false)
-const selectedMessageForSticker = ref<any>(null)
-const addingStickerMessageId = ref<string | null>(null)
-const stickerTab = ref<'emoji' | 'store' | 'deco'>('emoji')
+// 스티커 관련 (에셋 로드용)
 const stickerAssets = ref<StickerAsset[]>([])
 const isLoadingStickerAssets = ref(false)
 const stickerAssetsLoaded = ref(false) // 캐싱용 플래그
 
-// 스티커 배치 모드 (드래그로 위치 지정)
-const isStickerPlacementMode = ref(false)
-const pendingSticker = ref<{ type: string; content: string } | null>(null)
-const stickerPlacementPos = ref({ x: 50, y: 50 })
-const stickerScale = ref(1.0)
-const stickerRotation = ref(0)
-const placementContainerRef = ref<HTMLElement | null>(null)
+// 작성 모드 스티커 편집
+interface EditingSticker {
+  type: string
+  content: string
+  x: number
+  y: number
+  scale: number
+  rotation: number
+}
+const editingStickers = ref<EditingSticker[]>([])
+const selectedEditingStickerIndex = ref<number | null>(null)
+const isEditingStickerPickerOpen = ref(false)
+const editingStickerTab = ref<'emoji' | 'store' | 'deco'>('emoji')
+
+// 스티커 드래그 상태
+let isDraggingEditingSticker = false
+let dragStartOffset = { x: 0, y: 0 }
+
+// 선택된 스티커 (타입 안전성)
+const selectedEditingSticker = computed(() => {
+  if (selectedEditingStickerIndex.value === null) return null
+  return editingStickers.value[selectedEditingStickerIndex.value] ?? null
+})
 
 // 이모지 목록
 const emojiList = ['😊', '❤️', '👍', '🎉', '✨', '🔥', '💯', '🌟', '💕', '😍', '🥰', '😘', '🤩', '👏', '💪', '🙌']
@@ -706,6 +670,10 @@ const closeModal = () => {
   document.body.style.overflow = '' // 스크롤 복원
   hasDrawing.value = false
 
+  // 스티커 초기화
+  editingStickers.value = []
+  selectedEditingStickerIndex.value = null
+
   // 히스토리 뒤로가기 (모달이 히스토리에 추가됐으면)
   if (history.state?.modal === 'guestbook') {
     history.back()
@@ -718,6 +686,8 @@ const handlePopState = (event: PopStateEvent) => {
     isModalOpen.value = false
     document.body.style.overflow = ''
     hasDrawing.value = false
+    editingStickers.value = []
+    selectedEditingStickerIndex.value = null
   }
 }
 
@@ -885,6 +855,10 @@ const clearCanvas = () => {
     ctx.value.fillStyle = '#FFFFFF'
     ctx.value.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
   }
+
+  // 스티커도 모두 제거
+  editingStickers.value = []
+  selectedEditingStickerIndex.value = null
   hasDrawing.value = false
 }
 
@@ -894,13 +868,13 @@ const submitDrawing = async () => {
   isSubmitting.value = true
 
   try {
-    // 이미지 리사이징 및 압축
-    const resizedImageData = await resizeAndCompressImage(canvasRef.value)
+    // 스티커를 캔버스에 합성한 후 이미지 생성
+    const composedImageData = await composeAndResizeImage()
 
     // API 호출하여 이미지 저장
     await guestbookService.createMessage({
       qrCode: props.qrCodeId,  // QR Code 문자열 전달
-      imageData: resizedImageData,
+      imageData: composedImageData,
       color: 'yellow' // 기본 색상
     })
 
@@ -926,10 +900,10 @@ const submitDrawing = async () => {
           await followService.followAdmin(props.qrCodeId)
 
           // 팔로우 성공 후 방명록 다시 제출
-          const resizedImageData = await resizeAndCompressImage(canvasRef.value!)
+          const composedImageData = await composeAndResizeImage()
           await guestbookService.createMessage({
             qrCode: props.qrCodeId,
-            imageData: resizedImageData,
+            imageData: composedImageData,
             color: 'yellow'
           })
 
@@ -949,15 +923,17 @@ const submitDrawing = async () => {
   }
 }
 
-// 이미지 리사이징 및 압축 함수
-const resizeAndCompressImage = async (canvas: HTMLCanvasElement): Promise<string> => {
-  // 최대 크기 설정 (방명록 카드 크기에 맞춤)
+// 스티커를 캔버스에 합성하고 리사이징하는 함수
+const composeAndResizeImage = async (): Promise<string> => {
+  if (!canvasRef.value) throw new Error('Canvas not found')
+
   const MAX_WIDTH = 400
   const MAX_HEIGHT = 400
-  const QUALITY = 0.75 // JPEG 품질 (0.0 - 1.0)
+  const QUALITY = 0.75
 
-  let width = canvas.width
-  let height = canvas.height
+  const sourceCanvas = canvasRef.value
+  let width = sourceCanvas.width
+  let height = sourceCanvas.height
 
   // 비율 유지하면서 리사이징
   if (width > MAX_WIDTH || height > MAX_HEIGHT) {
@@ -966,31 +942,74 @@ const resizeAndCompressImage = async (canvas: HTMLCanvasElement): Promise<string
     height = Math.floor(height * ratio)
   }
 
-  // 새 캔버스 생성
-  const resizedCanvas = document.createElement('canvas')
-  resizedCanvas.width = width
-  resizedCanvas.height = height
+  // 합성용 캔버스 생성
+  const composedCanvas = document.createElement('canvas')
+  composedCanvas.width = width
+  composedCanvas.height = height
+  const composedCtx = composedCanvas.getContext('2d')
+  if (!composedCtx) throw new Error('Failed to get canvas context')
 
-  const ctx = resizedCanvas.getContext('2d')
-  if (!ctx) throw new Error('Failed to get canvas context')
-
-  // 낙서 모드: 투명 배경 유지 / 포스트잇 모드: 흰색 배경
+  // 배경 설정
   if (displayMode.value !== 'graffiti') {
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, width, height)
+    composedCtx.fillStyle = '#ffffff'
+    composedCtx.fillRect(0, 0, width, height)
   }
 
-  // 이미지 리사이징 (부드러운 스케일링)
-  ctx.imageSmoothingEnabled = true
-  ctx.imageSmoothingQuality = 'high'
-  ctx.drawImage(canvas, 0, 0, width, height)
+  // 원본 그림 그리기
+  composedCtx.imageSmoothingEnabled = true
+  composedCtx.imageSmoothingQuality = 'high'
+  composedCtx.drawImage(sourceCanvas, 0, 0, width, height)
 
-  // 낙서 모드: PNG (투명 배경 유지) / 포스트잇 모드: JPEG (파일 크기 작음)
+  // 스티커 합성
+  const scaleRatio = width / sourceCanvas.width
+
+  for (const sticker of editingStickers.value) {
+    const x = (sticker.x / 100) * width
+    const y = (sticker.y / 100) * height
+
+    composedCtx.save()
+    composedCtx.translate(x, y)
+    composedCtx.rotate((sticker.rotation * Math.PI) / 180)
+    composedCtx.scale(sticker.scale * scaleRatio, sticker.scale * scaleRatio)
+
+    if (sticker.type === 'logo' || sticker.type === 'asset') {
+      // 이미지 스티커
+      try {
+        const img = await loadImage(sticker.content)
+        const imgSize = 60 // 기본 스티커 크기
+        composedCtx.drawImage(img, -imgSize / 2, -imgSize / 2, imgSize, imgSize)
+      } catch (e) {
+        console.error('Failed to load sticker image:', e)
+      }
+    } else {
+      // 이모지 스티커
+      composedCtx.font = '32px sans-serif'
+      composedCtx.textAlign = 'center'
+      composedCtx.textBaseline = 'middle'
+      composedCtx.fillText(sticker.content, 0, 0)
+    }
+
+    composedCtx.restore()
+  }
+
+  // 이미지 데이터 반환
   if (displayMode.value === 'graffiti') {
-    return resizedCanvas.toDataURL('image/png')
+    return composedCanvas.toDataURL('image/png')
   }
-  return resizedCanvas.toDataURL('image/jpeg', QUALITY)
+  return composedCanvas.toDataURL('image/jpeg', QUALITY)
 }
+
+// 이미지 로드 헬퍼 함수
+const loadImage = (src: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
 
 const goToLogin = () => {
   const currentQr = router.currentRoute.value.query.qr
@@ -1112,128 +1131,170 @@ const fallbackShare = (url: string) => {
   prompt('이 링크를 복사하세요:', url)
 }
 
-// 스티커 피커 열기
-const openStickerPicker = (message: any) => {
-  selectedMessageForSticker.value = message
-  isStickerPickerOpen.value = true
+// ===== 작성 모드 스티커 함수들 =====
+
+// 작성 모드 스티커 피커 열기
+const openEditingStickerPicker = () => {
+  isEditingStickerPickerOpen.value = true
+  // 매장 스티커 미리 로드
+  loadStickerAssets()
 }
 
-// 스티커 피커 닫기
-const closeStickerPicker = () => {
-  isStickerPickerOpen.value = false
-  stickerTab.value = 'emoji' // 탭 상태 초기화
+// 작성 모드 스티커 피커 닫기
+const closeEditingStickerPicker = () => {
+  isEditingStickerPickerOpen.value = false
+  editingStickerTab.value = 'emoji'
 }
 
-// 스티커 선택 후 배치 모드로 전환
-const selectStickerForPlacement = (type: string, content: string) => {
-  pendingSticker.value = { type, content }
-  stickerPlacementPos.value = { x: 50, y: 50 }
-  stickerScale.value = type === 'emoji' ? 1.0 : 0.8
-  stickerRotation.value = 0
-  isStickerPickerOpen.value = false
-  isStickerPlacementMode.value = true
-}
-
-// 에셋 스티커 선택
-const selectAssetForPlacement = (asset: StickerAsset) => {
-  pendingSticker.value = { type: asset.type, content: asset.imageUrl }
-  stickerPlacementPos.value = { x: 50, y: 50 }
-  stickerScale.value = 0.8
-  stickerRotation.value = 0
-  isStickerPickerOpen.value = false
-  isStickerPlacementMode.value = true
-}
-
-// 스티커 드래그 관련
-let isDraggingSticker = false
-
-const startStickerDrag = (e: MouseEvent) => {
-  isDraggingSticker = true
-  updateStickerPosition(e)
-}
-
-const dragSticker = (e: MouseEvent) => {
-  if (!isDraggingSticker) return
-  updateStickerPosition(e)
-}
-
-const stopStickerDrag = () => {
-  isDraggingSticker = false
-}
-
-const updateStickerPosition = (e: MouseEvent) => {
-  if (!placementContainerRef.value) return
-  const rect = placementContainerRef.value.getBoundingClientRect()
-  const x = ((e.clientX - rect.left) / rect.width) * 100
-  const y = ((e.clientY - rect.top) / rect.height) * 100
-  stickerPlacementPos.value = {
-    x: Math.max(5, Math.min(95, x)),
-    y: Math.max(5, Math.min(95, y))
+// 스티커 추가 (작성 모드)
+const addEditingSticker = (type: string, content: string) => {
+  const newSticker: EditingSticker = {
+    type,
+    content,
+    x: 50,
+    y: 50,
+    scale: type === 'emoji' ? 1.0 : 0.6,
+    rotation: 0
   }
+  editingStickers.value.push(newSticker)
+  selectedEditingStickerIndex.value = editingStickers.value.length - 1
+  closeEditingStickerPicker()
+  hasDrawing.value = true // 스티커만 있어도 제출 가능
 }
 
-// 터치 이벤트 처리
-const startStickerTouchDrag = (e: TouchEvent) => {
-  isDraggingSticker = true
-  updateStickerTouchPosition(e)
+// 스티커 선택 (마우스)
+const selectEditingSticker = (index: number, e: MouseEvent) => {
+  selectedEditingStickerIndex.value = index
+  isDraggingEditingSticker = true
+
+  // 캔버스 컨테이너 기준 위치 계산
+  const container = canvasRef.value?.parentElement
+  if (!container) return
+
+  const rect = container.getBoundingClientRect()
+  const sticker = editingStickers.value[index]
+  if (!sticker) return
+
+  const stickerX = (sticker.x / 100) * rect.width
+  const stickerY = (sticker.y / 100) * rect.height
+
+  dragStartOffset = {
+    x: e.clientX - rect.left - stickerX,
+    y: e.clientY - rect.top - stickerY
+  }
+
+  // 이벤트 리스너 추가
+  document.addEventListener('mousemove', dragEditingSticker)
+  document.addEventListener('mouseup', stopDraggingEditingSticker)
 }
 
-const dragStickerTouch = (e: TouchEvent) => {
-  if (!isDraggingSticker) return
-  updateStickerTouchPosition(e)
-}
+// 스티커 선택 (터치)
+const selectEditingStickerTouch = (index: number, e: TouchEvent) => {
+  selectedEditingStickerIndex.value = index
+  isDraggingEditingSticker = true
 
-const updateStickerTouchPosition = (e: TouchEvent) => {
-  if (!placementContainerRef.value || !e.touches[0]) return
-  const rect = placementContainerRef.value.getBoundingClientRect()
   const touch = e.touches[0]
-  const x = ((touch.clientX - rect.left) / rect.width) * 100
-  const y = ((touch.clientY - rect.top) / rect.height) * 100
-  stickerPlacementPos.value = {
-    x: Math.max(5, Math.min(95, x)),
-    y: Math.max(5, Math.min(95, y))
+  if (!touch) return
+
+  const container = canvasRef.value?.parentElement
+  if (!container) return
+
+  const rect = container.getBoundingClientRect()
+  const sticker = editingStickers.value[index]
+  if (!sticker) return
+
+  const stickerX = (sticker.x / 100) * rect.width
+  const stickerY = (sticker.y / 100) * rect.height
+
+  dragStartOffset = {
+    x: touch.clientX - rect.left - stickerX,
+    y: touch.clientY - rect.top - stickerY
+  }
+
+  document.addEventListener('touchmove', dragEditingStickerTouch, { passive: false })
+  document.addEventListener('touchend', stopDraggingEditingSticker)
+}
+
+// 스티커 드래그 (마우스)
+const dragEditingSticker = (e: MouseEvent) => {
+  if (!isDraggingEditingSticker || selectedEditingStickerIndex.value === null) return
+
+  const container = canvasRef.value?.parentElement
+  if (!container) return
+
+  const sticker = editingStickers.value[selectedEditingStickerIndex.value]
+  if (!sticker) return
+
+  const rect = container.getBoundingClientRect()
+  const x = ((e.clientX - rect.left - dragStartOffset.x) / rect.width) * 100
+  const y = ((e.clientY - rect.top - dragStartOffset.y) / rect.height) * 100
+
+  sticker.x = Math.max(5, Math.min(95, x))
+  sticker.y = Math.max(5, Math.min(95, y))
+}
+
+// 스티커 드래그 (터치)
+const dragEditingStickerTouch = (e: TouchEvent) => {
+  if (!isDraggingEditingSticker || selectedEditingStickerIndex.value === null) return
+  e.preventDefault()
+
+  const touch = e.touches[0]
+  if (!touch) return
+
+  const container = canvasRef.value?.parentElement
+  if (!container) return
+
+  const sticker = editingStickers.value[selectedEditingStickerIndex.value]
+  if (!sticker) return
+
+  const rect = container.getBoundingClientRect()
+  const x = ((touch.clientX - rect.left - dragStartOffset.x) / rect.width) * 100
+  const y = ((touch.clientY - rect.top - dragStartOffset.y) / rect.height) * 100
+
+  sticker.x = Math.max(5, Math.min(95, x))
+  sticker.y = Math.max(5, Math.min(95, y))
+}
+
+// 스티커 드래그 종료
+const stopDraggingEditingSticker = () => {
+  isDraggingEditingSticker = false
+  document.removeEventListener('mousemove', dragEditingSticker)
+  document.removeEventListener('mouseup', stopDraggingEditingSticker)
+  document.removeEventListener('touchmove', dragEditingStickerTouch)
+  document.removeEventListener('touchend', stopDraggingEditingSticker)
+}
+
+// 스티커 삭제
+const deleteEditingSticker = (index: number) => {
+  editingStickers.value.splice(index, 1)
+  selectedEditingStickerIndex.value = null
+
+  // 스티커와 그림 모두 없으면 hasDrawing false
+  if (editingStickers.value.length === 0 && !checkCanvasHasDrawing()) {
+    hasDrawing.value = false
   }
 }
 
-// 스티커 배치 취소
-const cancelStickerPlacement = () => {
-  isStickerPlacementMode.value = false
-  pendingSticker.value = null
-  selectedMessageForSticker.value = null
-}
+// 캔버스에 실제 그림이 있는지 확인
+const checkCanvasHasDrawing = (): boolean => {
+  if (!canvasRef.value || !ctx.value) return false
 
-// 스티커 배치 확정
-const confirmStickerPlacement = async () => {
-  if (!selectedMessageForSticker.value || !pendingSticker.value || addingStickerMessageId.value) return
+  const imageData = ctx.value.getImageData(0, 0, canvasRef.value.width, canvasRef.value.height)
+  const data = imageData.data
 
-  addingStickerMessageId.value = selectedMessageForSticker.value.id
+  // 흰색(255,255,255) 또는 투명(0,0,0,0)이 아닌 픽셀이 있는지 확인
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i] ?? 255
+    const g = data[i + 1] ?? 255
+    const b = data[i + 2] ?? 255
+    const a = data[i + 3] ?? 0
 
-  try {
-    const response = await guestbookService.addSticker(selectedMessageForSticker.value.id, {
-      stickerType: pendingSticker.value.type as any,
-      stickerContent: pendingSticker.value.content,
-      positionX: stickerPlacementPos.value.x,
-      positionY: stickerPlacementPos.value.y,
-      rotation: stickerRotation.value,
-      scale: stickerScale.value
-    })
-
-    // 메시지에 스티커 추가
-    if (!selectedMessageForSticker.value.stickers) {
-      selectedMessageForSticker.value.stickers = []
+    // 투명하지 않고 흰색이 아닌 픽셀
+    if (a > 0 && !(r === 255 && g === 255 && b === 255)) {
+      return true
     }
-    selectedMessageForSticker.value.stickers.push(response)
-
-    // 모달 닫기
-    isStickerPlacementMode.value = false
-    pendingSticker.value = null
-    selectedMessageForSticker.value = null
-  } catch (error) {
-    console.error('Failed to add sticker:', error)
-    alert('스티커 추가에 실패했습니다.')
-  } finally {
-    addingStickerMessageId.value = null
   }
+  return false
 }
 
 // 스티커 에셋 로드 (캐싱 적용)
@@ -2229,6 +2290,133 @@ const handleLike = async (message: any) => {
 
 .modal-canvas-container .drawing-canvas.graffiti-canvas {
   background: transparent;
+}
+
+/* 캔버스 위 스티커 편집 레이어 */
+.canvas-stickers-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.editing-sticker {
+  position: absolute;
+  cursor: move;
+  pointer-events: auto;
+  user-select: none;
+  transition: box-shadow 0.2s;
+}
+
+.editing-sticker.selected {
+  box-shadow: 0 0 0 2px #4ECDC4, 0 0 12px rgba(78, 205, 196, 0.4);
+  border-radius: 4px;
+}
+
+.editing-sticker-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.editing-sticker-emoji {
+  font-size: 32px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.sticker-delete-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 22px;
+  height: 22px;
+  background: #ff4757;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 5;
+}
+
+.sticker-delete-btn:hover {
+  background: #e84050;
+  transform: scale(1.1);
+}
+
+/* 스티커 편집 컨트롤 */
+.sticker-edit-controls {
+  background: #f0fffe;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid #4ECDC4;
+}
+
+.sticker-edit-controls .control-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.sticker-edit-controls .control-row:last-child {
+  margin-bottom: 0;
+}
+
+.sticker-edit-controls label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  min-width: 40px;
+}
+
+.sticker-edit-controls .control-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  background: #ddd;
+  border-radius: 3px;
+  outline: none;
+}
+
+.sticker-edit-controls .control-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #4ECDC4;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sticker-edit-controls .control-value {
+  font-size: 12px;
+  color: #6b7280;
+  min-width: 45px;
+  text-align: right;
+}
+
+/* 스티커 추가 버튼 */
+.sticker-add-btn {
+  font-size: 20px;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 2px solid #ffb74d;
+}
+
+.sticker-add-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 183, 77, 0.4);
 }
 
 /* 모달 도구 모음 */
