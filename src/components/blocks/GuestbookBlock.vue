@@ -1290,9 +1290,10 @@ const loadStickerAssets = async () => {
     const response = await guestbookService.getStickerAssets(props.qrCodeId)
     stickerAssets.value = response.assets
     stickerAssetsLoaded.value = true
-  } catch (error) {
-    console.error('Failed to load sticker assets:', error)
+  } catch {
+    // API가 아직 구현되지 않았거나 에셋이 없는 경우 조용히 처리
     stickerAssets.value = []
+    stickerAssetsLoaded.value = true // 재시도 방지
   } finally {
     isLoadingStickerAssets.value = false
   }
