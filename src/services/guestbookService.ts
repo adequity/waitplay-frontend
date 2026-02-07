@@ -37,6 +37,28 @@ export interface ToggleLikeResponse {
   likeCount: number
 }
 
+export interface AddStickerRequest {
+  stickerType: 'emoji' | 'stamp' | 'custom'
+  stickerContent: string
+  positionX: number
+  positionY: number
+  rotation: number
+  scale: number
+}
+
+export interface StickerResponse {
+  id: string
+  userId: string
+  userName: string
+  stickerType: string
+  stickerContent: string
+  positionX: number
+  positionY: number
+  rotation: number
+  scale: number
+  createdAt: string
+}
+
 class GuestbookService {
   /**
    * Create a new guestbook message
@@ -83,6 +105,29 @@ class GuestbookService {
   async getLikeStatus(messageId: string): Promise<{ likeCount: number; isLikedByMe: boolean }> {
     const response = await apiClient.get<{ likeCount: number; isLikedByMe: boolean }>(`/api/guestbook/${messageId}/like`)
     return response.data
+  }
+
+  /**
+   * Add a sticker to a guestbook message
+   */
+  async addSticker(messageId: string, request: AddStickerRequest): Promise<StickerResponse> {
+    const response = await apiClient.post<StickerResponse>(`/api/guestbook/${messageId}/sticker`, request)
+    return response.data
+  }
+
+  /**
+   * Get all stickers for a message
+   */
+  async getStickers(messageId: string): Promise<StickerResponse[]> {
+    const response = await apiClient.get<StickerResponse[]>(`/api/guestbook/${messageId}/stickers`)
+    return response.data
+  }
+
+  /**
+   * Delete a sticker
+   */
+  async deleteSticker(stickerId: string): Promise<void> {
+    await apiClient.delete(`/api/guestbook/sticker/${stickerId}`)
   }
 }
 

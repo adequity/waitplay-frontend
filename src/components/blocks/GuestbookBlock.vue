@@ -66,14 +66,40 @@
                 :style="{ transform: `rotate(${message.rotation}deg)` }"
               >
                 <div class="post-it-content">
-                  <img
-                    v-if="message.imageUrl"
-                    :src="message.imageUrl"
-                    :alt="`${message.userName}의 방명록`"
-                    class="drawing-image"
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <div class="post-it-image-container">
+                    <img
+                      v-if="message.imageUrl"
+                      :src="message.imageUrl"
+                      :alt="`${message.userName}의 방명록`"
+                      class="drawing-image"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <!-- 스티커 레이어 -->
+                    <div class="stickers-layer">
+                      <div
+                        v-for="sticker in message.stickers || []"
+                        :key="sticker.id"
+                        class="sticker-item"
+                        :style="{
+                          left: `${sticker.positionX}%`,
+                          top: `${sticker.positionY}%`,
+                          transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`
+                        }"
+                      >
+                        {{ sticker.stickerContent }}
+                      </div>
+                    </div>
+                    <!-- 스티커 추가 버튼 -->
+                    <button
+                      v-if="isAuthenticated"
+                      class="add-sticker-btn"
+                      @click.stop="openStickerPicker(message)"
+                      title="스티커 추가"
+                    >
+                      😊
+                    </button>
+                  </div>
                   <div class="message-footer">
                     <div class="message-info">
                       <span class="message-author">- {{ message.userName }}</span>
@@ -240,6 +266,35 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- 스티커 피커 모달 -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="isStickerPickerOpen" class="sticker-picker-overlay" @click.self="closeStickerPicker">
+          <div class="sticker-picker-modal">
+            <div class="sticker-picker-header">
+              <h4>스티커 추가</h4>
+              <button @click="closeStickerPicker" class="sticker-picker-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="sticker-grid">
+              <button
+                v-for="emoji in emojiList"
+                :key="emoji"
+                class="sticker-option"
+                @click="addSticker(emoji)"
+                :disabled="addingStickerMessageId !== null"
+              >
+                {{ emoji }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -314,6 +369,14 @@ const totalMessageCount = ref(0)
 // 좋아요 관련
 const likingMessageId = ref<string | null>(null)
 
+// 스티커 관련
+const isStickerPickerOpen = ref(false)
+const selectedMessageForSticker = ref<any>(null)
+const addingStickerMessageId = ref<string | null>(null)
+
+// 이모지 목록
+const emojiList = ['😊', '❤️', '👍', '🎉', '✨', '🔥', '💯', '🌟', '💕', '😍', '🥰', '😘', '🤩', '👏', '💪', '🙌']
+
 // 미리보기용 최신 5개 메시지
 const previewMessages = computed(() => messages.value.slice(0, 5))
 
@@ -372,7 +435,18 @@ const loadMessages = async () => {
   isLoadingMessages.value = true
   try {
     const response = await guestbookService.getMessages(props.qrCodeId)
-    messages.value = response
+    // 각 메시지에 stickers 배열 초기화 후 스티커 로드
+    const messagesWithStickers = await Promise.all(
+      response.map(async (msg: any) => {
+        try {
+          const stickers = await guestbookService.getStickers(msg.id)
+          return { ...msg, stickers }
+        } catch {
+          return { ...msg, stickers: [] }
+        }
+      })
+    )
+    messages.value = messagesWithStickers
     totalMessageCount.value = response.length
   } catch {
     // API가 아직 구현되지 않았거나 네트워크 에러 시 조용히 처리
@@ -645,6 +719,55 @@ const formatDate = (dateString: string): string => {
   }
 }
 
+// 스티커 피커 열기
+const openStickerPicker = (message: any) => {
+  selectedMessageForSticker.value = message
+  isStickerPickerOpen.value = true
+}
+
+// 스티커 피커 닫기
+const closeStickerPicker = () => {
+  isStickerPickerOpen.value = false
+  selectedMessageForSticker.value = null
+}
+
+// 스티커 추가
+const addSticker = async (emoji: string) => {
+  if (!selectedMessageForSticker.value || addingStickerMessageId.value) return
+
+  addingStickerMessageId.value = selectedMessageForSticker.value.id
+
+  try {
+    // 랜덤 위치 및 회전
+    const positionX = 20 + Math.random() * 60 // 20-80%
+    const positionY = 20 + Math.random() * 60 // 20-80%
+    const rotation = -15 + Math.random() * 30 // -15 to 15 degrees
+    const scale = 0.8 + Math.random() * 0.4 // 0.8-1.2
+
+    const response = await guestbookService.addSticker(selectedMessageForSticker.value.id, {
+      stickerType: 'emoji',
+      stickerContent: emoji,
+      positionX,
+      positionY,
+      rotation,
+      scale
+    })
+
+    // 메시지에 스티커 추가
+    if (!selectedMessageForSticker.value.stickers) {
+      selectedMessageForSticker.value.stickers = []
+    }
+    selectedMessageForSticker.value.stickers.push(response)
+
+    closeStickerPicker()
+  } catch (error) {
+    console.error('Failed to add sticker:', error)
+    alert('스티커 추가에 실패했습니다.')
+  } finally {
+    addingStickerMessageId.value = null
+  }
+}
+
 // 좋아요 토글 핸들러
 const handleLike = async (message: any) => {
   if (!isAuthenticated.value) {
@@ -846,6 +969,148 @@ const handleLike = async (message: any) => {
   margin-top: 4px;
   text-align: center;
   font-weight: 600;
+}
+
+/* 포스트잇 이미지 컨테이너 (스티커 레이어 포함) */
+.post-it-image-container {
+  position: relative;
+  width: 100%;
+}
+
+.stickers-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sticker-item {
+  position: absolute;
+  font-size: 24px;
+  line-height: 1;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.add-sticker-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.post-it:hover .add-sticker-btn {
+  opacity: 1;
+}
+
+.add-sticker-btn:hover {
+  transform: scale(1.1);
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 스티커 피커 모달 */
+.sticker-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.sticker-picker-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.sticker-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sticker-picker-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.sticker-picker-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.sticker-picker-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.sticker-option {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sticker-option:hover:not(:disabled) {
+  background: #fff7ed;
+  border-color: #fdba74;
+  transform: scale(1.1);
+}
+
+.sticker-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 방명록 슬라이더 */
