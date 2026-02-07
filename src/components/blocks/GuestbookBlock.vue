@@ -355,12 +355,14 @@
         <div v-if="isEditingStickerPickerOpen" class="sticker-picker-overlay" @click.self="closeEditingStickerPicker">
           <div class="sticker-picker-modal">
             <div class="sticker-picker-header">
-              <h4>스티커 추가</h4>
-              <button @click="closeEditingStickerPicker" class="sticker-picker-close">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
-              </button>
+              <div class="sticker-picker-header-row">
+                <h4>스티커</h4>
+                <button @click="closeEditingStickerPicker" class="sticker-picker-close">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             <!-- 탭 메뉴 -->
             <div class="sticker-tabs">
@@ -927,17 +929,19 @@ const submitDrawing = async () => {
 const composeAndResizeImage = async (): Promise<string> => {
   if (!canvasRef.value) throw new Error('Canvas not found')
 
-  const MAX_WIDTH = 400
-  const MAX_HEIGHT = 400
-  const QUALITY = 0.75
+  // 최적화 설정
+  const MAX_SIZE = 500           // 최대 너비/높이 (px) - 모바일 최적화
+  const JPEG_QUALITY = 0.7       // JPEG 품질 (0.7 = 70%, 용량 대비 품질 균형)
+  const PNG_COMPRESSION = 0.8    // PNG 품질
+  const MAX_FILE_SIZE = 150000   // 최대 파일 크기 목표 (150KB)
 
   const sourceCanvas = canvasRef.value
   let width = sourceCanvas.width
   let height = sourceCanvas.height
 
   // 비율 유지하면서 리사이징
-  if (width > MAX_WIDTH || height > MAX_HEIGHT) {
-    const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height)
+  if (width > MAX_SIZE || height > MAX_SIZE) {
+    const ratio = Math.min(MAX_SIZE / width, MAX_SIZE / height)
     width = Math.floor(width * ratio)
     height = Math.floor(height * ratio)
   }
@@ -955,7 +959,7 @@ const composeAndResizeImage = async (): Promise<string> => {
     composedCtx.fillRect(0, 0, width, height)
   }
 
-  // 원본 그림 그리기
+  // 원본 그림 그리기 (고품질 스무딩)
   composedCtx.imageSmoothingEnabled = true
   composedCtx.imageSmoothingQuality = 'high'
   composedCtx.drawImage(sourceCanvas, 0, 0, width, height)
@@ -992,11 +996,24 @@ const composeAndResizeImage = async (): Promise<string> => {
     composedCtx.restore()
   }
 
-  // 이미지 데이터 반환
+  // 이미지 데이터 생성 (적응형 품질)
   if (displayMode.value === 'graffiti') {
-    return composedCanvas.toDataURL('image/png')
+    // 낙서 모드: PNG (투명 배경)
+    return composedCanvas.toDataURL('image/png', PNG_COMPRESSION)
   }
-  return composedCanvas.toDataURL('image/jpeg', QUALITY)
+
+  // JPEG: 파일 크기 목표에 맞춰 품질 조정
+  let quality = JPEG_QUALITY
+  let result = composedCanvas.toDataURL('image/jpeg', quality)
+
+  // 파일이 너무 크면 품질 단계적 감소
+  while (result.length > MAX_FILE_SIZE && quality > 0.4) {
+    quality -= 0.1
+    result = composedCanvas.toDataURL('image/jpeg', quality)
+  }
+
+  console.log(`Image optimized: ${Math.round(result.length / 1024)}KB, quality: ${Math.round(quality * 100)}%`)
+  return result
 }
 
 // 이미지 로드 헬퍼 함수
@@ -1730,76 +1747,166 @@ const handleLike = async (message: any) => {
   padding: 1rem;
 }
 
-.sticker-picker-modal {
-  background: white;
-  border-radius: 16px;
-  padding: 1rem;
-  max-width: 320px;
-  width: 100%;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+/* ===== 스티커 피커 - 모바일 우선 하단 시트 ===== */
+.sticker-picker-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
+.sticker-picker-modal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  max-height: 70vh;
+  max-height: 70dvh; /* Dynamic viewport height for mobile */
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: sheetSlideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* 드래그 핸들 */
 .sticker-picker-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 20px 16px;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.sticker-picker-header::before {
+  content: '';
+  width: 36px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  margin-bottom: 14px;
+}
+
+.sticker-picker-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  width: 100%;
 }
 
-/* 스티커 탭 */
+.sticker-picker-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.3px;
+}
+
+.sticker-picker-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.06);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #86868b;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sticker-picker-close:active {
+  transform: scale(0.9);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* 스티커 탭 - 모바일 터치 최적화 */
 .sticker-tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 1rem;
+  gap: 0;
+  margin: 0 16px 12px;
+  background: rgba(118, 118, 128, 0.12);
+  border-radius: 12px;
+  padding: 3px;
 }
 
 .sticker-tab {
   flex: 1;
-  padding: 0.5rem 0.75rem;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 500;
-  color: #6b7280;
+  color: #3c3c43;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.sticker-tab:hover {
-  background: #e5e7eb;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .sticker-tab.active {
-  background: #4ECDC4;
-  border-color: #4ECDC4;
-  color: white;
+  background: white;
+  color: #1d1d1f;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
 }
 
-/* 스티커 콘텐츠 영역 */
+.sticker-tab:active:not(.active) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* 스티커 콘텐츠 영역 - 모바일 스크롤 최적화 */
 .sticker-content {
-  min-height: 120px;
-  max-height: 280px;
+  min-height: 180px;
+  max-height: calc(70vh - 180px);
+  max-height: calc(70dvh - 180px);
   overflow-y: auto;
+  padding: 0 16px 20px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* 스크롤바 숨김 (모바일) */
+.sticker-content::-webkit-scrollbar {
+  display: none;
+}
+.sticker-content {
+  scrollbar-width: none;
 }
 
 .sticker-loading {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 120px;
-  color: #9ca3af;
+  gap: 14px;
+  min-height: 180px;
+  color: #86868b;
   font-size: 14px;
 }
 
 .loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #4ECDC4;
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(0, 0, 0, 0.08);
+  border-top-color: #007aff;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -1809,22 +1916,23 @@ const handleLike = async (message: any) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 120px;
-  color: #9ca3af;
-  font-size: 14px;
+  gap: 10px;
+  min-height: 180px;
+  color: #86868b;
+  font-size: 15px;
   text-align: center;
+  padding: 24px;
 }
 
-.sticker-empty-hint {
-  font-size: 11px;
-  color: #c0c0c0;
-  max-width: 200px;
+.sticker-empty::before {
+  content: '🏪';
+  font-size: 40px;
+  margin-bottom: 6px;
 }
 
 /* 스티커 섹션 */
 .sticker-section {
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .sticker-section:last-child {
@@ -1832,41 +1940,43 @@ const handleLike = async (message: any) => {
 }
 
 .sticker-section-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
-  margin-bottom: 8px;
-  padding-left: 2px;
+  color: #86868b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-left: 4px;
 }
 
-/* 에셋 스티커 그리드 */
+/* 에셋 스티커 그리드 - 모바일 최적화 */
 .sticker-asset-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
 }
 
 .sticker-asset-option {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  gap: 8px;
+  padding: 14px 8px;
+  background: #f5f5f7;
+  border: none;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.sticker-asset-option:hover:not(:disabled) {
-  background: #fff7ed;
-  border-color: #fdba74;
-  transform: scale(1.05);
+.sticker-asset-option:active:not(:disabled) {
+  transform: scale(0.92);
+  background: rgba(0, 122, 255, 0.12);
 }
 
 .sticker-asset-option:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -1874,12 +1984,13 @@ const handleLike = async (message: any) => {
   width: 48px;
   height: 48px;
   object-fit: contain;
-  border-radius: 6px;
+  border-radius: 12px;
 }
 
 .sticker-asset-label {
-  font-size: 10px;
-  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+  color: #3c3c43;
   text-align: center;
   max-width: 100%;
   overflow: hidden;
@@ -1887,36 +1998,12 @@ const handleLike = async (message: any) => {
   white-space: nowrap;
 }
 
-.sticker-picker-header h4 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.sticker-picker-close {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  color: #6b7280;
-  transition: all 0.2s;
-}
-
-.sticker-picker-close:hover {
-  background: #f3f4f6;
-  color: #374151;
-}
-
+/* 이모지 스티커 그리드 - 모바일 터치 최적화 */
 .sticker-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 0 16px 20px;
 }
 
 .sticker-option {
@@ -1925,22 +2012,80 @@ const handleLike = async (message: any) => {
   align-items: center;
   justify-content: center;
   font-size: 28px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  background: #f5f5f7;
+  border: none;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  min-height: 54px;
 }
 
-.sticker-option:hover:not(:disabled) {
-  background: #fff7ed;
-  border-color: #fdba74;
-  transform: scale(1.1);
+.sticker-option:active:not(:disabled) {
+  transform: scale(0.88);
+  background: rgba(255, 149, 0, 0.15);
 }
 
 .sticker-option:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* 다꾸 스티커 그리드 */
+.sticker-grid.deco-grid {
+  gap: 8px;
+}
+
+.sticker-option.deco-sticker {
+  font-size: 26px;
+  border-radius: 14px;
+}
+
+.sticker-option.deco-sticker:active:not(:disabled) {
+  background: rgba(255, 45, 85, 0.15);
+}
+
+/* 다꾸 카테고리 탭 - 모바일 스와이프 최적화 */
+.deco-category-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 4px;
+  background: #f5f5f7;
+  border-radius: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.deco-category-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.deco-category-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.deco-category-btn:active {
+  transform: scale(0.9);
+}
+
+.deco-category-btn.active {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 방명록 슬라이더 */
