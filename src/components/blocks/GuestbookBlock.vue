@@ -746,6 +746,9 @@ const initCanvas = () => {
 const startDrawing = (e: MouseEvent) => {
   if (!ctx.value || !canvasRef.value) return
 
+  // 캔버스 터치 시 스티커 선택 해제
+  selectedEditingStickerIndex.value = null
+
   isDrawing.value = true
   hasDrawing.value = true
 
@@ -775,6 +778,9 @@ const draw = (e: MouseEvent) => {
 
 const handleTouchStart = (e: TouchEvent) => {
   if (!ctx.value || !canvasRef.value) return
+
+  // 캔버스 터치 시 스티커 선택 해제
+  selectedEditingStickerIndex.value = null
 
   const touch = e.touches[0]
   if (!touch) return
@@ -1147,6 +1153,11 @@ const addEditingSticker = (type: string, content: string) => {
 
 // 스티커 선택 (마우스)
 const selectEditingSticker = (index: number, e: MouseEvent) => {
+  // 이미 선택된 스티커를 다시 클릭하면 선택 해제
+  if (selectedEditingStickerIndex.value === index) {
+    selectedEditingStickerIndex.value = null
+    return
+  }
   selectedEditingStickerIndex.value = index
   isDraggingEditingSticker = true
 
@@ -1173,6 +1184,11 @@ const selectEditingSticker = (index: number, e: MouseEvent) => {
 
 // 스티커 선택 (터치)
 const selectEditingStickerTouch = (index: number, e: TouchEvent) => {
+  // 이미 선택된 스티커를 다시 터치하면 선택 해제
+  if (selectedEditingStickerIndex.value === index) {
+    selectedEditingStickerIndex.value = null
+    return
+  }
   selectedEditingStickerIndex.value = index
   isDraggingEditingSticker = true
 
