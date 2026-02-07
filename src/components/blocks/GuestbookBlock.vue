@@ -90,15 +90,32 @@
                         {{ sticker.stickerContent }}
                       </div>
                     </div>
-                    <!-- 스티커 추가 버튼 -->
-                    <button
-                      v-if="isAuthenticated"
-                      class="add-sticker-btn"
-                      @click.stop="openStickerPicker(message)"
-                      title="스티커 추가"
-                    >
-                      😊
-                    </button>
+                    <!-- 액션 버튼들 -->
+                    <div class="post-it-actions">
+                      <!-- 스티커 추가 버튼 -->
+                      <button
+                        v-if="isAuthenticated"
+                        class="action-btn sticker-btn"
+                        @click.stop="openStickerPicker(message)"
+                        title="스티커 추가"
+                      >
+                        😊
+                      </button>
+                      <!-- 공유 버튼 -->
+                      <button
+                        class="action-btn share-btn"
+                        @click.stop="shareMessage(message)"
+                        title="공유하기"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="18" cy="5" r="3"/>
+                          <circle cx="6" cy="12" r="3"/>
+                          <circle cx="18" cy="19" r="3"/>
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <div class="message-footer">
                     <div class="message-info">
@@ -295,6 +312,59 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- 공유 모달 -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="isShareModalOpen" class="share-modal-overlay" @click.self="closeShareModal">
+          <div class="share-modal">
+            <div class="share-modal-header">
+              <h4>공유하기</h4>
+              <button @click="closeShareModal" class="share-modal-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="share-options">
+              <button class="share-option" @click="copyShareLink">
+                <div class="share-icon copy-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                  </svg>
+                </div>
+                <span>링크 복사</span>
+              </button>
+              <button class="share-option" @click="shareToKakao">
+                <div class="share-icon kakao-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3C6.5 3 2 6.58 2 11c0 2.85 1.86 5.35 4.64 6.78-.14.53-.54 1.97-.62 2.27-.1.37.14.36.29.26.12-.08 1.87-1.27 2.63-1.79.67.1 1.36.15 2.06.15 5.5 0 10-3.58 10-8S17.5 3 12 3z"/>
+                  </svg>
+                </div>
+                <span>카카오</span>
+              </button>
+              <button class="share-option" @click="shareToTwitter">
+                <div class="share-icon twitter-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </div>
+                <span>X</span>
+              </button>
+              <button class="share-option" @click="shareToFacebook">
+                <div class="share-icon facebook-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </div>
+                <span>페이스북</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -376,6 +446,10 @@ const addingStickerMessageId = ref<string | null>(null)
 
 // 이모지 목록
 const emojiList = ['😊', '❤️', '👍', '🎉', '✨', '🔥', '💯', '🌟', '💕', '😍', '🥰', '😘', '🤩', '👏', '💪', '🙌']
+
+// 공유 관련
+const isShareModalOpen = ref(false)
+const selectedMessageForShare = ref<any>(null)
 
 // 미리보기용 최신 5개 메시지
 const previewMessages = computed(() => messages.value.slice(0, 5))
@@ -719,6 +793,91 @@ const formatDate = (dateString: string): string => {
   }
 }
 
+// 공유 기능
+const shareMessage = async (message: any) => {
+  const shareUrl = `${window.location.origin}/guestbook?qr=${props.qrCodeId}&highlight=${message.id}`
+  const shareText = `${message.userName}님의 방명록을 확인해보세요!`
+
+  // Web Share API 지원 확인
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: '방명록 공유',
+        text: shareText,
+        url: shareUrl
+      })
+    } catch (error: any) {
+      // 사용자가 취소한 경우 무시
+      if (error.name !== 'AbortError') {
+        console.error('Share failed:', error)
+        fallbackShare(shareUrl)
+      }
+    }
+  } else {
+    // Web Share API 미지원 시 모달 표시
+    selectedMessageForShare.value = message
+    isShareModalOpen.value = true
+  }
+}
+
+// 공유 모달 닫기
+const closeShareModal = () => {
+  isShareModalOpen.value = false
+  selectedMessageForShare.value = null
+}
+
+// 링크 복사
+const copyShareLink = async () => {
+  if (!selectedMessageForShare.value) return
+
+  const shareUrl = `${window.location.origin}/guestbook?qr=${props.qrCodeId}&highlight=${selectedMessageForShare.value.id}`
+
+  try {
+    await navigator.clipboard.writeText(shareUrl)
+    alert('링크가 복사되었습니다!')
+    closeShareModal()
+  } catch {
+    // 클립보드 API 미지원 시 폴백
+    fallbackShare(shareUrl)
+  }
+}
+
+// 카카오톡 공유
+const shareToKakao = () => {
+  if (!selectedMessageForShare.value) return
+
+  const shareUrl = `${window.location.origin}/guestbook?qr=${props.qrCodeId}&highlight=${selectedMessageForShare.value.id}`
+  const kakaoShareUrl = `https://story.kakao.com/share?url=${encodeURIComponent(shareUrl)}`
+  window.open(kakaoShareUrl, '_blank', 'width=600,height=400')
+  closeShareModal()
+}
+
+// 트위터 공유
+const shareToTwitter = () => {
+  if (!selectedMessageForShare.value) return
+
+  const shareUrl = `${window.location.origin}/guestbook?qr=${props.qrCodeId}&highlight=${selectedMessageForShare.value.id}`
+  const text = `${selectedMessageForShare.value.userName}님의 방명록을 확인해보세요!`
+  const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`
+  window.open(twitterShareUrl, '_blank', 'width=600,height=400')
+  closeShareModal()
+}
+
+// 페이스북 공유
+const shareToFacebook = () => {
+  if (!selectedMessageForShare.value) return
+
+  const shareUrl = `${window.location.origin}/guestbook?qr=${props.qrCodeId}&highlight=${selectedMessageForShare.value.id}`
+  const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
+  window.open(facebookShareUrl, '_blank', 'width=600,height=400')
+  closeShareModal()
+}
+
+// 폴백 공유 (프롬프트)
+const fallbackShare = (url: string) => {
+  prompt('이 링크를 복사하세요:', url)
+}
+
 // 스티커 피커 열기
 const openStickerPicker = (message: any) => {
   selectedMessageForSticker.value = message
@@ -995,10 +1154,24 @@ const handleLike = async (message: any) => {
   pointer-events: none;
 }
 
-.add-sticker-btn {
+/* 포스트잇 액션 버튼들 */
+.post-it-actions {
   position: absolute;
   top: 4px;
   right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.post-it:hover .post-it-actions {
+  opacity: 1;
+}
+
+.action-btn {
   width: 28px;
   height: 28px;
   background: rgba(255, 255, 255, 0.9);
@@ -1009,19 +1182,136 @@ const handleLike = async (message: any) => {
   justify-content: center;
   font-size: 14px;
   cursor: pointer;
-  opacity: 0;
   transition: all 0.2s ease;
-  z-index: 10;
+  color: #6b7280;
 }
 
-.post-it:hover .add-sticker-btn {
-  opacity: 1;
-}
-
-.add-sticker-btn:hover {
+.action-btn:hover {
   transform: scale(1.1);
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.share-btn:hover {
+  color: #4ECDC4;
+  border-color: #4ECDC4;
+}
+
+/* 공유 모달 */
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.share-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.share-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.share-modal-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.share-modal-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.share-modal-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.share-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-option:hover {
+  background: #f3f4f6;
+}
+
+.share-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-icon {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.kakao-icon {
+  background: #FEE500;
+  color: #3A1D1D;
+}
+
+.twitter-icon {
+  background: #000000;
+  color: white;
+}
+
+.facebook-icon {
+  background: #1877F2;
+  color: white;
+}
+
+.share-option span {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 /* 스티커 피커 모달 */
