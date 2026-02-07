@@ -6,13 +6,13 @@
         <h1 class="page-title">WaitPlay 관리자</h1>
         <p class="page-desc">오늘도 좋은 하루 보내세요 👋</p>
       </div>
-      
+
       <!-- Date Range Filter -->
       <div class="date-filter">
         <span class="filter-label">기간 선택</span>
         <div class="segmented-control">
-          <button 
-            v-for="period in ['today', 'week', 'month']" 
+          <button
+            v-for="period in ['today', 'week', 'month']"
             :key="period"
             class="segment-btn"
             :class="{ active: currentPeriod === period }"
@@ -48,7 +48,45 @@
       </div>
     </div>
 
-    <!-- 2. Activity Chart -->
+    <!-- 2. Guestbook Stats Section -->
+    <div class="guestbook-stats-section" v-if="guestbookStats">
+      <div class="section-header">
+        <h2 class="section-title">📝 방명록 현황</h2>
+        <span class="section-badge">{{ guestbookStats.qrCodeCount }}개 QR</span>
+      </div>
+      <div class="guestbook-kpi-grid">
+        <div class="guestbook-kpi-card">
+          <div class="guestbook-kpi-icon">💬</div>
+          <div class="guestbook-kpi-content">
+            <div class="guestbook-kpi-value">{{ guestbookStats.totalMessages }}</div>
+            <div class="guestbook-kpi-label">총 메시지</div>
+          </div>
+        </div>
+        <div class="guestbook-kpi-card">
+          <div class="guestbook-kpi-icon">📅</div>
+          <div class="guestbook-kpi-content">
+            <div class="guestbook-kpi-value">{{ guestbookStats.todayMessages }}</div>
+            <div class="guestbook-kpi-label">오늘 메시지</div>
+          </div>
+        </div>
+        <div class="guestbook-kpi-card">
+          <div class="guestbook-kpi-icon">❤️</div>
+          <div class="guestbook-kpi-content">
+            <div class="guestbook-kpi-value">{{ guestbookStats.totalLikes }}</div>
+            <div class="guestbook-kpi-label">총 좋아요</div>
+          </div>
+        </div>
+        <div class="guestbook-kpi-card">
+          <div class="guestbook-kpi-icon">🎨</div>
+          <div class="guestbook-kpi-content">
+            <div class="guestbook-kpi-value">{{ guestbookStats.totalStickers }}</div>
+            <div class="guestbook-kpi-label">총 스티커</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Activity Chart -->
     <div class="chart-section card">
       <div class="card-header">
         <h2 class="section-title">일자별 활동 추이</h2>
@@ -146,10 +184,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive, watch } from 'vue'
 import { getDashboardStats, getChartData, type ChartPoint, type Period, type DashboardStats } from '@/services/dashboardService'
+import guestbookService, { type GuestbookStatsSummary } from '@/services/guestbookService'
 
 // --- State ---
 const currentPeriod = ref<Period>('today')
 const isLoading = ref(false)
+
+// 방명록 통계 데이터
+const guestbookStats = ref<GuestbookStatsSummary | null>(null)
 
 // API에서 받아온 차트 데이터
 const apiChartData = ref<ChartPoint[]>([])
@@ -188,6 +230,16 @@ const fetchDashboardData = async () => {
     apiChartData.value = getDefaultChartData(currentPeriod.value)
   } finally {
     isLoading.value = false
+  }
+}
+
+// 방명록 통계 조회
+const fetchGuestbookStats = async () => {
+  try {
+    guestbookStats.value = await guestbookService.getStatsSummary()
+  } catch (error) {
+    console.error('방명록 통계 조회 실패:', error)
+    guestbookStats.value = null
   }
 }
 
@@ -304,7 +356,10 @@ const setPeriod = async (period: string) => {
 watch(currentTotals, animateNumbers)
 
 onMounted(async () => {
-  await fetchDashboardData()
+  await Promise.all([
+    fetchDashboardData(),
+    fetchGuestbookStats()
+  ])
   animateNumbers()
 })
 </script>
@@ -471,6 +526,84 @@ onMounted(async () => {
   background: #f5f5f7;
 }
 
+/* Guestbook Stats Section */
+.guestbook-stats-section {
+  margin-bottom: 30px;
+  background: white;
+  border-radius: var(--card-radius);
+  padding: 30px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,0.02);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.section-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #f5f5f7;
+  color: #86868b;
+}
+
+.guestbook-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.guestbook-kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  border-radius: 16px;
+  border: 1px solid #e5e5ea;
+  transition: all 0.2s;
+}
+
+.guestbook-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.guestbook-kpi-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.guestbook-kpi-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.guestbook-kpi-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1d1d1f;
+  letter-spacing: -0.5px;
+}
+
+.guestbook-kpi-label {
+  font-size: 13px;
+  color: #86868b;
+  margin-top: 2px;
+}
+
 /* Chart Section */
 .card {
   background: white;
@@ -570,6 +703,9 @@ onMounted(async () => {
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .guestbook-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -577,6 +713,7 @@ onMounted(async () => {
   .dashboard-header { flex-direction: column; align-items: flex-start; gap: 20px; }
   .date-filter { width: 100%; align-items: flex-start; }
   .kpi-grid { grid-template-columns: 1fr; }
+  .guestbook-kpi-grid { grid-template-columns: 1fr; }
   .axis-labels.y-axis { display: none; } /* Mobile: Hide Y-axis labels for space */
 }
 </style>

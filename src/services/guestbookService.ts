@@ -59,6 +59,43 @@ export interface StickerResponse {
   createdAt: string
 }
 
+export interface GuestbookStatsOverview {
+  totalMessages: number
+  todayMessages: number
+  weekMessages: number
+  monthMessages: number
+  totalLikes: number
+  totalStickers: number
+  uniqueWriters: number
+}
+
+export interface GuestbookDailyStats {
+  date: string
+  count: number
+}
+
+export interface GuestbookTopMessage {
+  id: string
+  userName: string
+  createdAt: string
+  likeCount: number
+  stickerCount: number
+}
+
+export interface GuestbookStatsResponse {
+  overview: GuestbookStatsOverview
+  dailyStats: GuestbookDailyStats[]
+  topMessages: GuestbookTopMessage[]
+}
+
+export interface GuestbookStatsSummary {
+  totalMessages: number
+  todayMessages: number
+  totalLikes: number
+  totalStickers: number
+  qrCodeCount: number
+}
+
 class GuestbookService {
   /**
    * Create a new guestbook message
@@ -128,6 +165,22 @@ class GuestbookService {
    */
   async deleteSticker(stickerId: string): Promise<void> {
     await apiClient.delete(`/api/guestbook/sticker/${stickerId}`)
+  }
+
+  /**
+   * Get guestbook statistics for a QR code (admin only)
+   */
+  async getStats(qrCode: string): Promise<GuestbookStatsResponse> {
+    const response = await apiClient.get<GuestbookStatsResponse>(`/api/guestbook/stats/${qrCode}`)
+    return response.data
+  }
+
+  /**
+   * Get summary stats for all QR codes (admin only)
+   */
+  async getStatsSummary(): Promise<GuestbookStatsSummary> {
+    const response = await apiClient.get<GuestbookStatsSummary>('/api/guestbook/stats/summary')
+    return response.data
   }
 }
 
