@@ -101,9 +101,9 @@
                     </div>
                     <!-- 액션 버튼들 -->
                     <div class="post-it-actions">
-                      <!-- 스티커 추가 버튼 -->
+                      <!-- 스티커 추가 버튼 (본인 방명록만) -->
                       <button
-                        v-if="isAuthenticated"
+                        v-if="isAuthenticated && isMyMessage(message)"
                         class="action-btn sticker-btn"
                         @click.stop="openStickerPicker(message)"
                         title="스티커 추가"
@@ -586,6 +586,12 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const currentUserId = computed(() => authStore.user?.id)
+
+// 본인 방명록인지 확인
+const isMyMessage = (message: any) => {
+  return currentUserId.value && message.userId === currentUserId.value
+}
 
 // 표시 모드 (기본값: postit)
 const displayMode = computed(() => props.data.displayMode || 'postit')
