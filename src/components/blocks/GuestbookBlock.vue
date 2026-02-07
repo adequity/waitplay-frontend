@@ -81,13 +81,22 @@
                         v-for="sticker in message.stickers || []"
                         :key="sticker.id"
                         class="sticker-item"
+                        :class="{ 'sticker-item--image': sticker.stickerType === 'logo' || sticker.stickerType === 'asset' }"
                         :style="{
                           left: `${sticker.positionX}%`,
                           top: `${sticker.positionY}%`,
                           transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`
                         }"
                       >
-                        {{ sticker.stickerContent }}
+                        <!-- 이미지 타입 스티커 (로고/에셋) -->
+                        <img
+                          v-if="sticker.stickerType === 'logo' || sticker.stickerType === 'asset'"
+                          :src="sticker.stickerContent"
+                          alt="sticker"
+                          class="sticker-image"
+                        />
+                        <!-- 이모지 스티커 -->
+                        <template v-else>{{ sticker.stickerContent }}</template>
                       </div>
                     </div>
                     <!-- 액션 버튼들 -->
@@ -297,16 +306,56 @@
                 </svg>
               </button>
             </div>
-            <div class="sticker-grid">
+            <!-- 탭 메뉴 -->
+            <div class="sticker-tabs">
+              <button
+                class="sticker-tab"
+                :class="{ active: stickerTab === 'emoji' }"
+                @click="stickerTab = 'emoji'"
+              >
+                😊 이모지
+              </button>
+              <button
+                class="sticker-tab"
+                :class="{ active: stickerTab === 'store' }"
+                @click="stickerTab = 'store'; loadStickerAssets()"
+              >
+                🏪 매장
+              </button>
+            </div>
+            <!-- 이모지 탭 -->
+            <div v-if="stickerTab === 'emoji'" class="sticker-grid">
               <button
                 v-for="emoji in emojiList"
                 :key="emoji"
                 class="sticker-option"
-                @click="addSticker(emoji)"
+                @click="addEmojiSticker(emoji)"
                 :disabled="addingStickerMessageId !== null"
               >
                 {{ emoji }}
               </button>
+            </div>
+            <!-- 매장 스티커 탭 (로고 + 에셋) -->
+            <div v-else-if="stickerTab === 'store'" class="sticker-content">
+              <div v-if="isLoadingStickerAssets" class="sticker-loading">
+                불러오는 중...
+              </div>
+              <div v-else-if="stickerAssets.length === 0" class="sticker-empty">
+                사용 가능한 스티커가 없습니다
+              </div>
+              <div v-else class="sticker-asset-grid">
+                <button
+                  v-for="asset in stickerAssets"
+                  :key="asset.id"
+                  class="sticker-asset-option"
+                  @click="addAssetSticker(asset)"
+                  :disabled="addingStickerMessageId !== null"
+                  :title="asset.name"
+                >
+                  <img :src="asset.imageUrl" :alt="asset.name" class="sticker-asset-img" />
+                  <span class="sticker-asset-label">{{ asset.name }}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -372,7 +421,7 @@
 import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import guestbookService from '@/services/guestbookService'
+import guestbookService, { type StickerAsset } from '@/services/guestbookService'
 import followService from '@/services/followService'
 import type { GuestbookBlockData } from '@/types/blocks'
 
@@ -443,6 +492,9 @@ const likingMessageId = ref<string | null>(null)
 const isStickerPickerOpen = ref(false)
 const selectedMessageForSticker = ref<any>(null)
 const addingStickerMessageId = ref<string | null>(null)
+const stickerTab = ref<'emoji' | 'store'>('emoji')
+const stickerAssets = ref<StickerAsset[]>([])
+const isLoadingStickerAssets = ref(false)
 
 // 이모지 목록
 const emojiList = ['😊', '❤️', '👍', '🎉', '✨', '🔥', '💯', '🌟', '💕', '😍', '🥰', '😘', '🤩', '👏', '💪', '🙌']
@@ -888,10 +940,27 @@ const openStickerPicker = (message: any) => {
 const closeStickerPicker = () => {
   isStickerPickerOpen.value = false
   selectedMessageForSticker.value = null
+  stickerTab.value = 'emoji' // 탭 상태 초기화
 }
 
-// 스티커 추가
-const addSticker = async (emoji: string) => {
+// 스티커 에셋 로드
+const loadStickerAssets = async () => {
+  if (isLoadingStickerAssets.value || !props.qrCodeId) return
+
+  isLoadingStickerAssets.value = true
+  try {
+    const response = await guestbookService.getStickerAssets(props.qrCodeId)
+    stickerAssets.value = response.assets
+  } catch (error) {
+    console.error('Failed to load sticker assets:', error)
+    stickerAssets.value = []
+  } finally {
+    isLoadingStickerAssets.value = false
+  }
+}
+
+// 이모지 스티커 추가
+const addEmojiSticker = async (emoji: string) => {
   if (!selectedMessageForSticker.value || addingStickerMessageId.value) return
 
   addingStickerMessageId.value = selectedMessageForSticker.value.id
@@ -921,6 +990,43 @@ const addSticker = async (emoji: string) => {
     closeStickerPicker()
   } catch (error) {
     console.error('Failed to add sticker:', error)
+    alert('스티커 추가에 실패했습니다.')
+  } finally {
+    addingStickerMessageId.value = null
+  }
+}
+
+// 에셋(로고/이미지) 스티커 추가
+const addAssetSticker = async (asset: StickerAsset) => {
+  if (!selectedMessageForSticker.value || addingStickerMessageId.value) return
+
+  addingStickerMessageId.value = selectedMessageForSticker.value.id
+
+  try {
+    // 랜덤 위치 및 회전
+    const positionX = 20 + Math.random() * 60 // 20-80%
+    const positionY = 20 + Math.random() * 60 // 20-80%
+    const rotation = -15 + Math.random() * 30 // -15 to 15 degrees
+    const scale = 0.6 + Math.random() * 0.4 // 0.6-1.0 (이미지는 좀 더 작게)
+
+    const response = await guestbookService.addSticker(selectedMessageForSticker.value.id, {
+      stickerType: asset.type,
+      stickerContent: asset.imageUrl,
+      positionX,
+      positionY,
+      rotation,
+      scale
+    })
+
+    // 메시지에 스티커 추가
+    if (!selectedMessageForSticker.value.stickers) {
+      selectedMessageForSticker.value.stickers = []
+    }
+    selectedMessageForSticker.value.stickers.push(response)
+
+    closeStickerPicker()
+  } catch (error) {
+    console.error('Failed to add asset sticker:', error)
     alert('스티커 추가에 실패했습니다.')
   } finally {
     addingStickerMessageId.value = null
@@ -1154,6 +1260,19 @@ const handleLike = async (message: any) => {
   pointer-events: none;
 }
 
+/* 이미지 스티커 */
+.sticker-item--image {
+  font-size: inherit;
+  text-shadow: none;
+}
+
+.sticker-image {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.2));
+}
+
 /* 포스트잇 액션 버튼들 */
 .post-it-actions {
   position: absolute;
@@ -1342,9 +1461,104 @@ const handleLike = async (message: any) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid #e5e7eb;
+}
+
+/* 스티커 탭 */
+.sticker-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.sticker-tab {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sticker-tab:hover {
+  background: #e5e7eb;
+}
+
+.sticker-tab.active {
+  background: #4ECDC4;
+  border-color: #4ECDC4;
+  color: white;
+}
+
+/* 스티커 콘텐츠 영역 */
+.sticker-content {
+  min-height: 120px;
+}
+
+.sticker-loading,
+.sticker-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* 에셋 스티커 그리드 */
+.sticker-asset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.sticker-asset-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sticker-asset-option:hover:not(:disabled) {
+  background: #fff7ed;
+  border-color: #fdba74;
+  transform: scale(1.05);
+}
+
+.sticker-asset-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sticker-asset-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.sticker-asset-label {
+  font-size: 10px;
+  color: #6b7280;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sticker-picker-header h4 {

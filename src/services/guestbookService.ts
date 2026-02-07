@@ -38,7 +38,7 @@ export interface ToggleLikeResponse {
 }
 
 export interface AddStickerRequest {
-  stickerType: 'emoji' | 'stamp' | 'custom'
+  stickerType: 'emoji' | 'stamp' | 'custom' | 'asset' | 'logo'
   stickerContent: string
   positionX: number
   positionY: number
@@ -94,6 +94,21 @@ export interface GuestbookStatsSummary {
   totalLikes: number
   totalStickers: number
   qrCodeCount: number
+}
+
+export interface StickerAsset {
+  id: string
+  type: 'logo' | 'asset'
+  name: string
+  imageUrl: string
+  category: string
+}
+
+export interface StickerAssetsResponse {
+  qrCode: string
+  storeName: string
+  assets: StickerAsset[]
+  total: number
 }
 
 class GuestbookService {
@@ -180,6 +195,14 @@ class GuestbookService {
    */
   async getStatsSummary(): Promise<GuestbookStatsSummary> {
     const response = await apiClient.get<GuestbookStatsSummary>('/api/guestbook/stats/summary')
+    return response.data
+  }
+
+  /**
+   * Get available sticker assets for a QR code (logo + selected game assets)
+   */
+  async getStickerAssets(qrCode: string): Promise<StickerAssetsResponse> {
+    const response = await apiClient.get<StickerAssetsResponse>(`/api/guestbook/sticker-assets/${qrCode}`)
     return response.data
   }
 }
