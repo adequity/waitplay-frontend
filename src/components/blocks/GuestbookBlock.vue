@@ -313,14 +313,14 @@
                 :class="{ active: stickerTab === 'emoji' }"
                 @click="stickerTab = 'emoji'"
               >
-                😊 이모지
+                이모지
               </button>
               <button
                 class="sticker-tab"
                 :class="{ active: stickerTab === 'store' }"
                 @click="stickerTab = 'store'; loadStickerAssets()"
               >
-                🏪 매장
+                매장
               </button>
             </div>
             <!-- 이모지 탭 -->
@@ -342,14 +342,13 @@
                 불러오는 중...
               </div>
               <div v-else-if="stickerAssets.length === 0" class="sticker-empty">
-                <span>😅</span>
                 <span>사용 가능한 스티커가 없습니다</span>
                 <span class="sticker-empty-hint">관리자가 로고나 게임 에셋을 등록하면 여기에 표시됩니다</span>
               </div>
               <template v-else>
                 <!-- 로고 섹션 -->
                 <div v-if="logoAssets.length > 0" class="sticker-section">
-                  <div class="sticker-section-title">🏪 매장 로고</div>
+                  <div class="sticker-section-title">매장 로고</div>
                   <div class="sticker-asset-grid">
                     <button
                       v-for="asset in logoAssets"
@@ -366,7 +365,7 @@
                 </div>
                 <!-- 게임 에셋 섹션 -->
                 <div v-if="gameAssets.length > 0" class="sticker-section">
-                  <div class="sticker-section-title">🎮 게임 에셋</div>
+                  <div class="sticker-section-title">게임 에셋</div>
                   <div class="sticker-asset-grid">
                     <button
                       v-for="asset in gameAssets"

@@ -4,7 +4,7 @@
     <div class="dashboard-header">
       <div class="header-text">
         <h1 class="page-title">WaitPlay 관리자</h1>
-        <p class="page-desc">오늘도 좋은 하루 보내세요 👋</p>
+        <p class="page-desc">오늘도 좋은 하루 보내세요</p>
       </div>
 
       <!-- Date Range Filter -->
@@ -51,33 +51,29 @@
     <!-- 2. Guestbook Stats Section -->
     <div class="guestbook-stats-section" v-if="guestbookStats">
       <div class="section-header">
-        <h2 class="section-title">📝 방명록 현황</h2>
+        <h2 class="section-title">방명록 현황</h2>
         <span class="section-badge">{{ guestbookStats.qrCodeCount }}개 QR</span>
       </div>
       <div class="guestbook-kpi-grid">
         <div class="guestbook-kpi-card">
-          <div class="guestbook-kpi-icon">💬</div>
           <div class="guestbook-kpi-content">
             <div class="guestbook-kpi-value">{{ guestbookStats.totalMessages }}</div>
             <div class="guestbook-kpi-label">총 메시지</div>
           </div>
         </div>
         <div class="guestbook-kpi-card">
-          <div class="guestbook-kpi-icon">📅</div>
           <div class="guestbook-kpi-content">
             <div class="guestbook-kpi-value">{{ guestbookStats.todayMessages }}</div>
             <div class="guestbook-kpi-label">오늘 메시지</div>
           </div>
         </div>
         <div class="guestbook-kpi-card">
-          <div class="guestbook-kpi-icon">❤️</div>
           <div class="guestbook-kpi-content">
             <div class="guestbook-kpi-value">{{ guestbookStats.totalLikes }}</div>
             <div class="guestbook-kpi-label">총 좋아요</div>
           </div>
         </div>
         <div class="guestbook-kpi-card">
-          <div class="guestbook-kpi-icon">🎨</div>
           <div class="guestbook-kpi-content">
             <div class="guestbook-kpi-value">{{ guestbookStats.totalStickers }}</div>
             <div class="guestbook-kpi-label">총 스티커</div>
@@ -579,11 +575,6 @@ onMounted(async () => {
 .guestbook-kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-}
-
-.guestbook-kpi-icon {
-  font-size: 32px;
-  line-height: 1;
 }
 
 .guestbook-kpi-content {
