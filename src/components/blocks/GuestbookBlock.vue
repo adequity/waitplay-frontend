@@ -338,24 +338,50 @@
             <!-- 매장 스티커 탭 (로고 + 에셋) -->
             <div v-else-if="stickerTab === 'store'" class="sticker-content">
               <div v-if="isLoadingStickerAssets" class="sticker-loading">
+                <span class="loading-spinner"></span>
                 불러오는 중...
               </div>
               <div v-else-if="stickerAssets.length === 0" class="sticker-empty">
-                사용 가능한 스티커가 없습니다
+                <span>😅</span>
+                <span>사용 가능한 스티커가 없습니다</span>
+                <span class="sticker-empty-hint">관리자가 로고나 게임 에셋을 등록하면 여기에 표시됩니다</span>
               </div>
-              <div v-else class="sticker-asset-grid">
-                <button
-                  v-for="asset in stickerAssets"
-                  :key="asset.id"
-                  class="sticker-asset-option"
-                  @click="addAssetSticker(asset)"
-                  :disabled="addingStickerMessageId !== null"
-                  :title="asset.name"
-                >
-                  <img :src="asset.imageUrl" :alt="asset.name" class="sticker-asset-img" />
-                  <span class="sticker-asset-label">{{ asset.name }}</span>
-                </button>
-              </div>
+              <template v-else>
+                <!-- 로고 섹션 -->
+                <div v-if="logoAssets.length > 0" class="sticker-section">
+                  <div class="sticker-section-title">🏪 매장 로고</div>
+                  <div class="sticker-asset-grid">
+                    <button
+                      v-for="asset in logoAssets"
+                      :key="asset.id"
+                      class="sticker-asset-option"
+                      @click="addAssetSticker(asset)"
+                      :disabled="addingStickerMessageId !== null"
+                      :title="asset.name"
+                    >
+                      <img :src="asset.imageUrl" :alt="asset.name" class="sticker-asset-img" />
+                      <span class="sticker-asset-label">{{ asset.name }}</span>
+                    </button>
+                  </div>
+                </div>
+                <!-- 게임 에셋 섹션 -->
+                <div v-if="gameAssets.length > 0" class="sticker-section">
+                  <div class="sticker-section-title">🎮 게임 에셋</div>
+                  <div class="sticker-asset-grid">
+                    <button
+                      v-for="asset in gameAssets"
+                      :key="asset.id"
+                      class="sticker-asset-option"
+                      @click="addAssetSticker(asset)"
+                      :disabled="addingStickerMessageId !== null"
+                      :title="asset.name"
+                    >
+                      <img :src="asset.imageUrl" :alt="asset.name" class="sticker-asset-img" />
+                      <span class="sticker-asset-label">{{ asset.name }}</span>
+                    </button>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -495,6 +521,7 @@ const addingStickerMessageId = ref<string | null>(null)
 const stickerTab = ref<'emoji' | 'store'>('emoji')
 const stickerAssets = ref<StickerAsset[]>([])
 const isLoadingStickerAssets = ref(false)
+const stickerAssetsLoaded = ref(false) // 캐싱용 플래그
 
 // 이모지 목록
 const emojiList = ['😊', '❤️', '👍', '🎉', '✨', '🔥', '💯', '🌟', '💕', '😍', '🥰', '😘', '🤩', '👏', '💪', '🙌']
@@ -505,6 +532,10 @@ const selectedMessageForShare = ref<any>(null)
 
 // 미리보기용 최신 5개 메시지
 const previewMessages = computed(() => messages.value.slice(0, 5))
+
+// 스티커 에셋 분류
+const logoAssets = computed(() => stickerAssets.value.filter(a => a.type === 'logo'))
+const gameAssets = computed(() => stickerAssets.value.filter(a => a.type === 'asset'))
 
 // 모달 열기
 const openDrawingModal = async () => {
@@ -943,14 +974,16 @@ const closeStickerPicker = () => {
   stickerTab.value = 'emoji' // 탭 상태 초기화
 }
 
-// 스티커 에셋 로드
+// 스티커 에셋 로드 (캐싱 적용)
 const loadStickerAssets = async () => {
-  if (isLoadingStickerAssets.value || !props.qrCodeId) return
+  // 이미 로드했거나 로딩 중이면 스킵
+  if (stickerAssetsLoaded.value || isLoadingStickerAssets.value || !props.qrCodeId) return
 
   isLoadingStickerAssets.value = true
   try {
     const response = await guestbookService.getStickerAssets(props.qrCodeId)
     stickerAssets.value = response.assets
+    stickerAssetsLoaded.value = true
   } catch (error) {
     console.error('Failed to load sticker assets:', error)
     stickerAssets.value = []
@@ -1499,16 +1532,62 @@ const handleLike = async (message: any) => {
 /* 스티커 콘텐츠 영역 */
 .sticker-content {
   min-height: 120px;
+  max-height: 280px;
+  overflow-y: auto;
 }
 
-.sticker-loading,
-.sticker-empty {
+.sticker-loading {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 120px;
   color: #9ca3af;
   font-size: 14px;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #4ECDC4;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.sticker-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 120px;
+  color: #9ca3af;
+  font-size: 14px;
+  text-align: center;
+}
+
+.sticker-empty-hint {
+  font-size: 11px;
+  color: #c0c0c0;
+  max-width: 200px;
+}
+
+/* 스티커 섹션 */
+.sticker-section {
+  margin-bottom: 12px;
+}
+
+.sticker-section:last-child {
+  margin-bottom: 0;
+}
+
+.sticker-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+  padding-left: 2px;
 }
 
 /* 에셋 스티커 그리드 */
@@ -1516,8 +1595,6 @@ const handleLike = async (message: any) => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  max-height: 240px;
-  overflow-y: auto;
 }
 
 .sticker-asset-option {
