@@ -128,16 +128,16 @@
           <!-- Menu Tabs (Logged In) -->
           <div v-if="isAuthenticated" class="menu-tabs">
             <button
-              :class="['menu-tab', { active: activeTab === 'profile' }]"
-              @click="activeTab = 'profile'"
+              :class="['menu-tab', { active: activeTab === 'feed' }]"
+              @click="activeTab = 'feed'"
             >
               <span class="tab-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
-                  <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2"/>
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </span>
-              <span class="tab-label">내 프로필</span>
+              <span class="tab-label">피드</span>
             </button>
             <button
               :class="['menu-tab', { active: activeTab === 'stores' }]"
@@ -161,10 +161,188 @@
               </span>
               <span class="tab-label">내 방명록</span>
             </button>
+            <button
+              :class="['menu-tab', { active: activeTab === 'profile' }]"
+              @click="activeTab = 'profile'"
+            >
+              <span class="tab-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </span>
+              <span class="tab-label">내 정보</span>
+            </button>
           </div>
 
           <!-- Tab Content -->
           <div v-if="isAuthenticated" class="tab-content">
+            <!-- 피드 (Instagram Home Feed Style) -->
+            <div v-if="activeTab === 'feed'" class="feed-section">
+              <div v-if="isLoadingFeed && feedMessages.length === 0" class="loading-spinner">
+                <div class="spinner"></div>
+                <span>피드를 불러오는 중...</span>
+              </div>
+
+              <div v-else-if="feedMessages.length === 0" class="empty-state">
+                <div class="empty-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <p class="empty-title">피드가 비어있어요</p>
+                <p class="empty-subtitle">단골 매장을 팔로우하면 새 방명록이 여기에 표시됩니다!</p>
+              </div>
+
+              <div v-else class="feed-list" ref="feedScrollRef" @scroll="handleFeedScroll">
+                <div
+                  v-for="message in feedMessages"
+                  :key="message.id"
+                  class="feed-post"
+                >
+                  <!-- 포스트 헤더 - 작성자 + 매장 정보 -->
+                  <div class="feed-post-header">
+                    <div class="feed-author">
+                      <div class="feed-author-avatar">
+                        <div class="avatar-gradient-ring">
+                          <div class="avatar-inner-circle">
+                            <img v-if="message.userProfileImage" :src="message.userProfileImage" alt="" class="avatar-img" />
+                            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
+                              <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="feed-author-info">
+                        <p class="feed-author-name">{{ message.userName }}</p>
+                        <p class="feed-store-name">{{ message.storeName }}</p>
+                      </div>
+                    </div>
+                    <button class="feed-more-btn">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="5" r="1.5" fill="currentColor"/>
+                        <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                        <circle cx="12" cy="19" r="1.5" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- 콘텐츠 영역 (더블탭으로 좋아요) -->
+                  <div class="feed-content" @click="handleDoubleTap(message)">
+                    <!-- 이미지가 있는 경우 -->
+                    <div v-if="message.imageUrl" class="feed-image-wrapper">
+                      <img
+                        :src="message.imageUrl"
+                        alt="방명록 이미지"
+                        class="feed-image"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <!-- 더블탭 하트 애니메이션 -->
+                      <transition name="heart-pop">
+                        <div v-if="doubleTapLikeId === message.id" class="double-tap-heart">
+                          <svg width="80" height="80" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                          </svg>
+                        </div>
+                      </transition>
+                    </div>
+
+                    <!-- 텍스트만 있는 경우 - 포스트잇 스타일 -->
+                    <div
+                      v-else-if="message.message"
+                      class="feed-postit"
+                      :style="{ backgroundColor: message.color || '#fff9c4' }"
+                    >
+                      <p class="feed-postit-text">{{ message.message }}</p>
+                      <!-- 더블탭 하트 애니메이션 -->
+                      <transition name="heart-pop">
+                        <div v-if="doubleTapLikeId === message.id" class="double-tap-heart">
+                          <svg width="80" height="80" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                          </svg>
+                        </div>
+                      </transition>
+                    </div>
+                  </div>
+
+                  <!-- 액션 바 -->
+                  <div class="feed-actions">
+                    <div class="feed-action-left">
+                      <button
+                        class="feed-action-btn"
+                        :class="{ liked: message.isLikedByMe }"
+                        @click="toggleFeedLike(message)"
+                      >
+                        <svg v-if="message.isLikedByMe" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                      <button class="feed-action-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                      <button class="feed-action-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <button class="feed-action-btn">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- 좋아요 수 -->
+                  <div v-if="message.likeCount > 0" class="feed-likes">
+                    <span>좋아요 {{ message.likeCount }}개</span>
+                  </div>
+
+                  <!-- 캡션 -->
+                  <div class="feed-caption">
+                    <p class="caption-text">
+                      <strong>{{ message.userName }}</strong>
+                      <span v-if="message.imageUrl && message.message">{{ message.message }}</span>
+                      <span v-else-if="!message.imageUrl" class="caption-location">{{ message.storeName }}에서 작성</span>
+                    </p>
+                  </div>
+
+                  <!-- 게시 시간 -->
+                  <p class="feed-timestamp">{{ formatRelativeDate(message.createdAt) }}</p>
+                </div>
+
+                <!-- 더 불러오기 -->
+                <div v-if="hasMoreFeed" class="load-more">
+                  <button
+                    class="load-more-btn"
+                    :disabled="isLoadingFeed"
+                    @click="loadFeed(true)"
+                  >
+                    <div v-if="isLoadingFeed" class="btn-spinner"></div>
+                    <span v-else>이전 게시물 더 보기</span>
+                  </button>
+                </div>
+
+                <!-- 피드 끝 표시 -->
+                <div v-else class="feed-end">
+                  <div class="feed-end-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                  <p class="feed-end-text">모든 게시물을 확인했습니다</p>
+                </div>
+              </div>
+            </div>
+
             <!-- 내 프로필 (Instagram Settings Style) -->
             <div v-if="activeTab === 'profile'" class="profile-section-instagram">
               <div class="settings-group">
@@ -397,7 +575,7 @@ import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import gameSettingsService from '@/services/gameSettingsService'
 import type { Block, PageTheme } from '@/types/blocks'
-import type { MyGuestbookMessageResponse } from '@/services/guestbookService'
+import type { MyGuestbookMessageResponse, FeedGuestbookMessage } from '@/services/guestbookService'
 import type { FollowedStoreInfo } from '@/services/followService'
 
 // Import block components
@@ -441,8 +619,8 @@ const isSidebarOpen = ref(false)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const user = computed(() => authStore.user)
 
-// Active tab state
-const activeTab = ref('profile')
+// Active tab state (default to feed for Instagram-like experience)
+const activeTab = ref('feed')
 
 // Followed stores
 const followedStores = ref<FollowedStoreInfo[]>([])
@@ -451,6 +629,19 @@ const isLoadingStores = ref(false)
 // My guestbook messages
 const myGuestbookMessages = ref<MyGuestbookMessageResponse[]>([])
 const isLoadingMyMessages = ref(false)
+
+// Feed messages (from followed stores)
+const feedMessages = ref<FeedGuestbookMessage[]>([])
+const isLoadingFeed = ref(false)
+const feedCursor = ref<string | undefined>(undefined)
+const hasMoreFeed = ref(true)
+
+// Double-tap like animation
+const doubleTapLikeId = ref<string | null>(null)
+const lastTapTime = ref<Record<string, number>>({})
+
+// Feed scroll container ref
+const feedScrollRef = ref<HTMLElement | null>(null)
 
 const visibleBlocks = computed(() => {
   return blocks.value
@@ -477,7 +668,8 @@ function getBlockComponent(type: string): Component | string {
 // ✅ 탭별 데이터 로딩 여부 추적 (중복 로딩 방지)
 const tabDataLoaded = ref({
   stores: false,
-  guestbook: false
+  guestbook: false,
+  feed: false
 })
 
 // Sidebar functions
@@ -503,6 +695,9 @@ const loadTabData = async (tab: string) => {
   } else if (tab === 'guestbook' && !tabDataLoaded.value.guestbook) {
     await loadMyGuestbook()
     tabDataLoaded.value.guestbook = true
+  } else if (tab === 'feed' && !tabDataLoaded.value.feed) {
+    await loadFeed()
+    tabDataLoaded.value.feed = true
   }
 }
 
@@ -577,6 +772,94 @@ const deleteGuestbook = async (messageId: string) => {
   } catch (error) {
     console.error('Failed to delete guestbook message:', error)
     alert('방명록 삭제에 실패했습니다.')
+  }
+}
+
+// Load feed from followed stores
+const loadFeed = async (loadMore = false) => {
+  if (!isAuthenticated.value) return
+  if (isLoadingFeed.value) return
+  if (loadMore && !hasMoreFeed.value) return
+
+  isLoadingFeed.value = true
+  try {
+    const cursor = loadMore ? feedCursor.value : undefined
+    const response = await guestbookService.getFeed(cursor, 20)
+
+    if (loadMore) {
+      feedMessages.value = [...feedMessages.value, ...response.messages]
+    } else {
+      feedMessages.value = response.messages
+    }
+
+    hasMoreFeed.value = response.hasMore
+    feedCursor.value = response.nextCursor
+  } catch (error) {
+    console.error('Failed to load feed:', error)
+  } finally {
+    isLoadingFeed.value = false
+  }
+}
+
+// Toggle like on feed message
+const toggleFeedLike = async (message: FeedGuestbookMessage) => {
+  if (!isAuthenticated.value) {
+    goToLogin()
+    return
+  }
+
+  try {
+    const response = await guestbookService.toggleLike(message.id)
+    message.isLikedByMe = response.isLiked
+    message.likeCount = response.likeCount
+  } catch (error) {
+    console.error('Failed to toggle like:', error)
+  }
+}
+
+// Double-tap like (Instagram UX)
+const handleDoubleTap = async (message: FeedGuestbookMessage) => {
+  const now = Date.now()
+  const lastTap = lastTapTime.value[message.id] || 0
+  const DOUBLE_TAP_DELAY = 300 // ms
+
+  if (now - lastTap < DOUBLE_TAP_DELAY) {
+    // Double tap detected
+    if (!message.isLikedByMe) {
+      // Show heart animation
+      doubleTapLikeId.value = message.id
+      setTimeout(() => {
+        doubleTapLikeId.value = null
+      }, 1000)
+
+      // Like the post
+      await toggleFeedLike(message)
+    } else {
+      // Already liked - just show animation
+      doubleTapLikeId.value = message.id
+      setTimeout(() => {
+        doubleTapLikeId.value = null
+      }, 1000)
+    }
+  }
+
+  lastTapTime.value[message.id] = now
+}
+
+// Infinite scroll handler for feed
+const handleFeedScroll = (event: Event) => {
+  const target = event.target as HTMLElement
+  if (!target) return
+
+  const scrollHeight = target.scrollHeight
+  const scrollTop = target.scrollTop
+  const clientHeight = target.clientHeight
+
+  // Load more when 200px from bottom
+  if (scrollHeight - scrollTop - clientHeight < 200) {
+    if (!isLoadingFeed.value && hasMoreFeed.value) {
+      loadFeed(true)
+    }
   }
 }
 
@@ -1460,6 +1743,387 @@ onUnmounted(() => {
 
 .following-btn svg {
   opacity: 0.6;
+}
+
+/* Feed Section - Instagram Home Feed Style */
+.feed-section {
+  display: flex;
+  flex-direction: column;
+  margin: 0 -1.5rem;
+}
+
+.feed-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-post {
+  background: white;
+  border-bottom: 1px solid #efefef;
+  padding: 0 1rem;
+}
+
+.feed-post:last-child {
+  border-bottom: none;
+}
+
+.feed-post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+.feed-author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.feed-author-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-gradient-ring {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-inner-circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  overflow: hidden;
+  color: #8e8e8e;
+}
+
+.avatar-inner-circle .avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feed-author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.feed-author-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #262626;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.feed-store-name {
+  font-size: 0.75rem;
+  color: #8e8e8e;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.feed-more-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #262626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.15s ease;
+}
+
+.feed-more-btn:hover {
+  background: #f5f5f5;
+}
+
+/* 콘텐츠 영역 */
+.feed-content {
+  margin: 0 -1rem;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.feed-image-wrapper {
+  width: 100%;
+  background: #fafafa;
+  position: relative;
+}
+
+/* 더블탭 하트 애니메이션 */
+.double-tap-heart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.heart-pop-enter-active {
+  animation: heartPop 0.6s ease-out;
+}
+
+.heart-pop-leave-active {
+  animation: heartFade 0.4s ease-out;
+}
+
+@keyframes heartPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  45% {
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  60%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes heartFade {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0;
+  }
+}
+
+.feed-image {
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  display: block;
+}
+
+/* 포스트잇 스타일 (텍스트만 있을 때) */
+.feed-postit {
+  width: 100%;
+  min-height: 200px;
+  padding: 2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.feed-postit::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.feed-postit-text {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #262626;
+  margin: 0;
+  text-align: center;
+  line-height: 1.6;
+  word-break: break-word;
+  max-width: 280px;
+}
+
+/* 액션 바 - 인스타그램 스타일 */
+.feed-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.feed-action-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.feed-action-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  margin: -0.5rem;
+  cursor: pointer;
+  color: #262626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+
+.feed-action-btn:hover {
+  opacity: 0.6;
+}
+
+.feed-action-btn:active {
+  transform: scale(0.85);
+}
+
+.feed-action-btn.liked {
+  color: #ed4956;
+  animation: likeAnimation 0.3s ease;
+}
+
+@keyframes likeAnimation {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* 좋아요 수 */
+.feed-likes {
+  padding: 0 0 0.25rem 0;
+}
+
+.feed-likes span {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #262626;
+}
+
+/* 캡션 */
+.feed-caption {
+  padding: 0 0 0.25rem 0;
+}
+
+.feed-caption .caption-text {
+  font-size: 0.875rem;
+  color: #262626;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.feed-caption .caption-text strong {
+  font-weight: 600;
+  margin-right: 0.375rem;
+}
+
+.feed-caption .caption-location {
+  color: #8e8e8e;
+}
+
+/* 타임스탬프 */
+.feed-timestamp {
+  font-size: 0.625rem;
+  color: #8e8e8e;
+  margin: 0;
+  padding-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* 더 보기 버튼 */
+.load-more {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  background: #fafafa;
+}
+
+.load-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 280px;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0095f6;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.load-more-btn:hover:not(:disabled) {
+  background: #fafafa;
+  border-color: #c7c7c7;
+}
+
+.load-more-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: #8e8e8e;
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #dbdbdb;
+  border-top-color: #0095f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* 피드 끝 표시 */
+.feed-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  background: #fafafa;
+}
+
+.feed-end-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid #262626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #262626;
+  margin-bottom: 0.75rem;
+}
+
+.feed-end-text {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #262626;
+  margin: 0;
 }
 
 /* Guestbook Section - Instagram Feed Style */

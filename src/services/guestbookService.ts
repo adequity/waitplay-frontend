@@ -111,6 +111,29 @@ export interface StickerAssetsResponse {
   total: number
 }
 
+export interface FeedGuestbookMessage {
+  id: string
+  userId: string
+  userName: string
+  userProfileImage?: string
+  message?: string
+  imageUrl?: string
+  rotation: number
+  color: string
+  createdAt: string
+  likeCount: number
+  isLikedByMe: boolean
+  storeName: string
+  storeProfileImage?: string
+  qrCode: string
+}
+
+export interface FeedResponse {
+  messages: FeedGuestbookMessage[]
+  hasMore: boolean
+  nextCursor?: string
+}
+
 class GuestbookService {
   /**
    * Create a new guestbook message
@@ -203,6 +226,19 @@ class GuestbookService {
    */
   async getStickerAssets(qrCode: string): Promise<StickerAssetsResponse> {
     const response = await apiClient.get<StickerAssetsResponse>(`/api/guestbook/sticker-assets/${qrCode}`)
+    return response.data
+  }
+
+  /**
+   * Get guestbook feed from followed stores
+   * Returns messages from stores the current user follows, ordered by newest first
+   */
+  async getFeed(cursor?: string, limit: number = 20): Promise<FeedResponse> {
+    const params = new URLSearchParams()
+    if (cursor) params.append('cursor', cursor)
+    params.append('limit', limit.toString())
+
+    const response = await apiClient.get<FeedResponse>(`/api/guestbook/feed?${params.toString()}`)
     return response.data
   }
 }
