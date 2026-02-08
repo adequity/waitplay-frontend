@@ -941,7 +941,7 @@ onMounted(async () => {
 
 /* Advanced Settings Card */
 .advanced-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
 }
 
@@ -963,7 +963,7 @@ onMounted(async () => {
 .btn-layout-manager {
   width: 100%;
   background: white;
-  color: #667eea;
+  color: #3b82f6;
   border: none;
   padding: 14px 20px;
   border-radius: 12px;

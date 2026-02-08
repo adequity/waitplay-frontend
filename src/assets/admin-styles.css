@@ -617,7 +617,7 @@
 
 .section-title h2 {
   font-size: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1254,7 +1254,7 @@ input:checked + .toggle-slider:before {
 
 .form-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #3b82f6;
   box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
 }
 
@@ -1315,7 +1315,7 @@ input:checked + .toggle-slider:before {
 }
 
 .segment-count {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 12px;
@@ -1350,7 +1350,7 @@ input:checked + .toggle-slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 50%;
 }
 
@@ -1418,7 +1418,7 @@ input:checked + .toggle-slider:before {
 
 .form-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #3b82f6;
 }
 
 .form-textarea {
@@ -1435,13 +1435,13 @@ input:checked + .toggle-slider:before {
 
 .form-textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #3b82f6;
   box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
 }
 
 .btn-send-push {
   padding: 1.2rem;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
   border-radius: 12px;

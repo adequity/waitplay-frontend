@@ -320,7 +320,7 @@ h2 {
   padding: 0;
   margin: 0;
   z-index: 9999;
-  background: #0f0f23;
+  background: #ffffff;
 }
 
 .fullscreen-container {

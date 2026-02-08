@@ -156,7 +156,7 @@ onUnmounted(() => {
 
 /* Card 스타일 - 카드 형태 */
 .countdown-block--card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
@@ -203,7 +203,7 @@ onUnmounted(() => {
 
 /* Banner 스타일 - 배너 형태 */
 .countdown-block--banner {
-  background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 12px;
   padding: 3rem 2rem;
 }

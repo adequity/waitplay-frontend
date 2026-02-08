@@ -273,7 +273,7 @@ function close() {
 .reward-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -295,7 +295,7 @@ function close() {
 
 .reward-desc {
   font-size: 13px;
-  color: #667eea;
+  color: #3b82f6;
   margin: 0;
 }
 
@@ -406,7 +406,7 @@ function close() {
 }
 
 .form-input:focus {
-  border-color: #667eea;
+  border-color: #3b82f6;
 }
 
 .form-input:disabled {
@@ -426,7 +426,7 @@ function close() {
 
 .btn-submit {
   padding: 14px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -463,7 +463,7 @@ function close() {
 .btn-toggle {
   background: none;
   border: none;
-  color: #667eea;
+  color: #3b82f6;
   font-weight: 600;
   cursor: pointer;
   padding: 0;

@@ -88,7 +88,7 @@ function close() {
 }
 
 function getConfettiStyle(index: number) {
-  const colors = ['#667eea', '#764ba2', '#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1']
+  const colors = ['#3b82f6', '#1d4ed8', '#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1']
   return {
     '--delay': `${index * 0.1}s`,
     '--left': `${Math.random() * 100}%`,
@@ -180,7 +180,7 @@ function getConfettiStyle(index: number) {
   flex-direction: column;
   align-items: center;
   padding: 16px 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 16px;
   color: white;
 }
@@ -243,7 +243,7 @@ function getConfettiStyle(index: number) {
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
-  color: #667eea;
+  color: #3b82f6;
 }
 
 .question-section {
@@ -288,7 +288,7 @@ function getConfettiStyle(index: number) {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
 }
 

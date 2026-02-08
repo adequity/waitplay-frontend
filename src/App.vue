@@ -26,8 +26,8 @@ onMounted(() => {
 
 body {
   font-family: Arial, sans-serif;
-  background-color: #1a1a2e;
-  color: white;
+  background-color: #ffffff;
+  color: #1e293b;
 }
 
 #app {

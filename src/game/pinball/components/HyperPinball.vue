@@ -221,7 +221,7 @@ function exitGame() {
 .loading-spinner {
   width: 60px;
   height: 60px;
-  border: 4px solid #667eea;
+  border: 4px solid #3b82f6;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -314,7 +314,7 @@ function exitGame() {
   padding: 2rem;
   background: rgba(10, 10, 26, 0.95);
   border-radius: 16px;
-  border: 2px solid #667eea;
+  border: 2px solid #3b82f6;
   pointer-events: auto;
 }
 
@@ -357,7 +357,7 @@ function exitGame() {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: white;
 }
 
@@ -373,7 +373,7 @@ function exitGame() {
 }
 
 .btn-secondary:hover {
-  border-color: #667eea;
+  border-color: #3b82f6;
   color: #fff;
 }
 

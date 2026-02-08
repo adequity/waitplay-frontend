@@ -182,7 +182,7 @@ function close() {
 .modal-header {
   padding: 30px 30px 20px;
   text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
 }
 
@@ -230,7 +230,7 @@ function close() {
 .benefit-icon-wrapper {
   width: 100px;
   height: 100px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -260,7 +260,7 @@ function close() {
 .score-badge {
   display: inline-block;
   padding: 8px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border-radius: 20px;
   font-size: 15px;
@@ -288,7 +288,7 @@ function close() {
 .coupon-code {
   font-size: 32px;
   font-weight: 700;
-  color: #667eea;
+  color: #3b82f6;
   letter-spacing: 4px;
   font-family: 'Courier New', monospace;
   margin: 0 0 12px 0;
@@ -322,7 +322,7 @@ function close() {
   width: 40px;
   height: 40px;
   border: 4px solid #f5f5f7;
-  border-top: 4px solid #667eea;
+  border-top: 4px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -390,7 +390,7 @@ function close() {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
 }
 
@@ -409,7 +409,7 @@ function close() {
 }
 
 .btn-primary-full {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
 }
 

@@ -704,11 +704,11 @@ onUnmounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(240, 147, 251, 0.4);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -733,7 +733,7 @@ onUnmounted(() => {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
   cursor: pointer;
@@ -788,7 +788,7 @@ onUnmounted(() => {
   align-items: center;
   padding: 1.5rem;
   border-bottom: 1px solid #e0e0e0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
 }
 
@@ -834,7 +834,7 @@ onUnmounted(() => {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -888,7 +888,7 @@ onUnmounted(() => {
 
 .menu-tab.active {
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  border-color: #667eea;
+  border-color: #3b82f6;
 }
 
 .tab-icon {
@@ -899,7 +899,7 @@ onUnmounted(() => {
 }
 
 .menu-tab.active .tab-icon {
-  color: #667eea;
+  color: #3b82f6;
 }
 
 .tab-label {
@@ -909,7 +909,7 @@ onUnmounted(() => {
 }
 
 .menu-tab.active .tab-label {
-  color: #667eea;
+  color: #3b82f6;
 }
 
 /* Tab Content */
@@ -992,7 +992,7 @@ onUnmounted(() => {
 }
 
 .login-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
 }
@@ -1004,8 +1004,8 @@ onUnmounted(() => {
 
 .signup-btn {
   background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
 }
 
 .signup-btn:hover {
@@ -1041,7 +1041,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 12px;
   color: white;
   flex-shrink: 0;
@@ -1105,7 +1105,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #667eea;
+  color: #3b82f6;
   font-size: 0.875rem;
   font-weight: 600;
 }

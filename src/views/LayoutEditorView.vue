@@ -3186,7 +3186,7 @@ select.form-input {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -3509,7 +3509,7 @@ select.form-input {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -3616,7 +3616,7 @@ select.form-input {
 
 .bgm-tab.active {
   background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
-  border-color: #f093fb;
+  border-color: #3b82f6;
   color: #d946ef;
 }
 
@@ -3642,7 +3642,7 @@ select.form-input {
 }
 
 .file-upload-label:hover {
-  border-color: #f093fb;
+  border-color: #3b82f6;
   background: #fdf4ff;
 }
 
@@ -3670,7 +3670,7 @@ select.form-input {
 .upload-spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid #f093fb;
+  border: 2px solid #3b82f6;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -4114,7 +4114,7 @@ select.form-input {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border-radius: 50%;
   font-size: 12px;
