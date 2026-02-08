@@ -11,14 +11,14 @@
         </span>
       </div>
 
-      <!-- Grid Layout with Swipe -->
+      <!-- Grid Layout with Horizontal Swipe (2x1) -->
       <div v-if="displayStyle === 'grid'" class="menu-grid-wrapper">
         <div
           ref="gridContainer"
           class="menu-grid-container"
           @scroll="onScroll"
         >
-          <!-- 페이지별로 2x2 그리드 -->
+          <!-- 2개씩 페이지로 나누기 -->
           <div
             v-for="(page, pageIndex) in gridPages"
             :key="pageIndex"
@@ -98,8 +98,8 @@ const currentPage = ref(0)
 const displayStyle = computed(() => props.data.displayStyle || 'grid')
 const badgeStyle = computed(() => props.data.badgeStyle || 'badge')
 
-// 4개씩 페이지로 나누기 (2x2 그리드)
-const ITEMS_PER_PAGE = 4
+// 2개씩 페이지로 나누기 (2x1 가로 스와이프)
+const ITEMS_PER_PAGE = 2
 
 const gridPages = computed(() => {
   const items = props.data.items || []
@@ -202,7 +202,7 @@ const getBadgeClass = (index: number): string => {
   50% { opacity: 0.8; }
 }
 
-/* Grid Layout with Swipe */
+/* Grid Layout with Horizontal Swipe (2x1) */
 .menu-grid-wrapper {
   margin: 0 -20px;
 }
@@ -222,15 +222,16 @@ const getBadgeClass = (index: number): string => {
 
 .menu-grid-page {
   flex: 0 0 100%;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  display: flex;
+  gap: 10px;
   padding: 0 20px;
   scroll-snap-align: start;
   box-sizing: border-box;
 }
 
 .menu-grid-item {
+  flex: 1;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
