@@ -5,9 +5,13 @@
       '--text-color': data.textColor || '#374151',
       backgroundImage: data.backgroundImageUrl ? `url(${data.backgroundImageUrl})` : 'none',
       backgroundSize: 'cover',
-      backgroundPosition: 'center'
+      backgroundPosition: 'center',
+      '--bg-overlay': getBackgroundOverlay()
     }"
   >
+    <!-- 배경 오버레이 -->
+    <div v-if="data.backgroundImageUrl && data.backgroundOverlay" class="bg-overlay"></div>
+
     <h2 class="guestbook-title">{{ data.title }}</h2>
 
     <!-- 방명록 작성 버튼 (로그인한 사용자만) -->
@@ -525,6 +529,19 @@ const isMyMessage = (message: any) => {
 
 // 표시 모드 (기본값: postit)
 const displayMode = computed(() => props.data.displayMode || 'postit')
+
+// 배경 오버레이 계산 (음수: 어둡게, 양수: 밝게)
+const getBackgroundOverlay = () => {
+  const overlay = props.data.backgroundOverlay || 0
+  if (overlay < 0) {
+    // 어둡게: 검은색 오버레이
+    return `rgba(0, 0, 0, ${Math.abs(overlay) / 100})`
+  } else if (overlay > 0) {
+    // 밝게: 흰색 오버레이
+    return `rgba(255, 255, 255, ${overlay / 100})`
+  }
+  return 'transparent'
+}
 
 // 낙서 모드에서 각 아이템의 위치/회전 스타일 계산
 const getGraffitiStyle = (index: number, message: any) => {
@@ -1345,8 +1362,26 @@ const handleLike = async (message: any) => {
 
 <style scoped>
 .guestbook-block {
+  position: relative;
   padding: 2rem 1rem;
   margin-bottom: 1.5rem;
+}
+
+/* 배경 오버레이 (밝기 조절) */
+.bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-overlay, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.guestbook-block > *:not(.bg-overlay) {
+  position: relative;
+  z-index: 1;
 }
 
 .guestbook-title {

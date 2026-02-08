@@ -721,11 +721,26 @@
                     <span class="upload-text">배경 추가</span>
                   </div>
                 </label>
+                <!-- 배경 밝기 조절 -->
+                <div v-if="editForm.backgroundImageUrl" class="image-adjust-control">
+                  <div class="adjust-label">
+                    <span>밝기</span>
+                    <span class="adjust-value">{{ getBackgroundBrightnessLabel() }}</span>
+                  </div>
+                  <input
+                    type="range"
+                    class="form-range-mini"
+                    v-model.number="editForm.backgroundOverlay"
+                    min="-50"
+                    max="50"
+                    step="5"
+                  />
+                </div>
                 <button
                   v-if="editForm.backgroundImageUrl"
                   type="button"
                   class="image-remove-btn"
-                  @click="editForm.backgroundImageUrl = ''"
+                  @click="editForm.backgroundImageUrl = ''; editForm.backgroundOverlay = 0"
                 >제거</button>
               </div>
 
@@ -750,6 +765,21 @@
                     <span class="upload-text">버튼 추가</span>
                   </div>
                 </label>
+                <!-- 버튼 크기 조절 -->
+                <div v-if="editForm.buttonImageUrl" class="image-adjust-control">
+                  <div class="adjust-label">
+                    <span>크기</span>
+                    <span class="adjust-value">{{ Math.round((editForm.buttonImageScale || 1) * 100) }}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    class="form-range-mini"
+                    v-model.number="editForm.buttonImageScale"
+                    min="0.3"
+                    max="3"
+                    step="0.1"
+                  />
+                </div>
                 <button
                   v-if="editForm.buttonImageUrl"
                   type="button"
@@ -757,19 +787,6 @@
                   @click="editForm.buttonImageUrl = ''; editForm.buttonImageScale = 1"
                 >제거</button>
               </div>
-            </div>
-
-            <!-- 버튼 크기 조절 (버튼 이미지가 있을 때만) -->
-            <div v-if="editForm.buttonImageUrl" class="form-group">
-              <label class="form-label">버튼 크기: {{ Math.round((editForm.buttonImageScale || 1) * 100) }}%</label>
-              <input
-                type="range"
-                class="form-range"
-                v-model.number="editForm.buttonImageScale"
-                min="0.3"
-                max="3"
-                step="0.1"
-              />
             </div>
           </template>
 
@@ -1357,6 +1374,16 @@ function getSpeedLabel(speed: number): string {
   return '매우 느림'
 }
 
+// 배경 밝기 라벨
+function getBackgroundBrightnessLabel(): string {
+  const value = editForm.value.backgroundOverlay || 0
+  if (value < -30) return '많이 어둡게'
+  if (value < -10) return '어둡게'
+  if (value > 30) return '많이 밝게'
+  if (value > 10) return '밝게'
+  return '기본'
+}
+
 function getSpeedClass(speed: number): string {
   if (speed <= 8) return 'speed-very-fast'
   if (speed <= 12) return 'speed-fast'
@@ -1533,6 +1560,9 @@ async function editBlock(block: Block) {
   if (block.type === 'guestbook') {
     if (!editForm.value.displayMode) {
       editForm.value.displayMode = 'postit'
+    }
+    if (editForm.value.backgroundOverlay === undefined) {
+      editForm.value.backgroundOverlay = 0
     }
   }
 
@@ -3376,6 +3406,58 @@ select.form-input {
 .image-remove-btn:hover {
   background: #fef2f2;
   border-color: #ef4444;
+}
+
+/* 이미지 조절 컨트롤 */
+.image-adjust-control {
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-top: 6px;
+}
+
+.adjust-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.adjust-value {
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-range-mini {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e5e7eb;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.form-range-mini::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+
+.form-range-mini::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #3b82f6;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 /* 폼 범위 슬라이더 */
