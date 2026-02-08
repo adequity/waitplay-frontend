@@ -83,12 +83,17 @@ export interface MenuItem {
   price?: number
   description?: string
   imageUrl?: string // 메뉴 썸네일 이미지
+  badge?: string // 커스텀 뱃지 텍스트 (예: "추천", "인기", "NEW")
 }
 
 export interface PopularMenuBlockData {
   title: string
   subtitle: string
   items: MenuItem[]
+  // 표시 스타일: list(기존 리스트), grid(카드 그리드)
+  displayStyle?: 'list' | 'grid'
+  // 뱃지 스타일: none(숨김), rank(순위), badge(커스텀 텍스트)
+  badgeStyle?: 'none' | 'rank' | 'badge'
 }
 
 // Image Block

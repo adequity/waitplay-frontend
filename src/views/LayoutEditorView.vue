@@ -512,12 +512,69 @@
           <template v-if="editingBlock.type === 'popular_menu'">
             <div class="form-group">
               <label class="form-label">제목</label>
-              <input type="text" class="form-input" v-model="editForm.title" placeholder="인기 메뉴">
+              <input type="text" class="form-input" v-model="editForm.title" placeholder="추천 메뉴">
             </div>
             <div class="form-group">
               <label class="form-label">부제목 (선택)</label>
               <input type="text" class="form-input" v-model="editForm.subtitle" placeholder="부제목">
             </div>
+
+            <!-- 레이아웃 스타일 선택 -->
+            <div class="form-group">
+              <label class="form-label">레이아웃 스타일</label>
+              <div class="display-mode-selector">
+                <button
+                  type="button"
+                  :class="['mode-btn', { active: (editForm.displayStyle || 'grid') === 'grid' }]"
+                  @click="editForm.displayStyle = 'grid'"
+                >
+                  <span class="mode-icon">⊞</span>
+                  <span class="mode-label">그리드</span>
+                  <span class="mode-desc">카드 형태 2열 배치</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['mode-btn', { active: editForm.displayStyle === 'list' }]"
+                  @click="editForm.displayStyle = 'list'"
+                >
+                  <span class="mode-icon">≡</span>
+                  <span class="mode-label">리스트</span>
+                  <span class="mode-desc">세로 목록 형태</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 뱃지 스타일 선택 -->
+            <div class="form-group">
+              <label class="form-label">뱃지 스타일</label>
+              <div class="badge-style-selector">
+                <button
+                  type="button"
+                  :class="['badge-btn', { active: (editForm.badgeStyle || 'badge') === 'badge' }]"
+                  @click="editForm.badgeStyle = 'badge'"
+                >
+                  <span class="badge-preview badge-custom">추천</span>
+                  <span class="badge-label">커스텀 태그</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['badge-btn', { active: editForm.badgeStyle === 'rank' }]"
+                  @click="editForm.badgeStyle = 'rank'"
+                >
+                  <span class="badge-preview badge-rank">1</span>
+                  <span class="badge-label">순위 표시</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['badge-btn', { active: editForm.badgeStyle === 'none' }]"
+                  @click="editForm.badgeStyle = 'none'"
+                >
+                  <span class="badge-preview badge-none">-</span>
+                  <span class="badge-label">숨김</span>
+                </button>
+              </div>
+            </div>
+
             <div class="form-divider"></div>
             <div class="form-group">
               <label class="form-label">메뉴 아이템</label>
@@ -527,7 +584,6 @@
                   :key="index"
                   class="menu-item-card"
                 >
-                  <div class="menu-item-rank">{{ index + 1 }}</div>
                   <div class="menu-item-thumbnail">
                     <input
                       type="file"
@@ -574,6 +630,13 @@
                       v-model="item.description"
                       placeholder="설명 (선택)"
                     />
+                    <input
+                      v-if="(editForm.badgeStyle || 'badge') === 'badge'"
+                      type="text"
+                      class="form-input menu-badge-input"
+                      v-model="item.badge"
+                      placeholder="태그 (예: 추천, 인기, NEW)"
+                    />
                   </div>
                   <button
                     type="button"
@@ -591,7 +654,7 @@
               <button
                 type="button"
                 class="btn-add-menu-item"
-                @click="editForm.items.push({ rank: editForm.items.length + 1, name: '', price: null, description: '', imageUrl: '' })"
+                @click="editForm.items.push({ rank: editForm.items.length + 1, name: '', price: null, description: '', imageUrl: '', badge: '' })"
               >
                 + 메뉴 추가
               </button>
@@ -1442,6 +1505,24 @@ async function editBlock(block: Block) {
   if (block.type === 'guestbook') {
     if (!editForm.value.displayMode) {
       editForm.value.displayMode = 'postit'
+    }
+  }
+
+  // Ensure default values for popular_menu blocks
+  if (block.type === 'popular_menu') {
+    if (!editForm.value.displayStyle) {
+      editForm.value.displayStyle = 'grid'
+    }
+    if (!editForm.value.badgeStyle) {
+      editForm.value.badgeStyle = 'badge'
+    }
+    // Ensure all items have badge field
+    if (editForm.value.items) {
+      editForm.value.items.forEach((item: any) => {
+        if (item.badge === undefined) {
+          item.badge = ''
+        }
+      })
     }
   }
 
@@ -3573,6 +3654,83 @@ select.form-input {
 
 .display-mode-selector .mode-btn.active .mode-label {
   color: #1d4ed8;
+}
+
+/* 뱃지 스타일 선택기 */
+.badge-style-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.badge-style-selector .badge-btn {
+  flex: 1;
+  padding: 14px 10px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-style-selector .badge-btn:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.badge-style-selector .badge-btn.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.badge-style-selector .badge-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-style-selector .badge-preview.badge-custom {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.badge-style-selector .badge-preview.badge-rank {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #1a1a1a;
+}
+
+.badge-style-selector .badge-preview.badge-none {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.badge-style-selector .badge-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.badge-style-selector .badge-btn.active .badge-label {
+  color: #1d4ed8;
+}
+
+/* 메뉴 뱃지 입력 필드 */
+.menu-badge-input {
+  border: 1px dashed #d1d5db !important;
+  background: #fefce8 !important;
+}
+
+.menu-badge-input::placeholder {
+  color: #ca8a04;
 }
 
 /* 마퀴 이미지 업로드 */
