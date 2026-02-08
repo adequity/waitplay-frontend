@@ -253,7 +253,9 @@
                   <div class="store-avatar">
                     <div class="avatar-ring">
                       <div class="avatar-inner">
-                        <span class="avatar-emoji">{{ getStoreEmoji(store.storeName) }}</span>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="store-svg-icon">
+                          <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                       </div>
                     </div>
                   </div>
@@ -312,7 +314,9 @@
                   <div class="post-header">
                     <div class="post-author">
                       <div class="author-avatar">
-                        <span>{{ getStoreEmoji(message.storeName) }}</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                       </div>
                       <div class="author-info">
                         <p class="author-name">{{ message.storeName }}</p>
@@ -617,31 +621,6 @@ const formatRelativeDate = (dateString?: string) => {
   if (weeks < 5) return `${weeks}주 전`
   if (months < 12) return `${months}개월 전`
   return `${years}년 전`
-}
-
-// 매장 이름에서 이모지 생성
-const getStoreEmoji = (storeName?: string): string => {
-  if (!storeName) return '🏪'
-
-  const name = storeName.toLowerCase()
-  if (name.includes('카페') || name.includes('커피') || name.includes('coffee')) return '☕'
-  if (name.includes('레스토랑') || name.includes('식당') || name.includes('restaurant')) return '🍽️'
-  if (name.includes('베이커리') || name.includes('빵') || name.includes('bakery')) return '🥐'
-  if (name.includes('바') || name.includes('bar') || name.includes('펍')) return '🍺'
-  if (name.includes('치킨')) return '🍗'
-  if (name.includes('피자')) return '🍕'
-  if (name.includes('스시') || name.includes('초밥') || name.includes('일식')) return '🍣'
-  if (name.includes('중식') || name.includes('중국')) return '🥡'
-  if (name.includes('한식')) return '🍚'
-  if (name.includes('분식') || name.includes('떡볶이')) return '🍜'
-  if (name.includes('디저트') || name.includes('케이크')) return '🍰'
-  if (name.includes('아이스크림')) return '🍦'
-  if (name.includes('헬스') || name.includes('gym') || name.includes('피트니스')) return '💪'
-  if (name.includes('미용') || name.includes('헤어') || name.includes('salon')) return '💇'
-  if (name.includes('네일')) return '💅'
-  if (name.includes('마사지') || name.includes('스파')) return '💆'
-
-  return '🏪'
 }
 
 // BGM Functions
@@ -1426,9 +1405,8 @@ onUnmounted(() => {
   border: 2px solid white;
 }
 
-.avatar-emoji {
-  font-size: 1.5rem;
-  line-height: 1;
+.store-svg-icon {
+  color: #262626;
 }
 
 .store-info {
@@ -1526,7 +1504,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  color: white;
 }
 
 .author-info {
