@@ -11,6 +11,10 @@ export interface BenefitDto {
   expiryDays: number
   maxIssuance?: number
   isActive: boolean
+  // Icon settings
+  iconType: 'preset' | 'custom'
+  iconName?: string
+  customIconUrl?: string
   createdAt: string
   updatedAt?: string
   // Statistics
@@ -28,6 +32,10 @@ export interface CreateBenefitRequest {
   expiryDays?: number
   maxIssuance?: number
   isActive?: boolean
+  // Icon settings
+  iconType?: 'preset' | 'custom'
+  iconName?: string
+  customIconUrl?: string
 }
 
 export interface UpdateBenefitRequest {
@@ -38,6 +46,10 @@ export interface UpdateBenefitRequest {
   expiryDays?: number
   maxIssuance?: number
   isActive?: boolean
+  // Icon settings
+  iconType?: 'preset' | 'custom'
+  iconName?: string
+  customIconUrl?: string
 }
 
 export interface GameBenefitStatsDto {

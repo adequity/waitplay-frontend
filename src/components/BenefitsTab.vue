@@ -52,20 +52,23 @@
 
         <!-- Summary Medals (Read Only, Always Visible) -->
         <div class="summary-medals">
-          <div class="medal-box medal-box-bronze">
-            <IconBase name="medal-bronze" class="medal-icon medal-bronze" />
-            <span class="medal-name">{{ getStepName(game, 0) || '미설정' }}</span>
-            <span class="medal-score">{{ getStepRange(game, 0) }}</span>
+          <div v-for="(step, idx) in game.steps.slice(0, 3)" :key="idx" class="medal-box" :class="getMedalBoxBg(idx)">
+            <!-- 커스텀 아이콘 -->
+            <img v-if="step.iconType === 'custom' && step.customIconUrl"
+                 :src="step.customIconUrl"
+                 class="medal-icon custom-icon" />
+            <!-- 프리셋 아이콘 -->
+            <IconBase v-else :name="step.iconName || getMedalIconName(idx)"
+                      class="medal-icon"
+                      :style="{ color: getIconColor(step.iconName || getMedalIconName(idx)) }" />
+            <span class="medal-name">{{ step.name || '미설정' }}</span>
+            <span class="medal-score">{{ step.minScore }}-{{ step.maxScore }}점</span>
           </div>
-          <div class="medal-box medal-box-silver">
-            <IconBase name="medal-silver" class="medal-icon medal-silver" />
-            <span class="medal-name">{{ getStepName(game, 1) || '미설정' }}</span>
-            <span class="medal-score">{{ getStepRange(game, 1) }}</span>
-          </div>
-          <div class="medal-box medal-box-gold">
-            <IconBase name="medal-gold" class="medal-icon medal-gold" />
-            <span class="medal-name">{{ getStepName(game, 2) || '미설정' }}</span>
-            <span class="medal-score">{{ getStepRange(game, 2) }}</span>
+          <!-- 빈 슬롯 표시 (3개 미만일 때) -->
+          <div v-for="i in Math.max(0, 3 - game.steps.length)" :key="'empty-' + i" class="medal-box medal-box-empty">
+            <IconBase name="plus" class="medal-icon empty-icon" />
+            <span class="medal-name">미설정</span>
+            <span class="medal-score">-</span>
           </div>
         </div>
 
@@ -86,9 +89,18 @@
                 <div class="step-badge">{{ index + 1 }}</div>
                 
                 <div class="input-row">
+                  <!-- 아이콘 선택 버튼 -->
+                  <button class="icon-select-btn" @click="openIconPicker(game, index)" type="button">
+                    <img v-if="step.iconType === 'custom' && step.customIconUrl"
+                         :src="step.customIconUrl"
+                         class="selected-icon custom" />
+                    <IconBase v-else :name="step.iconName || getMedalIconName(index)"
+                              class="selected-icon"
+                              :style="{ color: getIconColor(step.iconName || getMedalIconName(index)) }" />
+                    <span class="icon-change-text">변경</span>
+                  </button>
                   <!-- Medal Name Input -->
-                  <div class="input-group-medal" :class="getMedalBoxClass(index)">
-                    <IconBase :name="getMedalIconName(index)" :class="getMedalClass(index)" />
+                  <div class="input-group-medal">
                     <input type="text" v-model="step.name" placeholder="등급 이름 (예: 동메달)">
                   </div>
                   <!-- Score Range Input -->
@@ -123,6 +135,49 @@
         </div>
       </div>
     </div>
+  <!-- Icon Picker Modal -->
+    <Teleport to="body">
+      <div v-if="showIconPicker" class="icon-picker-overlay" @click.self="showIconPicker = false">
+        <div class="icon-picker-modal">
+          <div class="icon-picker-header">
+            <h3>아이콘 선택</h3>
+            <button class="close-btn" @click="showIconPicker = false">
+              <IconBase name="close" />
+            </button>
+          </div>
+
+          <div class="icon-picker-content">
+            <!-- 프리셋 아이콘 -->
+            <div class="icon-section">
+              <h4>프리셋 아이콘</h4>
+              <div class="icon-grid">
+                <button
+                  v-for="preset in iconPresets"
+                  :key="preset.name"
+                  class="icon-option"
+                  :class="{ active: currentEditingStep?.game.steps[currentEditingStep?.stepIndex]?.iconName === preset.name }"
+                  @click="selectPresetIcon(preset.name)"
+                >
+                  <IconBase :name="preset.name" :style="{ color: preset.color }" />
+                  <span>{{ preset.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 커스텀 업로드 -->
+            <div class="icon-section">
+              <h4>커스텀 아이콘 업로드</h4>
+              <p class="upload-hint">PNG, JPG, SVG (최대 1MB)</p>
+              <label class="upload-btn">
+                <IconBase name="image" />
+                <span>이미지 업로드</span>
+                <input type="file" accept="image/*" @change="handleIconUpload" hidden />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -140,6 +195,9 @@ interface BenefitStep {
   minScore: number
   maxScore: number
   reward: string
+  iconType: 'preset' | 'custom'  // 아이콘 타입
+  iconName: string               // 프리셋 아이콘 이름
+  customIconUrl: string          // 커스텀 업로드 이미지 URL
 }
 
 interface GameBenefit {
@@ -169,11 +227,28 @@ const gameDefinitions: Record<string, { name: string; icon: string }> = {
   'spot-difference': { name: '틀린 그림 찾기', icon: 'fa-solid fa-magnifying-glass' }
 }
 
+// 아이콘 프리셋 목록
+const iconPresets = [
+  { name: 'medal-bronze', label: '동메달', color: '#cd7f32' },
+  { name: 'medal-silver', label: '은메달', color: '#a8a8a8' },
+  { name: 'medal-gold', label: '금메달', color: '#ffd700' },
+  { name: 'trophy', label: '트로피', color: '#ffd700' },
+  { name: 'star', label: '별', color: '#ffc107' },
+  { name: 'gift', label: '선물', color: '#e91e63' },
+  { name: 'ticket', label: '티켓', color: '#9c27b0' },
+  { name: 'sparkles', label: '반짝임', color: '#00bcd4' },
+  { name: 'party-horn', label: '파티', color: '#ff5722' },
+]
+
+// 아이콘 선택 팝업 상태
+const showIconPicker = ref(false)
+const currentEditingStep = ref<{ game: GameBenefit; stepIndex: number } | null>(null)
+
 // Default steps template
 const defaultSteps: BenefitStep[] = [
-  { name: '동메달', minScore: 6, maxScore: 7, reward: '아메리카노 1잔' },
-  { name: '은메달', minScore: 8, maxScore: 9, reward: '음료 2잔' },
-  { name: '금메달', minScore: 10, maxScore: 10, reward: '디저트 세트' }
+  { name: '동메달', minScore: 6, maxScore: 7, reward: '아메리카노 1잔', iconType: 'preset', iconName: 'medal-bronze', customIconUrl: '' },
+  { name: '은메달', minScore: 8, maxScore: 9, reward: '음료 2잔', iconType: 'preset', iconName: 'medal-silver', customIconUrl: '' },
+  { name: '금메달', minScore: 10, maxScore: 10, reward: '디저트 세트', iconType: 'preset', iconName: 'medal-gold', customIconUrl: '' }
 ]
 
 async function loadGameSettings() {
@@ -205,7 +280,11 @@ async function loadGameSettings() {
               maxScore: nextBenefit?.requiredScore
                 ? nextBenefit.requiredScore - 1
                 : b.requiredScore + 3,
-              reward: b.description || ''
+              reward: b.description || '',
+              // 아이콘 정보 (API에서 가져오거나 기본값)
+              iconType: (b as any).iconType || 'preset',
+              iconName: (b as any).iconName || getMedalIconName(index),
+              customIconUrl: (b as any).customIconUrl || ''
             }
           })
         : JSON.parse(JSON.stringify(defaultSteps))
@@ -236,8 +315,83 @@ function addStep(game: GameBenefit) {
     name: '새 단계',
     minScore: 0,
     maxScore: 0,
-    reward: ''
+    reward: '',
+    iconType: 'preset',
+    iconName: 'star',
+    customIconUrl: ''
   })
+}
+
+// 아이콘 선택 팝업 열기
+function openIconPicker(game: GameBenefit, stepIndex: number) {
+  currentEditingStep.value = { game, stepIndex }
+  showIconPicker.value = true
+}
+
+// 프리셋 아이콘 선택
+function selectPresetIcon(iconName: string) {
+  if (currentEditingStep.value) {
+    const step = currentEditingStep.value.game.steps[currentEditingStep.value.stepIndex]
+    if (step) {
+      step.iconType = 'preset'
+      step.iconName = iconName
+      step.customIconUrl = ''
+    }
+  }
+  showIconPicker.value = false
+}
+
+// 커스텀 아이콘 업로드
+async function handleIconUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  if (!input.files?.length || !currentEditingStep.value) return
+
+  const file = input.files[0]
+  if (!file) return
+
+  // 파일 크기 체크 (1MB 이하)
+  if (file.size > 1024 * 1024) {
+    alert('파일 크기는 1MB 이하여야 합니다.')
+    return
+  }
+
+  // 이미지 타입 체크
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드 가능합니다.')
+    return
+  }
+
+  // Base64로 변환 (간단한 구현, 실제로는 서버 업로드 권장)
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    if (currentEditingStep.value && e.target?.result) {
+      const step = currentEditingStep.value.game.steps[currentEditingStep.value.stepIndex]
+      if (step) {
+        step.iconType = 'custom'
+        step.customIconUrl = e.target.result as string
+        step.iconName = ''
+      }
+    }
+    showIconPicker.value = false
+  }
+  reader.readAsDataURL(file)
+
+  // 인풋 리셋
+  input.value = ''
+}
+
+// 현재 단계의 아이콘 정보 가져오기
+function getStepIcon(step: BenefitStep) {
+  if (step.iconType === 'custom' && step.customIconUrl) {
+    return { type: 'custom', url: step.customIconUrl }
+  }
+  return { type: 'preset', name: step.iconName || 'star' }
+}
+
+// 아이콘 프리셋의 색상 가져오기
+function getIconColor(iconName: string): string {
+  const preset = iconPresets.find(p => p.name === iconName)
+  return preset?.color || '#86868b'
 }
 
 function removeStep(game: GameBenefit, index: number) {
@@ -281,7 +435,10 @@ async function saveGameBenefits(game: GameBenefit) {
         await benefitsService.updateBenefit(step.id, {
           title: step.name,
           description: step.reward,
-          requiredScore: step.minScore
+          requiredScore: step.minScore,
+          iconType: step.iconType,
+          iconName: step.iconName,
+          customIconUrl: step.customIconUrl
         })
       } else {
         // Create new benefit
@@ -290,7 +447,10 @@ async function saveGameBenefits(game: GameBenefit) {
           title: step.name,
           description: step.reward,
           requiredScore: step.minScore,
-          isActive: true
+          isActive: true,
+          iconType: step.iconType,
+          iconName: step.iconName,
+          customIconUrl: step.customIconUrl
         })
         // Update local step with new ID
         step.id = newBenefit.id
@@ -360,6 +520,14 @@ function getStepName(game: GameBenefit, index: number) {
 function getStepRange(game: GameBenefit, index: number) {
   const s = game.steps[index]
   return s ? `${s.minScore}-${s.maxScore}점` : '-'
+}
+
+// 메달 박스 배경색 클래스
+function getMedalBoxBg(index: number): string {
+  if (index === 0) return 'medal-box-bronze'
+  if (index === 1) return 'medal-box-silver'
+  if (index === 2) return 'medal-box-gold'
+  return ''
 }
 
 onMounted(() => {
@@ -609,6 +777,207 @@ onMounted(() => {
 .btn-save:hover:not(:disabled) { background: #0077ed; transform: translateY(-1px); }
 .btn-save:disabled { background: #86868b; cursor: not-allowed; box-shadow: none; }
 
+/* 아이콘 선택 버튼 */
+.icon-select-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border: 2px dashed #d2d2d7;
+  border-radius: 12px;
+  background: #f9f9fb;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.icon-select-btn:hover {
+  border-color: #0071e3;
+  background: #f0f7ff;
+}
+.icon-select-btn .selected-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+.icon-select-btn .selected-icon.custom {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.icon-select-btn .icon-change-text {
+  font-size: 10px;
+  color: #86868b;
+  margin-top: 2px;
+}
+
+/* 커스텀 아이콘 이미지 */
+.custom-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+/* 빈 메달 박스 */
+.medal-box-empty {
+  background: #f5f5f7;
+  border: 2px dashed #d2d2d7;
+}
+.empty-icon {
+  color: #aeaeb2;
+}
+
+/* 아이콘 피커 모달 */
+.icon-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+.icon-picker-modal {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.icon-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.icon-picker-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #86868b;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+.close-btn:hover { color: #1d1d1f; }
+
+.icon-picker-content {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: calc(80vh - 80px);
+}
+
+.icon-section {
+  margin-bottom: 28px;
+}
+.icon-section:last-child { margin-bottom: 0; }
+
+.icon-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 12px 0;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.icon-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  border: 2px solid #e5e5ea;
+  border-radius: 14px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.icon-option:hover {
+  border-color: #0071e3;
+  background: #f0f7ff;
+}
+.icon-option.active {
+  border-color: #0071e3;
+  background: #e8f2ff;
+}
+.icon-option :deep(svg) {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 8px;
+}
+.icon-option span {
+  font-size: 12px;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+.upload-hint {
+  font-size: 13px;
+  color: #86868b;
+  margin: 0 0 12px 0;
+}
+
+.upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  border: 2px dashed #d2d2d7;
+  border-radius: 14px;
+  background: #f9f9fb;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0071e3;
+}
+.upload-btn:hover {
+  border-color: #0071e3;
+  background: #f0f7ff;
+}
+.upload-btn :deep(svg) {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
   .grid-container { grid-template-columns: repeat(2, 1fr); }
@@ -618,5 +987,7 @@ onMounted(() => {
   .grid-container { grid-template-columns: 1fr; }
   .card-footer { flex-direction: column-reverse; gap: 10px; }
   .btn-add, .btn-save { width: 100%; justify-content: center; }
+  .icon-grid { grid-template-columns: repeat(3, 1fr); }
+  .icon-picker-modal { width: 95%; }
 }
 </style>
