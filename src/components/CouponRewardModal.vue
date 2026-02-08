@@ -16,7 +16,12 @@
         <!-- Benefit Info -->
         <div class="benefit-info">
           <div class="benefit-icon-wrapper">
-            <IconBase name="gift" />
+            <!-- 커스텀 아이콘 -->
+            <img v-if="benefit.iconType === 'custom' && benefit.customIconUrl"
+                 :src="benefit.customIconUrl"
+                 class="benefit-custom-icon" />
+            <!-- 프리셋 아이콘 -->
+            <IconBase v-else :name="benefit.iconName || 'gift'" />
           </div>
           <h3 class="benefit-title">{{ benefit.title }}</h3>
           <p v-if="benefit.description" class="benefit-description">
@@ -85,6 +90,10 @@ interface Props {
     title: string
     description?: string
     requiredScore: number
+    // Icon settings
+    iconType?: 'preset' | 'custom'
+    iconName?: string
+    customIconUrl?: string
   }
   userId: string
   gameScoreId?: string
@@ -241,6 +250,19 @@ function close() {
 .benefit-icon-wrapper i {
   font-size: 48px;
   color: white;
+}
+
+.benefit-icon-wrapper :deep(svg) {
+  width: 48px;
+  height: 48px;
+  color: white;
+}
+
+.benefit-custom-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  object-fit: cover;
 }
 
 .benefit-title {
