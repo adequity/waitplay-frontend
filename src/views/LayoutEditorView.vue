@@ -698,50 +698,78 @@
               <input type="number" class="form-input" v-model="editForm.maxMessageLength" placeholder="200">
             </div>
 
-            <!-- 배경 이미지 업로드 -->
-            <div class="form-group">
-              <label class="form-label">배경 이미지 (선택)</label>
-              <p class="form-hint">방명록 영역의 배경 이미지를 설정합니다.</p>
-              <input type="file" class="form-input" @change="handleGuestbookBackgroundImageUpload" accept="image/*" style="margin-bottom: 8px;">
-              <div v-if="editForm.backgroundImageUrl" class="background-preview">
-                <img
-                  :src="editForm.backgroundImageUrl"
-                  alt="배경 미리보기"
-                  class="background-preview-image"
+            <!-- 배경/버튼 이미지 업로드 (2열 그리드) -->
+            <div class="image-upload-grid">
+              <!-- 배경 이미지 -->
+              <div class="image-upload-item">
+                <label class="form-label">배경 이미지</label>
+                <input
+                  type="file"
+                  :id="'guestbook-bg-upload'"
+                  @change="handleGuestbookBackgroundImageUpload"
+                  accept="image/*"
+                  style="display: none;"
                 />
-                <button type="button" class="remove-button-image" @click="editForm.backgroundImageUrl = ''">
-                  배경 제거
-                </button>
+                <label
+                  :for="'guestbook-bg-upload'"
+                  class="image-upload-box"
+                  :class="{ 'has-image': editForm.backgroundImageUrl }"
+                >
+                  <img v-if="editForm.backgroundImageUrl" :src="editForm.backgroundImageUrl" alt="배경" />
+                  <div v-else class="upload-placeholder">
+                    <span class="upload-icon">🖼️</span>
+                    <span class="upload-text">배경 추가</span>
+                  </div>
+                </label>
+                <button
+                  v-if="editForm.backgroundImageUrl"
+                  type="button"
+                  class="image-remove-btn"
+                  @click="editForm.backgroundImageUrl = ''"
+                >제거</button>
+              </div>
+
+              <!-- 버튼 이미지 -->
+              <div class="image-upload-item">
+                <label class="form-label">버튼 이미지</label>
+                <input
+                  type="file"
+                  :id="'guestbook-btn-upload'"
+                  @change="handleGuestbookButtonImageUpload"
+                  accept="image/*"
+                  style="display: none;"
+                />
+                <label
+                  :for="'guestbook-btn-upload'"
+                  class="image-upload-box"
+                  :class="{ 'has-image': editForm.buttonImageUrl }"
+                >
+                  <img v-if="editForm.buttonImageUrl" :src="editForm.buttonImageUrl" alt="버튼" />
+                  <div v-else class="upload-placeholder">
+                    <span class="upload-icon">🔘</span>
+                    <span class="upload-text">버튼 추가</span>
+                  </div>
+                </label>
+                <button
+                  v-if="editForm.buttonImageUrl"
+                  type="button"
+                  class="image-remove-btn"
+                  @click="editForm.buttonImageUrl = ''; editForm.buttonImageScale = 1"
+                >제거</button>
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">버튼 이미지 (선택)</label>
-              <p class="form-hint">커스텀 버튼 이미지를 업로드하세요. 권장: 가로로 긴 형태, 투명 PNG</p>
-              <input type="file" class="form-input" @change="handleGuestbookButtonImageUpload" accept="image/*" style="margin-bottom: 8px;">
-              <div v-if="editForm.buttonImageUrl" class="button-preview">
-                <img
-                  :src="editForm.buttonImageUrl"
-                  alt="버튼 미리보기"
-                  class="button-preview-image"
-                  :style="{ transform: `scale(${editForm.buttonImageScale || 1})` }"
-                />
-                <!-- 버튼 크기 조절 슬라이더 -->
-                <div class="scale-slider-group">
-                  <label class="scale-label">버튼 크기: {{ Math.round((editForm.buttonImageScale || 1) * 100) }}%</label>
-                  <input
-                    type="range"
-                    class="scale-slider"
-                    v-model.number="editForm.buttonImageScale"
-                    min="0.3"
-                    max="3"
-                    step="0.1"
-                  />
-                </div>
-                <button type="button" class="remove-button-image" @click="editForm.buttonImageUrl = ''; editForm.buttonImageScale = 1">
-                  이미지 제거
-                </button>
-              </div>
+            <!-- 버튼 크기 조절 (버튼 이미지가 있을 때만) -->
+            <div v-if="editForm.buttonImageUrl" class="form-group">
+              <label class="form-label">버튼 크기: {{ Math.round((editForm.buttonImageScale || 1) * 100) }}%</label>
+              <input
+                type="range"
+                class="form-range"
+                v-model.number="editForm.buttonImageScale"
+                min="0.3"
+                max="3"
+                step="0.1"
+              />
             </div>
           </template>
 
@@ -3265,6 +3293,121 @@ select.form-input {
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid #e5e5ea;
+}
+
+/* 이미지 업로드 2열 그리드 */
+.image-upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.image-upload-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.image-upload-item .form-label {
+  margin: 0;
+  font-size: 13px;
+}
+
+.image-upload-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.image-upload-box:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.image-upload-box.has-image {
+  border-style: solid;
+  border-color: #e5e7eb;
+  padding: 0;
+}
+
+.image-upload-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #9ca3af;
+}
+
+.upload-placeholder .upload-icon {
+  font-size: 24px;
+}
+
+.upload-placeholder .upload-text {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.image-remove-btn {
+  padding: 6px 12px;
+  background: #fff;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.image-remove-btn:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+/* 폼 범위 슬라이더 */
+.form-range {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e5e7eb;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.form-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.form-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #3b82f6;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .bgm-preview-section {
