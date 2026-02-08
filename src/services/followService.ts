@@ -21,6 +21,32 @@ export interface FollowedStoreInfo {
   followedAt: string
 }
 
+export interface StoreProfileResponse {
+  qrCode: string
+  adminId: string
+  storeName: string
+  storeProfileImage?: string
+  description?: string
+  followerCount: number
+  guestbookCount: number
+  isFollowing: boolean
+}
+
+export interface FollowerInfo {
+  userId: string
+  userName: string
+  profileImage?: string
+  followedAt: string
+}
+
+export interface StoreFollowersResponse {
+  storeName: string
+  totalCount: number
+  followers: FollowerInfo[]
+  hasMore: boolean
+  page: number
+}
+
 const followService = {
   /**
    * 매장 팔로우 (단골 등록)
@@ -51,6 +77,22 @@ const followService = {
    */
   async getMyFollowedStores(): Promise<FollowedStoreInfo[]> {
     const response = await api.get('/api/follow/my-stores')
+    return response.data
+  },
+
+  /**
+   * 매장 프로필 정보 조회
+   */
+  async getStoreProfile(qrCode: string): Promise<StoreProfileResponse> {
+    const response = await api.get(`/api/follow/store-profile/${qrCode}`)
+    return response.data
+  },
+
+  /**
+   * 매장 팔로워 목록 조회
+   */
+  async getStoreFollowers(qrCode: string, page: number = 1, limit: number = 20): Promise<StoreFollowersResponse> {
+    const response = await api.get(`/api/follow/store-followers/${qrCode}?page=${page}&limit=${limit}`)
     return response.data
   }
 }
