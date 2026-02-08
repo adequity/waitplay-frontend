@@ -167,7 +167,7 @@
             <!-- 커스텀 업로드 -->
             <div class="icon-section">
               <h4>커스텀 아이콘 업로드</h4>
-              <p class="upload-hint">PNG, JPG, SVG (최대 1MB)</p>
+              <p class="upload-hint">PNG, JPG, SVG (최대 10MB, 자동 리사이즈)</p>
               <label class="upload-btn">
                 <IconBase name="image" />
                 <span>이미지 업로드</span>
@@ -341,6 +341,57 @@ function selectPresetIcon(iconName: string) {
   showIconPicker.value = false
 }
 
+// 이미지 리사이즈 함수
+function resizeImage(file: File, maxSize: number = 128): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        // Canvas 생성
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('Canvas context not available'))
+          return
+        }
+
+        // 비율 유지하면서 리사이즈
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width)
+            width = maxSize
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height)
+            height = maxSize
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        // 고품질 리사이즈
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = 'high'
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // JPEG로 변환 (품질 0.9)
+        const resizedBase64 = canvas.toDataURL('image/png', 0.9)
+        resolve(resizedBase64)
+      }
+      img.onerror = () => reject(new Error('Failed to load image'))
+      img.src = e.target?.result as string
+    }
+    reader.onerror = () => reject(new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
+}
+
 // 커스텀 아이콘 업로드
 async function handleIconUpload(event: Event) {
   const input = event.target as HTMLInputElement
@@ -349,9 +400,9 @@ async function handleIconUpload(event: Event) {
   const file = input.files[0]
   if (!file) return
 
-  // 파일 크기 체크 (1MB 이하)
-  if (file.size > 1024 * 1024) {
-    alert('파일 크기는 1MB 이하여야 합니다.')
+  // 파일 크기 체크 (10MB 이하)
+  if (file.size > 10 * 1024 * 1024) {
+    alert('파일 크기는 10MB 이하여야 합니다.')
     return
   }
 
@@ -361,20 +412,23 @@ async function handleIconUpload(event: Event) {
     return
   }
 
-  // Base64로 변환 (간단한 구현, 실제로는 서버 업로드 권장)
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    if (currentEditingStep.value && e.target?.result) {
+  try {
+    // 이미지를 128x128로 리사이즈
+    const resizedBase64 = await resizeImage(file, 128)
+
+    if (currentEditingStep.value) {
       const step = currentEditingStep.value.game.steps[currentEditingStep.value.stepIndex]
       if (step) {
         step.iconType = 'custom'
-        step.customIconUrl = e.target.result as string
+        step.customIconUrl = resizedBase64
         step.iconName = ''
       }
     }
     showIconPicker.value = false
+  } catch (error) {
+    console.error('Image resize failed:', error)
+    alert('이미지 처리 중 오류가 발생했습니다.')
   }
-  reader.readAsDataURL(file)
 
   // 인풋 리셋
   input.value = ''
