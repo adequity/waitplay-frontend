@@ -408,10 +408,10 @@ onMounted(() => {
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* Game List */
+/* Game List - 2 Column Grid */
 .game-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 24px;
 }
 
@@ -785,7 +785,12 @@ input:checked + .slider:before {
 
 @media (max-width: 900px) {
   .tab-content { padding: 30px 20px; }
-  
+
+  /* 2열 → 1열 변경 */
+  .game-list {
+    grid-template-columns: 1fr;
+  }
+
   .game-actions {
     flex-direction: column;
     gap: 12px;

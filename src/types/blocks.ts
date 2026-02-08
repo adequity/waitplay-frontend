@@ -120,7 +120,7 @@ export interface GuestbookMessage {
   imageUrl?: string // For canvas drawing images
   createdAt: string
   rotation: number // -5 to 5 degrees for post-it rotation effect
-  color: 'yellow' | 'pink' | 'blue' | 'green'
+  color: 'yellow' | 'pink' | 'blue' | 'green' | 'lavender' | 'peach' | 'mint'
 }
 
 export interface GuestbookBlockData {
@@ -133,6 +133,7 @@ export interface GuestbookBlockData {
   backgroundImageUrl?: string // 방명록 영역 배경 이미지 URL
   backgroundOverlay?: number // 배경 밝기 조절 (-50 ~ 50, 음수: 어둡게, 양수: 밝게)
   displayMode?: 'postit' | 'graffiti' // 표시 모드: 포스트잇(기본) 또는 낙서
+  postitColor?: string // 포스트잇 배경색 (hex color, 기본값: 랜덤)
 }
 
 // Marquee Block (전광판/티커)

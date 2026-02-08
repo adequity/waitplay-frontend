@@ -80,25 +80,41 @@
         </div>
 
         <div class="sidebar-content">
-          <!-- User Info Section -->
-          <div v-if="isAuthenticated" class="user-section">
-            <div class="user-avatar">
-              <img v-if="user?.profileImage" :src="user.profileImage" alt="프로필" class="avatar-image" />
-              <svg v-else width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
-                  stroke="currentColor"
-                  stroke-width="2"
-                />
-                <path
-                  d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
-                  stroke="currentColor"
-                  stroke-width="2"
-                />
-              </svg>
+          <!-- User Info Section (Instagram Profile Style) -->
+          <div v-if="isAuthenticated" class="user-section-instagram">
+            <div class="profile-header">
+              <div class="profile-avatar-large">
+                <div class="avatar-ring-large">
+                  <div class="avatar-inner-large">
+                    <img v-if="user?.profileImage" :src="user.profileImage" alt="프로필" class="avatar-image-large" />
+                    <svg v-else width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <path
+                        d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="profile-stats">
+                <div class="stat-item">
+                  <span class="stat-number">{{ myGuestbookMessages.length }}</span>
+                  <span class="stat-label">게시물</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number">{{ followedStores.length }}</span>
+                  <span class="stat-label">팔로잉</span>
+                </div>
+              </div>
             </div>
-            <div class="user-info">
-              <p class="user-name">{{ user?.nickname || '사용자' }}</p>
+            <div class="profile-bio">
+              <p class="profile-username">{{ user?.nickname || '사용자' }}</p>
             </div>
           </div>
 
@@ -149,97 +165,215 @@
 
           <!-- Tab Content -->
           <div v-if="isAuthenticated" class="tab-content">
-            <!-- 내 프로필 -->
-            <div v-if="activeTab === 'profile'" class="profile-section">
-              <div class="profile-item">
-                <span class="profile-label">닉네임</span>
-                <span class="profile-value">{{ user?.nickname || '-' }}</span>
+            <!-- 내 프로필 (Instagram Settings Style) -->
+            <div v-if="activeTab === 'profile'" class="profile-section-instagram">
+              <div class="settings-group">
+                <div class="settings-item">
+                  <div class="settings-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
+                      <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="settings-content">
+                    <span class="settings-label">닉네임</span>
+                    <span class="settings-value">{{ user?.nickname || '-' }}</span>
+                  </div>
+                  <svg class="settings-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+
+                <div class="settings-item">
+                  <div class="settings-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                      <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <div class="settings-content">
+                    <span class="settings-label">가입일</span>
+                    <span class="settings-value">{{ formatDate(user?.createdAt) }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="profile-item">
-                <span class="profile-label">가입일</span>
-                <span class="profile-value">{{ formatDate(user?.createdAt) }}</span>
+
+              <div class="settings-group">
+                <button class="settings-item logout-item" @click="handleLogout">
+                  <div class="settings-icon logout-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <div class="settings-content">
+                    <span class="settings-label logout-text">로그아웃</span>
+                  </div>
+                </button>
               </div>
-              <button class="logout-btn" @click="handleLogout">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                로그아웃
-              </button>
             </div>
 
-            <!-- 단골 매장 -->
+            <!-- 단골 매장 (Instagram Style) -->
             <div v-if="activeTab === 'stores'" class="stores-section">
-              <div v-if="isLoadingStores" class="loading">불러오는 중...</div>
-              <div v-else-if="followedStores.length === 0" class="empty-message">
-                아직 단골 매장이 없습니다.
+              <!-- 헤더 통계 -->
+              <div class="stores-header">
+                <div class="stores-count">
+                  <span class="count-number">{{ followedStores.length }}</span>
+                  <span class="count-label">단골 매장</span>
+                </div>
               </div>
-              <div v-else class="stores-list">
+
+              <div v-if="isLoadingStores" class="loading-spinner">
+                <div class="spinner"></div>
+                <span>불러오는 중...</span>
+              </div>
+
+              <div v-else-if="followedStores.length === 0" class="empty-state">
+                <div class="empty-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <p class="empty-title">아직 단골 매장이 없어요</p>
+                <p class="empty-subtitle">매장을 방문해서 단골이 되어보세요!</p>
+              </div>
+
+              <div v-else class="stores-list-instagram">
                 <div
                   v-for="store in followedStores"
                   :key="store.adminId"
-                  class="store-item"
+                  class="store-card"
                 >
-                  <div class="store-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- 프로필 이미지 (인스타그램 스타일 원형) -->
+                  <div class="store-avatar">
+                    <div class="avatar-ring">
+                      <div class="avatar-inner">
+                        <span class="avatar-emoji">{{ getStoreEmoji(store.storeName) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 매장 정보 -->
+                  <div class="store-info">
+                    <p class="store-username">{{ store.storeName || '알 수 없는 매장' }}</p>
+                    <p class="store-meta">{{ formatRelativeDate(store.followedAt) }} 팔로우</p>
+                  </div>
+
+                  <!-- 팔로잉 버튼 -->
+                  <button class="following-btn">
+                    <span>팔로잉</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                  </div>
-                  <div class="store-details">
-                    <p class="store-name">{{ store.storeName || '알 수 없는 매장' }}</p>
-                    <p class="store-date">{{ formatDate(store.followedAt) }}부터 단골</p>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- 내 방명록 -->
+            <!-- 내 방명록 (Instagram Post Style) -->
             <div v-if="activeTab === 'guestbook'" class="guestbook-section">
-              <div v-if="isLoadingMyMessages" class="loading">불러오는 중...</div>
-              <div v-else-if="myGuestbookMessages.length === 0" class="empty-message">
-                아직 남긴 방명록이 없습니다.
+              <!-- 헤더 통계 -->
+              <div class="stores-header">
+                <div class="stores-count">
+                  <span class="count-number">{{ myGuestbookMessages.length }}</span>
+                  <span class="count-label">게시물</span>
+                </div>
               </div>
-              <div v-else class="guestbook-list">
+
+              <div v-if="isLoadingMyMessages" class="loading-spinner">
+                <div class="spinner"></div>
+                <span>불러오는 중...</span>
+              </div>
+
+              <div v-else-if="myGuestbookMessages.length === 0" class="empty-state">
+                <div class="empty-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                    <path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <p class="empty-title">아직 방명록이 없어요</p>
+                <p class="empty-subtitle">매장에서 추억을 남겨보세요!</p>
+              </div>
+
+              <div v-else class="guestbook-feed">
                 <div
                   v-for="message in myGuestbookMessages"
                   :key="message.id"
-                  class="guestbook-card"
+                  class="post-card"
                 >
-                  <div class="guestbook-header">
-                    <div class="guestbook-store-badge">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      <span>{{ message.storeName }}</span>
+                  <!-- 포스트 헤더 -->
+                  <div class="post-header">
+                    <div class="post-author">
+                      <div class="author-avatar">
+                        <span>{{ getStoreEmoji(message.storeName) }}</span>
+                      </div>
+                      <div class="author-info">
+                        <p class="author-name">{{ message.storeName }}</p>
+                        <p class="post-location">방명록</p>
+                      </div>
                     </div>
-                    <span class="guestbook-date">{{ formatDate(message.createdAt) }}</span>
+                    <button class="post-menu" @click="deleteGuestbook(message.id)">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="5" r="1" fill="currentColor"/>
+                        <circle cx="12" cy="12" r="1" fill="currentColor"/>
+                        <circle cx="12" cy="19" r="1" fill="currentColor"/>
+                      </svg>
+                    </button>
                   </div>
-                  <div class="guestbook-body">
+
+                  <!-- 이미지 (있는 경우) -->
+                  <div v-if="message.imageUrl" class="post-image-container">
                     <img
-                      v-if="message.imageUrl"
                       :src="message.imageUrl"
                       alt="방명록 이미지"
-                      class="guestbook-image"
+                      class="post-image"
                       loading="lazy"
                       decoding="async"
                     />
-                    <p v-if="message.message" class="guestbook-message">{{ message.message }}</p>
-                    <p v-if="!message.imageUrl && !message.message" class="guestbook-empty">
-                      (내용 없음)
-                    </p>
                   </div>
-                  <div class="guestbook-footer">
-                    <button class="delete-btn" @click="deleteGuestbook(message.id)">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+                  <!-- 액션 버튼 -->
+                  <div class="post-actions">
+                    <div class="action-left">
+                      <button class="action-btn liked">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                      </button>
+                      <button class="action-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                      <button class="action-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <button class="action-btn">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
-                      삭제
                     </button>
+                  </div>
+
+                  <!-- 캡션 -->
+                  <div class="post-caption">
+                    <p v-if="message.message" class="caption-text">
+                      <strong>{{ user?.nickname || '나' }}</strong> {{ message.message }}
+                    </p>
+                    <p v-else class="caption-empty">
+                      <strong>{{ user?.nickname || '나' }}</strong> <span class="empty-caption">(캡션 없음)</span>
+                    </p>
+                    <p class="post-time">{{ formatRelativeDate(message.createdAt) }}</p>
                   </div>
                 </div>
               </div>
@@ -459,6 +593,55 @@ const formatDate = (dateString?: string) => {
     month: 'long',
     day: 'numeric'
   })
+}
+
+// 인스타그램 스타일 상대 날짜 포맷
+const formatRelativeDate = (dateString?: string) => {
+  if (!dateString) return ''
+
+  const date = new Date(dateString)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const seconds = Math.floor(diff / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+  const weeks = Math.floor(days / 7)
+  const months = Math.floor(days / 30)
+  const years = Math.floor(days / 365)
+
+  if (seconds < 60) return '방금'
+  if (minutes < 60) return `${minutes}분 전`
+  if (hours < 24) return `${hours}시간 전`
+  if (days < 7) return `${days}일 전`
+  if (weeks < 5) return `${weeks}주 전`
+  if (months < 12) return `${months}개월 전`
+  return `${years}년 전`
+}
+
+// 매장 이름에서 이모지 생성
+const getStoreEmoji = (storeName?: string): string => {
+  if (!storeName) return '🏪'
+
+  const name = storeName.toLowerCase()
+  if (name.includes('카페') || name.includes('커피') || name.includes('coffee')) return '☕'
+  if (name.includes('레스토랑') || name.includes('식당') || name.includes('restaurant')) return '🍽️'
+  if (name.includes('베이커리') || name.includes('빵') || name.includes('bakery')) return '🥐'
+  if (name.includes('바') || name.includes('bar') || name.includes('펍')) return '🍺'
+  if (name.includes('치킨')) return '🍗'
+  if (name.includes('피자')) return '🍕'
+  if (name.includes('스시') || name.includes('초밥') || name.includes('일식')) return '🍣'
+  if (name.includes('중식') || name.includes('중국')) return '🥡'
+  if (name.includes('한식')) return '🍚'
+  if (name.includes('분식') || name.includes('떡볶이')) return '🍜'
+  if (name.includes('디저트') || name.includes('케이크')) return '🍰'
+  if (name.includes('아이스크림')) return '🍦'
+  if (name.includes('헬스') || name.includes('gym') || name.includes('피트니스')) return '💪'
+  if (name.includes('미용') || name.includes('헤어') || name.includes('salon')) return '💇'
+  if (name.includes('네일')) return '💅'
+  if (name.includes('마사지') || name.includes('스파')) return '💆'
+
+  return '🏪'
 }
 
 // BGM Functions
@@ -786,22 +969,26 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #efefef;
+  background: white;
+  min-height: 44px;
+  position: relative;
 }
 
 .sidebar-header h2 {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #262626;
+  flex: 1;
+  text-align: center;
 }
 
 .close-btn {
   background: none;
   border: none;
-  color: white;
+  color: #262626;
   cursor: pointer;
   padding: 0.5rem;
   display: flex;
@@ -809,10 +996,12 @@ onUnmounted(() => {
   justify-content: center;
   border-radius: 50%;
   transition: background 0.2s;
+  position: absolute;
+  right: 0.5rem;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #f5f5f5;
 }
 
 .sidebar-content {
@@ -821,51 +1010,92 @@ onUnmounted(() => {
   overflow-y: auto;
 }
 
-/* User Section */
-.user-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem 0;
-  border-bottom: 1px solid #e0e0e0;
+/* User Section - Instagram Profile Style */
+.user-section-instagram {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid #efefef;
 }
 
-.user-avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+.profile-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: white;
+  gap: 1.5rem;
   margin-bottom: 1rem;
 }
 
-.user-info {
-  text-align: center;
+.profile-avatar-large {
+  flex-shrink: 0;
 }
 
-.user-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0;
+.avatar-ring-large {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.avatar-image {
+.avatar-inner-large {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  color: #8e8e8e;
+}
+
+.avatar-image-large {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
 
-/* Menu Tabs */
+.profile-stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-number {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #262626;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #8e8e8e;
+}
+
+.profile-bio {
+  padding: 0;
+}
+
+.profile-username {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #262626;
+  margin: 0;
+}
+
+/* Menu Tabs - Instagram Style */
 .menu-tabs {
   display: flex;
-  gap: 0.5rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #efefef;
+  margin: 0 -1.5rem;
+  padding: 0 1.5rem;
 }
 
 .menu-tab {
@@ -873,43 +1103,46 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.75rem 0.5rem;
-  background: #f5f5f5;
-  border: 2px solid transparent;
-  border-radius: 12px;
+  gap: 0.375rem;
+  padding: 0.75rem 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s;
+  margin-bottom: -1px;
 }
 
-.menu-tab:hover {
-  background: #eeeeee;
+.menu-tab:hover .tab-icon {
+  color: #262626;
 }
 
 .menu-tab.active {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  border-color: #3b82f6;
+  border-bottom-color: #262626;
 }
 
 .tab-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #757575;
+  color: #8e8e8e;
+  transition: color 0.2s;
 }
 
 .menu-tab.active .tab-icon {
-  color: #3b82f6;
+  color: #262626;
 }
 
 .tab-label {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  color: #555;
+  color: #8e8e8e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .menu-tab.active .tab-label {
-  color: #3b82f6;
+  color: #262626;
 }
 
 /* Tab Content */
@@ -917,51 +1150,93 @@ onUnmounted(() => {
   padding-top: 1rem;
 }
 
-/* Profile Section */
-.profile-section {
+/* Profile Section - Instagram Settings Style */
+.profile-section-instagram {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
-.profile-item {
+.settings-group {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: #f9f9f9;
+  flex-direction: column;
+  background: #fafafa;
   border-radius: 12px;
+  overflow: hidden;
 }
 
-.profile-label {
-  font-size: 0.875rem;
-  color: #757575;
-  font-weight: 500;
-}
-
-.profile-value {
-  font-size: 0.9375rem;
-  color: #1a1a1a;
-  font-weight: 600;
-}
-
-.logout-btn {
+.settings-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  color: #d32f2f;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  gap: 0.875rem;
+  padding: 1rem;
+  background: white;
+  border: none;
+  cursor: default;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid #efefef;
+  width: 100%;
+  text-align: left;
 }
 
-.logout-btn:hover {
+.settings-item:last-child {
+  border-bottom: none;
+}
+
+.settings-item:hover {
+  background: #fafafa;
+}
+
+.settings-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #efefef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #262626;
+  flex-shrink: 0;
+}
+
+.settings-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.settings-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #262626;
+}
+
+.settings-value {
+  font-size: 0.8125rem;
+  color: #8e8e8e;
+}
+
+.settings-arrow {
+  color: #c7c7cc;
+  flex-shrink: 0;
+}
+
+.logout-item {
+  cursor: pointer;
+}
+
+.logout-icon {
   background: #ffebee;
-  border-color: #d32f2f;
+}
+
+.logout-icon svg {
+  color: #ed4956;
+}
+
+.logout-text {
+  color: #ed4956;
+  font-weight: 600;
 }
 
 /* Not Logged In Section */
@@ -1012,161 +1287,366 @@ onUnmounted(() => {
   background: #f5f7ff;
 }
 
-/* Stores Section */
+/* Stores Section - Instagram Style */
 .stores-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0;
 }
 
-.stores-list {
+.stores-header {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #efefef;
+  margin-bottom: 0.5rem;
+}
+
+.stores-count {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-}
-
-.store-item {
-  display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f9f9f9;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  gap: 0.125rem;
 }
 
-.store-icon {
-  width: 48px;
-  height: 48px;
+.count-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #262626;
+}
+
+.count-label {
+  font-size: 0.75rem;
+  color: #8e8e8e;
+  font-weight: 400;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: #8e8e8e;
+  font-size: 0.875rem;
+}
+
+.loading-spinner .spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #efefef;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #dbdbdb;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border-radius: 12px;
-  color: white;
-  flex-shrink: 0;
+  color: #8e8e8e;
+  margin-bottom: 1rem;
 }
 
-.store-details {
-  flex: 1;
-}
-
-.store-name {
+.empty-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #262626;
   margin: 0 0 0.25rem 0;
 }
 
-.store-date {
-  font-size: 0.8125rem;
-  color: #757575;
+.empty-subtitle {
+  font-size: 0.875rem;
+  color: #8e8e8e;
   margin: 0;
 }
 
-/* Guestbook Section */
+.stores-list-instagram {
+  display: flex;
+  flex-direction: column;
+}
+
+.store-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #efefef;
+  transition: background 0.15s ease;
+}
+
+.store-card:last-child {
+  border-bottom: none;
+}
+
+.store-card:active {
+  background: #fafafa;
+}
+
+/* 인스타그램 스타일 아바타 링 */
+.store-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-ring {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+.avatar-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.store-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.store-username {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #262626;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.store-meta {
+  font-size: 0.75rem;
+  color: #8e8e8e;
+  margin: 0;
+}
+
+/* 인스타그램 스타일 팔로잉 버튼 */
+.following-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: #efefef;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #262626;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.following-btn:hover {
+  background: #dbdbdb;
+}
+
+.following-btn:active {
+  transform: scale(0.96);
+}
+
+.following-btn svg {
+  opacity: 0.6;
+}
+
+/* Guestbook Section - Instagram Feed Style */
 .guestbook-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0;
 }
 
-.loading,
-.empty-message {
-  text-align: center;
-  padding: 2rem;
-  color: #757575;
-  font-size: 0.9375rem;
-}
-
-.guestbook-list {
+.guestbook-feed {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
-.guestbook-card {
+.post-card {
   background: white;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  overflow: hidden;
+  border-bottom: 1px solid #efefef;
 }
 
-.guestbook-header {
+.post-card:last-child {
+  border-bottom: none;
+}
+
+.post-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f9f9f9;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 0.75rem 0;
 }
 
-.guestbook-store-badge {
+.post-author {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: #3b82f6;
-  font-size: 0.875rem;
+  gap: 0.75rem;
+}
+
+.author-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-name {
+  font-size: 0.8125rem;
   font-weight: 600;
+  color: #262626;
+  margin: 0;
 }
 
-.guestbook-date {
-  font-size: 0.75rem;
-  color: #757575;
+.post-location {
+  font-size: 0.6875rem;
+  color: #8e8e8e;
+  margin: 0;
 }
 
-.guestbook-body {
-  padding: 1rem;
+.post-menu {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #262626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.15s ease;
 }
 
-.guestbook-image {
-  width: 100%;
-  max-height: 200px;
-  object-fit: contain;
-  border-radius: 8px;
+.post-menu:hover {
   background: #f5f5f5;
 }
 
-.guestbook-message {
-  font-size: 0.9375rem;
-  color: #1a1a1a;
-  line-height: 1.5;
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
+.post-image-container {
+  width: 100%;
+  margin: 0 -1.5rem;
+  width: calc(100% + 3rem);
 }
 
-.guestbook-empty {
+.post-image {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  display: block;
+}
+
+.post-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.action-left {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: #262626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.action-btn:hover {
+  opacity: 0.6;
+}
+
+.action-btn:active {
+  transform: scale(0.9);
+}
+
+.action-btn.liked {
+  color: #ed4956;
+}
+
+.post-caption {
+  padding-bottom: 0.75rem;
+}
+
+.caption-text {
   font-size: 0.875rem;
-  color: #9e9e9e;
-  margin: 0;
+  color: #262626;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+}
+
+.caption-text strong,
+.caption-empty strong {
+  font-weight: 600;
+  margin-right: 0.375rem;
+}
+
+.caption-empty {
+  font-size: 0.875rem;
+  color: #262626;
+  margin: 0 0 0.25rem 0;
+}
+
+.caption-empty .empty-caption {
+  color: #8e8e8e;
   font-style: italic;
 }
 
-.guestbook-footer {
-  padding: 0.75rem 1rem;
-  border-top: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.delete-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 0.875rem;
-  background: white;
-  border: 1px solid #d32f2f;
-  border-radius: 6px;
-  color: #d32f2f;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.delete-btn:hover {
-  background: #ffebee;
+.post-time {
+  font-size: 0.625rem;
+  color: #8e8e8e;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 /* Sidebar Transition */
