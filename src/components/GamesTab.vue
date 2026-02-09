@@ -145,7 +145,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import gameSettingsService from '@/services/gameSettingsService'
-import type { GameOrderDto } from '@/services/gameSettingsService'
+import type { GameOrderDto, GameStatsDto } from '@/services/gameSettingsService'
 import IconBase from '@/components/IconBase.vue'
 import GameAssetSelectModal from '@/components/GameAssetSelectModal.vue'
 import SpotDifferenceAssetModal from '@/components/SpotDifferenceAssetModal.vue'
@@ -277,11 +277,36 @@ const loadSettings = async () => {
 
     qrCodeId.value = user.qrCodeId
 
-    // Fetch settings from API
-    const settings = await gameSettingsService.getGameSettings(qrCodeId.value)
+    // Fetch settings and stats in parallel
+    const [settings, stats] = await Promise.all([
+      gameSettingsService.getGameSettings(qrCodeId.value),
+      gameSettingsService.getGameStats(qrCodeId.value).catch(err => {
+        console.warn('Failed to load game stats:', err)
+        return [] as GameStatsDto[]
+      })
+    ])
+
     initializeGames(settings.enabledGames)
 
+    // Map stats to games
+    if (stats && stats.length > 0) {
+      stats.forEach((stat: GameStatsDto) => {
+        const game = games.value.find(g => g.id === stat.gameType)
+        if (game) {
+          game.stats = {
+            todayPlays: String(stat.todayPlays),
+            avgScore: stat.avgScore,
+            participants: String(stat.participants),
+            revisitRate: stat.revisitRate,
+            couponAvgScore: stat.couponAvgScore,
+            couponCheck: stat.couponCheck
+          }
+        }
+      })
+    }
+
     console.log('Game settings loaded:', settings)
+    console.log('Game stats loaded:', stats)
   } catch (error) {
     console.error('Failed to load game settings:', error)
     // Initialize with defaults on error

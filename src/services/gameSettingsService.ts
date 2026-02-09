@@ -19,6 +19,16 @@ export interface UpdateGameSettingsDto {
   gamesOrder: GameOrderDto[] | null
 }
 
+export interface GameStatsDto {
+  gameType: string
+  todayPlays: number
+  avgScore: string | null
+  participants: number
+  revisitRate: string | null
+  couponAvgScore: string | null
+  couponCheck: string | null
+}
+
 const gameSettingsService = {
   /**
    * Get game settings by QR code ID (public - no auth required)
@@ -44,6 +54,14 @@ const gameSettingsService = {
     settings: UpdateGameSettingsDto
   ): Promise<GameSettingsDto> {
     const response = await api.put(`/api/games/settings/${qrCodeId}`, settings)
+    return response.data
+  },
+
+  /**
+   * Get game statistics by QR code ID (admin only)
+   */
+  async getGameStats(qrCodeId: string): Promise<GameStatsDto[]> {
+    const response = await api.get(`/api/games/stats/${qrCodeId}`)
     return response.data
   }
 }
