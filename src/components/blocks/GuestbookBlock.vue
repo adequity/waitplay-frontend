@@ -557,6 +557,24 @@
                 </button>
               </div>
             </div>
+
+            <!-- 사장님 답글 -->
+            <div v-if="isLoadingReplies" class="detail-replies-loading">
+              <span class="loading-spinner-small"></span>
+            </div>
+            <div v-else-if="detailReplies.length > 0" class="detail-replies">
+              <div
+                v-for="reply in detailReplies"
+                :key="reply.id"
+                class="detail-reply"
+              >
+                <div class="reply-header">
+                  <span class="reply-badge">사장님</span>
+                  <span class="reply-date">{{ formatDate(reply.createdAt) }}</span>
+                </div>
+                <p class="reply-content">{{ reply.content }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </Transition>
@@ -706,6 +724,8 @@ const selectedMessageForShare = ref<any>(null)
 // 상세 보기 모달 관련
 const isDetailModalOpen = ref(false)
 const selectedMessageForDetail = ref<any>(null)
+const detailReplies = ref<any[]>([])
+const isLoadingReplies = ref(false)
 
 // 미리보기용 최신 5개 메시지
 const previewMessages = computed(() => messages.value.slice(0, 5))
@@ -1153,17 +1173,34 @@ const closeShareModal = () => {
 }
 
 // 상세 보기 모달 열기
-const openDetailModal = (message: any) => {
+const openDetailModal = async (message: any) => {
   selectedMessageForDetail.value = message
   isDetailModalOpen.value = true
   document.body.style.overflow = 'hidden'
+
+  // 답글 로드
+  await loadDetailReplies(message.id)
 }
 
 // 상세 보기 모달 닫기
 const closeDetailModal = () => {
   isDetailModalOpen.value = false
   selectedMessageForDetail.value = null
+  detailReplies.value = []
   document.body.style.overflow = ''
+}
+
+// 답글 로드
+const loadDetailReplies = async (messageId: string) => {
+  isLoadingReplies.value = true
+  try {
+    const replies = await guestbookService.getReplies(messageId)
+    detailReplies.value = replies
+  } catch {
+    detailReplies.value = []
+  } finally {
+    isLoadingReplies.value = false
+  }
 }
 
 // 링크 복사
@@ -1956,6 +1993,68 @@ const handleLike = async (message: any) => {
 .detail-like-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 답글 섹션 */
+.detail-replies-loading {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.loading-spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.detail-replies {
+  width: 100%;
+  max-width: 90vw;
+  margin-top: 8px;
+}
+
+.detail-reply {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+
+.reply-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.reply-badge {
+  background: #4ECDC4;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.reply-date {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.reply-content {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 /* 모바일 최적화 */
