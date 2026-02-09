@@ -14,7 +14,7 @@
         </div>
         <div class="stat-info">
           <span class="stat-value">{{ stats.totalMessages }}</span>
-          <span class="stat-label">총 메시지</span>
+          <span class="stat-label">총 방명록</span>
         </div>
       </div>
       <div class="stat-card">
@@ -23,7 +23,7 @@
         </div>
         <div class="stat-info">
           <span class="stat-value">{{ stats.todayMessages }}</span>
-          <span class="stat-label">오늘 메시지</span>
+          <span class="stat-label">오늘 방명록</span>
         </div>
       </div>
       <div class="stat-card">
