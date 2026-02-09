@@ -61,6 +61,7 @@
         <QRManagement v-if="activeTab === 'qr'" />
         <GamesTab v-if="activeTab === 'games'" />
         <BenefitsTab v-if="activeTab === 'benefits'" />
+        <GuestbookManageTab v-if="activeTab === 'guestbook'" />
         <CustomersTab v-if="activeTab === 'customers'" />
         <CustomerSupportTab v-if="activeTab === 'cs'" />
         <AffiliationRequest v-if="activeTab === 'settings'" />
@@ -81,6 +82,7 @@ import BenefitsTab from '@/components/BenefitsTab.vue'
 import CustomersTab from '@/components/CustomersTab.vue'
 import CustomerSupportTab from '@/components/CustomerSupportTab.vue'
 import AffiliationRequest from '@/components/AffiliationRequest.vue'
+import GuestbookManageTab from '@/components/GuestbookManageTab.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -92,6 +94,7 @@ const tabs = [
   { id: 'qr', label: 'QR 관리', iconName: 'qr' },
   { id: 'games', label: '게임 설정', iconName: 'gamepad' },
   { id: 'benefits', label: '혜택 설정', iconName: 'gift' },
+  { id: 'guestbook', label: '방명록 관리', iconName: 'book' },
   { id: 'customers', label: '고객 분석', iconName: 'users' },
   { id: 'cs', label: 'CS 게시판', iconName: 'message' },
   { id: 'settings', label: '설정', iconName: 'settings' }

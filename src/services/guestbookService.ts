@@ -134,6 +134,25 @@ export interface FeedResponse {
   nextCursor?: string
 }
 
+export interface ReplyResponse {
+  id: string
+  messageId: string
+  userId: string
+  userName: string
+  userProfileImage?: string
+  content: string
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface CreateReplyRequest {
+  content: string
+}
+
+export interface UpdateReplyRequest {
+  content: string
+}
+
 class GuestbookService {
   /**
    * Create a new guestbook message
@@ -240,6 +259,37 @@ class GuestbookService {
 
     const response = await apiClient.get<FeedResponse>(`/api/guestbook/feed?${params.toString()}`)
     return response.data
+  }
+
+  /**
+   * Add a reply to a guestbook message (store owner only)
+   */
+  async addReply(messageId: string, content: string): Promise<ReplyResponse> {
+    const response = await apiClient.post<ReplyResponse>(`/api/guestbook/${messageId}/reply`, { content })
+    return response.data
+  }
+
+  /**
+   * Get all replies for a guestbook message
+   */
+  async getReplies(messageId: string): Promise<ReplyResponse[]> {
+    const response = await apiClient.get<ReplyResponse[]>(`/api/guestbook/${messageId}/replies`)
+    return response.data
+  }
+
+  /**
+   * Update a reply (author only)
+   */
+  async updateReply(replyId: string, content: string): Promise<ReplyResponse> {
+    const response = await apiClient.put<ReplyResponse>(`/api/guestbook/reply/${replyId}`, { content })
+    return response.data
+  }
+
+  /**
+   * Delete a reply (author only)
+   */
+  async deleteReply(replyId: string): Promise<void> {
+    await apiClient.delete(`/api/guestbook/reply/${replyId}`)
   }
 }
 
