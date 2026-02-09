@@ -63,6 +63,7 @@
               v-for="message in previewMessages"
               :key="message.id"
               class="post-it-slide"
+              @click="openDetailModal(message)"
             >
               <div
                 class="post-it"
@@ -129,6 +130,7 @@
             :key="message.id"
             class="graffiti-item"
             :style="getGraffitiStyle(index, message)"
+            @click="openDetailModal(message)"
           >
             <img
               v-if="message.imageUrl"
@@ -498,6 +500,67 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- 방명록 상세 보기 모달 -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="isDetailModalOpen" class="detail-modal-overlay" @click.self="closeDetailModal">
+          <div class="detail-modal" v-if="selectedMessageForDetail">
+            <!-- 닫기 버튼 -->
+            <button @click="closeDetailModal" class="detail-modal-close">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+
+            <!-- 메시지 내용 -->
+            <div
+              class="detail-post-it"
+              :class="`detail-post-it--${selectedMessageForDetail.color}`"
+            >
+              <div class="detail-image-container">
+                <img
+                  v-if="selectedMessageForDetail.imageUrl"
+                  :src="selectedMessageForDetail.imageUrl"
+                  :alt="`${selectedMessageForDetail.userName}의 방명록`"
+                  class="detail-image"
+                />
+              </div>
+            </div>
+
+            <!-- 하단 정보 -->
+            <div class="detail-footer">
+              <div class="detail-info">
+                <span class="detail-author">{{ selectedMessageForDetail.userName }}</span>
+                <span class="detail-date">{{ formatDate(selectedMessageForDetail.createdAt) }}</span>
+              </div>
+              <div class="detail-actions">
+                <button
+                  class="detail-like-btn"
+                  :class="{ 'liked': selectedMessageForDetail.isLikedByMe }"
+                  @click="handleLike(selectedMessageForDetail)"
+                  :disabled="likingMessageId === selectedMessageForDetail.id"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" :fill="selectedMessageForDetail.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                  <span>{{ selectedMessageForDetail.likeCount || 0 }}</span>
+                </button>
+                <button class="detail-share-btn" @click="shareMessage(selectedMessageForDetail)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="18" cy="5" r="3"/>
+                    <circle cx="6" cy="12" r="3"/>
+                    <circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -639,6 +702,10 @@ const selectedDecoCategory = ref<keyof typeof decoStickerPacks>('hearts')
 // 공유 관련
 const isShareModalOpen = ref(false)
 const selectedMessageForShare = ref<any>(null)
+
+// 상세 보기 모달 관련
+const isDetailModalOpen = ref(false)
+const selectedMessageForDetail = ref<any>(null)
 
 // 미리보기용 최신 5개 메시지
 const previewMessages = computed(() => messages.value.slice(0, 5))
@@ -1085,6 +1152,20 @@ const closeShareModal = () => {
   selectedMessageForShare.value = null
 }
 
+// 상세 보기 모달 열기
+const openDetailModal = (message: any) => {
+  selectedMessageForDetail.value = message
+  isDetailModalOpen.value = true
+  document.body.style.overflow = 'hidden'
+}
+
+// 상세 보기 모달 닫기
+const closeDetailModal = () => {
+  isDetailModalOpen.value = false
+  selectedMessageForDetail.value = null
+  document.body.style.overflow = ''
+}
+
 // 링크 복사
 const copyShareLink = async () => {
   if (!selectedMessageForShare.value) return
@@ -1524,6 +1605,7 @@ const handleLike = async (message: any) => {
   position: absolute;
   transition: all 0.3s ease;
   max-width: 45%;
+  cursor: pointer;
 }
 
 .graffiti-item:hover {
@@ -1717,6 +1799,195 @@ const handleLike = async (message: any) => {
   font-size: 11px;
   color: #6b7280;
   font-weight: 500;
+}
+
+/* ===== 방명록 상세 보기 모달 ===== */
+.detail-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.detail-modal {
+  position: relative;
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.detail-modal-close {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.detail-modal-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.detail-post-it {
+  background: #fff9c4;
+  border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: scaleIn 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 포스트잇 색상 */
+.detail-post-it--yellow { background: #fff9c4; }
+.detail-post-it--pink { background: #fce4ec; }
+.detail-post-it--blue { background: #e3f2fd; }
+.detail-post-it--green { background: #e8f5e9; }
+.detail-post-it--orange { background: #fff3e0; }
+.detail-post-it--purple { background: #f3e5f5; }
+
+.detail-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.detail-image {
+  max-width: 80vw;
+  max-height: 60vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.detail-footer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  margin-top: 12px;
+}
+
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-author {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.detail-date {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.detail-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.detail-like-btn,
+.detail-share-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 24px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.detail-like-btn:hover,
+.detail-share-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.detail-like-btn.liked {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.detail-like-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
+  .detail-modal {
+    max-width: 95vw;
+    max-height: 90vh;
+  }
+
+  .detail-modal-close {
+    top: -48px;
+    right: -4px;
+  }
+
+  .detail-image {
+    max-width: 90vw;
+    max-height: 55vh;
+  }
+
+  .detail-footer {
+    padding: 12px 0;
+  }
+
+  .detail-author {
+    font-size: 15px;
+  }
+
+  .detail-like-btn,
+  .detail-share-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
 }
 
 /* 스티커 피커 모달 */
@@ -2101,6 +2372,7 @@ const handleLike = async (message: any) => {
 .post-it-slide {
   flex: 0 0 280px;
   scroll-snap-align: center;
+  cursor: pointer;
 }
 
 .post-it {
