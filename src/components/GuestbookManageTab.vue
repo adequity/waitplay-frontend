@@ -116,6 +116,19 @@
           />
         </div>
 
+        <!-- 사장님 답글 미리보기 (펼치지 않아도 표시) -->
+        <div
+          v-if="message.replyCount > 0 && messageReplies[message.id]?.length > 0 && !expandedReplies.has(message.id)"
+          class="reply-preview"
+          @click="toggleReplies(message.id)"
+        >
+          <div class="reply-preview-badge">사장님 답글</div>
+          <p class="reply-preview-text">{{ messageReplies[message.id][0].content }}</p>
+          <span v-if="message.replyCount > 1" class="reply-preview-more">
+            +{{ message.replyCount - 1 }}개 더 보기
+          </span>
+        </div>
+
         <div class="message-footer">
           <div class="message-actions">
             <!-- 좋아요 버튼 -->
@@ -314,6 +327,19 @@ const loadData = async () => {
     const result = await guestbookService.getManageData(user.qrCodeId, filter.value.sortBy)
     messages.value = result.messages
     stats.value = result.stats
+
+    // 답글이 있는 메시지의 답글을 미리 로드 (미리보기 표시용)
+    const messagesWithReplies = result.messages.filter(m => m.replyCount > 0)
+    await Promise.all(
+      messagesWithReplies.map(async (msg) => {
+        try {
+          const replies = await guestbookService.getReplies(msg.id)
+          messageReplies.value[msg.id] = replies
+        } catch (err) {
+          console.error(`Failed to load replies for message ${msg.id}:`, err)
+        }
+      })
+    )
   } catch (error) {
     console.error('Failed to load guestbook data:', error)
   } finally {
@@ -787,6 +813,53 @@ onMounted(async () => {
 
 .message-image:hover {
   transform: scale(1.02);
+}
+
+/* 사장님 답글 미리보기 */
+.reply-preview {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid rgba(0, 149, 246, 0.1);
+}
+
+.reply-preview:hover {
+  background: linear-gradient(135deg, #f0f4f8 0%, #e8ecf0 100%);
+  border-color: rgba(0, 149, 246, 0.2);
+}
+
+.reply-preview-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0095f6;
+  background: rgba(0, 149, 246, 0.12);
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.reply-preview-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1d1d1f;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reply-preview-more {
+  display: block;
+  font-size: 12px;
+  color: #0095f6;
+  margin-top: 6px;
+  font-weight: 500;
 }
 
 .message-footer {

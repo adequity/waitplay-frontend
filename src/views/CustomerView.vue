@@ -315,6 +315,27 @@
                     </p>
                   </div>
 
+                  <!-- 사장님 답글 -->
+                  <div v-if="message.replies && message.replies.length > 0" class="feed-replies">
+                    <div
+                      v-for="reply in message.replies"
+                      :key="reply.id"
+                      class="feed-reply"
+                    >
+                      <div class="feed-reply-header">
+                        <div class="reply-author-avatar">
+                          <img v-if="reply.userProfileImage" :src="reply.userProfileImage" alt="" />
+                          <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 21v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                          </svg>
+                        </div>
+                        <span class="reply-badge">사장님</span>
+                      </div>
+                      <p class="feed-reply-content">{{ reply.content }}</p>
+                    </div>
+                  </div>
+
                   <!-- 게시 시간 -->
                   <p class="feed-timestamp">{{ formatRelativeDate(message.createdAt) }}</p>
                 </div>
@@ -2046,6 +2067,68 @@ onUnmounted(() => {
   padding-bottom: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+}
+
+/* 사장님 답글 */
+.feed-replies {
+  padding: 0 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.feed-reply {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.feed-reply:last-child {
+  margin-bottom: 0;
+}
+
+.feed-reply-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+
+.reply-author-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.reply-author-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reply-author-avatar svg {
+  color: #8e8e8e;
+}
+
+.reply-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #0095f6;
+  background: rgba(0, 149, 246, 0.1);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+}
+
+.feed-reply-content {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: #262626;
+  margin: 0;
+  word-break: break-word;
 }
 
 /* 더 보기 버튼 */

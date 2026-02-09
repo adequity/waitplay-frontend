@@ -126,6 +126,8 @@ export interface FeedGuestbookMessage {
   storeName: string
   storeProfileImage?: string
   qrCode: string
+  replyCount: number
+  replies?: ReplyResponse[]
 }
 
 export interface FeedResponse {
