@@ -338,16 +338,20 @@
               <label class="form-label">매장 이름</label>
               <input type="text" class="form-input" v-model="editForm.storeName" placeholder="매장명 입력" />
             </div>
-            <div class="form-group">
-              <label class="form-label">배경 이미지</label>
-              <input type="file" class="form-input" @change="handleBackgroundImageUpload" accept="image/*" style="margin-bottom: 8px;">
-              <div v-if="editForm.backgroundImage" style="margin-top: 8px;">
-                <img :src="editForm.backgroundImage" alt="배경 미리보기" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e5ea;">
+
+            <!-- 배경 이미지 + 환영 메시지 2열 -->
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="form-label">배경 이미지</label>
+                <input type="file" class="form-input" @change="handleBackgroundImageUpload" accept="image/*" style="margin-bottom: 8px;">
+                <div v-if="editForm.backgroundImage" style="margin-top: 8px;">
+                  <img :src="editForm.backgroundImage" alt="배경 미리보기" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e5ea;">
+                </div>
               </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">환영 메시지</label>
-              <textarea class="form-textarea" v-model="editForm.welcomeMessage" placeholder="환영 메시지 입력"></textarea>
+              <div class="form-group">
+                <label class="form-label">환영 메시지</label>
+                <textarea class="form-textarea" v-model="editForm.welcomeMessage" placeholder="환영 메시지 입력" style="min-height: 120px;"></textarea>
+              </div>
             </div>
 
             <!-- 폰트 스타일 옵션 -->
@@ -363,20 +367,24 @@
                 <option value="handwriting">손글씨</option>
               </select>
             </div>
-            <div class="form-group">
-              <label class="form-label">제목 크기: {{ editForm.titleFontSize || 32 }}px</label>
-              <input type="range" class="form-range" v-model.number="editForm.titleFontSize" min="24" max="48" step="2" />
-              <div class="range-labels">
-                <span>24px</span>
-                <span>48px</span>
+
+            <!-- 제목 크기 + 설명 크기 2열 -->
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="form-label">제목 크기: {{ editForm.titleFontSize || 32 }}px</label>
+                <input type="range" class="form-range" v-model.number="editForm.titleFontSize" min="24" max="48" step="2" />
+                <div class="range-labels">
+                  <span>24px</span>
+                  <span>48px</span>
+                </div>
               </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">설명 크기: {{ editForm.descFontSize || 15 }}px</label>
-              <input type="range" class="form-range" v-model.number="editForm.descFontSize" min="12" max="20" step="1" />
-              <div class="range-labels">
-                <span>12px</span>
-                <span>20px</span>
+              <div class="form-group">
+                <label class="form-label">설명 크기: {{ editForm.descFontSize || 15 }}px</label>
+                <input type="range" class="form-range" v-model.number="editForm.descFontSize" min="12" max="20" step="1" />
+                <div class="range-labels">
+                  <span>12px</span>
+                  <span>20px</span>
+                </div>
               </div>
             </div>
           </template>
@@ -2754,6 +2762,16 @@ function removeMenuItem(index: number) {
 
 .form-group {
   margin-bottom: 20px;
+}
+
+/* 2열 레이아웃 */
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-row-2col .form-group {
+  margin-bottom: 0;
 }
 .form-label {
   display: block;
