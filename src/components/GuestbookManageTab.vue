@@ -68,167 +68,197 @@
       <p>고객이 방명록에 메시지를 남기면 여기에 표시됩니다.</p>
     </div>
 
-    <!-- Messages List -->
-    <div v-else class="messages-list">
+    <!-- Messages Grid (3열) -->
+    <div v-else class="messages-grid">
       <div
         v-for="message in messages"
         :key="message.id"
         class="message-card"
         :class="{ pinned: message.isPinned }"
-        :style="{ borderLeftColor: message.color }"
+        :style="{ backgroundColor: message.color }"
+        @click="openMessageModal(message)"
       >
         <!-- Pinned Badge -->
         <div v-if="message.isPinned" class="pinned-badge">
           <IconBase name="pin" />
-          <span>상단 고정</span>
         </div>
 
-        <div class="message-header">
-          <div class="message-author">
-            <div class="author-avatar" :style="{ backgroundColor: message.color }">
-              {{ message.userName?.charAt(0) || '?' }}
-            </div>
-            <div class="author-info">
-              <span class="author-name">{{ message.userName }}</span>
-              <span class="message-date">{{ formatDate(message.createdAt) }}</span>
-            </div>
-          </div>
-          <div class="message-stats-header">
-            <span class="stat-badge views">
-              <IconBase name="eye" class="stat-badge-icon" />
-              {{ message.viewCount }}
-            </span>
-            <span class="stat-badge likes">
-              <IconBase name="heart" class="stat-badge-icon" />
-              {{ message.likeCount }}
-            </span>
-          </div>
-        </div>
-
-        <div class="message-content">
-          <p v-if="message.message" class="message-text">{{ message.message }}</p>
+        <!-- 카드 콘텐츠 -->
+        <div class="card-content">
+          <p v-if="message.message" class="card-text">{{ message.message }}</p>
           <img
             v-if="message.imageUrl"
             :src="message.imageUrl"
             alt="방명록 이미지"
-            class="message-image"
-            @click="openImageModal(message.imageUrl)"
+            class="card-image"
           />
         </div>
 
-        <!-- 사장님 답글 미리보기 (펼치지 않아도 표시) -->
-        <div
-          v-if="message.replyCount > 0 && messageReplies[message.id]?.length && !expandedReplies.has(message.id)"
-          class="reply-preview"
-          @click="toggleReplies(message.id)"
-        >
-          <div class="reply-preview-badge">사장님 답글</div>
-          <p class="reply-preview-text">{{ messageReplies[message.id]?.[0]?.content }}</p>
-          <span v-if="message.replyCount > 1" class="reply-preview-more">
-            +{{ message.replyCount - 1 }}개 더 보기
-          </span>
+        <!-- 카드 푸터 -->
+        <div class="card-footer">
+          <span class="card-author">{{ message.userName }}</span>
+          <div class="card-stats">
+            <span class="card-stat">
+              <IconBase :name="message.isLikedByMe ? 'heart' : 'heart-outline'" />
+              {{ message.likeCount }}
+            </span>
+            <span v-if="message.replyCount > 0" class="card-stat">
+              <IconBase name="message" />
+              {{ message.replyCount }}
+            </span>
+          </div>
         </div>
+      </div>
+    </div>
 
-        <div class="message-footer">
-          <div class="message-actions">
-            <!-- 좋아요 버튼 -->
+    <!-- Message Detail Modal -->
+    <div v-if="selectedMessage" class="modal-overlay" @click.self="closeMessageModal">
+      <div class="message-modal">
+        <button class="btn-close-modal" @click="closeMessageModal">
+          <IconBase name="close" />
+        </button>
+
+        <div class="modal-content">
+          <!-- 메시지 헤더 -->
+          <div class="modal-header">
+            <div class="modal-author">
+              <div class="author-avatar" :style="{ backgroundColor: selectedMessage.color }">
+                {{ selectedMessage.userName?.charAt(0) || '?' }}
+              </div>
+              <div class="author-info">
+                <span class="author-name">{{ selectedMessage.userName }}</span>
+                <span class="message-date">{{ formatDate(selectedMessage.createdAt) }}</span>
+              </div>
+            </div>
+            <div class="modal-stats">
+              <span class="stat-badge views">
+                <IconBase name="eye" />
+                {{ selectedMessage.viewCount }}
+              </span>
+              <span class="stat-badge likes">
+                <IconBase name="heart" />
+                {{ selectedMessage.likeCount }}
+              </span>
+            </div>
+          </div>
+
+          <!-- 메시지 본문 -->
+          <div class="modal-body" :style="{ backgroundColor: selectedMessage.color }">
+            <p v-if="selectedMessage.message" class="modal-text">{{ selectedMessage.message }}</p>
+            <img
+              v-if="selectedMessage.imageUrl"
+              :src="selectedMessage.imageUrl"
+              alt="방명록 이미지"
+              class="modal-image"
+              @click="openImageModal(selectedMessage.imageUrl)"
+            />
+          </div>
+
+          <!-- 사장님 답글 미리보기 -->
+          <div
+            v-if="selectedMessage.replyCount > 0 && messageReplies[selectedMessage.id]?.length && !expandedReplies.has(selectedMessage.id)"
+            class="reply-preview"
+            @click="toggleReplies(selectedMessage.id)"
+          >
+            <div class="reply-preview-badge">사장님 답글</div>
+            <p class="reply-preview-text">{{ messageReplies[selectedMessage.id]?.[0]?.content }}</p>
+            <span v-if="selectedMessage.replyCount > 1" class="reply-preview-more">
+              +{{ selectedMessage.replyCount - 1 }}개 더 보기
+            </span>
+          </div>
+
+          <!-- 액션 버튼 -->
+          <div class="modal-actions">
             <button
               class="action-btn"
-              :class="{ liked: message.isLikedByMe, loading: likingMessageId === message.id }"
-              @click="toggleLike(message.id)"
-              :disabled="likingMessageId === message.id"
+              :class="{ liked: selectedMessage.isLikedByMe, loading: likingMessageId === selectedMessage.id }"
+              @click.stop="toggleLike(selectedMessage.id)"
+              :disabled="likingMessageId === selectedMessage.id"
             >
-              <IconBase :name="message.isLikedByMe ? 'heart' : 'heart-outline'" class="action-icon" />
+              <IconBase :name="selectedMessage.isLikedByMe ? 'heart' : 'heart-outline'" />
               <span>좋아요</span>
             </button>
 
-            <!-- 댓글 토글 버튼 -->
             <button
               class="action-btn"
-              :class="{ active: expandedReplies.has(message.id) }"
-              @click="toggleReplies(message.id)"
+              :class="{ active: expandedReplies.has(selectedMessage.id) }"
+              @click.stop="toggleReplies(selectedMessage.id)"
             >
-              <IconBase name="message" class="action-icon" />
-              <span>댓글 {{ message.replyCount > 0 ? `(${message.replyCount})` : '' }}</span>
+              <IconBase name="message" />
+              <span>댓글 {{ selectedMessage.replyCount > 0 ? `(${selectedMessage.replyCount})` : '' }}</span>
             </button>
 
-            <!-- 상단 고정 버튼 -->
             <button
               class="action-btn pin-btn"
-              :class="{ pinned: message.isPinned, loading: pinningMessageId === message.id }"
-              @click="togglePin(message.id)"
-              :disabled="pinningMessageId === message.id"
+              :class="{ pinned: selectedMessage.isPinned, loading: pinningMessageId === selectedMessage.id }"
+              @click.stop="togglePin(selectedMessage.id)"
+              :disabled="pinningMessageId === selectedMessage.id"
             >
-              <IconBase name="pin" class="action-icon" />
-              <span>{{ message.isPinned ? '고정 해제' : '상단 고정' }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 댓글 섹션 -->
-        <div v-if="expandedReplies.has(message.id)" class="replies-section">
-          <!-- 댓글 입력 -->
-          <div class="reply-input-wrapper">
-            <input
-              v-model="replyInputs[message.id]"
-              type="text"
-              placeholder="고객에게 답글을 남겨보세요..."
-              class="reply-input"
-              @keyup.enter="submitReply(message.id)"
-              :disabled="isSubmittingReply[message.id]"
-            />
-            <button
-              class="btn-submit-reply"
-              @click="submitReply(message.id)"
-              :disabled="!replyInputs[message.id]?.trim() || isSubmittingReply[message.id]"
-            >
-              {{ isSubmittingReply[message.id] ? '작성 중...' : '작성' }}
+              <IconBase name="pin" />
+              <span>{{ selectedMessage.isPinned ? '고정 해제' : '상단 고정' }}</span>
             </button>
           </div>
 
-          <!-- 댓글 목록 -->
-          <div v-if="messageReplies[message.id]?.length" class="replies-list">
-            <div
-              v-for="reply in messageReplies[message.id]"
-              :key="reply.id"
-              class="reply-item"
-            >
-              <div class="reply-avatar">
-                <img v-if="reply.userProfileImage" :src="reply.userProfileImage" alt="프로필" />
-                <IconBase v-else name="user" class="avatar-placeholder" />
-              </div>
-              <div class="reply-content">
-                <div class="reply-header">
-                  <span class="reply-author">{{ reply.userName }}</span>
-                  <span class="reply-date">{{ formatDate(reply.createdAt) }}</span>
-                  <span v-if="reply.updatedAt" class="reply-edited">(수정됨)</span>
+          <!-- 댓글 섹션 -->
+          <div v-if="expandedReplies.has(selectedMessage.id)" class="replies-section">
+            <div class="reply-input-wrapper">
+              <input
+                v-model="replyInputs[selectedMessage.id]"
+                type="text"
+                placeholder="고객에게 답글을 남겨보세요..."
+                class="reply-input"
+                @keyup.enter="submitReply(selectedMessage.id)"
+                :disabled="isSubmittingReply[selectedMessage.id]"
+              />
+              <button
+                class="btn-submit-reply"
+                @click="submitReply(selectedMessage.id)"
+                :disabled="!replyInputs[selectedMessage.id]?.trim() || isSubmittingReply[selectedMessage.id]"
+              >
+                {{ isSubmittingReply[selectedMessage.id] ? '작성 중...' : '작성' }}
+              </button>
+            </div>
+
+            <div v-if="messageReplies[selectedMessage.id]?.length" class="replies-list">
+              <div
+                v-for="reply in messageReplies[selectedMessage.id]"
+                :key="reply.id"
+                class="reply-item"
+              >
+                <div class="reply-avatar">
+                  <img v-if="reply.userProfileImage" :src="reply.userProfileImage" alt="프로필" />
+                  <IconBase v-else name="user" class="avatar-placeholder" />
                 </div>
-                <!-- 수정 모드 -->
-                <div v-if="editingReplyId === reply.id" class="reply-edit-form">
-                  <input
-                    v-model="editingReplyContent"
-                    type="text"
-                    class="reply-edit-input"
-                    @keyup.enter="saveEditReply(message.id)"
-                    @keyup.escape="cancelEditReply"
-                  />
-                  <div class="reply-edit-actions">
-                    <button class="btn-edit-save" @click="saveEditReply(message.id)">저장</button>
-                    <button class="btn-edit-cancel" @click="cancelEditReply">취소</button>
+                <div class="reply-content">
+                  <div class="reply-header">
+                    <span class="reply-author">{{ reply.userName }}</span>
+                    <span class="reply-date">{{ formatDate(reply.createdAt) }}</span>
+                    <span v-if="reply.updatedAt" class="reply-edited">(수정됨)</span>
                   </div>
-                </div>
-                <!-- 일반 모드 -->
-                <p v-else class="reply-text">{{ reply.content }}</p>
-                <!-- 내 댓글일 경우 수정/삭제 버튼 -->
-                <div v-if="reply.userId === authStore.user?.id && editingReplyId !== reply.id" class="reply-actions">
-                  <button class="btn-reply-action" @click="startEditReply(reply)">수정</button>
-                  <button class="btn-reply-action delete" @click="deleteReply(message.id, reply.id)">삭제</button>
+                  <div v-if="editingReplyId === reply.id" class="reply-edit-form">
+                    <input
+                      v-model="editingReplyContent"
+                      type="text"
+                      class="reply-edit-input"
+                      @keyup.enter="saveEditReply(selectedMessage.id)"
+                      @keyup.escape="cancelEditReply"
+                    />
+                    <div class="reply-edit-actions">
+                      <button class="btn-edit-save" @click="saveEditReply(selectedMessage.id)">저장</button>
+                      <button class="btn-edit-cancel" @click="cancelEditReply">취소</button>
+                    </div>
+                  </div>
+                  <p v-else class="reply-text">{{ reply.content }}</p>
+                  <div v-if="reply.userId === authStore.user?.id && editingReplyId !== reply.id" class="reply-actions">
+                    <button class="btn-reply-action" @click="startEditReply(reply)">수정</button>
+                    <button class="btn-reply-action delete" @click="deleteReply(selectedMessage.id, reply.id)">삭제</button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div v-else class="no-replies">
-            <p>아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
+            <div v-else class="no-replies">
+              <p>아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
+            </div>
           </div>
         </div>
       </div>
@@ -283,6 +313,9 @@ const likingMessageId = ref<string | null>(null)
 
 // 상단 고정 처리 중 상태
 const pinningMessageId = ref<string | null>(null)
+
+// 메시지 상세 모달
+const selectedMessage = ref<ManageMessageResponse | null>(null)
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
@@ -352,6 +385,14 @@ const openImageModal = (imageUrl: string) => {
   showImageModal.value = true
 }
 
+const openMessageModal = (message: ManageMessageResponse) => {
+  selectedMessage.value = message
+}
+
+const closeMessageModal = () => {
+  selectedMessage.value = null
+}
+
 // 좋아요 토글
 const toggleLike = async (messageId: string) => {
   if (likingMessageId.value) return
@@ -363,6 +404,11 @@ const toggleLike = async (messageId: string) => {
     if (message) {
       message.likeCount = result.likeCount
       message.isLikedByMe = result.isLiked
+    }
+    // 모달에서도 업데이트
+    if (selectedMessage.value?.id === messageId) {
+      selectedMessage.value.likeCount = result.likeCount
+      selectedMessage.value.isLikedByMe = result.isLiked
     }
   } catch (error) {
     console.error('Failed to toggle like:', error)
@@ -382,6 +428,11 @@ const togglePin = async (messageId: string) => {
     if (message) {
       message.isPinned = result.isPinned
       message.pinnedAt = result.pinnedAt
+    }
+    // 모달에서도 업데이트
+    if (selectedMessage.value?.id === messageId) {
+      selectedMessage.value.isPinned = result.isPinned
+      selectedMessage.value.pinnedAt = result.pinnedAt
     }
     // 정렬 다시 적용
     await loadData()
@@ -679,55 +730,183 @@ onMounted(async () => {
   font-size: 15px;
 }
 
-/* Messages List */
-.messages-list {
+/* Messages Grid - 3열 레이아웃 */
+.messages-grid {
   display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
+@media (max-width: 900px) {
+  .messages-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .messages-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .message-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  border-left: 4px solid #0071e3;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  padding: 16px;
+  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.15);
   position: relative;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.message-card:hover {
+  transform: translateY(-4px) rotate(1deg);
+  box-shadow: 4px 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .message-card.pinned {
-  background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
-  border-left-color: #ff9500;
+  box-shadow: 0 0 0 3px #ff9500, 2px 3px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Pinned Badge */
+/* Pinned Badge (그리드 카드용) */
 .pinned-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+  justify-content: center;
   background: #ff9500;
   color: white;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 12px;
+  border-radius: 50%;
+  z-index: 1;
 }
 
 .pinned-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 카드 콘텐츠 */
+.card-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1d1d1f;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* 카드 푸터 */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  margin-top: auto;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.card-author {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d1d1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+}
+
+.card-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.card-stat {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: #666;
+}
+
+.card-stat svg {
   width: 12px;
   height: 12px;
 }
 
-.message-header {
+/* =========================== */
+/* Message Detail Modal Styles */
+/* =========================== */
+.message-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.btn-close-modal {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.btn-close-modal:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.btn-close-modal svg {
+  width: 18px;
+  height: 18px;
+}
+
+.modal-content {
+  padding: 24px;
+}
+
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 16px;
 }
 
-.message-author {
+.modal-author {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -761,8 +940,8 @@ onMounted(async () => {
   color: #86868b;
 }
 
-/* Message Stats Header */
-.message-stats-header {
+/* Modal Stats */
+.modal-stats {
   display: flex;
   gap: 8px;
 }
@@ -777,6 +956,11 @@ onMounted(async () => {
   font-weight: 500;
 }
 
+.stat-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
 .stat-badge.views {
   background: #f3e8ff;
   color: #af52de;
@@ -787,32 +971,43 @@ onMounted(async () => {
   color: #ff2d55;
 }
 
-.stat-badge-icon {
-  width: 14px;
-  height: 14px;
-}
-
-.message-content {
+/* Modal Body (포스트잇 스타일) */
+.modal-body {
+  padding: 20px;
+  border-radius: 4px;
   margin-bottom: 16px;
+  min-height: 150px;
+  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.1);
 }
 
-.message-text {
-  font-size: 15px;
+.modal-text {
+  font-size: 16px;
   line-height: 1.6;
   color: #1d1d1f;
   margin: 0 0 12px 0;
+  word-break: break-word;
 }
 
-.message-image {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 12px;
+.modal-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
   cursor: pointer;
   transition: transform 0.2s;
 }
 
-.message-image:hover {
+.modal-image:hover {
   transform: scale(1.02);
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f5;
 }
 
 /* 사장님 답글 미리보기 */
@@ -862,20 +1057,7 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-.message-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 12px;
-  border-top: 1px solid #f0f0f5;
-}
-
-/* Message Actions */
-.message-actions {
-  display: flex;
-  gap: 12px;
-}
-
+/* Action Buttons */
 .action-btn {
   display: flex;
   align-items: center;
@@ -888,6 +1070,11 @@ onMounted(async () => {
   color: #86868b;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.action-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .action-btn:hover {
