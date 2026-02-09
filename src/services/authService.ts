@@ -47,6 +47,7 @@ export interface UserProfile {
   userRole: string
   createdAt: string
   qrCodeId?: string
+  qrCode?: string
 }
 
 class AuthService {

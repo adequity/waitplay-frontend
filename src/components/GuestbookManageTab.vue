@@ -118,12 +118,12 @@
 
         <!-- 사장님 답글 미리보기 (펼치지 않아도 표시) -->
         <div
-          v-if="message.replyCount > 0 && messageReplies[message.id]?.length > 0 && !expandedReplies.has(message.id)"
+          v-if="message.replyCount > 0 && messageReplies[message.id]?.length && !expandedReplies.has(message.id)"
           class="reply-preview"
           @click="toggleReplies(message.id)"
         >
           <div class="reply-preview-badge">사장님 답글</div>
-          <p class="reply-preview-text">{{ messageReplies[message.id][0].content }}</p>
+          <p class="reply-preview-text">{{ messageReplies[message.id]?.[0]?.content }}</p>
           <span v-if="message.replyCount > 1" class="reply-preview-more">
             +{{ message.replyCount - 1 }}개 더 보기
           </span>
