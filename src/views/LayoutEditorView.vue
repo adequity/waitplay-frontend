@@ -637,6 +637,12 @@
                       v-model="item.badge"
                       placeholder="태그 (예: 추천, 인기, NEW)"
                     />
+                    <input
+                      type="url"
+                      class="form-input menu-link-input"
+                      v-model="item.link"
+                      placeholder="링크 URL (선택, 예: https://blog.naver.com/...)"
+                    />
                   </div>
                   <button
                     type="button"
@@ -654,7 +660,7 @@
               <button
                 type="button"
                 class="btn-add-menu-item"
-                @click="editForm.items.push({ rank: editForm.items.length + 1, name: '', price: null, description: '', imageUrl: '', badge: '' })"
+                @click="editForm.items.push({ rank: editForm.items.length + 1, name: '', price: null, description: '', imageUrl: '', badge: '', link: '' })"
               >
                 + 메뉴 추가
               </button>
@@ -3956,6 +3962,17 @@ select.form-input {
 
 .menu-badge-input::placeholder {
   color: #ca8a04;
+}
+
+/* 메뉴 링크 입력 필드 */
+.menu-link-input {
+  border: 1px dashed #d1d5db !important;
+  background: #f0fdf4 !important;
+}
+
+.menu-link-input::placeholder {
+  color: #16a34a;
+  font-size: 12px;
 }
 
 /* 마퀴 이미지 업로드 */

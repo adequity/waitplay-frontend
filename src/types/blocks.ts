@@ -84,6 +84,7 @@ export interface MenuItem {
   description?: string
   imageUrl?: string // 메뉴 썸네일 이미지
   badge?: string // 커스텀 뱃지 텍스트 (예: "추천", "인기", "NEW")
+  link?: string // 클릭 시 이동할 링크 URL (블로그, 상세페이지 등)
 }
 
 export interface PopularMenuBlockData {

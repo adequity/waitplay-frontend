@@ -28,6 +28,8 @@
               v-for="(item, itemIndex) in page"
               :key="itemIndex"
               class="menu-grid-item"
+              :class="{ clickable: item.link }"
+              @click="handleItemClick(item)"
             >
               <div v-if="item.imageUrl" class="grid-item-image">
                 <img :src="item.imageUrl" :alt="item.name" loading="lazy" decoding="async" />
@@ -62,7 +64,13 @@
 
       <!-- List Layout (기존) -->
       <div v-else class="menu-rankings">
-        <div class="menu-rank-item" v-for="(item, index) in data.items" :key="index">
+        <div
+          class="menu-rank-item"
+          :class="{ clickable: item.link }"
+          v-for="(item, index) in data.items"
+          :key="index"
+          @click="handleItemClick(item)"
+        >
           <div v-if="item.imageUrl" class="menu-thumbnail">
             <img :src="item.imageUrl" :alt="item.name" loading="lazy" decoding="async" />
           </div>
@@ -154,6 +162,13 @@ const getBadgeClass = (index: number): string => {
   if (index === 1) return 'rank-silver'
   if (index === 2) return 'rank-bronze'
   return ''
+}
+
+// 메뉴 아이템 클릭 핸들러
+const handleItemClick = (item: MenuItem) => {
+  if (item.link) {
+    window.open(item.link, '_blank', 'noopener,noreferrer')
+  }
 }
 </script>
 
@@ -433,5 +448,23 @@ const getBadgeClass = (index: number): string => {
 /* 리스트 스타일에서 배지 - 가격 위에 배치 */
 .menu-price-area .rank-badge {
   min-width: auto;
+}
+
+/* 클릭 가능한 아이템 스타일 */
+.menu-grid-item.clickable,
+.menu-rank-item.clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menu-grid-item.clickable:hover,
+.menu-rank-item.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.menu-grid-item.clickable:active,
+.menu-rank-item.clickable:active {
+  transform: translateY(0);
 }
 </style>
