@@ -153,6 +153,39 @@ export interface UpdateReplyRequest {
   content: string
 }
 
+export interface ManageMessageResponse {
+  id: string
+  userId: string
+  userName: string
+  message?: string
+  imageUrl?: string
+  rotation: number
+  color: string
+  createdAt: string
+  viewCount: number
+  likeCount: number
+  replyCount: number
+  isLikedByMe: boolean
+  isPinned: boolean
+  pinnedAt?: string
+}
+
+export interface ManageStatsResponse {
+  totalMessages: number
+  todayMessages: number
+  totalViews: number
+}
+
+export interface ManageDataResponse {
+  stats: ManageStatsResponse
+  messages: ManageMessageResponse[]
+}
+
+export interface TogglePinResponse {
+  isPinned: boolean
+  pinnedAt?: string
+}
+
 class GuestbookService {
   /**
    * Create a new guestbook message
@@ -290,6 +323,31 @@ class GuestbookService {
    */
   async deleteReply(replyId: string): Promise<void> {
     await apiClient.delete(`/api/guestbook/reply/${replyId}`)
+  }
+
+  /**
+   * Get guestbook management data for store owner
+   * Includes stats and messages with view counts, pin status
+   */
+  async getManageData(qrCode: string, sort: string = 'latest'): Promise<ManageDataResponse> {
+    const response = await apiClient.get<ManageDataResponse>(`/api/guestbook/manage/${qrCode}?sort=${sort}`)
+    return response.data
+  }
+
+  /**
+   * Increment view count for a message
+   */
+  async incrementViewCount(messageId: string): Promise<{ viewCount: number }> {
+    const response = await apiClient.post<{ viewCount: number }>(`/api/guestbook/${messageId}/view`)
+    return response.data
+  }
+
+  /**
+   * Toggle pin status for a message (store owner only)
+   */
+  async togglePin(messageId: string): Promise<TogglePinResponse> {
+    const response = await apiClient.post<TogglePinResponse>(`/api/guestbook/${messageId}/pin`)
+    return response.data
   }
 }
 

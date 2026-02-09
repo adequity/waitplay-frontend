@@ -27,21 +27,12 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon pink">
-          <IconBase name="heart" />
+        <div class="stat-icon purple">
+          <IconBase name="eye" />
         </div>
         <div class="stat-info">
-          <span class="stat-value">{{ stats.totalLikes }}</span>
-          <span class="stat-label">총 좋아요</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon orange">
-          <IconBase name="sparkles" />
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ stats.totalStickers }}</span>
-          <span class="stat-label">총 스티커</span>
+          <span class="stat-value">{{ stats.totalViews }}</span>
+          <span class="stat-label">총 조회수</span>
         </div>
       </div>
     </div>
@@ -49,14 +40,15 @@
     <!-- Filter Bar -->
     <div class="filter-bar">
       <div class="filter-left">
-        <select v-model="filter.sortBy" class="filter-select">
-          <option value="newest">최신순</option>
+        <select v-model="filter.sortBy" class="filter-select" @change="loadData">
+          <option value="latest">최신순</option>
           <option value="oldest">오래된순</option>
+          <option value="views">조회수순</option>
           <option value="likes">좋아요순</option>
         </select>
       </div>
       <div class="filter-right">
-        <button class="btn-refresh" @click="loadMessages">
+        <button class="btn-refresh" @click="loadData">
           <IconBase name="loader" :class="{ spinning: isLoading }" />
           새로고침
         </button>
@@ -79,11 +71,18 @@
     <!-- Messages List -->
     <div v-else class="messages-list">
       <div
-        v-for="message in sortedMessages"
+        v-for="message in messages"
         :key="message.id"
         class="message-card"
+        :class="{ pinned: message.isPinned }"
         :style="{ borderLeftColor: message.color }"
       >
+        <!-- Pinned Badge -->
+        <div v-if="message.isPinned" class="pinned-badge">
+          <IconBase name="pin" />
+          <span>상단 고정</span>
+        </div>
+
         <div class="message-header">
           <div class="message-author">
             <div class="author-avatar" :style="{ backgroundColor: message.color }">
@@ -93,6 +92,16 @@
               <span class="author-name">{{ message.userName }}</span>
               <span class="message-date">{{ formatDate(message.createdAt) }}</span>
             </div>
+          </div>
+          <div class="message-stats-header">
+            <span class="stat-badge views">
+              <IconBase name="eye" class="stat-badge-icon" />
+              {{ message.viewCount }}
+            </span>
+            <span class="stat-badge likes">
+              <IconBase name="heart" class="stat-badge-icon" />
+              {{ message.likeCount }}
+            </span>
           </div>
         </div>
 
@@ -117,7 +126,7 @@
               :disabled="likingMessageId === message.id"
             >
               <IconBase :name="message.isLikedByMe ? 'heart' : 'heart-outline'" class="action-icon" />
-              <span>{{ message.likeCount }}</span>
+              <span>좋아요</span>
             </button>
 
             <!-- 댓글 토글 버튼 -->
@@ -127,7 +136,18 @@
               @click="toggleReplies(message.id)"
             >
               <IconBase name="message" class="action-icon" />
-              <span>댓글</span>
+              <span>댓글 {{ message.replyCount > 0 ? `(${message.replyCount})` : '' }}</span>
+            </button>
+
+            <!-- 상단 고정 버튼 -->
+            <button
+              class="action-btn pin-btn"
+              :class="{ pinned: message.isPinned, loading: pinningMessageId === message.id }"
+              @click="togglePin(message.id)"
+              :disabled="pinningMessageId === message.id"
+            >
+              <IconBase name="pin" class="action-icon" />
+              <span>{{ message.isPinned ? '고정 해제' : '상단 고정' }}</span>
             </button>
           </div>
         </div>
@@ -214,25 +234,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
-import type { GuestbookMessageResponse, ReplyResponse } from '@/services/guestbookService'
+import type { ManageMessageResponse, ReplyResponse } from '@/services/guestbookService'
 import IconBase from '@/components/IconBase.vue'
 
 const authStore = useAuthStore()
 
 const isLoading = ref(true)
-const messages = ref<GuestbookMessageResponse[]>([])
+const messages = ref<ManageMessageResponse[]>([])
 const stats = ref({
   totalMessages: 0,
   todayMessages: 0,
-  totalLikes: 0,
-  totalStickers: 0
+  totalViews: 0
 })
 
 const filter = ref({
-  sortBy: 'newest' as 'newest' | 'oldest' | 'likes'
+  sortBy: 'latest' as 'latest' | 'oldest' | 'views' | 'likes'
 })
 
 const showImageModal = ref(false)
@@ -249,19 +268,8 @@ const isSubmittingReply = ref<Record<string, boolean>>({})
 // 좋아요 처리 중 상태
 const likingMessageId = ref<string | null>(null)
 
-const sortedMessages = computed(() => {
-  const sorted = [...messages.value]
-  switch (filter.value.sortBy) {
-    case 'newest':
-      return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    case 'oldest':
-      return sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-    case 'likes':
-      return sorted.sort((a, b) => b.likeCount - a.likeCount)
-    default:
-      return sorted
-  }
-})
+// 상단 고정 처리 중 상태
+const pinningMessageId = ref<string | null>(null)
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
@@ -294,21 +302,7 @@ const formatDate = (dateStr: string) => {
   })
 }
 
-const loadStats = async () => {
-  try {
-    const summary = await guestbookService.getStatsSummary()
-    stats.value = {
-      totalMessages: summary.totalMessages,
-      todayMessages: summary.todayMessages,
-      totalLikes: summary.totalLikes,
-      totalStickers: summary.totalStickers
-    }
-  } catch (error) {
-    console.error('Failed to load guestbook stats:', error)
-  }
-}
-
-const loadMessages = async () => {
+const loadData = async () => {
   isLoading.value = true
   try {
     const user = authStore.user
@@ -317,10 +311,11 @@ const loadMessages = async () => {
       return
     }
 
-    const result = await guestbookService.getMessages(user.qrCodeId)
-    messages.value = result
+    const result = await guestbookService.getManageData(user.qrCodeId, filter.value.sortBy)
+    messages.value = result.messages
+    stats.value = result.stats
   } catch (error) {
-    console.error('Failed to load guestbook messages:', error)
+    console.error('Failed to load guestbook data:', error)
   } finally {
     isLoading.value = false
   }
@@ -347,6 +342,28 @@ const toggleLike = async (messageId: string) => {
     console.error('Failed to toggle like:', error)
   } finally {
     likingMessageId.value = null
+  }
+}
+
+// 상단 고정 토글
+const togglePin = async (messageId: string) => {
+  if (pinningMessageId.value) return
+
+  pinningMessageId.value = messageId
+  try {
+    const result = await guestbookService.togglePin(messageId)
+    const message = messages.value.find(m => m.id === messageId)
+    if (message) {
+      message.isPinned = result.isPinned
+      message.pinnedAt = result.pinnedAt
+    }
+    // 정렬 다시 적용
+    await loadData()
+  } catch (error) {
+    console.error('Failed to toggle pin:', error)
+    alert('상단 고정 처리에 실패했습니다.')
+  } finally {
+    pinningMessageId.value = null
   }
 }
 
@@ -386,6 +403,12 @@ const submitReply = async (messageId: string) => {
     messageReplies.value[messageId].push(reply)
     replyInputs.value[messageId] = ''
     expandedReplies.value.add(messageId)
+
+    // 댓글 수 업데이트
+    const message = messages.value.find(m => m.id === messageId)
+    if (message) {
+      message.replyCount++
+    }
   } catch (error) {
     console.error('Failed to submit reply:', error)
     alert('댓글 작성에 실패했습니다.')
@@ -436,6 +459,12 @@ const deleteReply = async (messageId: string, replyId: string) => {
     if (replies) {
       messageReplies.value[messageId] = replies.filter(r => r.id !== replyId)
     }
+
+    // 댓글 수 업데이트
+    const message = messages.value.find(m => m.id === messageId)
+    if (message && message.replyCount > 0) {
+      message.replyCount--
+    }
   } catch (error) {
     console.error('Failed to delete reply:', error)
     alert('댓글 삭제에 실패했습니다.')
@@ -443,7 +472,7 @@ const deleteReply = async (messageId: string, replyId: string) => {
 }
 
 onMounted(async () => {
-  await Promise.all([loadStats(), loadMessages()])
+  await loadData()
 })
 </script>
 
@@ -475,7 +504,7 @@ onMounted(async () => {
 /* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 30px;
 }
@@ -510,14 +539,9 @@ onMounted(async () => {
   color: #34c759;
 }
 
-.stat-icon.pink {
-  background: #fff0f3;
-  color: #ff2d55;
-}
-
-.stat-icon.orange {
-  background: #fff5e6;
-  color: #ff9500;
+.stat-icon.purple {
+  background: #f3e8ff;
+  color: #af52de;
 }
 
 .stat-info {
@@ -641,6 +665,33 @@ onMounted(async () => {
   padding: 24px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   border-left: 4px solid #0071e3;
+  position: relative;
+}
+
+.message-card.pinned {
+  background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+  border-left-color: #ff9500;
+}
+
+/* Pinned Badge */
+.pinned-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #ff9500;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+.pinned-badge svg {
+  width: 12px;
+  height: 12px;
 }
 
 .message-header {
@@ -684,6 +735,37 @@ onMounted(async () => {
   color: #86868b;
 }
 
+/* Message Stats Header */
+.message-stats-header {
+  display: flex;
+  gap: 8px;
+}
+
+.stat-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.stat-badge.views {
+  background: #f3e8ff;
+  color: #af52de;
+}
+
+.stat-badge.likes {
+  background: #fff0f3;
+  color: #ff2d55;
+}
+
+.stat-badge-icon {
+  width: 14px;
+  height: 14px;
+}
+
 .message-content {
   margin-bottom: 16px;
 }
@@ -713,27 +795,6 @@ onMounted(async () => {
   align-items: center;
   padding-top: 12px;
   border-top: 1px solid #f0f0f5;
-}
-
-.message-stats {
-  display: flex;
-  gap: 16px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #86868b;
-}
-
-.stat-icon-small {
-  font-size: 16px;
-}
-
-.stat-icon-small.pink {
-  color: #ff2d55;
 }
 
 /* Message Actions */
@@ -778,6 +839,20 @@ onMounted(async () => {
 .action-btn.loading {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.action-btn.pin-btn {
+  background: #f5f5f7;
+}
+
+.action-btn.pin-btn:hover {
+  background: #fff5e6;
+  color: #ff9500;
+}
+
+.action-btn.pin-btn.pinned {
+  background: #fff5e6;
+  color: #ff9500;
 }
 
 .action-icon {
@@ -987,7 +1062,7 @@ onMounted(async () => {
   margin: 0;
 }
 
-/* Modal Overlay */
+/* Image Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1001,52 +1076,6 @@ onMounted(async () => {
   z-index: 1000;
 }
 
-.modal-content {
-  background: white;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 400px;
-  overflow: hidden;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e5ea;
-}
-
-.modal-header h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #86868b;
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 24px;
-}
-
-.modal-body p {
-  margin: 0 0 8px 0;
-  font-size: 15px;
-  color: #1d1d1f;
-}
-
-.warning-text {
-  color: #ff3b30 !important;
-  font-size: 13px !important;
-}
-
-/* Image Modal */
 .image-modal-overlay {
   background: rgba(0, 0, 0, 0.9);
 }
@@ -1077,7 +1106,7 @@ onMounted(async () => {
 /* Responsive */
 @media (max-width: 1200px) {
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -1104,6 +1133,10 @@ onMounted(async () => {
   .btn-refresh {
     width: 100%;
     justify-content: center;
+  }
+
+  .message-actions {
+    flex-wrap: wrap;
   }
 }
 </style>
