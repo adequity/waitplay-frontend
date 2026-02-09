@@ -2358,16 +2358,47 @@ function removeMenuItem(index: number) {
 .header-subtitle { font-size: 12px; color: #86868b; margin: 0; }
 
 .header-actions { display: flex; gap: 12px; }
+
+/* 공통 버튼 스타일 */
 .btn-action {
-  padding: 10px 20px; border-radius: 20px; font-size: 14px;
-  font-weight: 600; cursor: pointer; border: none;
-  display: flex; align-items: center; gap: 6px;
-  transition: all 0.2s;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
 }
-.btn-secondary { background: white; border: 1px solid #d2d2d7; color: #1d1d1f; }
-.btn-secondary:hover { background: #f5f5f7; }
-.btn-primary { background: #0071e3; color: white; }
-.btn-primary:hover { background: #0077ed; transform: translateY(-1px); }
+
+/* Secondary 버튼 (흰색/회색) */
+.btn-secondary {
+  background: #ffffff;
+  border: 1px solid #d2d2d7;
+  color: #1d1d1f;
+}
+.btn-secondary:hover {
+  background: #f5f5f7;
+  border-color: #c7c7cc;
+}
+
+/* Primary 버튼 (파란색) */
+.btn-primary {
+  background: linear-gradient(180deg, #0077ed 0%, #0071e3 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 113, 227, 0.25);
+}
+.btn-primary:hover {
+  background: linear-gradient(180deg, #0081ff 0%, #0077ed 100%);
+  box-shadow: 0 4px 10px rgba(0, 113, 227, 0.35);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 113, 227, 0.2);
+}
 
 /* Main Layout */
 .editor-container {
@@ -3578,22 +3609,6 @@ select.form-input {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
-
-.btn-secondary {
-  padding: 10px 20px;
-  background: #f5f5f7;
-  color: #1d1d1f;
-  border: 1px solid #e5e5ea;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-secondary:hover {
-  background: #e5e5ea;
 }
 
 /* BGM 입력 탭 */
