@@ -2444,7 +2444,7 @@ function removeMenuItem(index: number) {
   transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 .block-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-.block-item.fixed { background: #fffdf5; border-color: #fff3cd; }
+.block-item.fixed { background: #f0f7ff; border-color: #bfdbfe; }
 
 /* Animation classes for draggable */
 .sortable-ghost {
@@ -2482,7 +2482,7 @@ function removeMenuItem(index: number) {
   border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;
   flex-shrink: 0;
 }
-.fixed .block-icon { background: #fff3cd; }
+.fixed .block-icon { background: #dbeafe; }
 
 .block-info { flex: 1; min-width: 0; }
 .block-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
@@ -2490,7 +2490,7 @@ function removeMenuItem(index: number) {
 .block-preview { font-size: 13px; color: #86868b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
-.badge.fixed { background: #fff3cd; color: #b78a0b; }
+.badge.fixed { background: #dbeafe; color: #1d4ed8; }
 .badge.hidden { background: #e5e5ea; color: #86868b; }
 
 .block-actions { display: flex; gap: 4px; opacity: 0.6; transition: 0.2s; }
