@@ -319,12 +319,12 @@ const loadData = async () => {
   isLoading.value = true
   try {
     const user = authStore.user
-    if (!user?.qrCodeId) {
-      console.error('No QR code ID found')
+    if (!user?.qrCode) {
+      console.error('No QR code found')
       return
     }
 
-    const result = await guestbookService.getManageData(user.qrCodeId, filter.value.sortBy)
+    const result = await guestbookService.getManageData(user.qrCode, filter.value.sortBy)
     messages.value = result.messages
     stats.value = result.stats
 
