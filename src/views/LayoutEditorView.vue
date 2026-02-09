@@ -2377,6 +2377,7 @@ function removeMenuItem(index: number) {
   border: none;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   transition: all 0.2s ease;
 }
