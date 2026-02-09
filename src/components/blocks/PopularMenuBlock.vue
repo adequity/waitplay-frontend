@@ -63,9 +63,6 @@
       <!-- List Layout (기존) -->
       <div v-else class="menu-rankings">
         <div class="menu-rank-item" v-for="(item, index) in data.items" :key="index">
-          <span v-if="showBadge(item, index)" class="rank-badge" :class="getBadgeClass(index)">
-            {{ getBadgeText(item, index) }}
-          </span>
           <div v-if="item.imageUrl" class="menu-thumbnail">
             <img :src="item.imageUrl" :alt="item.name" loading="lazy" decoding="async" />
           </div>
@@ -74,7 +71,12 @@
               <span class="menu-name">{{ item.name }}</span>
               <span v-if="item.description" class="menu-description">{{ item.description }}</span>
             </div>
-            <span v-if="item.price" class="menu-price">{{ item.price.toLocaleString() }}원</span>
+            <div class="menu-price-area">
+              <span v-if="showBadge(item, index)" class="rank-badge" :class="getBadgeClass(index)">
+                {{ getBadgeText(item, index) }}
+              </span>
+              <span v-if="item.price" class="menu-price">{{ item.price.toLocaleString() }}원</span>
+            </div>
           </div>
         </div>
       </div>
@@ -400,6 +402,14 @@ const getBadgeClass = (index: number): string => {
   gap: 2px;
 }
 
+.menu-price-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .menu-name {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 15px;
@@ -418,6 +428,10 @@ const getBadgeClass = (index: number): string => {
   font-size: 14px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
-  flex-shrink: 0;
+}
+
+/* 리스트 스타일에서 배지 - 가격 위에 배치 */
+.menu-price-area .rank-badge {
+  min-width: auto;
 }
 </style>
