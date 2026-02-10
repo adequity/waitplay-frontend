@@ -773,10 +773,36 @@ onMounted(async () => {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   position: relative;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.4s ease;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* 등장 애니메이션 */
+  animation: cardSlideUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+/* 카드 순차 등장 애니메이션 딜레이 */
+.message-card:nth-child(1) { animation-delay: 0.05s; }
+.message-card:nth-child(2) { animation-delay: 0.1s; }
+.message-card:nth-child(3) { animation-delay: 0.15s; }
+.message-card:nth-child(4) { animation-delay: 0.2s; }
+.message-card:nth-child(5) { animation-delay: 0.25s; }
+.message-card:nth-child(6) { animation-delay: 0.3s; }
+.message-card:nth-child(7) { animation-delay: 0.35s; }
+.message-card:nth-child(8) { animation-delay: 0.4s; }
+.message-card:nth-child(9) { animation-delay: 0.45s; }
+.message-card:nth-child(n+10) { animation-delay: 0.5s; }
+
+@keyframes cardSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .message-card:hover {
