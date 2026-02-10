@@ -36,7 +36,7 @@
         <div class="qr-card-header">
           <div class="qr-info">
             <h3>{{ qr.name }}</h3>
-            <p class="qr-owner">{{ qr.user?.nickname || qr.user?.username || '알 수 없음' }}</p>
+            <p class="qr-owner">{{ qr.adminName || qr.adminCompany || '알 수 없음' }}</p>
           </div>
           <span class="status-badge" :class="{ active: qr.isActive }">
             {{ qr.isActive ? '활성' : '비활성' }}
@@ -119,8 +119,8 @@ const fetchQRCodes = async () => {
     if (!response.ok) throw new Error('Failed to fetch QR codes')
 
     const data = await response.json()
-    qrcodes.value = data.qrcodes
-    totalPages.value = data.totalPages
+    qrcodes.value = data.data ?? []
+    totalPages.value = data.totalPages ?? 1
   } catch (error) {
     console.error('Fetch QR codes error:', error)
   } finally {
