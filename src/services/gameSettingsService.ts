@@ -29,6 +29,14 @@ export interface GameStatsDto {
   couponCheck: string | null
 }
 
+export interface AvailableGameDto {
+  gameKey: string
+  name: string
+  icon: string | null
+  description: string | null
+  displayOrder: number
+}
+
 const gameSettingsService = {
   /**
    * Get game settings by QR code ID (public - no auth required)
@@ -63,6 +71,14 @@ const gameSettingsService = {
   async getGameStats(qrCodeId: string): Promise<GameStatsDto[]> {
     const response = await api.get(`/api/games/stats/${qrCodeId}`)
     return response.data
+  },
+
+  /**
+   * Get available games assigned to admin user (admin only)
+   */
+  async getAvailableGames(): Promise<AvailableGameDto[]> {
+    const response = await api.get('/api/games/settings/available-games')
+    return response.data.games || []
   }
 }
 

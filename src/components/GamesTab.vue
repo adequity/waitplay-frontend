@@ -145,7 +145,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import gameSettingsService from '@/services/gameSettingsService'
-import type { GameOrderDto, GameStatsDto } from '@/services/gameSettingsService'
+import type { GameOrderDto, GameStatsDto, AvailableGameDto } from '@/services/gameSettingsService'
 import IconBase from '@/components/IconBase.vue'
 import GameAssetSelectModal from '@/components/GameAssetSelectModal.vue'
 import SpotDifferenceAssetModal from '@/components/SpotDifferenceAssetModal.vue'
@@ -172,37 +172,52 @@ interface Game {
   } | null
 }
 
-// Game definitions matching HTML design
-const gameDefinitions = [
-  {
-    id: 'pinball',
-    name: '핀볼',
+// Fallback game definitions (used when API fails or for icon mapping)
+const defaultGameDefinitions: Record<string, { iconClass: string; iconBg: string; statusText: string }> = {
+  'pinball': {
     iconClass: 'fa-solid fa-bullseye',
     iconBg: 'brand',
     statusText: '가장 인기 있는 게임입니다.'
   },
-  {
-    id: 'brick-breaker',
-    name: '벽돌깨기',
+  'brick-breaker': {
     iconClass: 'fa-solid fa-utensils',
     iconBg: 'menu',
     statusText: '신메뉴 이미지로 자동 생성됩니다.'
   },
-  {
-    id: 'memory',
-    name: '같은 카드 찾기',
+  'memory': {
     iconClass: 'fa-solid fa-clone',
     iconBg: 'find',
     statusText: '기억력 향상 게임입니다.'
   },
-  {
-    id: 'spot-difference',
-    name: '틀린 그림 찾기',
+  'spot-difference': {
     iconClass: 'fa-solid fa-magnifying-glass',
     iconBg: 'find',
     statusText: '관찰력 향상 게임입니다.'
+  },
+  'roulette': {
+    iconClass: 'fa-solid fa-circle-notch',
+    iconBg: 'brand',
+    statusText: '행운의 룰렛 게임입니다.'
+  },
+  'slot': {
+    iconClass: 'fa-solid fa-dice',
+    iconBg: 'menu',
+    statusText: '슬롯머신 게임입니다.'
+  },
+  'scratch': {
+    iconClass: 'fa-solid fa-ticket',
+    iconBg: 'find',
+    statusText: '복권 스크래치 게임입니다.'
+  },
+  'gacha': {
+    iconClass: 'fa-solid fa-gift',
+    iconBg: 'brand',
+    statusText: '가챠 뽑기 게임입니다.'
   }
-]
+}
+
+// Available games from API (assigned games)
+const availableGames = ref<AvailableGameDto[]>([])
 
 const authStore = useAuthStore()
 const games = ref<Game[]>([])
@@ -229,22 +244,54 @@ const onAssetsSaved = () => {
   // Optionally refresh or show success message
 }
 
-// Initialize games with default stats
+// Initialize games with default stats (only assigned games)
 const initializeGames = (enabledGames: string[] = []) => {
-  games.value = gameDefinitions.map(game => ({
-    ...game,
-    active: enabledGames.includes(game.id),
-    isExpanded: false,
-    stats: {
-      todayPlays: '0',
-      avgScore: null,
-      participants: '0',
-      revisitRate: null,
-      couponAvgScore: null,
-      couponCheck: null
-    },
-    details: null
-  }))
+  // If no assigned games from API, fallback to default behavior
+  if (availableGames.value.length === 0) {
+    console.warn('No assigned games found, showing all default games')
+  }
+
+  // Map available games (assigned by MasterAdmin) to display format
+  const gamesToShow = availableGames.value.length > 0
+    ? availableGames.value
+    : Object.keys(defaultGameDefinitions).slice(0, 4).map(key => ({
+        gameKey: key,
+        name: key === 'pinball' ? '핀볼' :
+              key === 'memory' ? '같은 카드 찾기' :
+              key === 'brick-breaker' ? '벽돌깨기' :
+              key === 'spot-difference' ? '틀린 그림 찾기' : key,
+        icon: null,
+        description: null,
+        displayOrder: 0
+      }))
+
+  games.value = gamesToShow.map(availableGame => {
+    const gameKey = availableGame.gameKey
+    const defaults = defaultGameDefinitions[gameKey] || {
+      iconClass: 'fa-solid fa-gamepad',
+      iconBg: 'find',
+      statusText: availableGame.description || '게임 설명이 없습니다.'
+    }
+
+    return {
+      id: gameKey,
+      name: availableGame.name,
+      iconClass: defaults.iconClass,
+      iconBg: defaults.iconBg,
+      statusText: availableGame.description || defaults.statusText,
+      active: enabledGames.includes(gameKey),
+      isExpanded: false,
+      stats: {
+        todayPlays: '0',
+        avgScore: null,
+        participants: '0',
+        revisitRate: null,
+        couponAvgScore: null,
+        couponCheck: null
+      },
+      details: null
+    }
+  })
 }
 
 // Switch to benefits tab
@@ -258,7 +305,12 @@ function getIconName(faClass: string): string {
     'fa-solid fa-bullseye': 'target',
     'fa-solid fa-utensils': 'utensils',
     'fa-solid fa-clone': 'clone',
-    'fa-solid fa-magnifying-glass': 'magnifying-glass'
+    'fa-solid fa-magnifying-glass': 'magnifying-glass',
+    'fa-solid fa-circle-notch': 'refresh',
+    'fa-solid fa-dice': 'gamepad',
+    'fa-solid fa-ticket': 'ticket',
+    'fa-solid fa-gift': 'gift',
+    'fa-solid fa-gamepad': 'gamepad'
   }
   return iconMapping[faClass] || 'gamepad'
 }
@@ -276,6 +328,16 @@ const loadSettings = async () => {
     }
 
     qrCodeId.value = user.qrCodeId
+
+    // First, fetch available games assigned by MasterAdmin
+    try {
+      const games = await gameSettingsService.getAvailableGames()
+      availableGames.value = games
+      console.log('Available games (assigned by MasterAdmin):', games)
+    } catch (err) {
+      console.warn('Failed to load available games, using defaults:', err)
+      availableGames.value = []
+    }
 
     // Fetch settings and stats in parallel
     const [settings, stats] = await Promise.all([
