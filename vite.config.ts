@@ -31,7 +31,9 @@ export default defineConfig({
     strictPort: false,
     allowedHosts: [
       'waitplay-frontend-production-77e5.up.railway.app',
-      '.up.railway.app'
+      '.up.railway.app',
+      'waitplay.co.kr',
+      'www.waitplay.co.kr'
     ]
   }
 })
