@@ -229,8 +229,36 @@ const fetchDashboard = async () => {
     if (!response.ok) throw new Error('Failed to fetch dashboard')
 
     const data = await response.json()
-    stats.value = data.stats
-    recentActivity.value = data.recentActivity
+
+    // Safely assign stats with fallback to defaults
+    if (data.stats) {
+      stats.value = {
+        totalAccounts: data.stats.totalAccounts ?? 0,
+        adminCount: data.stats.adminCount ?? 0,
+        superadminCount: data.stats.superadminCount ?? 0,
+        totalQRCodes: data.stats.totalQRCodes ?? 0,
+        activeQRCodes: data.stats.activeQRCodes ?? 0,
+        totalBenefits: data.stats.totalBenefits ?? 0,
+        activeBenefits: data.stats.activeBenefits ?? 0,
+        totalGuestbook: data.stats.totalGuestbook ?? 0,
+        pinnedGuestbook: data.stats.pinnedGuestbook ?? 0,
+        totalGameScores: data.stats.totalGameScores ?? 0,
+        totalInquiries: data.stats.totalInquiries ?? 0,
+        unansweredInquiries: data.stats.unansweredInquiries ?? 0,
+        totalNotices: data.stats.totalNotices ?? 0,
+        pinnedNotices: data.stats.pinnedNotices ?? 0,
+        totalAssets: data.stats.totalAssets ?? 0
+      }
+    }
+
+    // Safely assign recentActivity with fallback
+    if (data.recentActivity) {
+      recentActivity.value = {
+        accounts: data.recentActivity.accounts ?? [],
+        inquiries: data.recentActivity.inquiries ?? [],
+        guestbook: data.recentActivity.guestbook ?? []
+      }
+    }
   } catch (error) {
     console.error('Dashboard fetch error:', error)
   } finally {
