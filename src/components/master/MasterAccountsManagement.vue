@@ -231,8 +231,8 @@ const fetchAccounts = async () => {
     if (!response.ok) throw new Error('Failed to fetch accounts')
 
     const data = await response.json()
-    accounts.value = data.accounts
-    totalPages.value = data.totalPages
+    accounts.value = data.data ?? []
+    totalPages.value = data.totalPages ?? 1
   } catch (error) {
     console.error('Fetch accounts error:', error)
   } finally {
