@@ -1851,12 +1851,12 @@ const handleLike = async (message: any) => {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .detail-modal {
@@ -1896,17 +1896,17 @@ const handleLike = async (message: any) => {
   border-radius: 4px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-  animation: scaleIn 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: translateY(30px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -2124,16 +2124,18 @@ const handleLike = async (message: any) => {
   max-width: 100%;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  animation: sheetSlideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: sheetSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 @keyframes sheetSlideUp {
   from {
-    transform: translateY(100%);
+    opacity: 0;
+    transform: translateY(100%) scale(0.98);
   }
   to {
-    transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

@@ -725,12 +725,12 @@ onMounted(() => {
 .medal-score { font-size: 12px; color: #86868b; font-weight: 500; }
 
 /* Card Content & Animation */
-.card-content { display: block; animation: fadeIn 0.3s ease; }
+.card-content { display: block; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
 .card.collapsed .card-content { display: none; }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .btn-template {
@@ -907,12 +907,12 @@ onMounted(() => {
   max-height: 80vh;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease;
+  animation: surfaceRise 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes surfaceRise {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .icon-picker-header {

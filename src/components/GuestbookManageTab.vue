@@ -777,8 +777,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* 등장 애니메이션 */
-  animation: cardSlideUp 0.5s ease forwards;
+  /* Depth Rising 애니메이션 */
+  animation: surfaceRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
 }
 
@@ -794,14 +794,14 @@ onMounted(async () => {
 .message-card:nth-child(9) { animation-delay: 0.45s; }
 .message-card:nth-child(n+10) { animation-delay: 0.5s; }
 
-@keyframes cardSlideUp {
+@keyframes surfaceRise {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 

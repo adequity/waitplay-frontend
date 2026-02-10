@@ -193,7 +193,19 @@ input:focus, textarea:focus, select:focus {
 /* .loading 클래스는 카드 등에서 로딩 상태 표시용으로 사용됨 (spin 제거) */
 /* 스피너가 필요한 경우 .spinner 클래스 또는 개별 컴포넌트에서 정의 */
 
-/* Fade Animations */
+/* Surface Rise Animation - 통일된 등장 애니메이션 */
+@keyframes surfaceRise {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Fade Animations (deprecated - surfaceRise 사용 권장) */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -206,22 +218,22 @@ input:focus, textarea:focus, select:focus {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 @keyframes fadeInDown {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-30px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -230,11 +242,15 @@ input:focus, textarea:focus, select:focus {
 }
 
 .fade-in-up {
-  animation: fadeInUp 0.5s ease-out;
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .fade-in-down {
-  animation: fadeInDown 0.5s ease-out;
+  animation: fadeInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.surface-rise {
+  animation: surfaceRise 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Responsive */

@@ -227,17 +227,17 @@
 
 /* Tab Content - Apple Animation */
 .tab-content {
-  animation: fadeInApple 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInApple 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeInApple {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -359,11 +359,11 @@
 @keyframes metricSlideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(30px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -3757,17 +3757,17 @@ input:checked + .toggle-slider:before {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: slideUp 0.3s ease;
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 

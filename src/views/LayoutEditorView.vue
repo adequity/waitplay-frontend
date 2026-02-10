@@ -2624,7 +2624,7 @@ function removeMenuItem(index: number) {
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
+    transform: translateY(30px) scale(0.96);
   }
   to {
     opacity: 1;
@@ -2644,7 +2644,7 @@ function removeMenuItem(index: number) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .modal-card.large { width: 600px; }
 

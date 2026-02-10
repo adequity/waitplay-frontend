@@ -453,8 +453,8 @@ onMounted(() => {
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1000; display: flex; justify-content: center; align-items: center; }
-.modal-card { background: white; width: 640px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); display: flex; flex-direction: column; max-height: 85vh; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.modal-card { background: white; width: 640px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); display: flex; flex-direction: column; max-height: 85vh; animation: surfaceRise 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes surfaceRise { from { opacity: 0; transform: translateY(30px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 .modal-header { padding: 20px 28px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
 .modal-header h2 { font-size: 18px; font-weight: 700; margin: 0; }
@@ -490,8 +490,7 @@ onMounted(() => {
 .btn-toggle-popup { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border-color); background: white; color: var(--text-gray); transition: 0.2s; }
 .btn-toggle-popup.active { background: #e7f5ff; color: #1971c2; border-color: #1971c2; }
 
-.date-range-picker { display: flex; align-items: center; gap: 10px; animation: slideDown 0.2s ease; }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+.date-range-picker { display: flex; align-items: center; gap: 10px; animation: surfaceRise 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 .form-input.date { flex: 1; }
 .tilde { color: var(--text-gray); font-weight: 600; }
 

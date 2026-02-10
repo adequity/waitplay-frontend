@@ -709,7 +709,7 @@ onMounted(() => {
   box-shadow: 0 24px 64px rgba(0,0,0,0.2), 0 0 1px rgba(0,0,0,0.1);
   display: flex; flex-direction: column;
   max-height: 90vh;
-  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: surfaceRise 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
 
@@ -719,9 +719,9 @@ onMounted(() => {
 
 .detail-card { width: 640px; }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: scale(0.96) translateY(20px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+@keyframes surfaceRise {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Enhanced Modal Header */
