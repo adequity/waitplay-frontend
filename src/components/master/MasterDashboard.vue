@@ -220,15 +220,24 @@ const recentActivity = ref({
 const fetchDashboard = async () => {
   try {
     loading.value = true
-    const response = await fetch(`${API_URL}/api/masteradmin/dashboard/stats`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
-    })
 
-    if (!response.ok) throw new Error('Failed to fetch dashboard')
+    // Fetch stats and recent activity in parallel
+    const [statsResponse, activityResponse] = await Promise.all([
+      fetch(`${API_URL}/api/masteradmin/dashboard/stats`, {
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`
+        }
+      }),
+      fetch(`${API_URL}/api/masteradmin/system/recent-activity`, {
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`
+        }
+      })
+    ])
 
-    const data = await response.json()
+    if (!statsResponse.ok) throw new Error('Failed to fetch dashboard stats')
+
+    const data = await statsResponse.json()
 
     // Map backend response structure to frontend stats
     // Backend returns: accounts, qrCodes, benefits, guestbook, games, inquiries, notices, assets
@@ -250,8 +259,16 @@ const fetchDashboard = async () => {
       totalAssets: data.assets?.total ?? 0
     }
 
-    // Recent activity is fetched separately or may not exist in this endpoint
-    // Keep empty arrays as default
+    // Fetch recent activity from separate endpoint
+    // Backend returns: { recentUsers, recentGames, recentGuestbook }
+    if (activityResponse.ok) {
+      const activityData = await activityResponse.json()
+      recentActivity.value = {
+        accounts: activityData.recentUsers ?? [],
+        inquiries: activityData.recentInquiries ?? [],
+        guestbook: activityData.recentGuestbook ?? []
+      }
+    }
   } catch (error) {
     console.error('Dashboard fetch error:', error)
   } finally {
