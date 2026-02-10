@@ -286,6 +286,29 @@
               <option value="masteradmin" v-if="editAccount.userRole === 'masteradmin'">마스터관리자</option>
             </select>
           </div>
+
+          <!-- 사업자 정보 (admin 역할인 경우) -->
+          <div v-if="editAccount.userRole === 'admin'" class="business-info-section">
+            <h4>사업자 정보</h4>
+            <div class="form-group">
+              <label>사업자 번호</label>
+              <input v-model="editAccount.businessNumber" type="text" placeholder="000-00-00000" />
+            </div>
+            <div class="form-group">
+              <label>사업장 주소</label>
+              <input v-model="editAccount.businessAddress" type="text" placeholder="사업장 주소" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>업종</label>
+                <input v-model="editAccount.businessType" type="text" placeholder="업종" />
+              </div>
+              <div class="form-group">
+                <label>업태</label>
+                <input v-model="editAccount.businessCategory" type="text" placeholder="업태" />
+              </div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" @click="showEditModal = false">취소</button>
@@ -335,7 +358,11 @@ const editAccount = ref({
   password: '',
   nickname: '',
   company: '',
-  userRole: ''
+  userRole: '',
+  businessNumber: '',
+  businessAddress: '',
+  businessType: '',
+  businessCategory: ''
 })
 const updating = ref(false)
 
@@ -438,7 +465,11 @@ const openEditModal = (account: any) => {
     password: '',
     nickname: account.nickname || '',
     company: account.company || '',
-    userRole: account.userRole
+    userRole: account.userRole,
+    businessNumber: account.businessNumber || '',
+    businessAddress: account.businessAddress || '',
+    businessType: account.businessType || '',
+    businessCategory: account.businessCategory || ''
   }
   showEditModal.value = true
 }
@@ -460,6 +491,10 @@ const updateAccount = async () => {
     if (editAccount.value.password) updateData.password = editAccount.value.password
     if (editAccount.value.nickname) updateData.nickname = editAccount.value.nickname
     if (editAccount.value.company !== undefined) updateData.company = editAccount.value.company
+    if (editAccount.value.businessNumber !== undefined) updateData.businessNumber = editAccount.value.businessNumber
+    if (editAccount.value.businessAddress !== undefined) updateData.businessAddress = editAccount.value.businessAddress
+    if (editAccount.value.businessType !== undefined) updateData.businessType = editAccount.value.businessType
+    if (editAccount.value.businessCategory !== undefined) updateData.businessCategory = editAccount.value.businessCategory
 
     const response = await fetch(`${API_URL}/api/masteradmin/accounts/${editAccount.value.id}`, {
       method: 'PUT',
@@ -1019,6 +1054,25 @@ onMounted(() => {
 .form-group select:disabled {
   background: #f0f0f0;
   cursor: not-allowed;
+}
+
+.business-info-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e5ea;
+}
+
+.business-info-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 16px 0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
 .modal-footer {
