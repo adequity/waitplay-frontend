@@ -159,90 +159,79 @@
           <h2>계정 상세 정보</h2>
           <button class="btn-close" @click="showDetailModal = false">&times;</button>
         </div>
-        <div class="modal-body" v-if="detailAccount">
-          <div class="detail-grid">
-            <div class="detail-section">
-              <h3>기본 정보</h3>
-              <div class="detail-item">
-                <span class="detail-label">ID</span>
-                <span class="detail-value monospace">{{ detailAccount.id }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">이메일 (Username)</span>
-                <span class="detail-value">{{ detailAccount.username || '-' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">닉네임</span>
-                <span class="detail-value">{{ detailAccount.nickname || '-' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">역할</span>
-                <span class="detail-value">
-                  <span class="role-badge" :class="detailAccount.userRole">
-                    {{ getRoleLabel(detailAccount.userRole) }}
-                  </span>
-                </span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">회사</span>
-                <span class="detail-value">{{ detailAccount.company || '-' }}</span>
-              </div>
+        <div class="modal-body compact" v-if="detailAccount">
+          <div class="detail-grid-compact">
+            <div class="detail-row">
+              <span class="detail-label">ID</span>
+              <span class="detail-value monospace">{{ detailAccount.id }}</span>
             </div>
-
-            <div class="detail-section">
-              <h3>계정 상태</h3>
-              <div class="detail-item">
-                <span class="detail-label">승인 상태</span>
-                <span class="detail-value">
-                  <span class="status-badge" :class="{ active: detailAccount.approvalStatus === 'approved' || !detailAccount.approvalStatus }">
-                    {{ detailAccount.approvalStatus === 'approved' || !detailAccount.approvalStatus ? '활성' : '대기' }}
-                  </span>
-                </span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">가입일</span>
-                <span class="detail-value">{{ formatDateTime(detailAccount.createdAt) }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">초대 코드</span>
-                <span class="detail-value monospace">{{ detailAccount.inviteCode || '-' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">상위 관리자 ID</span>
-                <span class="detail-value monospace">{{ detailAccount.superAdminId || '-' }}</span>
-              </div>
+            <div class="detail-row">
+              <span class="detail-label">이메일</span>
+              <span class="detail-value">{{ detailAccount.username || '-' }}</span>
             </div>
-
-            <div class="detail-section">
-              <h3>소셜 연동</h3>
-              <div class="detail-item">
-                <span class="detail-label">카카오 ID</span>
-                <span class="detail-value monospace">{{ detailAccount.kakaoId || '-' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">네이버 ID</span>
-                <span class="detail-value monospace">{{ detailAccount.naverId || '-' }}</span>
-              </div>
+            <div class="detail-row">
+              <span class="detail-label">닉네임</span>
+              <span class="detail-value">{{ detailAccount.nickname || '-' }}</span>
             </div>
-
-            <div class="detail-section">
-              <h3>사업자 정보</h3>
-              <div class="detail-item">
-                <span class="detail-label">사업자 번호</span>
-                <span class="detail-value">{{ detailAccount.businessNumber || '-' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">사업장 주소</span>
-                <span class="detail-value">{{ detailAccount.businessAddress || '-' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">업종</span>
-                <span class="detail-value">{{ detailAccount.businessType || '-' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">업태</span>
-                <span class="detail-value">{{ detailAccount.businessCategory || '-' }}</span>
-              </div>
+            <div class="detail-row">
+              <span class="detail-label">역할</span>
+              <span class="detail-value"><span class="role-badge" :class="detailAccount.userRole">{{ getRoleLabel(detailAccount.userRole) }}</span></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">회사</span>
+              <span class="detail-value">{{ detailAccount.company || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">승인 상태</span>
+              <span class="detail-value"><span class="status-badge" :class="{ active: detailAccount.approvalStatus === 'approved' || !detailAccount.approvalStatus }">{{ detailAccount.approvalStatus === 'approved' || !detailAccount.approvalStatus ? '활성' : '대기' }}</span></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">가입일</span>
+              <span class="detail-value">{{ formatDateTime(detailAccount.createdAt) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">프로필 이미지</span>
+              <span class="detail-value">{{ detailAccount.profileImage ? '있음' : '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">카카오 ID</span>
+              <span class="detail-value monospace">{{ detailAccount.kakaoId || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">네이버 ID</span>
+              <span class="detail-value monospace">{{ detailAccount.naverId || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">초대 코드</span>
+              <span class="detail-value monospace">{{ detailAccount.inviteCode || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">상위 관리자 ID</span>
+              <span class="detail-value monospace">{{ detailAccount.superAdminId || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">가입 경유 매장</span>
+              <span class="detail-value monospace">{{ detailAccount.registeredViaAdminId || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">승인일</span>
+              <span class="detail-value">{{ detailAccount.approvedAt ? formatDateTime(detailAccount.approvedAt) : '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">사업자 번호</span>
+              <span class="detail-value">{{ detailAccount.businessNumber || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">사업장 주소</span>
+              <span class="detail-value">{{ detailAccount.businessAddress || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">업종</span>
+              <span class="detail-value">{{ detailAccount.businessType || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">업태</span>
+              <span class="detail-value">{{ detailAccount.businessCategory || '-' }}</span>
             </div>
           </div>
         </div>
@@ -255,55 +244,57 @@
 
     <!-- Edit Account Modal -->
     <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
-      <div class="modal">
+      <div class="modal modal-wide">
         <div class="modal-header">
           <h2>계정 수정</h2>
           <button class="btn-close" @click="showEditModal = false">&times;</button>
         </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>사용자명 (이메일)</label>
-            <input v-model="editAccount.username" type="text" placeholder="email@example.com" />
-          </div>
-          <div class="form-group">
-            <label>새 비밀번호 (변경 시에만 입력)</label>
-            <input v-model="editAccount.password" type="password" placeholder="새 비밀번호" />
-          </div>
-          <div class="form-group">
-            <label>닉네임</label>
-            <input v-model="editAccount.nickname" type="text" placeholder="닉네임" />
-          </div>
-          <div class="form-group">
-            <label>회사</label>
-            <input v-model="editAccount.company" type="text" placeholder="회사명" />
-          </div>
-          <div class="form-group">
-            <label>역할</label>
-            <select v-model="editAccount.userRole" :disabled="editAccount.userRole === 'masteradmin'">
-              <option value="user">사용자</option>
-              <option value="admin">관리자</option>
-              <option value="superadmin">슈퍼관리자</option>
-              <option value="masteradmin" v-if="editAccount.userRole === 'masteradmin'">마스터관리자</option>
-            </select>
+        <div class="modal-body compact">
+          <div class="edit-grid-compact">
+            <div class="form-group-compact">
+              <label>사용자명 (이메일)</label>
+              <input v-model="editAccount.username" type="text" placeholder="email@example.com" />
+            </div>
+            <div class="form-group-compact">
+              <label>새 비밀번호</label>
+              <input v-model="editAccount.password" type="password" placeholder="변경 시에만 입력" />
+            </div>
+            <div class="form-group-compact">
+              <label>닉네임</label>
+              <input v-model="editAccount.nickname" type="text" placeholder="닉네임" />
+            </div>
+            <div class="form-group-compact">
+              <label>회사</label>
+              <input v-model="editAccount.company" type="text" placeholder="회사명" />
+            </div>
+            <div class="form-group-compact">
+              <label>역할</label>
+              <select v-model="editAccount.userRole" :disabled="editAccount.userRole === 'masteradmin'">
+                <option value="user">사용자</option>
+                <option value="admin">관리자</option>
+                <option value="superadmin">슈퍼관리자</option>
+                <option value="masteradmin" v-if="editAccount.userRole === 'masteradmin'">마스터관리자</option>
+              </select>
+            </div>
           </div>
 
           <!-- 사업자 정보 (admin 또는 superadmin 역할인 경우) -->
-          <div v-if="editAccount.userRole === 'admin' || editAccount.userRole === 'superadmin'" class="business-info-section">
+          <div v-if="editAccount.userRole === 'admin' || editAccount.userRole === 'superadmin'" class="business-info-section compact">
             <h4>사업자 정보</h4>
-            <div class="form-group">
-              <label>사업자 번호</label>
-              <input v-model="editAccount.businessNumber" type="text" placeholder="000-00-00000" />
-            </div>
-            <div class="form-group">
-              <label>사업장 주소</label>
-              <input v-model="editAccount.businessAddress" type="text" placeholder="사업장 주소" />
-            </div>
-            <div class="form-row">
-              <div class="form-group">
+            <div class="edit-grid-compact">
+              <div class="form-group-compact">
+                <label>사업자 번호</label>
+                <input v-model="editAccount.businessNumber" type="text" placeholder="000-00-00000" />
+              </div>
+              <div class="form-group-compact">
+                <label>사업장 주소</label>
+                <input v-model="editAccount.businessAddress" type="text" placeholder="사업장 주소" />
+              </div>
+              <div class="form-group-compact">
                 <label>업종</label>
                 <input v-model="editAccount.businessType" type="text" placeholder="업종" />
               </div>
-              <div class="form-group">
+              <div class="form-group-compact">
                 <label>업태</label>
                 <input v-model="editAccount.businessCategory" type="text" placeholder="업태" />
               </div>
@@ -1107,8 +1098,114 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
+/* Compact Detail Grid (2-column continuous layout) */
+.modal-body.compact {
+  padding: 16px 24px;
+}
+
+.detail-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 24px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.detail-row .detail-label {
+  flex: 0 0 90px;
+  font-size: 12px;
+  color: #86868b;
+  margin: 0;
+}
+
+.detail-row .detail-value {
+  flex: 1;
+  font-size: 13px;
+  color: #1d1d1f;
+  word-break: break-all;
+}
+
+.detail-row .detail-value.monospace {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 11px;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.detail-row .role-badge,
+.detail-row .status-badge {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+/* Compact Edit Grid */
+.edit-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 20px;
+}
+
+.form-group-compact {
+  margin-bottom: 0;
+}
+
+.form-group-compact label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 4px;
+}
+
+.form-group-compact input,
+.form-group-compact select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.form-group-compact input:focus,
+.form-group-compact select:focus {
+  outline: none;
+  border-color: #d4a853;
+  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.1);
+}
+
+.form-group-compact select:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.business-info-section.compact {
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.business-info-section.compact h4 {
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
 @media (max-width: 768px) {
   .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-grid-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-grid-compact {
     grid-template-columns: 1fr;
   }
 }
