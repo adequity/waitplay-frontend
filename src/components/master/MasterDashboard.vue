@@ -230,35 +230,28 @@ const fetchDashboard = async () => {
 
     const data = await response.json()
 
-    // Safely assign stats with fallback to defaults
-    if (data.stats) {
-      stats.value = {
-        totalAccounts: data.stats.totalAccounts ?? 0,
-        adminCount: data.stats.adminCount ?? 0,
-        superadminCount: data.stats.superadminCount ?? 0,
-        totalQRCodes: data.stats.totalQRCodes ?? 0,
-        activeQRCodes: data.stats.activeQRCodes ?? 0,
-        totalBenefits: data.stats.totalBenefits ?? 0,
-        activeBenefits: data.stats.activeBenefits ?? 0,
-        totalGuestbook: data.stats.totalGuestbook ?? 0,
-        pinnedGuestbook: data.stats.pinnedGuestbook ?? 0,
-        totalGameScores: data.stats.totalGameScores ?? 0,
-        totalInquiries: data.stats.totalInquiries ?? 0,
-        unansweredInquiries: data.stats.unansweredInquiries ?? 0,
-        totalNotices: data.stats.totalNotices ?? 0,
-        pinnedNotices: data.stats.pinnedNotices ?? 0,
-        totalAssets: data.stats.totalAssets ?? 0
-      }
+    // Map backend response structure to frontend stats
+    // Backend returns: accounts, qrCodes, benefits, guestbook, games, inquiries, notices, assets
+    stats.value = {
+      totalAccounts: data.accounts?.total ?? 0,
+      adminCount: data.accounts?.admins ?? 0,
+      superadminCount: data.accounts?.superAdmins ?? 0,
+      totalQRCodes: data.qrCodes?.total ?? 0,
+      activeQRCodes: data.qrCodes?.active ?? 0,
+      totalBenefits: data.benefits?.total ?? 0,
+      activeBenefits: data.benefits?.active ?? 0,
+      totalGuestbook: data.guestbook?.total ?? 0,
+      pinnedGuestbook: data.guestbook?.today ?? 0,
+      totalGameScores: data.games?.total ?? 0,
+      totalInquiries: data.inquiries?.total ?? 0,
+      unansweredInquiries: data.inquiries?.pending ?? 0,
+      totalNotices: data.notices?.total ?? 0,
+      pinnedNotices: data.notices?.pinned ?? 0,
+      totalAssets: data.assets?.total ?? 0
     }
 
-    // Safely assign recentActivity with fallback
-    if (data.recentActivity) {
-      recentActivity.value = {
-        accounts: data.recentActivity.accounts ?? [],
-        inquiries: data.recentActivity.inquiries ?? [],
-        guestbook: data.recentActivity.guestbook ?? []
-      }
-    }
+    // Recent activity is fetched separately or may not exist in this endpoint
+    // Keep empty arrays as default
   } catch (error) {
     console.error('Dashboard fetch error:', error)
   } finally {
