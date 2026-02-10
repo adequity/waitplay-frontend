@@ -190,9 +190,8 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
-.loading {
-  animation: spin 1s linear infinite;
-}
+/* .loading 클래스는 카드 등에서 로딩 상태 표시용으로 사용됨 (spin 제거) */
+/* 스피너가 필요한 경우 .spinner 클래스 또는 개별 컴포넌트에서 정의 */
 
 /* Fade Animations */
 @keyframes fadeIn {
