@@ -148,7 +148,7 @@
 
           <!-- 통계 정보 -->
           <div class="detail-section">
-            <h4>통계</h4>
+            <h4>통계 요약</h4>
             <div class="stats-summary">
               <div class="stat-box">
                 <span class="stat-number">{{ detailData.benefitsCount || 0 }}</span>
@@ -165,6 +165,79 @@
               <div class="stat-box">
                 <span class="stat-number">{{ getTotalPlays() }}</span>
                 <span class="stat-name">총 플레이</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 일자별 추이 차트 -->
+          <div class="detail-section" v-if="detailData.dailyStats?.length > 0">
+            <h4>최근 14일 활동 추이</h4>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-dot game-plays"></span> 게임 플레이</span>
+              <span class="legend-item"><span class="legend-dot guestbook"></span> 방명록</span>
+              <span class="legend-item"><span class="legend-dot benefits"></span> 혜택 발급</span>
+            </div>
+            <div class="chart-container">
+              <div class="chart-y-axis">
+                <span>{{ getMaxChartValue() }}</span>
+                <span>{{ Math.floor(getMaxChartValue() / 2) }}</span>
+                <span>0</span>
+              </div>
+              <div class="chart-area">
+                <div class="chart-bars">
+                  <div
+                    v-for="(day, index) in detailData.dailyStats"
+                    :key="index"
+                    class="chart-bar-group"
+                  >
+                    <div class="bar-stack">
+                      <div
+                        class="bar game-plays"
+                        :style="{ height: getBarHeight(day.gamePlays) + '%' }"
+                        :title="`게임: ${day.gamePlays}회`"
+                      ></div>
+                      <div
+                        class="bar guestbook"
+                        :style="{ height: getBarHeight(day.guestbook) + '%' }"
+                        :title="`방명록: ${day.guestbook}개`"
+                      ></div>
+                      <div
+                        class="bar benefits"
+                        :style="{ height: getBarHeight(day.benefits) + '%' }"
+                        :title="`혜택: ${day.benefits}건`"
+                      ></div>
+                    </div>
+                    <span class="bar-label">{{ day.date.split('-')[1] }}</span>
+                  </div>
+                </div>
+                <div class="chart-grid-lines">
+                  <div class="grid-line"></div>
+                  <div class="grid-line"></div>
+                  <div class="grid-line"></div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-summary">
+              <div class="summary-item">
+                <span class="summary-label">14일 총 게임</span>
+                <span class="summary-value">{{ getTotalFromDaily('gamePlays') }}회</span>
+                <span class="summary-trend" :class="getTrendClass('gamePlays')">
+                  {{ getTrendText('gamePlays') }}
+                </span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">14일 총 방명록</span>
+                <span class="summary-value">{{ getTotalFromDaily('guestbook') }}개</span>
+                <span class="summary-trend" :class="getTrendClass('guestbook')">
+                  {{ getTrendText('guestbook') }}
+                </span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">14일 총 혜택</span>
+                <span class="summary-value">{{ getTotalFromDaily('benefits') }}건</span>
+                <span class="summary-trend" :class="getTrendClass('benefits')">
+                  {{ getTrendText('benefits') }}
+                </span>
               </div>
             </div>
           </div>
@@ -394,6 +467,51 @@ const goToAdminPage = () => {
     const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'https://waitplay.co.kr'
     window.open(`${frontendUrl}/admin/dashboard`, '_blank')
   }
+}
+
+// 차트 관련 함수들
+const getMaxChartValue = () => {
+  if (!detailData.value?.dailyStats) return 10
+  const maxValue = Math.max(
+    ...detailData.value.dailyStats.map((d: any) =>
+      Math.max(d.gamePlays || 0, d.guestbook || 0, d.benefits || 0)
+    )
+  )
+  return maxValue > 0 ? Math.ceil(maxValue * 1.2) : 10
+}
+
+const getBarHeight = (value: number) => {
+  const max = getMaxChartValue()
+  return max > 0 ? (value / max) * 100 : 0
+}
+
+const getTotalFromDaily = (field: string) => {
+  if (!detailData.value?.dailyStats) return 0
+  return detailData.value.dailyStats.reduce((sum: number, d: any) => sum + (d[field] || 0), 0)
+}
+
+const getTrendClass = (field: string) => {
+  if (!detailData.value?.dailyStats || detailData.value.dailyStats.length < 7) return 'neutral'
+  const stats = detailData.value.dailyStats
+  const firstWeek = stats.slice(0, 7).reduce((sum: number, d: any) => sum + (d[field] || 0), 0)
+  const secondWeek = stats.slice(7, 14).reduce((sum: number, d: any) => sum + (d[field] || 0), 0)
+  if (secondWeek > firstWeek) return 'up'
+  if (secondWeek < firstWeek) return 'down'
+  return 'neutral'
+}
+
+const getTrendText = (field: string) => {
+  if (!detailData.value?.dailyStats || detailData.value.dailyStats.length < 7) return '-'
+  const stats = detailData.value.dailyStats
+  const firstWeek = stats.slice(0, 7).reduce((sum: number, d: any) => sum + (d[field] || 0), 0)
+  const secondWeek = stats.slice(7, 14).reduce((sum: number, d: any) => sum + (d[field] || 0), 0)
+  if (firstWeek === 0) {
+    return secondWeek > 0 ? '↑ 상승' : '-'
+  }
+  const change = ((secondWeek - firstWeek) / firstWeek) * 100
+  if (change > 0) return `↑ ${Math.round(change)}%`
+  if (change < 0) return `↓ ${Math.round(Math.abs(change))}%`
+  return '→ 유지'
 }
 
 watch(page, fetchQRCodes)
@@ -952,5 +1070,184 @@ onMounted(() => {
   color: #333;
   margin: 0;
   line-height: 1.5;
+}
+
+/* Chart Styles */
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #666;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.legend-dot.game-plays {
+  background: #d4a853;
+}
+
+.legend-dot.guestbook {
+  background: #5c9eff;
+}
+
+.legend-dot.benefits {
+  background: #52c41a;
+}
+
+.chart-container {
+  display: flex;
+  gap: 8px;
+  height: 150px;
+  margin-bottom: 16px;
+}
+
+.chart-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 30px;
+  font-size: 10px;
+  color: #999;
+  padding: 0 4px;
+}
+
+.chart-area {
+  flex: 1;
+  position: relative;
+  border-left: 1px solid #e5e5ea;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.chart-grid-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.grid-line {
+  border-top: 1px dashed #f0f0f0;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 100%;
+  padding: 0 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.chart-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 40px;
+}
+
+.bar-stack {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 130px;
+}
+
+.bar {
+  width: 8px;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.3s ease;
+  cursor: pointer;
+}
+
+.bar:hover {
+  opacity: 0.8;
+}
+
+.bar.game-plays {
+  background: linear-gradient(180deg, #d4a853, #b8942e);
+}
+
+.bar.guestbook {
+  background: linear-gradient(180deg, #5c9eff, #3a7bd5);
+}
+
+.bar.benefits {
+  background: linear-gradient(180deg, #52c41a, #389e0d);
+}
+
+.bar-label {
+  font-size: 9px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.chart-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 10px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.summary-label {
+  font-size: 10px;
+  color: #86868b;
+}
+
+.summary-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.summary-trend {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.summary-trend.up {
+  color: #52c41a;
+  background: #f6ffed;
+}
+
+.summary-trend.down {
+  color: #ff4d4f;
+  background: #fff1f0;
+}
+
+.summary-trend.neutral {
+  color: #666;
+  background: #f5f5f5;
 }
 </style>
