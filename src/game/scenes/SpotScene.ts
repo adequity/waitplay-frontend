@@ -630,18 +630,6 @@ export class SpotScene extends Phaser.Scene {
       8
     );
 
-    // 원본 라벨 (배지 스타일)
-    const origLabelBg = this.add.graphics();
-    origLabelBg.fillStyle(0x6366f1, 1);
-    origLabelBg.fillRoundedRect(W / 2 - 30, originalY - this.imageHeight / 2 - 28, 60, 24, 12);
-
-    this.add.text(W / 2, originalY - this.imageHeight / 2 - 16, '원본', {
-      fontSize: '13px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-
     // 차이점 이미지 (아래)
     const modifiedY = originalY + this.imageHeight + 20;
     this.modifiedImage = this.add.image(W / 2, modifiedY, 'spot-modified');
@@ -658,18 +646,6 @@ export class SpotScene extends Phaser.Scene {
       this.imageHeight + 4,
       8
     );
-
-    // 차이점 라벨 (배지 스타일)
-    const modLabelBg = this.add.graphics();
-    modLabelBg.fillStyle(0xa78bfa, 1);
-    modLabelBg.fillRoundedRect(W / 2 - 50, modifiedY - this.imageHeight / 2 - 28, 100, 24, 12);
-
-    this.add.text(W / 2, modifiedY - this.imageHeight / 2 - 16, '차이점을 찾으세요', {
-      fontSize: '13px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
 
     // 클릭 이벤트 설정
     this.modifiedImage.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
