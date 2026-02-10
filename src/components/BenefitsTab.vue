@@ -263,11 +263,21 @@ async function loadGameSettings() {
       benefitsService.getBenefits(qrCodeId)
     ])
 
+    // 활성화된 게임 중 혜택이 없는 게임에 대해 기본 혜택 자동 생성
+    const gamesNeedingDefaults: string[] = []
+
     gamesList.value = Object.entries(gameDefinitions).map(([type, def]) => {
       // Find existing benefits for this game type
       const gameBenefits = existingBenefits
         .filter(b => b.gameType === type)
         .sort((a, b) => a.requiredScore - b.requiredScore)
+
+      const isEnabled = settings.enabledGames.includes(type)
+
+      // 활성화된 게임인데 혜택이 없으면 자동 생성 목록에 추가
+      if (isEnabled && gameBenefits.length === 0) {
+        gamesNeedingDefaults.push(type)
+      }
 
       // Convert API benefits to steps format
       const steps: BenefitStep[] = gameBenefits.length > 0
@@ -293,15 +303,56 @@ async function loadGameSettings() {
         type,
         name: def.name,
         icon: def.icon,
-        enabled: settings.enabledGames.includes(type),
+        enabled: isEnabled,
         steps
       }
     })
+
+    // 기본 혜택이 필요한 게임들에 대해 자동 생성
+    if (gamesNeedingDefaults.length > 0) {
+      console.log('[BenefitsTab] Auto-creating default benefits for games:', gamesNeedingDefaults)
+      await createDefaultBenefitsForGames(qrCodeId, gamesNeedingDefaults)
+    }
 
   } catch (error) {
     console.error('Failed to load game settings:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 기본 혜택을 자동으로 생성하는 함수
+async function createDefaultBenefitsForGames(qrCodeId: string, gameTypes: string[]) {
+  for (const gameType of gameTypes) {
+    try {
+      console.log(`[BenefitsTab] Creating default benefits for ${gameType}`)
+
+      for (const step of defaultSteps) {
+        const newBenefit = await benefitsService.createBenefit(qrCodeId, {
+          gameType,
+          title: step.name,
+          description: step.reward,
+          requiredScore: step.minScore,
+          isActive: true,
+          iconType: step.iconType,
+          iconName: step.iconName,
+          customIconUrl: step.customIconUrl
+        })
+
+        // 해당 게임의 steps에 ID 업데이트
+        const game = gamesList.value.find(g => g.type === gameType)
+        if (game) {
+          const matchingStep = game.steps.find(s => s.name === step.name && s.minScore === step.minScore)
+          if (matchingStep) {
+            matchingStep.id = newBenefit.id
+          }
+        }
+      }
+
+      console.log(`[BenefitsTab] Default benefits created for ${gameType}`)
+    } catch (error) {
+      console.error(`[BenefitsTab] Failed to create default benefits for ${gameType}:`, error)
+    }
   }
 }
 
