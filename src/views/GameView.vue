@@ -10,6 +10,19 @@
 
     <!-- 다른 게임: Phaser 기반 -->
     <template v-else>
+      <!-- 게임 로딩 오버레이 -->
+      <div v-if="isGameLoading" class="game-loading-overlay">
+        <video
+          autoplay
+          loop
+          muted
+          playsinline
+          class="loading-video"
+        >
+          <source src="/loading-character.mp4" type="video/mp4" />
+        </video>
+        <p class="loading-text">게임 로딩 중...</p>
+      </div>
       <!-- 전체화면 모드가 아닐 때만 헤더 표시 -->
       <div v-if="!isFullscreen" class="header">
         <h2>{{ gameTitle }}</h2>
@@ -70,6 +83,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const gameContainer = ref<HTMLElement>()
 const isFullscreen = ref(false)
+const isGameLoading = ref(true)
 
 // Game state
 const gameType = computed(() => (route.params.type as string).toUpperCase() as GameType)
@@ -228,6 +242,11 @@ function handlePhaserGameOver(event: Event) {
   handleGameOver(score, scoreId)
 }
 
+// 게임 로딩 완료 이벤트 리스너
+function handleGameReady() {
+  isGameLoading.value = false
+}
+
 onMounted(() => {
   // 핀볼이 아닌 경우에만 Phaser 게임 초기화
   if (!isPinball.value && gameContainer.value) {
@@ -243,6 +262,7 @@ onMounted(() => {
 
       // Phaser 게임 이벤트 리스너 설정
       window.addEventListener('phaser-game-over', handlePhaserGameOver)
+      window.addEventListener('phaser-game-ready', handleGameReady)
     } catch (error) {
       console.error('게임 초기화 실패:', error)
     }
@@ -262,6 +282,7 @@ onBeforeUnmount(() => {
 
   // 이벤트 리스너 제거
   window.removeEventListener('phaser-game-over', handlePhaserGameOver)
+  window.removeEventListener('phaser-game-ready', handleGameReady)
 })
 
 function goBack() {
@@ -358,5 +379,34 @@ h2 {
   background: rgba(0, 0, 0, 0.8);
   border-color: rgba(255, 255, 255, 0.5);
   transform: scale(1.1);
+}
+
+/* 게임 로딩 오버레이 */
+.game-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  gap: 16px;
+}
+
+.game-loading-overlay .loading-video {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 16px;
+}
+
+.game-loading-overlay .loading-text {
+  font-size: 16px;
+  color: #86868b;
+  font-weight: 500;
 }
 </style>

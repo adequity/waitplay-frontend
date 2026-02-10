@@ -2,7 +2,15 @@
   <div class="hyper-pinball-container">
     <!-- 로딩 상태 -->
     <div v-if="gameState === 'loading'" class="loading-overlay">
-      <div class="loading-spinner"></div>
+      <video
+        autoplay
+        loop
+        muted
+        playsinline
+        class="loading-video"
+      >
+        <source src="/loading-character.mp4" type="video/mp4" />
+      </video>
       <p>게임 로딩 중...</p>
     </div>
 
@@ -218,17 +226,11 @@ function exitGame() {
   z-index: 100;
 }
 
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid #3b82f6;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.loading-video {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border-radius: 12px;
 }
 
 .loading-overlay p {

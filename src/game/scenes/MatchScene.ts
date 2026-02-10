@@ -221,50 +221,15 @@ export class MatchScene extends Phaser.Scene {
     this.createCards(W, H);
 
     console.log('[MatchScene] Game initialized with useImageAssets:', this.useImageAssets);
+
+    // Vue에 게임 준비 완료 알림
+    window.dispatchEvent(new CustomEvent('phaser-game-ready'));
   }
 
   private createLoadingSpinner(W: number, H: number) {
-    // 로딩 컨테이너
+    // Vue 오버레이에서 로딩을 표시하므로 Phaser 내부 스피너는 최소화
+    // 빈 컨테이너만 생성 (나중에 destroy를 위해)
     this.loadingContainer = this.add.container(W * 0.5, H * 0.5);
-
-    // 스피너 배경 원 (연한 색)
-    const bgCircle = this.add.circle(0, 0, 32, 0xfecdd3, 0.3);
-    this.loadingContainer.add(bgCircle);
-
-    // 스피너 아크 (회전하는 부분)
-    const spinnerGraphics = this.add.graphics();
-    spinnerGraphics.lineStyle(4, 0xf43f5e, 1); // rose-500
-    spinnerGraphics.beginPath();
-    spinnerGraphics.arc(0, 0, 28, Phaser.Math.DegToRad(0), Phaser.Math.DegToRad(270), false);
-    spinnerGraphics.strokePath();
-    this.loadingContainer.add(spinnerGraphics);
-
-    // 회전 애니메이션
-    this.tweens.add({
-      targets: spinnerGraphics,
-      angle: 360,
-      duration: 1000,
-      repeat: -1,
-      ease: 'Linear'
-    });
-
-    // 로딩 텍스트
-    const loadingText = this.add.text(0, 55, '로딩 중...', {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#9ca3af',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-    this.loadingContainer.add(loadingText);
-
-    // 텍스트 펄스 애니메이션
-    this.tweens.add({
-      targets: loadingText,
-      alpha: 0.5,
-      duration: 800,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
   }
 
   private createBackground(W: number, H: number) {
