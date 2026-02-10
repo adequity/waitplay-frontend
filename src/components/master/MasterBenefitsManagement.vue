@@ -23,9 +23,7 @@
       </select>
     </div>
 
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-    </div>
+    <LoadingSpinner v-if="loading" />
 
     <div v-else class="benefits-grid">
       <div v-for="benefit in benefits" :key="benefit.id" class="benefit-card" :class="{ inactive: !benefit.isActive }">
@@ -71,6 +69,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -218,10 +217,6 @@ onMounted(() => fetchBenefits())
 .search-box input:focus { outline: none; border-color: #d4a853; box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.1); }
 .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #86868b; }
 .filters-bar select { padding: 12px 16px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 14px; background: white; min-width: 150px; }
-
-.loading-container { display: flex; justify-content: center; padding: 80px 0; }
-.spinner { width: 40px; height: 40px; border: 3px solid #e5e5ea; border-top-color: #d4a853; border-radius: 50%; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .benefits-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
 .benefit-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); transition: all 0.3s; }

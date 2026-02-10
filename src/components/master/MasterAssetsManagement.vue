@@ -16,9 +16,7 @@
       </select>
     </div>
 
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-    </div>
+    <LoadingSpinner v-if="loading" message="에셋을 불러오는 중..." />
 
     <div v-else class="assets-grid">
       <div v-for="asset in assets" :key="asset.id" class="asset-card">
@@ -63,6 +61,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -141,10 +140,6 @@ onMounted(() => fetchAssets())
 
 .filters-bar { display: flex; gap: 16px; margin-bottom: 24px; }
 .filters-bar select { padding: 12px 16px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 14px; background: white; min-width: 150px; }
-
-.loading-container { display: flex; justify-content: center; padding: 80px 0; }
-.spinner { width: 40px; height: 40px; border: 3px solid #e5e5ea; border-top-color: #d4a853; border-radius: 50%; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .assets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
 

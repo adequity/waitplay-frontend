@@ -26,9 +26,7 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-    </div>
+    <LoadingSpinner v-if="loading" />
 
     <!-- QR Cards Grid -->
     <div v-else class="qr-grid">
@@ -326,6 +324,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -645,26 +644,6 @@ onMounted(() => {
   background: white;
   cursor: pointer;
   min-width: 150px;
-}
-
-/* Loading */
-.loading-container {
-  display: flex;
-  justify-content: center;
-  padding: 80px 0;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e5e5ea;
-  border-top-color: #d4a853;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 /* QR Grid */

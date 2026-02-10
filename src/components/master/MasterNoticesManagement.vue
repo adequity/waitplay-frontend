@@ -7,9 +7,7 @@
       </div>
     </div>
 
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-    </div>
+    <LoadingSpinner v-if="loading" message="공지사항을 불러오는 중..." />
 
     <div v-else class="table-container">
       <table class="data-table">
@@ -71,6 +69,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -142,10 +141,6 @@ onMounted(() => fetchNotices())
 .page-header { margin-bottom: 32px; }
 .page-header h1 { font-size: 28px; font-weight: 700; color: #1d1d1f; margin: 0 0 8px 0; }
 .subtitle { font-size: 15px; color: #86868b; margin: 0; }
-
-.loading-container { display: flex; justify-content: center; padding: 80px 0; }
-.spinner { width: 40px; height: 40px; border: 3px solid #e5e5ea; border-top-color: #d4a853; border-radius: 50%; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .table-container { background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); overflow: hidden; }
 .data-table { width: 100%; border-collapse: collapse; }

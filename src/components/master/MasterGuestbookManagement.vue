@@ -14,9 +14,7 @@
       </div>
     </div>
 
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-    </div>
+    <LoadingSpinner v-if="loading" message="방명록을 불러오는 중..." />
 
     <div v-else class="table-container">
       <table class="data-table">
@@ -88,6 +86,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -189,10 +188,6 @@ onMounted(() => fetchMessages())
 .search-box input { width: 100%; padding: 12px 16px 12px 44px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 14px; background: white; }
 .search-box input:focus { outline: none; border-color: #d4a853; }
 .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #86868b; }
-
-.loading-container { display: flex; justify-content: center; padding: 80px 0; }
-.spinner { width: 40px; height: 40px; border: 3px solid #e5e5ea; border-top-color: #d4a853; border-radius: 50%; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .table-container { background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); overflow: hidden; }
 .data-table { width: 100%; border-collapse: collapse; }

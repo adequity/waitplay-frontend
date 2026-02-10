@@ -14,9 +14,7 @@
       <button :class="{ active: activeTab === 'scores' }" @click="activeTab = 'scores'">점수 기록</button>
     </div>
 
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-    </div>
+    <LoadingSpinner v-if="loading" message="게임 정보를 불러오는 중..." />
 
     <!-- Game Templates Tab -->
     <div v-else-if="activeTab === 'templates'" class="templates-section">
@@ -218,6 +216,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -582,10 +581,6 @@ onMounted(() => fetchAll())
 .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
 .tabs button { padding: 10px 20px; border: none; border-radius: 10px; background: #f0f0f0; font-size: 14px; font-weight: 500; color: #86868b; cursor: pointer; transition: all 0.2s; }
 .tabs button.active { background: linear-gradient(135deg, #d4a853, #b8942e); color: white; }
-
-.loading-container { display: flex; justify-content: center; padding: 80px 0; }
-.spinner { width: 40px; height: 40px; border: 3px solid #e5e5ea; border-top-color: #d4a853; border-radius: 50%; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Templates Section */
 .section-actions { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }

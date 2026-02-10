@@ -7,10 +7,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p>게임 설정을 불러오는 중...</p>
-    </div>
+    <LoadingSpinner v-if="isLoading" message="게임 설정을 불러오는 중..." />
 
     <!-- Games List -->
     <div v-else class="game-list">
@@ -147,6 +144,7 @@ import { useAuthStore } from '@/stores/auth'
 import gameSettingsService from '@/services/gameSettingsService'
 import type { GameOrderDto, GameStatsDto, AvailableGameDto } from '@/services/gameSettingsService'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import GameAssetSelectModal from '@/components/GameAssetSelectModal.vue'
 import SpotDifferenceAssetModal from '@/components/SpotDifferenceAssetModal.vue'
 
@@ -473,27 +471,6 @@ onMounted(() => {
   color: #86868b;
   font-size: 16px;
 }
-
-/* Loading State */
-.loading-state {
-  text-align: center;
-  padding: 100px 20px;
-  color: #86868b;
-  font-size: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e5e5ea;
-  border-top-color: #0071e3;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 /* Game List - 2 Column Grid */
 .game-list {

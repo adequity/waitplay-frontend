@@ -6,10 +6,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-      <p>데이터를 불러오는 중...</p>
-    </div>
+    <LoadingSpinner v-if="loading" message="데이터를 불러오는 중..." />
 
     <!-- Stats Grid -->
     <div v-else class="stats-grid">
@@ -188,6 +185,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -329,30 +327,6 @@ onMounted(() => {
   font-size: 15px;
   color: #86868b;
   margin: 0;
-}
-
-/* Loading */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 0;
-  color: #86868b;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e5e5ea;
-  border-top-color: #d4a853;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 /* Stats Grid */
