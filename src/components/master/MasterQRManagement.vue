@@ -426,7 +426,7 @@ const formatDate = (dateStr: string) => {
 
 const goToQR = (qr: any) => {
   const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'https://waitplay.co.kr'
-  window.open(`${frontendUrl}/customer?qr=${qr.id}`, '_blank')
+  window.open(`${frontendUrl}/customer?qr=${qr.code}`, '_blank')
 }
 
 const openDetailModal = async (qr: any) => {
@@ -484,9 +484,9 @@ const getEnabledGamesCount = () => {
 }
 
 const goToQRFromDetail = () => {
-  if (detailData.value?.id) {
+  if (detailData.value?.code) {
     const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'https://waitplay.co.kr'
-    window.open(`${frontendUrl}/customer?qr=${detailData.value.id}`, '_blank')
+    window.open(`${frontendUrl}/customer?qr=${detailData.value.code}`, '_blank')
   }
 }
 
@@ -498,9 +498,9 @@ const goToAdminPage = () => {
 }
 
 const goToGuestbook = () => {
-  if (detailData.value?.id) {
+  if (detailData.value?.code) {
     const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'https://waitplay.co.kr'
-    window.open(`${frontendUrl}/customer?qr=${detailData.value.id}&tab=guestbook`, '_blank')
+    window.open(`${frontendUrl}/customer?qr=${detailData.value.code}&tab=guestbook`, '_blank')
   }
 }
 
