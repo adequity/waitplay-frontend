@@ -57,6 +57,8 @@ export class MatchScene extends Phaser.Scene {
   private consecutiveMatches: number = 0;
   private maxCombo: number = 0;
   private titleElements: Phaser.GameObjects.GameObject[] = [];
+  private readonly TIME_LIMIT = 120; // 시간 제한 (초)
+  private timeRemaining: number = 120;
 
   // 에셋 관련
   private gameAssets: GameAsset[] = [];
@@ -83,6 +85,7 @@ export class MatchScene extends Phaser.Scene {
     this.elapsedTime = 0;
     this.consecutiveMatches = 0;
     this.maxCombo = 0;
+    this.timeRemaining = this.TIME_LIMIT;
     this.titleElements = [];
     this.gameAssets = [];
     this.useImageAssets = false;
@@ -346,7 +349,7 @@ export class MatchScene extends Phaser.Scene {
     }).setOrigin(0.5);
     panelContainer.add(this.matchesText);
 
-    // ========== TIME (시간) ==========
+    // ========== TIME (남은 시간) ==========
     const timeX = statSpacing;
 
     // 라벨
@@ -358,8 +361,13 @@ export class MatchScene extends Phaser.Scene {
     }).setOrigin(0.5);
     panelContainer.add(timeLabel);
 
-    // 값 (🕐 아이콘 + 숫자)
-    this.timeText = this.add.text(timeX, panelHeight * 0.12, '🕐 0s', {
+    // 초기 시간 표시 (2:00 형식)
+    const initMinutes = Math.floor(this.TIME_LIMIT / 60);
+    const initSeconds = this.TIME_LIMIT % 60;
+    const initTimeDisplay = `${initMinutes}:${initSeconds.toString().padStart(2, '0')}`;
+
+    // 값 (⏱️ 아이콘 + 남은시간)
+    this.timeText = this.add.text(timeX, panelHeight * 0.12, `⏱️ ${initTimeDisplay}`, {
       fontSize: Math.floor(H * 0.032) + 'px',
       color: '#8b5cf6', // violet-500 (textTime)
       fontStyle: 'bold',
@@ -902,7 +910,37 @@ export class MatchScene extends Phaser.Scene {
 
   private updateTimer() {
     this.elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
-    this.timeText?.setText(`🕐 ${this.elapsedTime}초`);
+    this.timeRemaining = Math.max(0, this.TIME_LIMIT - this.elapsedTime);
+
+    // 남은 시간 표시 (분:초 형식)
+    const minutes = Math.floor(this.timeRemaining / 60);
+    const seconds = this.timeRemaining % 60;
+    const timeDisplay = minutes > 0
+      ? `${minutes}:${seconds.toString().padStart(2, '0')}`
+      : `${seconds}초`;
+
+    // 시간이 30초 이하면 빨간색으로 경고
+    if (this.timeRemaining <= 30) {
+      this.timeText?.setColor('#ef4444'); // red-500
+
+      // 10초 이하면 깜빡임 효과
+      if (this.timeRemaining <= 10 && this.timeRemaining > 0) {
+        this.tweens.add({
+          targets: this.timeText,
+          alpha: 0.5,
+          duration: 200,
+          yoyo: true
+        });
+      }
+    }
+
+    this.timeText?.setText(`⏱️ ${timeDisplay}`);
+
+    // 시간 초과 - 게임 종료
+    if (this.timeRemaining <= 0) {
+      this.timerEvent?.remove();
+      this.endGame(false); // 시간 초과로 실패
+    }
   }
 
   private flipCard(card: Card) {
@@ -993,7 +1031,7 @@ export class MatchScene extends Phaser.Scene {
       if (this.matches === this.TOTAL_PAIRS) {
         this.timerEvent?.remove();
         this.time.delayedCall(600, () => {
-          this.endGame();
+          this.endGame(true); // 성공으로 종료
         });
       }
     } else {
@@ -1075,13 +1113,25 @@ export class MatchScene extends Phaser.Scene {
     }
   }
 
-  private async endGame() {
+  private async endGame(completed: boolean = true) {
     // 점수 계산
-    const baseScore = 1000;
-    const movePenalty = Math.max(0, (this.moves - this.TOTAL_PAIRS) * 8);
-    const timePenalty = this.elapsedTime * 3;
-    const comboBonus = this.maxCombo * 50;
-    const finalScore = Math.max(100, baseScore - movePenalty - timePenalty + comboBonus);
+    let finalScore: number;
+
+    if (completed) {
+      // 성공 - 기본 점수에서 시간/이동 패널티, 콤보 보너스 적용
+      const baseScore = 1000;
+      const movePenalty = Math.max(0, (this.moves - this.TOTAL_PAIRS) * 8);
+      const timePenalty = this.elapsedTime * 3;
+      const comboBonus = this.maxCombo * 50;
+      // 빨리 클리어하면 시간 보너스
+      const timeBonus = Math.max(0, (this.TIME_LIMIT - this.elapsedTime) * 2);
+      finalScore = Math.max(100, baseScore - movePenalty - timePenalty + comboBonus + timeBonus);
+    } else {
+      // 시간 초과 - 찾은 매치 수에 따라 점수 부여
+      const matchScore = this.matches * 50;
+      const comboBonus = this.maxCombo * 20;
+      finalScore = Math.max(50, matchScore + comboBonus);
+    }
 
     // 성능 등급
     const grade = this.getGrade(finalScore);
@@ -1094,7 +1144,11 @@ export class MatchScene extends Phaser.Scene {
         moves: this.moves,
         combo: this.maxCombo,
         grade: grade,
-        gameType: 'memory'
+        gameType: 'memory',
+        success: completed,
+        matchesFound: this.matches,
+        totalPairs: this.TOTAL_PAIRS,
+        timeLimit: this.TIME_LIMIT
       }
     }));
 
