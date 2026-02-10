@@ -77,8 +77,8 @@
         :class="{ pinned: message.isPinned }"
         @click="openMessageModal(message)"
       >
-        <!-- 컬러 악센트 바 -->
-        <div class="color-accent" :style="{ backgroundColor: message.color }"></div>
+        <!-- 컬러 악센트 바 (블루 그라데이션) -->
+        <div class="color-accent"></div>
 
         <!-- Pinned Badge -->
         <div v-if="message.isPinned" class="pinned-badge">
@@ -88,7 +88,7 @@
         <!-- 카드 헤더 -->
         <div class="card-header">
           <div class="card-author-info">
-            <div class="card-avatar" :style="{ backgroundColor: message.color }">
+            <div class="card-avatar">
               {{ message.userName?.charAt(0) || '?' }}
             </div>
             <div class="card-author-text">
@@ -139,7 +139,7 @@
           <!-- 메시지 헤더 -->
           <div class="modal-header">
             <div class="modal-author">
-              <div class="author-avatar" :style="{ backgroundColor: selectedMessage.color }">
+              <div class="author-avatar">
                 {{ selectedMessage.userName?.charAt(0) || '?' }}
               </div>
               <div class="author-info">
@@ -160,7 +160,7 @@
           </div>
 
           <!-- 메시지 본문 -->
-          <div class="modal-body" :style="{ backgroundColor: selectedMessage.color }">
+          <div class="modal-body">
             <p v-if="selectedMessage.message" class="modal-text">{{ selectedMessage.message }}</p>
             <img
               v-if="selectedMessage.imageUrl"
@@ -629,13 +629,13 @@ onMounted(async () => {
 }
 
 .stat-icon.green {
-  background: #e8f8f0;
-  color: #34c759;
+  background: #e3f0ff;
+  color: #0095f6;
 }
 
 .stat-icon.purple {
-  background: #f3e8ff;
-  color: #af52de;
+  background: #e8f2ff;
+  color: #5856d6;
 }
 
 .stat-info {
@@ -785,13 +785,14 @@ onMounted(async () => {
 }
 
 .message-card.pinned {
-  box-shadow: 0 0 0 2px #ff9500, 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 0 2px #0071e3, 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
-/* 컬러 악센트 바 */
+/* 컬러 악센트 바 (블루 그라데이션) */
 .color-accent {
   height: 4px;
   width: 100%;
+  background: linear-gradient(90deg, #0071e3 0%, #5856d6 100%);
 }
 
 /* Pinned Badge */
@@ -804,11 +805,11 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ff9500;
+  background: #0071e3;
   color: white;
   border-radius: 50%;
   z-index: 1;
-  box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
 }
 
 .pinned-badge svg {
@@ -838,6 +839,7 @@ onMounted(async () => {
   font-weight: 600;
   color: white;
   flex-shrink: 0;
+  background: linear-gradient(135deg, #0071e3 0%, #5856d6 100%);
 }
 
 .card-author-text {
@@ -922,11 +924,11 @@ onMounted(async () => {
 }
 
 .card-stat.liked {
-  color: #ff2d55;
+  color: #0071e3;
 }
 
 .card-stat.liked svg {
-  color: #ff2d55;
+  color: #0071e3;
 }
 
 /* =========================== */
@@ -994,6 +996,7 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
   color: white;
+  background: linear-gradient(135deg, #0071e3 0%, #5856d6 100%);
 }
 
 .author-info {
@@ -1034,22 +1037,23 @@ onMounted(async () => {
 }
 
 .stat-badge.views {
-  background: #f3e8ff;
-  color: #af52de;
+  background: #e8f2ff;
+  color: #5856d6;
 }
 
 .stat-badge.likes {
-  background: #fff0f3;
-  color: #ff2d55;
+  background: #e3f0ff;
+  color: #0071e3;
 }
 
-/* Modal Body (포스트잇 스타일) */
+/* Modal Body (화이트 카드 스타일) */
 .modal-body {
   padding: 20px;
-  border-radius: 4px;
+  border-radius: 12px;
   margin-bottom: 16px;
   min-height: 150px;
-  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e8f2ff;
 }
 
 .modal-text {
@@ -1155,12 +1159,12 @@ onMounted(async () => {
 }
 
 .action-btn.liked {
-  background: #fff0f3;
-  color: #ff2d55;
+  background: #e3f0ff;
+  color: #0071e3;
 }
 
 .action-btn.liked .action-icon {
-  color: #ff2d55;
+  color: #0071e3;
 }
 
 .action-btn.active {
@@ -1178,13 +1182,13 @@ onMounted(async () => {
 }
 
 .action-btn.pin-btn:hover {
-  background: #fff5e6;
-  color: #ff9500;
+  background: #e8f2ff;
+  color: #0071e3;
 }
 
 .action-btn.pin-btn.pinned {
-  background: #fff5e6;
-  color: #ff9500;
+  background: #e8f2ff;
+  color: #0071e3;
 }
 
 .action-icon {
