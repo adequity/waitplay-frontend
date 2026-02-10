@@ -111,6 +111,46 @@ export interface StickerAssetsResponse {
   total: number
 }
 
+export interface MyActivityResponse {
+  userId: string
+  qrCode: string
+  storeName: string
+  visitCount: number
+  gamePlayCount: number
+  guestbookCount: number
+  firstVisitDate?: string
+  lastVisitDate?: string
+  followedAt?: string
+  bestScore?: {
+    gameType: string
+    score: number
+  }
+}
+
+export interface StoreGuestbookMessage {
+  id: string
+  userId: string
+  userName: string
+  message?: string
+  imageUrl?: string
+  rotation: number
+  color: string
+  createdAt: string
+  likeCount: number
+  isLikedByMe: boolean
+  isMine: boolean
+}
+
+export interface StoreGuestbookResponse {
+  qrCode: string
+  storeName: string
+  totalCount: number
+  page: number
+  pageSize: number
+  hasMore: boolean
+  messages: StoreGuestbookMessage[]
+}
+
 export interface FeedGuestbookMessage {
   id: string
   userId: string
@@ -349,6 +389,33 @@ class GuestbookService {
    */
   async togglePin(messageId: string): Promise<TogglePinResponse> {
     const response = await apiClient.post<TogglePinResponse>(`/api/guestbook/${messageId}/pin`)
+    return response.data
+  }
+
+  /**
+   * Get user's activity for a specific store
+   */
+  async getMyActivity(qrCode: string): Promise<MyActivityResponse> {
+    const response = await apiClient.get<MyActivityResponse>(`/api/guestbook/my-activity/${qrCode}`)
+    return response.data
+  }
+
+  /**
+   * Get store guestbook with isMine highlighting
+   */
+  async getStoreGuestbook(
+    qrCode: string,
+    options: { sort?: string; myOnly?: boolean; page?: number; pageSize?: number } = {}
+  ): Promise<StoreGuestbookResponse> {
+    const params = new URLSearchParams()
+    if (options.sort) params.append('sort', options.sort)
+    if (options.myOnly) params.append('myOnly', 'true')
+    if (options.page) params.append('page', options.page.toString())
+    if (options.pageSize) params.append('pageSize', options.pageSize.toString())
+
+    const response = await apiClient.get<StoreGuestbookResponse>(
+      `/api/guestbook/store/${qrCode}?${params.toString()}`
+    )
     return response.data
   }
 }

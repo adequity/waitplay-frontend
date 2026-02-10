@@ -45,6 +45,39 @@
       </div>
     </div>
 
+    <!-- 내 활동 카드 (로그인 시) -->
+    <div v-if="isAuthenticated && myActivity" class="my-activity-card">
+      <div class="activity-header">
+        <span class="activity-title">나의 기록</span>
+        <button
+          v-if="myActivity.guestbookCount > 0"
+          class="view-my-posts-btn"
+          @click="toggleMyPostsFilter"
+        >
+          {{ showMyPostsOnly ? '전체 보기' : '내 글만 보기' }}
+        </button>
+      </div>
+      <div class="activity-stats">
+        <div class="stat-item">
+          <span class="stat-value">{{ myActivity.gamePlayCount }}</span>
+          <span class="stat-label">게임</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value">{{ myActivity.guestbookCount }}</span>
+          <span class="stat-label">방명록</span>
+        </div>
+        <div v-if="myActivity.bestScore" class="stat-divider"></div>
+        <div v-if="myActivity.bestScore" class="stat-item">
+          <span class="stat-value">{{ myActivity.bestScore.score.toLocaleString() }}</span>
+          <span class="stat-label">최고점수</span>
+        </div>
+      </div>
+      <div v-if="myActivity.firstVisitDate" class="activity-dates">
+        <span class="date-info">첫 방문: {{ formatActivityDate(myActivity.firstVisitDate) }}</span>
+      </div>
+    </div>
+
     <!-- 방명록 슬라이더 -->
     <LoadingSpinner v-if="isLoadingMessages" message="방명록을 불러오는 중..." :size="60" />
 
@@ -61,11 +94,12 @@
               v-for="message in previewMessages"
               :key="message.id"
               class="post-it-slide"
+              :class="{ 'my-post': isMyMessage(message) }"
               @click="openDetailModal(message)"
             >
               <div
                 class="post-it"
-                :class="`post-it--${message.color}`"
+                :class="[`post-it--${message.color}`, { 'my-post': isMyMessage(message) }]"
                 :style="{ transform: `rotate(${message.rotation}deg)` }"
               >
                 <div class="post-it-content">
@@ -98,6 +132,7 @@
                   </div>
                   <div class="message-footer">
                     <div class="message-info">
+                      <span v-if="isMyMessage(message)" class="my-post-badge">MY</span>
                       <span class="message-author">- {{ message.userName }}</span>
                       <span class="message-date">{{ formatDate(message.createdAt) }}</span>
                     </div>
@@ -584,7 +619,7 @@
 import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import guestbookService, { type StickerAsset } from '@/services/guestbookService'
+import guestbookService, { type StickerAsset, type MyActivityResponse } from '@/services/guestbookService'
 import followService from '@/services/followService'
 import type { GuestbookBlockData } from '@/types/blocks'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
@@ -670,6 +705,10 @@ const totalMessageCount = ref(0)
 
 // 좋아요 관련
 const likingMessageId = ref<string | null>(null)
+
+// 내 활동 관련
+const myActivity = ref<MyActivityResponse | null>(null)
+const showMyPostsOnly = ref(false)
 
 // 스티커 관련 (에셋 로드용)
 const stickerAssets = ref<StickerAsset[]>([])
@@ -779,6 +818,10 @@ onMounted(async () => {
   // 미리보기 모드에서는 API 호출 스킵 (404 에러 방지)
   if (!props.isPreview) {
     await loadMessages()
+    // 로그인된 경우 내 활동 정보도 로드
+    if (isAuthenticated.value) {
+      await loadMyActivity()
+    }
   }
 })
 
@@ -804,6 +847,33 @@ const loadMessages = async () => {
   } finally {
     isLoadingMessages.value = false
   }
+}
+
+// 내 활동 데이터 로드
+const loadMyActivity = async () => {
+  if (!props.qrCodeId || !isAuthenticated.value) return
+
+  try {
+    const response = await guestbookService.getMyActivity(props.qrCodeId)
+    myActivity.value = response
+  } catch {
+    // 로그인하지 않았거나 에러 시 조용히 처리
+    myActivity.value = null
+  }
+}
+
+// 내 글만 보기 토글
+const toggleMyPostsFilter = () => {
+  showMyPostsOnly.value = !showMyPostsOnly.value
+}
+
+// 활동 날짜 포맷
+const formatActivityDate = (dateString: string) => {
+  const date = new Date(dateString)
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  return `${year}.${month}.${day}`
 }
 
 // 전체 방명록 페이지로 이동
@@ -1626,6 +1696,91 @@ const handleLike = async (message: any) => {
   background: #f0fffe;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(78, 205, 196, 0.2);
+}
+
+/* 내 활동 카드 */
+.my-activity-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.activity-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.view-my-posts-btn {
+  padding: 0.4rem 0.75rem;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-my-posts-btn:hover {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.activity-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 0.75rem 0;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #4ECDC4;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: #e5e7eb;
+}
+
+.activity-dates {
+  text-align: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 0.5rem;
+}
+
+.date-info {
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 /* 낙서 모드 스타일 */
@@ -2525,6 +2680,26 @@ const handleLike = async (message: any) => {
 .post-it--green {
   background: #d1fae5;
   border-top: 3px solid #34d399;
+}
+
+/* 내 글 하이라이트 */
+.post-it.my-post {
+  box-shadow: 0 0 0 2px #4ECDC4, 0 4px 6px rgba(0, 0, 0, 0.12);
+}
+
+.post-it-slide.my-post:hover .post-it {
+  box-shadow: 0 0 0 3px #4ECDC4, 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.my-post-badge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  background: #4ECDC4;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  margin-bottom: 0.15rem;
 }
 
 .post-it-content {
