@@ -288,12 +288,12 @@ const changeRole = async () => {
   try {
     changing.value = true
     const response = await fetch(`${API_URL}/api/masteradmin/accounts/${selectedAccount.value.id}/role`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ newRole: newRole.value })
+      body: JSON.stringify({ role: newRole.value })
     })
 
     if (!response.ok) throw new Error('Failed to change role')
