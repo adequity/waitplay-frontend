@@ -82,13 +82,17 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const gameContainer = ref<HTMLElement>()
-const isFullscreen = ref(false)
+// MATCH, SPOT 게임은 기본적으로 풀스크린 모드
+const isFullscreen = ref(false)  // onMounted에서 게임 타입에 따라 설정됨
 const isGameLoading = ref(true)
 
 // Game state
 const gameType = computed(() => (route.params.type as string).toUpperCase() as GameType)
 const qrCode = computed(() => route.query.qr as string | undefined)
 const isPinball = computed(() => gameType.value === 'PINBALL')
+
+// 전체화면 지원 게임 (MATCH 카드 게임, SPOT 틀린그림찾기)
+const supportsFullscreen = computed(() => ['MATCH', 'SPOT'].includes(gameType.value))
 
 // QR Code ID from URL
 const qrCodeId = computed(() => route.query.qr as string | undefined)
@@ -101,14 +105,6 @@ const showRewardOffer = ref(false)
 const showAuthModal = ref(false)
 const showCouponModal = ref(false)
 const currentUserId = ref('')
-
-// 모바일 감지
-const isMobile = computed(() => {
-  return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-})
-
-// 전체화면 지원 게임 (MATCH 카드 게임)
-const supportsFullscreen = computed(() => ['MATCH', 'SPOT'].includes(gameType.value))
 
 const gameTitle = computed(() => {
   const titles: Record<GameType, string> = {
@@ -253,8 +249,8 @@ onMounted(() => {
     try {
       console.log('GameView QR Code:', qrCode.value)
 
-      // 모바일 + 전체화면 지원 게임이면 자동 전체화면
-      if (isMobile.value && supportsFullscreen.value) {
+      // MATCH, SPOT 게임은 항상 풀스크린 모드로 시작 (기본값)
+      if (supportsFullscreen.value) {
         enterFullscreen()
       }
 
