@@ -24,63 +24,71 @@
       </button>
 
       <div v-if="showScoreGuide" class="score-guide-content">
-        <div class="score-guide-grid">
-          <!-- 핀볼 -->
-          <div class="score-guide-card">
-            <div class="guide-header">
-              <IconBase name="target" class="guide-game-icon pinball" />
-              <h4>핀볼</h4>
-            </div>
-            <div class="guide-body">
-              <p class="guide-desc">범퍼/타겟 점수 누적, 콤보 보너스</p>
-              <div class="score-range">
-                <div class="range-item">
-                  <span class="range-label">일반</span>
-                  <span class="range-value">0 ~ 500점</span>
-                </div>
-                <div class="range-item">
-                  <span class="range-label">중급</span>
-                  <span class="range-value">500 ~ 1,000점</span>
-                </div>
-                <div class="range-item highlight">
-                  <span class="range-label">상급</span>
-                  <span class="range-value">1,000점+</span>
-                </div>
+        <!-- 추천 설정 안내 -->
+        <div class="guide-recommendation">
+          <div class="recommendation-header">
+            <IconBase name="sparkles" class="recommendation-icon" />
+            <h4>추천 혜택 설정 가이드</h4>
+          </div>
+          <div class="recommendation-body">
+            <p>대부분의 고객이 <strong>중간 난이도</strong>에서 혜택을 받을 수 있도록 설정하는 것을 권장합니다.</p>
+            <div class="recommendation-examples">
+              <div class="example-item">
+                <span class="example-medal bronze">🥉 동메달</span>
+                <span class="example-desc">→ 대부분의 고객이 받을 수 있는 점수 (하위 70%)</span>
+              </div>
+              <div class="example-item">
+                <span class="example-medal silver">🥈 은메달</span>
+                <span class="example-desc">→ 어느 정도 실력이 필요한 점수 (상위 30~50%)</span>
+              </div>
+              <div class="example-item">
+                <span class="example-medal gold">🥇 금메달</span>
+                <span class="example-desc">→ 잘하는 고객만 받을 수 있는 점수 (상위 10~20%)</span>
               </div>
             </div>
           </div>
+        </div>
 
+        <div class="score-guide-grid">
           <!-- 같은 카드 찾기 -->
           <div class="score-guide-card">
             <div class="guide-header">
               <IconBase name="clone" class="guide-game-icon memory" />
               <h4>같은 카드 찾기</h4>
+              <span class="time-badge">⏱️ 2분 제한</span>
             </div>
             <div class="guide-body">
-              <p class="guide-desc">기본 1000점 - 시간/이동 패널티 + 콤보 보너스 (제한시간 2분)</p>
-              <div class="score-range">
-                <div class="range-item">
-                  <span class="range-label">🍬 캔디</span>
-                  <span class="range-value">0 ~ 449점</span>
-                </div>
-                <div class="range-item">
-                  <span class="range-label">🍪 쿠키</span>
-                  <span class="range-value">450 ~ 599점</span>
-                </div>
-                <div class="range-item">
-                  <span class="range-label">🧁 컵케이크</span>
-                  <span class="range-value">600 ~ 749점</span>
-                </div>
-                <div class="range-item">
-                  <span class="range-label">🍰 케이크</span>
-                  <span class="range-value">750 ~ 899점</span>
-                </div>
-                <div class="range-item highlight">
-                  <span class="range-label">🏆 마스터</span>
-                  <span class="range-value">900점+</span>
+              <div class="formula-box">
+                <div class="formula-title">점수 계산 공식</div>
+                <div class="formula-content">
+                  <code>기본 1000점 - (이동×8) - (시간×3) + (콤보×50) + (남은시간×2)</code>
                 </div>
               </div>
-              <p class="guide-tip">💡 빠른 클리어 시 시간 보너스 추가</p>
+
+              <div class="example-section">
+                <div class="example-title">실제 플레이 예시</div>
+                <div class="example-case good">
+                  <div class="case-header">✨ 잘하는 경우 (60초, 12번 이동, 3콤보)</div>
+                  <div class="case-calc">1000 - 32 - 180 + 150 + 120 = <strong>1,058점</strong></div>
+                </div>
+                <div class="example-case normal">
+                  <div class="case-header">👍 보통 경우 (90초, 18번 이동, 2콤보)</div>
+                  <div class="case-calc">1000 - 80 - 270 + 100 + 60 = <strong>810점</strong></div>
+                </div>
+                <div class="example-case poor">
+                  <div class="case-header">😅 초보자 (110초, 25번 이동, 1콤보)</div>
+                  <div class="case-calc">1000 - 136 - 330 + 50 + 20 = <strong>604점</strong></div>
+                </div>
+              </div>
+
+              <div class="recommend-setting">
+                <div class="setting-title">💡 권장 점수 설정</div>
+                <div class="setting-items">
+                  <div class="setting-item bronze">🥉 동메달: <strong>500점</strong> (대부분 달성)</div>
+                  <div class="setting-item silver">🥈 은메달: <strong>700점</strong> (중상위권)</div>
+                  <div class="setting-item gold">🥇 금메달: <strong>900점</strong> (상위 10%)</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -89,28 +97,86 @@
             <div class="guide-header">
               <IconBase name="magnifying-glass" class="guide-game-icon spot" />
               <h4>틀린 그림 찾기</h4>
+              <span class="time-badge">⏱️ 난이도별 제한</span>
             </div>
             <div class="guide-body">
-              <p class="guide-desc">성공 시 1000점 + 시간 보너스 + 난이도 보너스 - 힌트 사용 감점</p>
-              <div class="score-range">
-                <div class="range-item">
-                  <span class="range-label">👀 초보</span>
-                  <span class="range-value">0 ~ 600점</span>
-                </div>
-                <div class="range-item">
-                  <span class="range-label">🔍 관찰자</span>
-                  <span class="range-value">600 ~ 900점</span>
-                </div>
-                <div class="range-item">
-                  <span class="range-label">🎯 명탐정</span>
-                  <span class="range-value">900 ~ 1,200점</span>
-                </div>
-                <div class="range-item highlight">
-                  <span class="range-label">🦅 독수리눈</span>
-                  <span class="range-value">1,200점+</span>
+              <div class="formula-box">
+                <div class="formula-title">점수 계산 공식</div>
+                <div class="formula-content">
+                  <code>성공 1000점 + (남은시간×10) + (난이도×200) - (힌트×50)</code>
                 </div>
               </div>
-              <p class="guide-tip">💡 힌트 미사용 + 빠른 클리어 = 고득점</p>
+
+              <div class="example-section">
+                <div class="example-title">실제 플레이 예시</div>
+                <div class="example-case good">
+                  <div class="case-header">✨ 빠른 클리어 (30초 남음, 난이도2, 힌트0)</div>
+                  <div class="case-calc">1000 + 300 + 200 - 0 = <strong>1,500점</strong></div>
+                </div>
+                <div class="example-case normal">
+                  <div class="case-header">👍 보통 클리어 (10초 남음, 난이도1, 힌트1)</div>
+                  <div class="case-calc">1000 + 100 + 0 - 50 = <strong>1,050점</strong></div>
+                </div>
+                <div class="example-case poor">
+                  <div class="case-header">😅 힌트 많이 사용 (5초 남음, 난이도1, 힌트3)</div>
+                  <div class="case-calc">1000 + 50 + 0 - 150 = <strong>900점</strong></div>
+                </div>
+                <div class="example-case fail">
+                  <div class="case-header">❌ 시간 초과 실패</div>
+                  <div class="case-calc">점수 없음 (혜택 미지급)</div>
+                </div>
+              </div>
+
+              <div class="recommend-setting">
+                <div class="setting-title">💡 권장 점수 설정</div>
+                <div class="setting-items">
+                  <div class="setting-item bronze">🥉 동메달: <strong>900점</strong> (힌트 사용해도 OK)</div>
+                  <div class="setting-item silver">🥈 은메달: <strong>1,100점</strong> (힌트 적게)</div>
+                  <div class="setting-item gold">🥇 금메달: <strong>1,300점</strong> (빠른 클리어)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 핀볼 -->
+          <div class="score-guide-card">
+            <div class="guide-header">
+              <IconBase name="target" class="guide-game-icon pinball" />
+              <h4>핀볼</h4>
+              <span class="time-badge">🎱 3개 공</span>
+            </div>
+            <div class="guide-body">
+              <div class="formula-box">
+                <div class="formula-title">점수 획득 방법</div>
+                <div class="formula-content">
+                  <code>범퍼 10~50점 + 타겟 100점 + 콤보 보너스(연속 적중)</code>
+                </div>
+              </div>
+
+              <div class="example-section">
+                <div class="example-title">실제 플레이 예시</div>
+                <div class="example-case good">
+                  <div class="case-header">✨ 숙련자 (3개 공 모두 오래 유지)</div>
+                  <div class="case-calc">평균 <strong>800~1,500점</strong></div>
+                </div>
+                <div class="example-case normal">
+                  <div class="case-header">👍 보통 플레이어</div>
+                  <div class="case-calc">평균 <strong>300~600점</strong></div>
+                </div>
+                <div class="example-case poor">
+                  <div class="case-header">😅 초보자 (빠르게 공 잃음)</div>
+                  <div class="case-calc">평균 <strong>100~300점</strong></div>
+                </div>
+              </div>
+
+              <div class="recommend-setting">
+                <div class="setting-title">💡 권장 점수 설정</div>
+                <div class="setting-items">
+                  <div class="setting-item bronze">🥉 동메달: <strong>200점</strong> (누구나 달성)</div>
+                  <div class="setting-item silver">🥈 은메달: <strong>500점</strong> (조금 연습 필요)</div>
+                  <div class="setting-item gold">🥇 금메달: <strong>1,000점</strong> (숙련자)</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -119,24 +185,50 @@
             <div class="guide-header">
               <IconBase name="utensils" class="guide-game-icon brick" />
               <h4>벽돌깨기</h4>
+              <span class="time-badge">❤️ 3개 생명</span>
             </div>
             <div class="guide-body">
-              <p class="guide-desc">벽돌 파괴 점수 누적, 스테이지 보너스</p>
-              <div class="score-range">
-                <div class="range-item">
-                  <span class="range-label">일반</span>
-                  <span class="range-value">0 ~ 300점</span>
+              <div class="formula-box">
+                <div class="formula-title">점수 획득 방법</div>
+                <div class="formula-content">
+                  <code>벽돌 1개당 10점 + 스테이지 클리어 보너스</code>
                 </div>
-                <div class="range-item">
-                  <span class="range-label">중급</span>
-                  <span class="range-value">300 ~ 600점</span>
+              </div>
+
+              <div class="example-section">
+                <div class="example-title">실제 플레이 예시</div>
+                <div class="example-case good">
+                  <div class="case-header">✨ 스테이지 3 이상 클리어</div>
+                  <div class="case-calc">평균 <strong>500~800점</strong></div>
                 </div>
-                <div class="range-item highlight">
-                  <span class="range-label">상급</span>
-                  <span class="range-value">600점+</span>
+                <div class="example-case normal">
+                  <div class="case-header">👍 스테이지 1~2 클리어</div>
+                  <div class="case-calc">평균 <strong>200~400점</strong></div>
+                </div>
+                <div class="example-case poor">
+                  <div class="case-header">😅 스테이지 1 실패</div>
+                  <div class="case-calc">평균 <strong>50~150점</strong></div>
+                </div>
+              </div>
+
+              <div class="recommend-setting">
+                <div class="setting-title">💡 권장 점수 설정</div>
+                <div class="setting-items">
+                  <div class="setting-item bronze">🥉 동메달: <strong>150점</strong> (스테이지1 중간)</div>
+                  <div class="setting-item silver">🥈 은메달: <strong>350점</strong> (스테이지2 클리어)</div>
+                  <div class="setting-item gold">🥇 금메달: <strong>600점</strong> (스테이지3+)</div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- 하단 팁 -->
+        <div class="guide-footer-tip">
+          <IconBase name="lightbulb" class="tip-icon" />
+          <div>
+            <strong>팁:</strong> 처음에는 낮은 점수로 시작해서 고객 반응을 보며 조정하세요.
+            너무 어려우면 고객이 포기하고, 너무 쉬우면 혜택의 가치가 떨어집니다.
           </div>
         </div>
       </div>
@@ -943,18 +1035,207 @@ onMounted(() => {
   font-weight: 700;
 }
 
-.guide-tip {
-  margin: 12px 0 0 0;
+/* 추천 설정 박스 */
+.guide-recommendation {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #86efac;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.recommendation-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #166534;
+}
+.recommendation-icon {
+  width: 24px;
+  height: 24px;
+  color: #22c55e;
+}
+.recommendation-body p {
+  margin: 0 0 14px 0;
+  font-size: 14px;
+  color: #166534;
+  line-height: 1.6;
+}
+.recommendation-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.example-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.example-medal {
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.example-medal.bronze { background: #fef3c7; color: #92400e; }
+.example-medal.silver { background: #f1f5f9; color: #475569; }
+.example-medal.gold { background: #fef9c3; color: #854d0e; }
+.example-desc { color: #374151; }
+
+/* 시간 배지 */
+.time-badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 20px;
+}
+
+/* 공식 박스 */
+.formula-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.formula-title {
   font-size: 12px;
-  color: #0071e3;
-  background: #f0f7ff;
-  padding: 8px 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+.formula-content code {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 12px;
+  color: #1e293b;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: block;
+  line-height: 1.5;
+}
+
+/* 예시 섹션 */
+.example-section {
+  margin-bottom: 16px;
+}
+.example-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 10px;
+}
+.example-case {
+  padding: 10px 12px;
   border-radius: 8px;
+  margin-bottom: 8px;
+}
+.example-case.good {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #86efac;
+}
+.example-case.normal {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #7dd3fc;
+}
+.example-case.poor {
+  background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+  border: 1px solid #fde047;
+}
+.example-case.fail {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #fca5a5;
+}
+.case-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+.case-calc {
+  font-size: 12px;
+  color: #6b7280;
+}
+.case-calc strong {
+  color: #1d1d1f;
+  font-weight: 700;
+}
+
+/* 권장 설정 */
+.recommend-setting {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 14px;
+}
+.setting-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 10px;
+}
+.setting-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.setting-item {
+  font-size: 13px;
+  color: #1f2937;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: white;
+}
+.setting-item.bronze { border-left: 3px solid #cd7f32; }
+.setting-item.silver { border-left: 3px solid #a8a8a8; }
+.setting-item.gold { border-left: 3px solid #ffd700; }
+.setting-item strong {
+  color: #0071e3;
+  font-weight: 700;
+}
+
+/* 하단 팁 */
+.guide-footer-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #1e40af;
+  line-height: 1.6;
+}
+.tip-icon {
+  width: 20px;
+  height: 20px;
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 @media (max-width: 768px) {
   .score-guide-grid {
     grid-template-columns: 1fr;
+  }
+  .example-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .recommendation-examples {
+    gap: 12px;
   }
 }
 
