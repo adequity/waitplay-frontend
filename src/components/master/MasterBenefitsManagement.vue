@@ -5,6 +5,10 @@
         <h1>혜택 관리</h1>
         <p class="subtitle">전체 시스템의 혜택을 관리합니다</p>
       </div>
+      <button class="btn-generate" @click="generateDefaultBenefits" :disabled="generating">
+        <IconBase name="wand" />
+        {{ generating ? '생성 중...' : '기본 혜택 일괄 생성' }}
+      </button>
     </div>
 
     <div class="filters-bar">
@@ -72,6 +76,7 @@ const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
 const loading = ref(true)
+const generating = ref(false)
 const benefits = ref<any[]>([])
 const page = ref(1)
 const pageSize = ref(12)
@@ -80,6 +85,27 @@ const searchQuery = ref('')
 const statusFilter = ref('')
 
 let searchTimeout: number | null = null
+
+const generateDefaultBenefits = async () => {
+  if (!confirm('활성화된 모든 게임에 기본 혜택(동/은/금메달)을 생성하시겠습니까?\n이미 혜택이 있는 게임은 건너뜁니다.')) return
+
+  generating.value = true
+  try {
+    const response = await fetch(`${API_URL}/api/masteradmin/benefits/generate-defaults`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+    })
+    if (!response.ok) throw new Error('Failed')
+    const data = await response.json()
+    alert(`${data.message}\n생성된 혜택: ${data.totalCreated}개\n처리된 QR코드: ${data.qrCodesProcessed}개`)
+    fetchBenefits()
+  } catch (error) {
+    console.error(error)
+    alert('기본 혜택 생성에 실패했습니다')
+  } finally {
+    generating.value = false
+  }
+}
 
 const fetchBenefits = async () => {
   try {
@@ -144,12 +170,28 @@ const confirmDelete = async (benefit: any) => {
 }
 
 const getTypeIcon = (gameType: string) => {
-  const icons: Record<string, string> = { 'roulette': 'target', 'slot': 'grid', 'racing': 'zap' }
+  const icons: Record<string, string> = {
+    'pinball': 'target',
+    'brick-breaker': 'grid',
+    'memory': 'clone',
+    'spot-difference': 'magnifying-glass',
+    'roulette': 'target',
+    'slot': 'grid',
+    'racing': 'zap'
+  }
   return icons[gameType] || 'gift'
 }
 
 const getGameLabel = (gameType: string) => {
-  const labels: Record<string, string> = { 'roulette': '룰렛', 'slot': '슬롯머신', 'racing': '레이싱' }
+  const labels: Record<string, string> = {
+    'pinball': '핀볼',
+    'brick-breaker': '벽돌깨기',
+    'memory': '같은 카드 찾기',
+    'spot-difference': '틀린 그림 찾기',
+    'roulette': '룰렛',
+    'slot': '슬롯머신',
+    'racing': '레이싱'
+  }
   return labels[gameType] || gameType || '전체'
 }
 
@@ -161,9 +203,14 @@ onMounted(() => fetchBenefits())
 
 <style scoped>
 .benefits-management { padding: 0; }
-.page-header { margin-bottom: 32px; }
+.page-header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-start; }
 .page-header h1 { font-size: 28px; font-weight: 700; color: #1d1d1f; margin: 0 0 8px 0; }
 .subtitle { font-size: 15px; color: #86868b; margin: 0; }
+
+.btn-generate { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, #d4a853, #b8942e); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(212, 168, 83, 0.3); }
+.btn-generate:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(212, 168, 83, 0.4); }
+.btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-generate :deep(svg) { width: 18px; height: 18px; }
 
 .filters-bar { display: flex; gap: 16px; margin-bottom: 24px; }
 .search-box { flex: 1; max-width: 400px; position: relative; }
