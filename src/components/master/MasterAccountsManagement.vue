@@ -267,7 +267,9 @@
               <label>회사</label>
               <input v-model="editAccount.company" type="text" placeholder="회사명" />
             </div>
-            <div class="form-group-compact">
+          </div>
+          <div class="edit-grid-compact" style="margin-top: 12px;">
+            <div class="form-group-compact full-width">
               <label>역할</label>
               <select v-model="editAccount.userRole" :disabled="editAccount.userRole === 'masteradmin'">
                 <option value="user">사용자</option>
@@ -1154,6 +1156,10 @@ onMounted(() => {
 
 .form-group-compact {
   margin-bottom: 0;
+}
+
+.form-group-compact.full-width {
+  grid-column: 1 / -1;
 }
 
 .form-group-compact label {
