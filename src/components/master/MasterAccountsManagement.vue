@@ -287,8 +287,8 @@
             </select>
           </div>
 
-          <!-- 사업자 정보 (admin 역할인 경우) -->
-          <div v-if="editAccount.userRole === 'admin'" class="business-info-section">
+          <!-- 사업자 정보 (admin 또는 superadmin 역할인 경우) -->
+          <div v-if="editAccount.userRole === 'admin' || editAccount.userRole === 'superadmin'" class="business-info-section">
             <h4>사업자 정보</h4>
             <div class="form-group">
               <label>사업자 번호</label>
