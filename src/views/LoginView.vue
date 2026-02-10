@@ -166,6 +166,9 @@ const handleLogin = async () => {
 
     // Navigate based on user_role from backend response
     switch (response.userRole) {
+      case 'masteradmin':
+        router.push('/masteradmin')
+        break
       case 'superadmin':
         router.push('/superadmin')
         break

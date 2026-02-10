@@ -37,6 +37,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresSuperAdmin: true }
   },
   {
+    path: '/masteradmin',
+    name: 'masteradmin',
+    component: () => import('../views/MasterAdminView.vue'),
+    meta: { requiresAuth: true, requiresMasterAdmin: true }
+  },
+  {
     path: '/game/:type',
     name: 'game',
     component: () => import('../views/GameView.vue'),
@@ -106,8 +112,18 @@ router.beforeEach(async (to, from, next) => {
     // Check superadmin role requirement
     if (to.meta.requiresSuperAdmin) {
       const role = authStore.userRole || authStore.user?.userRole
-      if (role !== 'superadmin') {
+      if (role !== 'superadmin' && role !== 'masteradmin') {
         console.warn('Access denied: Superadmin role required')
+        next({ name: 'login' })
+        return
+      }
+    }
+
+    // Check masteradmin role requirement
+    if (to.meta.requiresMasterAdmin) {
+      const role = authStore.userRole || authStore.user?.userRole
+      if (role !== 'masteradmin') {
+        console.warn('Access denied: MasterAdmin role required')
         next({ name: 'login' })
         return
       }
