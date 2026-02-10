@@ -10,8 +10,135 @@
     <div class="info-box">
       <IconBase name="lightbulb" class="info-icon" />
       <div>
-        <strong>기본 설정:</strong> 게임별로 점수 구간(메달)을 설정하고 각 구간마다 제공할 쿠폰 혜택을 자유롭게 입력하세요. 
+        <strong>기본 설정:</strong> 게임별로 점수 구간(메달)을 설정하고 각 구간마다 제공할 쿠폰 혜택을 자유롭게 입력하세요.
         설정된 혜택은 고객이 게임을 완료했을 때 자동으로 지급됩니다.
+      </div>
+    </div>
+
+    <!-- 게임별 점수 가이드 -->
+    <div class="score-guide-container">
+      <button class="score-guide-toggle" @click="showScoreGuide = !showScoreGuide">
+        <IconBase name="chart" class="guide-icon" />
+        <span>게임별 점수 가이드</span>
+        <span class="toggle-arrow">{{ showScoreGuide ? '▲' : '▼' }}</span>
+      </button>
+
+      <div v-if="showScoreGuide" class="score-guide-content">
+        <div class="score-guide-grid">
+          <!-- 핀볼 -->
+          <div class="score-guide-card">
+            <div class="guide-header">
+              <IconBase name="target" class="guide-game-icon pinball" />
+              <h4>핀볼</h4>
+            </div>
+            <div class="guide-body">
+              <p class="guide-desc">범퍼/타겟 점수 누적, 콤보 보너스</p>
+              <div class="score-range">
+                <div class="range-item">
+                  <span class="range-label">일반</span>
+                  <span class="range-value">0 ~ 500점</span>
+                </div>
+                <div class="range-item">
+                  <span class="range-label">중급</span>
+                  <span class="range-value">500 ~ 1,000점</span>
+                </div>
+                <div class="range-item highlight">
+                  <span class="range-label">상급</span>
+                  <span class="range-value">1,000점+</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 같은 카드 찾기 -->
+          <div class="score-guide-card">
+            <div class="guide-header">
+              <IconBase name="clone" class="guide-game-icon memory" />
+              <h4>같은 카드 찾기</h4>
+            </div>
+            <div class="guide-body">
+              <p class="guide-desc">기본 1000점 - 시간/이동 패널티 + 콤보 보너스 (제한시간 2분)</p>
+              <div class="score-range">
+                <div class="range-item">
+                  <span class="range-label">🍬 캔디</span>
+                  <span class="range-value">0 ~ 449점</span>
+                </div>
+                <div class="range-item">
+                  <span class="range-label">🍪 쿠키</span>
+                  <span class="range-value">450 ~ 599점</span>
+                </div>
+                <div class="range-item">
+                  <span class="range-label">🧁 컵케이크</span>
+                  <span class="range-value">600 ~ 749점</span>
+                </div>
+                <div class="range-item">
+                  <span class="range-label">🍰 케이크</span>
+                  <span class="range-value">750 ~ 899점</span>
+                </div>
+                <div class="range-item highlight">
+                  <span class="range-label">🏆 마스터</span>
+                  <span class="range-value">900점+</span>
+                </div>
+              </div>
+              <p class="guide-tip">💡 빠른 클리어 시 시간 보너스 추가</p>
+            </div>
+          </div>
+
+          <!-- 틀린 그림 찾기 -->
+          <div class="score-guide-card">
+            <div class="guide-header">
+              <IconBase name="magnifying-glass" class="guide-game-icon spot" />
+              <h4>틀린 그림 찾기</h4>
+            </div>
+            <div class="guide-body">
+              <p class="guide-desc">성공 시 1000점 + 시간 보너스 + 난이도 보너스 - 힌트 사용 감점</p>
+              <div class="score-range">
+                <div class="range-item">
+                  <span class="range-label">👀 초보</span>
+                  <span class="range-value">0 ~ 600점</span>
+                </div>
+                <div class="range-item">
+                  <span class="range-label">🔍 관찰자</span>
+                  <span class="range-value">600 ~ 900점</span>
+                </div>
+                <div class="range-item">
+                  <span class="range-label">🎯 명탐정</span>
+                  <span class="range-value">900 ~ 1,200점</span>
+                </div>
+                <div class="range-item highlight">
+                  <span class="range-label">🦅 독수리눈</span>
+                  <span class="range-value">1,200점+</span>
+                </div>
+              </div>
+              <p class="guide-tip">💡 힌트 미사용 + 빠른 클리어 = 고득점</p>
+            </div>
+          </div>
+
+          <!-- 벽돌깨기 -->
+          <div class="score-guide-card">
+            <div class="guide-header">
+              <IconBase name="utensils" class="guide-game-icon brick" />
+              <h4>벽돌깨기</h4>
+            </div>
+            <div class="guide-body">
+              <p class="guide-desc">벽돌 파괴 점수 누적, 스테이지 보너스</p>
+              <div class="score-range">
+                <div class="range-item">
+                  <span class="range-label">일반</span>
+                  <span class="range-value">0 ~ 300점</span>
+                </div>
+                <div class="range-item">
+                  <span class="range-label">중급</span>
+                  <span class="range-value">300 ~ 600점</span>
+                </div>
+                <div class="range-item highlight">
+                  <span class="range-label">상급</span>
+                  <span class="range-value">600점+</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -213,6 +340,7 @@ const gamesList = ref<GameBenefit[]>([])
 const loading = ref(false)
 const saving = ref<Record<string, boolean>>({})
 const collapsedCards = ref<Record<string, boolean>>({})
+const showScoreGuide = ref(false)
 
 // Computed property for enabled games only
 const enabledGames = computed(() => {
@@ -684,6 +812,151 @@ onMounted(() => {
   gap: 15px; margin-bottom: 40px; line-height: 1.6;
 }
 .info-icon { font-size: 20px; width: 20px; height: 20px; color: #ffc107; flex-shrink: 0; margin-top: 2px; }
+
+/* Score Guide */
+.score-guide-container {
+  margin-bottom: 30px;
+}
+
+.score-guide-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 20px;
+  background: white;
+  border: 1px solid #e5e5ea;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.score-guide-toggle:hover {
+  background: #f9f9fb;
+  border-color: #d2d2d7;
+}
+.guide-icon {
+  width: 20px;
+  height: 20px;
+  color: #0071e3;
+}
+.toggle-arrow {
+  margin-left: auto;
+  font-size: 12px;
+  color: #86868b;
+}
+
+.score-guide-content {
+  margin-top: 16px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.score-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.score-guide-card {
+  background: white;
+  border: 1px solid #e5e5ea;
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+.score-guide-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border-color: #d2d2d7;
+}
+
+.guide-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f5;
+}
+.guide-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.guide-game-icon {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border-radius: 10px;
+}
+.guide-game-icon.pinball { background: #fff0f2; color: #ff3b30; }
+.guide-game-icon.memory { background: #f0f7ff; color: #007aff; }
+.guide-game-icon.spot { background: #f5f0ff; color: #5856d6; }
+.guide-game-icon.brick { background: #fff5f0; color: #ff9500; }
+
+.guide-body {}
+
+.guide-desc {
+  font-size: 13px;
+  color: #86868b;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.score-range {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.range-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f9f9fb;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.range-item.highlight {
+  background: linear-gradient(135deg, #fff8e6 0%, #fff3cc 100%);
+  border: 1px solid #ffe066;
+}
+.range-label {
+  font-weight: 600;
+  color: #1d1d1f;
+}
+.range-value {
+  color: #86868b;
+  font-weight: 500;
+}
+.range-item.highlight .range-value {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.guide-tip {
+  margin: 12px 0 0 0;
+  font-size: 12px;
+  color: #0071e3;
+  background: #f0f7ff;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .score-guide-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Empty State */
 .empty-state {
