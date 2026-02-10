@@ -66,7 +66,11 @@
             <h3 class="asset-name">{{ asset.name }}</h3>
             <div class="asset-tags">
               <span class="tag category">{{ asset.category }}</span>
-              <span class="tag game">{{ asset.gameType }}</span>
+              <span
+                v-for="game in getAssetGameTypes(asset)"
+                :key="game"
+                class="tag game"
+              >{{ game }}</span>
             </div>
             <div class="asset-meta">
               <span class="usage-count">사용 {{ asset.usageCount }}회</span>
@@ -123,14 +127,20 @@
               </div>
             </div>
             <div class="form-group half">
-              <label class="form-label">사용 게임</label>
-              <div class="select-wrapper">
-                <select v-model="form.gameType" class="form-select">
-                  <option value="틀린그림찾기">틀린그림찾기</option>
-                  <option value="기억력게임">기억력게임</option>
-                  <option value="같은그림찾기">같은그림찾기</option>
-                </select>
-                <IconBase name="chevron-down" class="select-icon" />
+              <label class="form-label">사용 게임 (다중 선택 가능)</label>
+              <div class="game-checkbox-group">
+                <label class="game-checkbox">
+                  <input type="checkbox" v-model="form.gameTypes" value="틀린그림찾기" />
+                  <span class="checkbox-label">틀린그림찾기</span>
+                </label>
+                <label class="game-checkbox">
+                  <input type="checkbox" v-model="form.gameTypes" value="기억력게임" />
+                  <span class="checkbox-label">기억력게임</span>
+                </label>
+                <label class="game-checkbox">
+                  <input type="checkbox" v-model="form.gameTypes" value="같은그림찾기" />
+                  <span class="checkbox-label">같은그림찾기</span>
+                </label>
               </div>
             </div>
           </div>
@@ -182,7 +192,8 @@ interface Asset {
   id: string
   name: string
   category: string
-  gameType: string
+  gameType: string  // 콤마로 구분된 문자열 또는 단일 값
+  gameTypes: string[]  // 배열 형태
   imageUrl: string
   usageCount: number
   createdAt: string
@@ -201,7 +212,7 @@ const form = ref<any>({
   id: '',
   name: '',
   category: '음식',
-  gameType: '틀린그림찾기',
+  gameTypes: ['틀린그림찾기'],  // 배열로 변경
   imageUrl: ''
 })
 
@@ -212,7 +223,9 @@ onMounted(() => {
 const filteredAssets = computed(() => {
   return assets.value.filter(asset => {
     const matchCategory = filterCategory.value === 'all' || asset.category === filterCategory.value
-    const matchGame = filterGame.value === 'all' || asset.gameType === filterGame.value
+    // gameTypes 배열 또는 gameType 문자열에서 필터링
+    const assetGameTypes = asset.gameTypes || (asset.gameType ? asset.gameType.split(',').map(g => g.trim()) : [])
+    const matchGame = filterGame.value === 'all' || assetGameTypes.includes(filterGame.value)
     const matchSearch = asset.name.toLowerCase().includes(searchQuery.value.toLowerCase())
     return matchCategory && matchGame && matchSearch
   })
@@ -241,13 +254,15 @@ const fetchAssets = async () => {
 // Modal Actions
 const openUploadModal = () => {
   isEditing.value = false
-  form.value = { id: '', name: '', category: '음식', gameType: '틀린그림찾기', imageUrl: '' }
+  form.value = { id: '', name: '', category: '음식', gameTypes: ['틀린그림찾기'], imageUrl: '' }
   showModal.value = true
 }
 
 const editAsset = (asset: Asset) => {
   isEditing.value = true
-  form.value = { ...asset }
+  // gameType 문자열을 gameTypes 배열로 변환
+  const gameTypes = asset.gameTypes || (asset.gameType ? asset.gameType.split(',').map(g => g.trim()) : ['틀린그림찾기'])
+  form.value = { ...asset, gameTypes }
   showModal.value = true
 }
 
@@ -293,28 +308,38 @@ const saveAsset = async () => {
     return
   }
 
+  if (!form.value.gameTypes || form.value.gameTypes.length === 0) {
+    alert('사용할 게임을 하나 이상 선택해주세요.')
+    return
+  }
+
   try {
+    // gameTypes 배열을 콤마 구분 문자열로 변환하여 gameType으로 전송
+    const { id, gameTypes, ...rest } = form.value
+    const submitData = {
+      ...rest,
+      gameType: gameTypes.join(',')
+    }
+
     if (isEditing.value) {
-      const { id, ...updateData } = form.value
       const response = await fetch(`${API_URL}/api/superadmin/assets/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${authStore.accessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(submitData)
       })
       if (!response.ok) throw new Error('Failed to update asset')
       alert('에셋이 수정되었습니다.')
     } else {
-      const { id, ...createData } = form.value
       const response = await fetch(`${API_URL}/api/superadmin/assets`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authStore.accessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(createData)
+        body: JSON.stringify(submitData)
       })
       if (!response.ok) throw new Error('Failed to create asset')
       alert('에셋이 등록되었습니다.')
@@ -348,6 +373,17 @@ const deleteAsset = async (id: string) => {
 
 const viewDetail = (asset: Asset) => {
   alert(`${asset.name} 상세 보기 (준비중)`)
+}
+
+// 에셋의 게임 타입 배열 반환
+const getAssetGameTypes = (asset: Asset): string[] => {
+  if (asset.gameTypes && asset.gameTypes.length > 0) {
+    return asset.gameTypes
+  }
+  if (asset.gameType) {
+    return asset.gameType.split(',').map(g => g.trim())
+  }
+  return []
 }
 </script>
 
@@ -457,6 +493,13 @@ const viewDetail = (asset: Asset) => {
 .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
 .form-input, .form-select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px; outline: none; font-family: inherit; }
 .form-input:focus, .form-select:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+
+/* Game Checkbox Group */
+.game-checkbox-group { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: #f9f9fa; }
+.game-checkbox { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 8px; border-radius: 6px; transition: background 0.2s; }
+.game-checkbox:hover { background: #eee; }
+.game-checkbox input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary-blue); cursor: pointer; }
+.checkbox-label { font-size: 14px; color: var(--text-dark); font-weight: 500; }
 
 /* Upload Area */
 .upload-area { position: relative; height: 200px; border: 2px dashed var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; background: #f9f9fa; overflow: hidden; }

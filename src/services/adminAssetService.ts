@@ -9,11 +9,26 @@ export interface AdminAsset {
   id: string
   name: string
   category: string
-  gameType: string
+  gameType: string  // 콤마로 구분된 문자열
+  gameTypes?: string[]  // 배열 형태 (optional)
   imageUrl: string
   usageCount: number
   isSelected: boolean
   createdAt: string
+}
+
+/**
+ * 에셋이 특정 게임 타입을 포함하는지 확인
+ */
+export function assetIncludesGameType(asset: AdminAsset, gameType: string): boolean {
+  if (asset.gameTypes && asset.gameTypes.length > 0) {
+    return asset.gameTypes.includes(gameType)
+  }
+  if (asset.gameType) {
+    const types = asset.gameType.split(',').map(t => t.trim())
+    return types.includes(gameType)
+  }
+  return false
 }
 
 export interface SelectedAsset {
