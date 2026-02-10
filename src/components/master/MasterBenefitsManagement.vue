@@ -26,17 +26,17 @@
     <div v-else class="benefits-grid">
       <div v-for="benefit in benefits" :key="benefit.id" class="benefit-card" :class="{ inactive: !benefit.isActive }">
         <div class="benefit-header">
-          <div class="benefit-type" :class="benefit.type">
-            <IconBase :name="getTypeIcon(benefit.type)" />
+          <div class="benefit-type" :class="benefit.gameType">
+            <IconBase :name="getTypeIcon(benefit.gameType)" />
           </div>
           <span class="status-badge" :class="{ active: benefit.isActive }">
             {{ benefit.isActive ? '활성' : '비활성' }}
           </span>
         </div>
-        <h3>{{ benefit.name }}</h3>
+        <h3>{{ benefit.title }}</h3>
         <p class="benefit-desc">{{ benefit.description || '설명 없음' }}</p>
         <div class="benefit-meta">
-          <span>{{ getTypeLabel(benefit.type) }}</span>
+          <span>{{ getGameLabel(benefit.gameType) }}</span>
           <span>{{ formatDate(benefit.createdAt) }}</span>
         </div>
         <div class="benefit-actions">
@@ -96,8 +96,8 @@ const fetchBenefits = async () => {
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
-    benefits.value = data.benefits
-    totalPages.value = data.totalPages
+    benefits.value = data.data || []
+    totalPages.value = data.totalPages || 1
   } catch (error) {
     console.error(error)
   } finally {
@@ -113,7 +113,7 @@ const debouncedSearch = () => {
 const toggleActive = async (benefit: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/benefits/${benefit.id}/toggle-active`, {
-      method: 'POST',
+      method: 'PATCH',
       headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
     })
     if (!response.ok) throw new Error('Failed')
@@ -124,7 +124,7 @@ const toggleActive = async (benefit: any) => {
 }
 
 const confirmDelete = async (benefit: any) => {
-  if (!confirm(`"${benefit.name}" 혜택을 삭제하시겠습니까?`)) return
+  if (!confirm(`"${benefit.title}" 혜택을 삭제하시겠습니까?`)) return
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/benefits/${benefit.id}`, {
       method: 'DELETE',
@@ -137,14 +137,14 @@ const confirmDelete = async (benefit: any) => {
   }
 }
 
-const getTypeIcon = (type: string) => {
-  const icons: Record<string, string> = { 'coupon': 'ticket', 'reward': 'gift', 'discount': 'percent' }
-  return icons[type] || 'gift'
+const getTypeIcon = (gameType: string) => {
+  const icons: Record<string, string> = { 'roulette': 'target', 'slot': 'grid', 'racing': 'zap' }
+  return icons[gameType] || 'gift'
 }
 
-const getTypeLabel = (type: string) => {
-  const labels: Record<string, string> = { 'coupon': '쿠폰', 'reward': '리워드', 'discount': '할인' }
-  return labels[type] || type
+const getGameLabel = (gameType: string) => {
+  const labels: Record<string, string> = { 'roulette': '룰렛', 'slot': '슬롯머신', 'racing': '레이싱' }
+  return labels[gameType] || gameType || '전체'
 }
 
 const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('ko-KR')
