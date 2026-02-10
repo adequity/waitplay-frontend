@@ -50,7 +50,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="account in accounts" :key="account.id">
+          <tr
+            v-for="account in accounts"
+            :key="account.id"
+            @click="openDetailModal(account)"
+            class="clickable-row"
+          >
             <td>
               <div class="user-cell">
                 <div class="user-avatar" :class="account.userRole">
@@ -74,9 +79,9 @@
                 {{ account.approvalStatus === 'approved' || !account.approvalStatus ? '활성' : '대기' }}
               </span>
             </td>
-            <td>
+            <td @click.stop>
               <div class="action-buttons">
-                <button class="btn-action" @click="openRoleModal(account)" title="역할 변경">
+                <button class="btn-action" @click="openEditModal(account)" title="수정">
                   <IconBase name="edit" />
                 </button>
                 <button
@@ -147,30 +152,145 @@
       </div>
     </div>
 
-    <!-- Change Role Modal -->
-    <div v-if="showRoleModal" class="modal-overlay" @click.self="showRoleModal = false">
+    <!-- Account Detail Modal -->
+    <div v-if="showDetailModal" class="modal-overlay" @click.self="showDetailModal = false">
+      <div class="modal modal-wide">
+        <div class="modal-header">
+          <h2>계정 상세 정보</h2>
+          <button class="btn-close" @click="showDetailModal = false">&times;</button>
+        </div>
+        <div class="modal-body" v-if="detailAccount">
+          <div class="detail-grid">
+            <div class="detail-section">
+              <h3>기본 정보</h3>
+              <div class="detail-item">
+                <span class="detail-label">ID</span>
+                <span class="detail-value monospace">{{ detailAccount.id }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">이메일 (Username)</span>
+                <span class="detail-value">{{ detailAccount.username || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">닉네임</span>
+                <span class="detail-value">{{ detailAccount.nickname || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">역할</span>
+                <span class="detail-value">
+                  <span class="role-badge" :class="detailAccount.userRole">
+                    {{ getRoleLabel(detailAccount.userRole) }}
+                  </span>
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">회사</span>
+                <span class="detail-value">{{ detailAccount.company || '-' }}</span>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>계정 상태</h3>
+              <div class="detail-item">
+                <span class="detail-label">승인 상태</span>
+                <span class="detail-value">
+                  <span class="status-badge" :class="{ active: detailAccount.approvalStatus === 'approved' || !detailAccount.approvalStatus }">
+                    {{ detailAccount.approvalStatus === 'approved' || !detailAccount.approvalStatus ? '활성' : '대기' }}
+                  </span>
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">가입일</span>
+                <span class="detail-value">{{ formatDateTime(detailAccount.createdAt) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">초대 코드</span>
+                <span class="detail-value monospace">{{ detailAccount.inviteCode || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">상위 관리자 ID</span>
+                <span class="detail-value monospace">{{ detailAccount.superAdminId || '-' }}</span>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>소셜 연동</h3>
+              <div class="detail-item">
+                <span class="detail-label">카카오 ID</span>
+                <span class="detail-value monospace">{{ detailAccount.kakaoId || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">네이버 ID</span>
+                <span class="detail-value monospace">{{ detailAccount.naverId || '-' }}</span>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>사업자 정보</h3>
+              <div class="detail-item">
+                <span class="detail-label">사업자 번호</span>
+                <span class="detail-value">{{ detailAccount.businessNumber || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">사업장 주소</span>
+                <span class="detail-value">{{ detailAccount.businessAddress || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">업종</span>
+                <span class="detail-value">{{ detailAccount.businessType || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">업태</span>
+                <span class="detail-value">{{ detailAccount.businessCategory || '-' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showDetailModal = false">닫기</button>
+          <button class="btn-primary" @click="openEditModalFromDetail">수정</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Account Modal -->
+    <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
       <div class="modal">
         <div class="modal-header">
-          <h2>역할 변경</h2>
-          <button class="btn-close" @click="showRoleModal = false">&times;</button>
+          <h2>계정 수정</h2>
+          <button class="btn-close" @click="showEditModal = false">&times;</button>
         </div>
         <div class="modal-body">
-          <p class="modal-info">
-            <strong>{{ selectedAccount?.nickname || selectedAccount?.username }}</strong>의 역할을 변경합니다
-          </p>
           <div class="form-group">
-            <label>새 역할</label>
-            <select v-model="newRole">
+            <label>사용자명 (이메일)</label>
+            <input v-model="editAccount.username" type="text" placeholder="email@example.com" />
+          </div>
+          <div class="form-group">
+            <label>새 비밀번호 (변경 시에만 입력)</label>
+            <input v-model="editAccount.password" type="password" placeholder="새 비밀번호" />
+          </div>
+          <div class="form-group">
+            <label>닉네임</label>
+            <input v-model="editAccount.nickname" type="text" placeholder="닉네임" />
+          </div>
+          <div class="form-group">
+            <label>회사</label>
+            <input v-model="editAccount.company" type="text" placeholder="회사명" />
+          </div>
+          <div class="form-group">
+            <label>역할</label>
+            <select v-model="editAccount.userRole" :disabled="editAccount.userRole === 'masteradmin'">
               <option value="user">사용자</option>
               <option value="admin">관리자</option>
               <option value="superadmin">슈퍼관리자</option>
+              <option value="masteradmin" v-if="editAccount.userRole === 'masteradmin'">마스터관리자</option>
             </select>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="showRoleModal = false">취소</button>
-          <button class="btn-primary" @click="changeRole" :disabled="changing">
-            {{ changing ? '변경 중...' : '변경' }}
+          <button class="btn-secondary" @click="showEditModal = false">취소</button>
+          <button class="btn-primary" @click="updateAccount" :disabled="updating">
+            {{ updating ? '저장 중...' : '저장' }}
           </button>
         </div>
       </div>
@@ -204,10 +324,20 @@ const newAccount = ref({
   userRole: 'admin'
 })
 
-const showRoleModal = ref(false)
-const selectedAccount = ref<any>(null)
-const newRole = ref('')
-const changing = ref(false)
+const showDetailModal = ref(false)
+const detailAccount = ref<any>(null)
+const detailLoading = ref(false)
+
+const showEditModal = ref(false)
+const editAccount = ref({
+  id: '',
+  username: '',
+  password: '',
+  nickname: '',
+  company: '',
+  userRole: ''
+})
+const updating = ref(false)
 
 let searchTimeout: number | null = null
 
@@ -237,6 +367,26 @@ const fetchAccounts = async () => {
     console.error('Fetch accounts error:', error)
   } finally {
     loading.value = false
+  }
+}
+
+const fetchAccountDetail = async (accountId: string) => {
+  try {
+    detailLoading.value = true
+    const response = await fetch(`${API_URL}/api/masteradmin/accounts/${accountId}`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      }
+    })
+
+    if (!response.ok) throw new Error('Failed to fetch account detail')
+
+    detailAccount.value = await response.json()
+  } catch (error) {
+    console.error('Fetch account detail error:', error)
+    alert('계정 정보를 불러오는데 실패했습니다')
+  } finally {
+    detailLoading.value = false
   }
 }
 
@@ -276,35 +426,79 @@ const createAccount = async () => {
   }
 }
 
-const openRoleModal = (account: any) => {
-  selectedAccount.value = account
-  newRole.value = account.userRole
-  showRoleModal.value = true
+const openDetailModal = async (account: any) => {
+  showDetailModal.value = true
+  await fetchAccountDetail(account.id)
 }
 
-const changeRole = async () => {
-  if (!selectedAccount.value) return
+const openEditModal = (account: any) => {
+  editAccount.value = {
+    id: account.id,
+    username: account.username || '',
+    password: '',
+    nickname: account.nickname || '',
+    company: account.company || '',
+    userRole: account.userRole
+  }
+  showEditModal.value = true
+}
 
+const openEditModalFromDetail = () => {
+  if (detailAccount.value) {
+    openEditModal(detailAccount.value)
+    showDetailModal.value = false
+  }
+}
+
+const updateAccount = async () => {
   try {
-    changing.value = true
-    const response = await fetch(`${API_URL}/api/masteradmin/accounts/${selectedAccount.value.id}/role`, {
-      method: 'PATCH',
+    updating.value = true
+
+    // Update account info
+    const updateData: any = {}
+    if (editAccount.value.username) updateData.username = editAccount.value.username
+    if (editAccount.value.password) updateData.password = editAccount.value.password
+    if (editAccount.value.nickname) updateData.nickname = editAccount.value.nickname
+    if (editAccount.value.company !== undefined) updateData.company = editAccount.value.company
+
+    const response = await fetch(`${API_URL}/api/masteradmin/accounts/${editAccount.value.id}`, {
+      method: 'PUT',
       headers: {
         'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ role: newRole.value })
+      body: JSON.stringify(updateData)
     })
 
-    if (!response.ok) throw new Error('Failed to change role')
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to update account')
+    }
 
-    showRoleModal.value = false
+    // Update role if changed
+    const originalAccount = accounts.value.find(a => a.id === editAccount.value.id)
+    if (originalAccount && originalAccount.userRole !== editAccount.value.userRole && editAccount.value.userRole !== 'masteradmin') {
+      const roleResponse = await fetch(`${API_URL}/api/masteradmin/accounts/${editAccount.value.id}/role`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${authStore.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: editAccount.value.userRole })
+      })
+
+      if (!roleResponse.ok) {
+        console.warn('Role update failed')
+      }
+    }
+
+    showEditModal.value = false
     fetchAccounts()
-    alert('역할이 변경되었습니다')
-  } catch (error) {
-    alert('역할 변경에 실패했습니다')
+    alert('계정이 수정되었습니다')
+  } catch (error: any) {
+    alert(error.message || '계정 수정에 실패했습니다')
   } finally {
-    changing.value = false
+    updating.value = false
   }
 }
 
@@ -314,7 +508,7 @@ const confirmDelete = async (account: any) => {
     return
   }
 
-  if (!confirm(`${account.nickname || account.username} 계정을 삭제하시겠습니까?`)) return
+  if (!confirm(`${account.nickname || account.username} 계정을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) return
 
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/accounts/${account.id}`, {
@@ -349,6 +543,17 @@ const getRoleLabel = (role: string) => {
 
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('ko-KR')
+}
+
+const formatDateTime = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 watch(page, fetchAccounts)
@@ -505,8 +710,13 @@ onMounted(() => {
   background: #fafafa;
 }
 
-.data-table tbody tr:hover {
-  background: #fafafa;
+.data-table tbody tr.clickable-row {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.data-table tbody tr.clickable-row:hover {
+  background: #f8f8f8;
 }
 
 .user-cell {
@@ -672,8 +882,13 @@ onMounted(() => {
   border-radius: 20px;
   width: 100%;
   max-width: 480px;
-  overflow: hidden;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal.modal-wide {
+  max-width: 720px;
 }
 
 .modal-header {
@@ -682,6 +897,10 @@ onMounted(() => {
   align-items: center;
   padding: 24px;
   border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
 }
 
 .modal-header h2 {
@@ -717,6 +936,57 @@ onMounted(() => {
   color: #86868b;
 }
 
+/* Detail Grid */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.detail-section {
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.detail-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #86868b;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-size: 12px;
+  color: #86868b;
+  margin-bottom: 4px;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: #1d1d1f;
+  word-break: break-all;
+}
+
+.detail-value.monospace {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 12px;
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
 .form-group {
   margin-bottom: 20px;
 }
@@ -746,12 +1016,20 @@ onMounted(() => {
   box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.1);
 }
 
+.form-group select:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 24px;
   border-top: 1px solid #f0f0f0;
+  position: sticky;
+  bottom: 0;
+  background: white;
 }
 
 .btn-secondary {
@@ -773,5 +1051,11 @@ onMounted(() => {
 .modal-footer .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
