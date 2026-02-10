@@ -243,27 +243,54 @@
           </div>
 
           <!-- 게임 현황 -->
-          <div class="detail-section" v-if="detailData.gameStats?.length > 0">
-            <h4>게임 플레이 현황</h4>
-            <div class="game-stats-list">
-              <div v-for="game in detailData.gameStats" :key="game.gameType" class="game-stat-item">
-                <span class="game-name">{{ getGameName(game.gameType) }}</span>
-                <span class="game-plays">{{ game.totalPlays }}회</span>
-                <span class="game-avg">평균 {{ Math.round(game.avgScore) }}점</span>
+          <div class="detail-section" v-if="hasAnyGameStats()">
+            <div class="section-header-with-filter">
+              <h4>게임 운영 현황</h4>
+              <div class="period-filter">
+                <button
+                  :class="{ active: gameStatsPeriod === '7d' }"
+                  @click="gameStatsPeriod = '7d'"
+                >7일</button>
+                <button
+                  :class="{ active: gameStatsPeriod === '30d' }"
+                  @click="gameStatsPeriod = '30d'"
+                >30일</button>
+                <button
+                  :class="{ active: gameStatsPeriod === 'all' }"
+                  @click="gameStatsPeriod = 'all'"
+                >전체</button>
               </div>
+            </div>
+            <div class="game-stats-grid" v-if="getFilteredGameStats().length > 0">
+              <div v-for="game in getFilteredGameStats()" :key="game.gameType" class="game-stat-card">
+                <span class="game-name">{{ getGameName(game.gameType) }}</span>
+                <div class="game-stats-row">
+                  <span class="game-plays">{{ game.totalPlays }}회</span>
+                  <span class="game-avg">평균 {{ Math.round(game.avgScore) }}점</span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="no-data-message">
+              해당 기간에 게임 기록이 없습니다
             </div>
           </div>
 
           <!-- 최근 방명록 -->
           <div class="detail-section" v-if="detailData.recentGuestbook?.length > 0">
-            <h4>최근 방명록</h4>
-            <div class="guestbook-list">
-              <div v-for="msg in detailData.recentGuestbook" :key="msg.id" class="guestbook-item">
+            <div class="section-header-with-filter">
+              <h4>최근 방명록</h4>
+              <button class="btn-link" @click="goToGuestbook">
+                전체 보기
+                <IconBase name="external-link" />
+              </button>
+            </div>
+            <div class="guestbook-grid">
+              <div v-for="msg in detailData.recentGuestbook" :key="msg.id" class="guestbook-card">
                 <div class="guestbook-header">
                   <span class="guestbook-author">{{ msg.userName }}</span>
                   <span class="guestbook-date">{{ formatDate(msg.createdAt) }}</span>
                 </div>
-                <p class="guestbook-message">{{ msg.message }}</p>
+                <p class="guestbook-message">{{ msg.message || '(이미지)' }}</p>
               </div>
             </div>
           </div>
@@ -313,6 +340,7 @@ const statusFilter = ref('')
 
 // Detail modal state
 const showDetailModal = ref(false)
+const gameStatsPeriod = ref<'7d' | '30d' | 'all'>('30d')
 const detailData = ref<any>(null)
 const detailLoading = ref(false)
 
@@ -466,6 +494,33 @@ const goToAdminPage = () => {
   if (detailData.value?.admin?.id) {
     const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'https://waitplay.co.kr'
     window.open(`${frontendUrl}/admin/dashboard`, '_blank')
+  }
+}
+
+const goToGuestbook = () => {
+  if (detailData.value?.id) {
+    const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'https://waitplay.co.kr'
+    window.open(`${frontendUrl}/customer?qr=${detailData.value.id}&tab=guestbook`, '_blank')
+  }
+}
+
+// 게임 통계 필터 함수들
+const hasAnyGameStats = () => {
+  return detailData.value?.gameStats?.length > 0 ||
+         detailData.value?.gameStats7Days?.length > 0 ||
+         detailData.value?.gameStats30Days?.length > 0
+}
+
+const getFilteredGameStats = () => {
+  if (!detailData.value) return []
+  switch (gameStatsPeriod.value) {
+    case '7d':
+      return detailData.value.gameStats7Days || []
+    case '30d':
+      return detailData.value.gameStats30Days || []
+    case 'all':
+    default:
+      return detailData.value.gameStats || []
   }
 }
 
@@ -998,51 +1053,119 @@ onMounted(() => {
   margin-top: 4px;
 }
 
-/* Game Stats List */
-.game-stats-list {
+/* Section Header with Filter */
+.section-header-with-filter {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-.game-stat-item {
+.section-header-with-filter h4 {
+  margin: 0;
+}
+
+.period-filter {
+  display: flex;
+  gap: 4px;
+  background: #f0f0f0;
+  padding: 3px;
+  border-radius: 8px;
+}
+
+.period-filter button {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.period-filter button.active {
+  background: white;
+  color: #1d1d1f;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #d4a853;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.btn-link :deep(svg) {
+  width: 12px;
+  height: 12px;
+}
+
+.no-data-message {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  padding: 20px;
+}
+
+/* Game Stats Grid - 3 columns */
+.game-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.game-stat-card {
   background: #f9f9f9;
   border-radius: 10px;
+  padding: 12px;
+  text-align: center;
 }
 
-.game-stat-item .game-name {
-  flex: 1;
+.game-stat-card .game-name {
+  display: block;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: #1d1d1f;
+  margin-bottom: 8px;
 }
 
-.game-stat-item .game-plays {
-  font-size: 13px;
+.game-stat-card .game-stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.game-stat-card .game-plays {
   font-weight: 600;
   color: #d4a853;
 }
 
-.game-stat-item .game-avg {
-  font-size: 12px;
+.game-stat-card .game-avg {
   color: #86868b;
 }
 
-/* Guestbook List */
-.guestbook-list {
-  display: flex;
-  flex-direction: column;
+/* Guestbook Grid - 3 columns */
+.guestbook-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  max-height: 200px;
-  overflow-y: auto;
 }
 
-.guestbook-item {
-  padding: 12px;
+.guestbook-card {
+  padding: 10px;
   background: #f9f9f9;
   border-radius: 10px;
 }
