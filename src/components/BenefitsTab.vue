@@ -462,6 +462,8 @@ function applyTemplate(game: GameBenefit) {
 
 async function saveGameBenefits(game: GameBenefit) {
   const qrCodeId = authStore.user?.qrCodeId
+  console.log('[BenefitsTab] Saving benefits for game:', game.type, 'qrCodeId:', qrCodeId)
+
   if (!qrCodeId) {
     alert('QR 코드 정보를 찾을 수 없습니다.')
     return
@@ -472,6 +474,7 @@ async function saveGameBenefits(game: GameBenefit) {
   try {
     // Get existing benefits for this game to compare
     const existingBenefits = await benefitsService.getBenefitsByGame(qrCodeId, game.type)
+    console.log('[BenefitsTab] Existing benefits:', existingBenefits.length)
     const existingIds = new Set(existingBenefits.map(b => b.id))
     const currentIds = new Set(game.steps.filter(s => s.id).map(s => s.id))
 
@@ -496,6 +499,7 @@ async function saveGameBenefits(game: GameBenefit) {
         })
       } else {
         // Create new benefit
+        console.log('[BenefitsTab] Creating new benefit:', step.name, step.minScore)
         const newBenefit = await benefitsService.createBenefit(qrCodeId, {
           gameType: game.type,
           title: step.name,
@@ -506,11 +510,13 @@ async function saveGameBenefits(game: GameBenefit) {
           iconName: step.iconName,
           customIconUrl: step.customIconUrl
         })
+        console.log('[BenefitsTab] Created benefit:', newBenefit)
         // Update local step with new ID
         step.id = newBenefit.id
       }
     }
 
+    console.log('[BenefitsTab] All benefits saved successfully')
     alert(`${game.name} 혜택 설정이 저장되었습니다.`)
   } catch (error) {
     console.error('Failed to save benefits:', error)
