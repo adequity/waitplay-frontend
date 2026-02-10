@@ -58,13 +58,7 @@
         <button @click="resumeGame" class="btn-primary">계속하기</button>
       </div>
 
-      <div v-if="gameState === 'game_over'" class="state-message game-over">
-        <h2>GAME OVER</h2>
-        <p class="final-score">최종 점수: {{ formattedScore }}</p>
-        <p class="max-combo">최대 콤보: x{{ score.maxCombo }}</p>
-        <button @click="restartGame" class="btn-primary">다시 시작</button>
-        <button @click="exitGame" class="btn-secondary">나가기</button>
-      </div>
+      <!-- 게임 오버 상태는 GameResultModal에서 처리 -->
 
       <!-- 컨트롤 힌트 (첫 플레이 시) -->
       <div v-if="showControlHints" class="control-hints">
@@ -105,9 +99,19 @@ const props = defineProps<{
 
 // Emits
 const emit = defineEmits<{
-  (e: 'gameOver', score: number): void;
+  (e: 'gameOver', data: { score: number; time: number; maxCombo: number; ballsUsed: number; grade: { emoji: string; text: string; color: string } }): void;
   (e: 'exit'): void;
+  (e: 'restart'): void;
 }>();
+
+// 점수에 따른 등급 계산
+function getGrade(score: number): { emoji: string; text: string; color: string } {
+  if (score >= 100000) return { emoji: '🏆', text: '핀볼 레전드', color: '#f59e0b' }
+  if (score >= 50000) return { emoji: '🎯', text: '핀볼 마스터', color: '#f43f5e' }
+  if (score >= 25000) return { emoji: '🌟', text: '프로 플레이어', color: '#ec4899' }
+  if (score >= 10000) return { emoji: '🎮', text: '숙련된 게이머', color: '#8b5cf6' }
+  return { emoji: '🎪', text: '도전자', color: '#6b7280' }
+}
 
 // Refs
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -122,6 +126,7 @@ const showControlHints = ref(true);
 
 // Game instance
 let app: Application | null = null;
+let gameStartTime = Date.now();
 
 // Computed
 const formattedScore = computed(() => {
@@ -148,9 +153,18 @@ onMounted(async () => {
         console.log('Ball lost! Remaining:', ballsRemaining);
       },
       onGameOver: (finalScore) => {
-        emit('gameOver', finalScore);
+        // 게임 결과 데이터를 상위 컴포넌트로 전달
+        emit('gameOver', {
+          score: finalScore,
+          time: Math.floor((Date.now() - gameStartTime) / 1000),
+          maxCombo: score.value.maxCombo,
+          ballsUsed: 3 - score.value.balls,
+          grade: getGrade(finalScore)
+        });
       },
       onReady: () => {
+        // 게임 시작 시간 기록
+        gameStartTime = Date.now();
         // 게임 준비 완료, 5초 후 컨트롤 힌트 숨김
         setTimeout(() => {
           showControlHints.value = false;
@@ -183,9 +197,15 @@ function resumeGame() {
 }
 
 function restartGame() {
+  gameStartTime = Date.now();
   app?.restart();
   app?.start();
 }
+
+// 외부에서 호출 가능한 restart 함수
+defineExpose({
+  restartGame
+})
 
 function exitGame() {
   emit('exit');

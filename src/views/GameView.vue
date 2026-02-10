@@ -3,8 +3,9 @@
     <!-- 핀볼 게임: 새로운 Pixi.js + Rapier 기반 -->
     <HyperPinball
       v-if="isPinball"
+      ref="pinballRef"
       :qr-code="qrCode"
-      @game-over="handleGameOver"
+      @game-over="handlePinballGameOver"
       @exit="goBack"
     />
 
@@ -33,35 +34,15 @@
       <div id="game-container" ref="gameContainer" :class="{ 'fullscreen-container': isFullscreen }"></div>
     </template>
 
-    <!-- 리워드 제안 모달 (쿠폰화 할지 묻는 팝업) -->
-    <RewardOfferModal
-      v-if="eligibleReward"
-      :is-open="showRewardOffer"
-      :score="finalScore"
-      :reward="eligibleReward"
-      @accept="handleRewardAccept"
-      @decline="handleRewardDecline"
-      @close="showRewardOffer = false"
-    />
-
-    <!-- 로그인/회원가입 모달 -->
-    <AuthModal
-      :is-open="showAuthModal"
-      :qr-code-id="qrCodeId"
-      :reward-info="eligibleReward ? { title: eligibleReward.title, description: eligibleReward.description } : undefined"
-      @success="handleAuthSuccess"
-      @close="showAuthModal = false"
-    />
-
-    <!-- 쿠폰 생성 모달 -->
-    <CouponRewardModal
-      v-if="eligibleReward"
-      :is-open="showCouponModal"
-      :benefit="eligibleReward"
-      :user-id="currentUserId"
-      :game-score-id="gameScoreId"
+    <!-- 통합 게임 결과 모달 (모든 게임 공통) -->
+    <GameResultModal
+      v-if="gameResultData"
+      :is-open="showGameResultModal"
+      :game-data="gameResultData"
       :qr-code="qrCodeId"
-      @close="handleCouponClose"
+      :game-type="mapGameTypeForApi(gameType)"
+      @close="handleResultClose"
+      @restart="handleRestart"
     />
   </div>
 </template>
@@ -71,16 +52,26 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { gameManager } from '../game/GameManager'
 import type { GameType } from '../game/config'
-import { useAuthStore } from '@/stores/auth'
-import benefitsService, { type BenefitDto } from '@/services/benefitsService'
 import HyperPinball from '../game/pinball/components/HyperPinball.vue'
-import RewardOfferModal from '@/components/RewardOfferModal.vue'
-import AuthModal from '@/components/AuthModal.vue'
-import CouponRewardModal from '@/components/CouponRewardModal.vue'
+import GameResultModal from '@/components/GameResultModal.vue'
+
+// 게임 결과 데이터 타입
+interface GameResultData {
+  score: number
+  time: number
+  grade: { emoji: string; text: string; color: string }
+  // Memory game specific
+  moves?: number
+  combo?: number
+  // Spot difference game specific
+  foundCount?: number
+  totalDifferences?: number
+  hintsUsed?: number
+  success?: boolean
+}
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
 const gameContainer = ref<HTMLElement>()
 // MATCH, SPOT 게임은 기본적으로 풀스크린 모드
 const isFullscreen = ref(false)  // onMounted에서 게임 타입에 따라 설정됨
@@ -97,14 +88,15 @@ const supportsFullscreen = computed(() => ['MATCH', 'SPOT'].includes(gameType.va
 // QR Code ID from URL
 const qrCodeId = computed(() => route.query.qr as string | undefined)
 
-// Reward flow state
+// Game result state
 const finalScore = ref(0)
-const gameScoreId = ref<string>('')
-const eligibleReward = ref<BenefitDto | null>(null)
-const showRewardOffer = ref(false)
-const showAuthModal = ref(false)
-const showCouponModal = ref(false)
-const currentUserId = ref('')
+
+// 통합 결과 모달 상태 (모든 게임 공통)
+const showGameResultModal = ref(false)
+const gameResultData = ref<GameResultData | null>(null)
+
+// 핀볼 ref
+const pinballRef = ref<InstanceType<typeof HyperPinball> | null>(null)
 
 const gameTitle = computed(() => {
   const titles: Record<GameType, string> = {
@@ -144,43 +136,27 @@ function exitFullscreen() {
   goBack()
 }
 
-// 게임 종료 시 리워드 플로우 처리
-async function handleGameOver(score: number, scoreId?: string) {
-  console.log('Game Over! Final Score:', score, 'Score ID:', scoreId)
+// 핀볼 게임 오버 핸들러 (통합 모달 사용)
+interface PinballGameOverData {
+  score: number
+  time: number
+  maxCombo: number
+  ballsUsed: number
+  grade: { emoji: string; text: string; color: string }
+}
 
-  finalScore.value = score
-  if (scoreId) {
-    gameScoreId.value = scoreId
+function handlePinballGameOver(data: PinballGameOverData) {
+  console.log('Pinball Game Over!', data)
+
+  gameResultData.value = {
+    score: data.score,
+    time: data.time,
+    grade: data.grade,
+    combo: data.maxCombo,
+    moves: data.ballsUsed // ballsUsed를 moves로 표시
   }
-
-  // QR 코드가 없으면 리워드 플로우 스킵
-  if (!qrCodeId.value) {
-    console.log('No QR code, skipping reward flow')
-    return
-  }
-
-  try {
-    // 게임 타입에 맞는 혜택 조회
-    const gameTypeForApi = mapGameTypeForApi(gameType.value)
-    const benefits = await benefitsService.getBenefitsByGame(qrCodeId.value, gameTypeForApi)
-
-    console.log('Available benefits:', benefits)
-
-    // 점수에 맞는 적격 리워드 찾기 (requiredScore 이하인 것 중 가장 높은 것)
-    const eligible = benefits
-      .filter(b => b.isActive && b.requiredScore <= score)
-      .sort((a, b) => b.requiredScore - a.requiredScore)[0]
-
-    if (eligible) {
-      console.log('Eligible reward found:', eligible)
-      eligibleReward.value = eligible
-      showRewardOffer.value = true
-    } else {
-      console.log('No eligible reward for score:', score)
-    }
-  } catch (error) {
-    console.error('Failed to fetch benefits:', error)
-  }
+  finalScore.value = data.score
+  showGameResultModal.value = true
 }
 
 // 게임 타입을 API용으로 변환
@@ -194,48 +170,45 @@ function mapGameTypeForApi(type: GameType): string {
   return mapping[type] || type.toLowerCase()
 }
 
-// 리워드 수락 처리
-function handleRewardAccept() {
-  showRewardOffer.value = false
 
-  // 로그인 여부 확인
-  if (authStore.isAuthenticated && authStore.user) {
-    // 이미 로그인됨 → 바로 쿠폰 생성
-    currentUserId.value = authStore.user.id
-    showCouponModal.value = true
-  } else {
-    // 비로그인 → 로그인 모달 표시
-    showAuthModal.value = true
-  }
-}
-
-// 리워드 거절 처리
-function handleRewardDecline() {
-  showRewardOffer.value = false
-  eligibleReward.value = null
-}
-
-// 로그인 성공 처리
-function handleAuthSuccess(loggedInUserId: string) {
-  console.log('Auth success, user ID:', loggedInUserId)
-  showAuthModal.value = false
-  currentUserId.value = loggedInUserId
-
-  // 로그인 완료 → 쿠폰 생성 모달 표시
-  showCouponModal.value = true
-}
-
-// 쿠폰 모달 닫기
-function handleCouponClose() {
-  showCouponModal.value = false
-  eligibleReward.value = null
-}
-
-// Phaser 게임 이벤트 리스너
+// Phaser 게임 이벤트 리스너 (통합 모달)
 function handlePhaserGameOver(event: Event) {
   const customEvent = event as CustomEvent
-  const { score, scoreId } = customEvent.detail
-  handleGameOver(score, scoreId)
+  const detail = customEvent.detail
+
+  gameResultData.value = {
+    score: detail.score,
+    time: detail.time,
+    grade: detail.grade,
+    moves: detail.moves,
+    combo: detail.combo,
+    foundCount: detail.foundCount,
+    totalDifferences: detail.totalDifferences,
+    hintsUsed: detail.hintsUsed,
+    success: detail.success
+  }
+  finalScore.value = detail.score
+  showGameResultModal.value = true
+}
+
+// 결과 모달 닫기
+function handleResultClose() {
+  showGameResultModal.value = false
+  gameResultData.value = null
+}
+
+// 게임 재시작
+function handleRestart() {
+  showGameResultModal.value = false
+  gameResultData.value = null
+
+  if (isPinball.value) {
+    // 핀볼 재시작
+    pinballRef.value?.restartGame()
+  } else {
+    // Phaser 게임 재시작 이벤트 발생
+    window.dispatchEvent(new CustomEvent('phaser-restart-game'))
+  }
 }
 
 // 게임 로딩 완료 이벤트 리스너

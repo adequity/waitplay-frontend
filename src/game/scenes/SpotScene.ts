@@ -128,6 +128,17 @@ export class SpotScene extends Phaser.Scene {
 
     // Vue에 게임 준비 완료 알림
     window.dispatchEvent(new CustomEvent('phaser-game-ready'));
+
+    // Vue에서 게임 재시작 이벤트 수신
+    const restartHandler = () => {
+      this.scene.restart();
+    };
+    window.addEventListener('phaser-restart-game', restartHandler);
+
+    // 씬 종료 시 이벤트 리스너 제거
+    this.events.on('shutdown', () => {
+      window.removeEventListener('phaser-restart-game', restartHandler);
+    });
   }
 
   private createBackground(W: number, H: number) {
@@ -848,215 +859,32 @@ export class SpotScene extends Phaser.Scene {
 
     this.timerEvent?.remove();
 
-    const W = this.scale.width;
-    const H = this.scale.height;
-
-    // 점수 계산 (미리 계산하여 이벤트 발생)
+    // 점수 계산
     const baseScore = success ? 1000 : 0;
     const timeBonus = success ? Math.max(0, (this.timeLimit > 0 ? this.timeLimit : 120) - this.elapsedTime) * 10 : 0;
     const hintPenalty = (this.gameData!.hintsAllowed - this.hintsRemaining) * 50;
     const difficultyBonus = (this.gameData!.difficulty - 1) * 200;
     const finalScore = Math.max(0, baseScore + timeBonus + difficultyBonus - hintPenalty);
 
-    // Vue 컴포넌트에 게임 종료 이벤트 전달 (혜택 플로우 시작)
-    // 점수 제출은 Vue에서 혜택 확인 후 처리
+    // 등급 계산
+    const grade = this.getGrade(success);
+
+    // Vue 컴포넌트에 게임 종료 이벤트 전달 (통합 모달에서 처리)
     window.dispatchEvent(new CustomEvent('phaser-game-over', {
-      detail: { score: finalScore, gameType: 'spot-difference' }
+      detail: {
+        score: finalScore,
+        time: this.elapsedTime,
+        foundCount: this.foundCount,
+        totalDifferences: this.totalDifferences,
+        hintsUsed: this.gameData!.hintsAllowed - this.hintsRemaining,
+        success: success,
+        grade: grade,
+        gameType: 'spot-difference'
+      }
     }));
 
-    // ==================== 결과 오버레이 (밝은 모달 스타일) ====================
-    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0xffffff, 0.6);
-
-    // 모달 설정
-    const modalCenterY = H * 0.48;
-    const modalWidth = Math.min(W * 0.88, 340);
-    const modalHeight = H * 0.72;
-    const modalRadius = 24;
-
-    // 모달 그림자
-    const shadowGraphics = this.add.graphics();
-    shadowGraphics.fillStyle(0x94a3b8, 0.25);
-    shadowGraphics.fillRoundedRect(
-      W * 0.5 - modalWidth / 2 + 4,
-      modalCenterY - modalHeight / 2 + 8,
-      modalWidth,
-      modalHeight,
-      modalRadius
-    );
-
-    // 모달 배경
-    const modalGraphics = this.add.graphics();
-    modalGraphics.fillStyle(0xffffff, 1);
-    modalGraphics.fillRoundedRect(
-      W * 0.5 - modalWidth / 2,
-      modalCenterY - modalHeight / 2,
-      modalWidth,
-      modalHeight,
-      modalRadius
-    );
-    modalGraphics.lineStyle(1, 0xf1f5f9, 1);
-    modalGraphics.strokeRoundedRect(
-      W * 0.5 - modalWidth / 2,
-      modalCenterY - modalHeight / 2,
-      modalWidth,
-      modalHeight,
-      modalRadius
-    );
-
-    // ========== 타이틀 ==========
-    const titleY = modalCenterY - modalHeight * 0.38;
-    const resultText = success ? '미션 완료!' : '시간 초과!';
-    this.add.text(W * 0.5, titleY, resultText, {
-      fontSize: Math.floor(H * 0.042) + 'px',
-      color: success ? '#1e293b' : '#ef4444',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-
-    // ========== 등급 표시 ==========
-    const grade = this.getGrade(success);
-    const gradeY = modalCenterY - modalHeight * 0.22;
-    const gradeEmoji = this.add.text(W * 0.5, gradeY, grade.emoji, {
-      fontSize: Math.floor(H * 0.10) + 'px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-
-    // 바운스 애니메이션
-    this.tweens.add({
-      targets: gradeEmoji,
-      y: gradeY - 8,
-      duration: 600,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
-
-    const gradeTextY = gradeY + H * 0.07;
-    this.add.text(W * 0.5, gradeTextY, grade.text, {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: grade.color,
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-
-    // ========== 통계 패널 ==========
-    const statsY = modalCenterY + modalHeight * 0.02;
-    const statsWidth = modalWidth * 0.85;
-    const statsHeight = H * 0.14;
-    const statsRadius = 16;
-
-    const statsGraphics = this.add.graphics();
-    statsGraphics.fillStyle(0xf8fafc, 1);
-    statsGraphics.fillRoundedRect(
-      W * 0.5 - statsWidth / 2,
-      statsY - statsHeight / 2,
-      statsWidth,
-      statsHeight,
-      statsRadius
-    );
-    statsGraphics.lineStyle(1, 0xf1f5f9, 1);
-    statsGraphics.strokeRoundedRect(
-      W * 0.5 - statsWidth / 2,
-      statsY - statsHeight / 2,
-      statsWidth,
-      statsHeight,
-      statsRadius
-    );
-
-    const statLineHeight = H * 0.032;
-    const statStartY = statsY - statsHeight * 0.32;
-    const statLeftX = W * 0.5 - statsWidth * 0.38;
-    const statRightX = W * 0.5 + statsWidth * 0.38;
-
-    // 찾은 개수
-    this.add.text(statLeftX, statStartY, '찾은 개수', {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#64748b',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0, 0.5);
-    this.add.text(statRightX, statStartY, `${this.foundCount}/${this.totalDifferences}`, {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#64748b',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(1, 0.5);
-
-    // 소요 시간
-    this.add.text(statLeftX, statStartY + statLineHeight, '소요 시간', {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#64748b',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0, 0.5);
-    this.add.text(statRightX, statStartY + statLineHeight, `${this.elapsedTime}초`, {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#64748b',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(1, 0.5);
-
-    // 구분선
-    const dividerY = statStartY + statLineHeight * 1.7;
-    this.add.rectangle(W * 0.5, dividerY, statsWidth * 0.9, 1, 0xe2e8f0, 1);
-
-    // 점수
-    const scoreY = statStartY + statLineHeight * 2.4;
-    this.add.text(statLeftX, scoreY, '최종 점수', {
-      fontSize: Math.floor(H * 0.026) + 'px',
-      color: '#6366f1',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0, 0.5);
-    this.add.text(statRightX, scoreY, `${finalScore}점`, {
-      fontSize: Math.floor(H * 0.026) + 'px',
-      color: '#6366f1',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(1, 0.5);
-
-    // ========== HTML 다시하기 버튼 (모달 가로 중앙) ==========
-    const gameContainer = document.getElementById('game-container');
-    // 모달 하단 영역에 버튼 배치 (점수 패널 아래)
-    const restartBtnY = modalCenterY + modalHeight * 0.32;
-    const buttonWidth = modalWidth * 0.7;
-    // 모달 중앙 X 좌표 계산 (W * 0.5가 모달 중앙)
-    const modalCenterX = W * 0.5;
-    const restartButton = document.createElement('button');
-    restartButton.innerHTML = '다시 하기';
-    restartButton.style.cssText = `
-      position: absolute;
-      left: ${modalCenterX - buttonWidth / 2}px;
-      top: ${restartBtnY}px;
-      width: ${buttonWidth}px;
-      padding: 16px 32px;
-      font-size: 16px;
-      background: #f1f5f9;
-      color: #64748b;
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-      font-weight: 600;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      transition: all 0.2s ease;
-    `;
-    restartButton.onmouseover = () => {
-      restartButton.style.background = '#e2e8f0';
-      restartButton.style.color = '#475569';
-    };
-    restartButton.onmouseout = () => {
-      restartButton.style.background = '#f1f5f9';
-      restartButton.style.color = '#64748b';
-    };
-    gameContainer?.appendChild(restartButton);
-
-    // 다시 하기 클릭
-    restartButton.onclick = () => {
-      restartButton.remove();
-      this.scene.restart();
-    };
-
-    // Note: 혜택 플로우는 Vue의 RewardOfferModal에서 처리됨
-    // phaser-game-over 이벤트가 발생하면 GameView에서 자동으로
-    // 혜택 모달을 표시하고, 수락 시에만 점수가 제출됨
+    // 게임 일시정지 (Vue 모달에서 처리할 때까지)
+    this.scene.pause();
   }
 
   private getGrade(success: boolean): { emoji: string; text: string; color: string } {

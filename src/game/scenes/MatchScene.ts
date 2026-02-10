@@ -113,6 +113,17 @@ export class MatchScene extends Phaser.Scene {
 
     // 에셋 로딩 후 게임 초기화
     this.loadGameAssetsAndInit(W, H);
+
+    // Vue에서 게임 재시작 이벤트 수신
+    const restartHandler = () => {
+      this.scene.restart();
+    };
+    window.addEventListener('phaser-restart-game', restartHandler);
+
+    // 씬 종료 시 이벤트 리스너 제거
+    this.events.on('shutdown', () => {
+      window.removeEventListener('phaser-restart-game', restartHandler);
+    });
   }
 
   private async loadGameAssetsAndInit(W: number, H: number) {
@@ -1065,9 +1076,6 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private async endGame() {
-    const W = this.sys.game.config.width as number;
-    const H = this.sys.game.config.height as number;
-
     // 점수 계산
     const baseScore = 1000;
     const movePenalty = Math.max(0, (this.moves - this.TOTAL_PAIRS) * 8);
@@ -1075,321 +1083,23 @@ export class MatchScene extends Phaser.Scene {
     const comboBonus = this.maxCombo * 50;
     const finalScore = Math.max(100, baseScore - movePenalty - timePenalty + comboBonus);
 
-    // Vue 컴포넌트에 게임 종료 이벤트 전달
-    window.dispatchEvent(new CustomEvent('phaser-game-over', {
-      detail: { score: finalScore }
-    }));
-
     // 성능 등급
     const grade = this.getGrade(finalScore);
 
-    // ==================== 결과 오버레이 (밝은 모달 스타일) ====================
-    // 배경 블러 오버레이 (bg-white/60 backdrop-blur-md)
-    this.add.rectangle(W * 0.5, H * 0.5, W, H, 0xffffff, 0.6);
-
-    // 모달 컨테이너 위치
-    const modalCenterY = H * 0.48;
-    const modalWidth = Math.min(W * 0.88, 340);
-    const modalHeight = H * 0.72;
-    const modalRadius = 24;
-
-    // 모달 그림자 (shadow-2xl)
-    const shadowGraphics = this.add.graphics();
-    shadowGraphics.fillStyle(0x94a3b8, 0.25);
-    shadowGraphics.fillRoundedRect(
-      W * 0.5 - modalWidth / 2 + 4,
-      modalCenterY - modalHeight / 2 + 8,
-      modalWidth,
-      modalHeight,
-      modalRadius
-    );
-
-    // 모달 배경 (bg-white rounded-3xl border border-slate-100)
-    const modalGraphics = this.add.graphics();
-    modalGraphics.fillStyle(0xffffff, 1);
-    modalGraphics.fillRoundedRect(
-      W * 0.5 - modalWidth / 2,
-      modalCenterY - modalHeight / 2,
-      modalWidth,
-      modalHeight,
-      modalRadius
-    );
-    modalGraphics.lineStyle(1, 0xf1f5f9, 1); // slate-100
-    modalGraphics.strokeRoundedRect(
-      W * 0.5 - modalWidth / 2,
-      modalCenterY - modalHeight / 2,
-      modalWidth,
-      modalHeight,
-      modalRadius
-    );
-
-    // ========== 타이틀 (미션 완료! 🎉) ==========
-    const titleY = modalCenterY - modalHeight * 0.38;
-    this.add.text(W * 0.5, titleY, '미션 완료! 🎉', {
-      fontSize: Math.floor(H * 0.042) + 'px',
-      color: '#1e293b', // slate-800
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-
-    // ========== 등급 표시 (바운스 애니메이션) ==========
-    const gradeY = modalCenterY - modalHeight * 0.22;
-    const gradeEmoji = this.add.text(W * 0.5, gradeY, grade.emoji, {
-      fontSize: Math.floor(H * 0.10) + 'px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-
-    // 바운스 애니메이션
-    this.tweens.add({
-      targets: gradeEmoji,
-      y: gradeY - 8,
-      duration: 600,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
-
-    const gradeTextY = gradeY + H * 0.07;
-    this.add.text(W * 0.5, gradeTextY, grade.text, {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: grade.color,
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-
-    // ========== 통계 패널 (bg-slate-50 rounded-2xl) ==========
-    const statsY = modalCenterY + modalHeight * 0.02;
-    const statsWidth = modalWidth * 0.85;
-    const statsHeight = H * 0.14;
-    const statsRadius = 16;
-
-    // 통계 패널 배경
-    const statsGraphics = this.add.graphics();
-    statsGraphics.fillStyle(0xf8fafc, 1); // slate-50
-    statsGraphics.fillRoundedRect(
-      W * 0.5 - statsWidth / 2,
-      statsY - statsHeight / 2,
-      statsWidth,
-      statsHeight,
-      statsRadius
-    );
-    statsGraphics.lineStyle(1, 0xf1f5f9, 1); // slate-100
-    statsGraphics.strokeRoundedRect(
-      W * 0.5 - statsWidth / 2,
-      statsY - statsHeight / 2,
-      statsWidth,
-      statsHeight,
-      statsRadius
-    );
-
-    // 통계 항목들
-    const statLineHeight = H * 0.032;
-    const statStartY = statsY - statsHeight * 0.32;
-    const statLeftX = W * 0.5 - statsWidth * 0.38;
-    const statRightX = W * 0.5 + statsWidth * 0.38;
-
-    // 시간
-    this.add.text(statLeftX, statStartY, '🕐 시간', {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#64748b', // slate-500
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0, 0.5);
-    this.add.text(statRightX, statStartY, `${this.elapsedTime}초`, {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#64748b',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(1, 0.5);
-
-    // 콤보
-    this.add.text(statLeftX, statStartY + statLineHeight, '⚡ 콤보', {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#64748b',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0, 0.5);
-    this.add.text(statRightX, statStartY + statLineHeight, `${this.maxCombo}회`, {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#64748b',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(1, 0.5);
-
-    // 구분선 (h-px bg-slate-200)
-    const dividerY = statStartY + statLineHeight * 1.7;
-    this.add.rectangle(W * 0.5, dividerY, statsWidth * 0.9, 1, 0xe2e8f0, 1); // slate-200
-
-    // 점수 (rose-500)
-    const scoreY = statStartY + statLineHeight * 2.4;
-    this.add.text(statLeftX, scoreY, '🌟 점수', {
-      fontSize: Math.floor(H * 0.026) + 'px',
-      color: '#f43f5e', // rose-500
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0, 0.5);
-    this.add.text(statRightX, scoreY, `${finalScore}점`, {
-      fontSize: Math.floor(H * 0.026) + 'px',
-      color: '#f43f5e',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(1, 0.5);
-
-    // ========== 상태 메시지 영역 ==========
-    const statusY = modalCenterY + modalHeight * 0.22;
-    const statusText = this.add.text(W * 0.5, statusY, '', {
-      fontSize: Math.floor(H * 0.022) + 'px',
-      color: '#6b7280',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-
-    // ========== HTML 이름 입력 필드 ==========
-    const gameContainer = document.getElementById('game-container');
-    const inputY = modalCenterY + modalHeight * 0.17;
-
-    const inputElement = document.createElement('input');
-    inputElement.type = 'text';
-    inputElement.placeholder = '이름을 입력하세요';
-    inputElement.maxLength = 20;
-    inputElement.style.cssText = `
-      position: absolute;
-      left: 50%;
-      top: ${inputY}px;
-      transform: translateX(-50%);
-      width: ${modalWidth * 0.8}px;
-      padding: 14px 16px;
-      font-size: 15px;
-      border: 2px solid transparent;
-      border-radius: 12px;
-      text-align: center;
-      background: #f1f5f9;
-      color: #1e293b;
-      font-weight: 500;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      outline: none;
-      transition: all 0.2s ease;
-    `;
-    inputElement.onfocus = () => {
-      inputElement.style.background = '#ffffff';
-      inputElement.style.borderColor = '#fb7185'; // rose-400
-    };
-    inputElement.onblur = () => {
-      inputElement.style.background = '#f1f5f9';
-      inputElement.style.borderColor = 'transparent';
-    };
-    gameContainer?.appendChild(inputElement);
-    inputElement.focus();
-
-    // ========== 제출 버튼 (둥근 스타일 + 그림자) ==========
-    const submitBtnY = modalCenterY + modalHeight * 0.30;
-
-    const submitButton = document.createElement('button');
-    submitButton.innerHTML = '✈️ 점수 제출';
-    submitButton.style.cssText = `
-      position: absolute;
-      left: 50%;
-      top: ${submitBtnY}px;
-      transform: translateX(-50%);
-      width: ${modalWidth * 0.8}px;
-      padding: 14px 24px;
-      font-size: 15px;
-      background: #f43f5e;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: bold;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      box-shadow: 0 8px 20px rgba(253, 164, 175, 0.5);
-      transition: transform 0.15s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    `;
-    submitButton.onmouseover = () => {
-      submitButton.style.transform = 'translateX(-50%) scale(1.03)';
-    };
-    submitButton.onmouseout = () => {
-      submitButton.style.transform = 'translateX(-50%) scale(1)';
-    };
-    submitButton.onmousedown = () => {
-      submitButton.style.transform = 'translateX(-50%) scale(0.97)';
-    };
-    submitButton.onmouseup = () => {
-      submitButton.style.transform = 'translateX(-50%) scale(1.03)';
-    };
-    gameContainer?.appendChild(submitButton);
-
-    // ========== 다시 하기 버튼 ==========
-    const restartBtnY = modalCenterY + modalHeight * 0.41;
-
-    const restartButton = document.createElement('button');
-    restartButton.innerHTML = '🔄 다시 하기';
-    restartButton.style.cssText = `
-      position: absolute;
-      left: 50%;
-      top: ${restartBtnY}px;
-      transform: translateX(-50%);
-      padding: 8px 16px;
-      font-size: 14px;
-      background: transparent;
-      color: #94a3b8;
-      border: none;
-      cursor: pointer;
-      font-weight: 500;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      transition: color 0.15s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    `;
-    restartButton.onmouseover = () => {
-      restartButton.style.color = '#64748b';
-    };
-    restartButton.onmouseout = () => {
-      restartButton.style.color = '#94a3b8';
-    };
-    gameContainer?.appendChild(restartButton);
-
-    restartButton.onclick = () => {
-      inputElement.remove();
-      submitButton.remove();
-      restartButton.remove();
-      this.scene.restart();
-    };
-
-    const submitScore = async () => {
-      const playerName = inputElement.value.trim() || '익명';
-
-      submitButton.disabled = true;
-      submitButton.innerHTML = '전송 중...';
-      submitButton.style.opacity = '0.7';
-
-      const qrCode = gameManager.getQrCode();
-      const success = await submitGameScore({
-        gameType: 'memory',
-        playerName,
+    // Vue 컴포넌트에 게임 종료 이벤트 전달 (통합 모달에서 처리)
+    window.dispatchEvent(new CustomEvent('phaser-game-over', {
+      detail: {
         score: finalScore,
-        qrCode: qrCode
-      });
-
-      inputElement.remove();
-      submitButton.remove();
-
-      if (success) {
-        statusText.setText('✅ 점수가 제출되었습니다!');
-        statusText.setColor('#34d399'); // green-400
-      } else {
-        statusText.setText('❌ 점수 제출 실패');
-        statusText.setColor('#f87171'); // red-400
+        time: this.elapsedTime,
+        moves: this.moves,
+        combo: this.maxCombo,
+        grade: grade,
+        gameType: 'memory'
       }
-    };
+    }));
 
-    submitButton.onclick = submitScore;
-    inputElement.onkeydown = (e) => {
-      if (e.key === 'Enter') {
-        submitScore();
-      }
-    };
+    // 게임 일시정지 (Vue 모달에서 처리할 때까지)
+    this.scene.pause();
   }
 
   private getGrade(score: number): { emoji: string; text: string; color: string } {
