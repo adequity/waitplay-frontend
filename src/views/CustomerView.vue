@@ -80,76 +80,49 @@
         </div>
 
         <div class="sidebar-content">
-          <!-- User Info Section (Instagram Profile Style) -->
-          <div v-if="isAuthenticated" class="user-section-instagram">
+          <!-- Store Profile Section (매장 프로필) -->
+          <div class="store-profile-section">
             <div class="profile-header">
               <div class="profile-avatar-large">
-                <div class="avatar-ring-large">
+                <div class="avatar-ring-large store-avatar-ring">
                   <div class="avatar-inner-large">
-                    <img v-if="user?.profileImage" :src="user.profileImage" alt="프로필" class="avatar-image-large" />
+                    <img v-if="storeProfile?.storeProfileImage" :src="storeProfile.storeProfileImage" alt="매장 로고" class="avatar-image-large" />
                     <svg v-else width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      />
-                      <path
-                        d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      />
+                      <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </div>
                 </div>
               </div>
               <div class="profile-stats">
                 <div class="stat-item">
-                  <span class="stat-number">{{ myGuestbookMessages.length }}</span>
+                  <span class="stat-number">{{ storeProfile?.guestbookCount || 0 }}</span>
                   <span class="stat-label">게시물</span>
                 </div>
                 <div class="stat-item">
-                  <span class="stat-number">{{ followedStores.length }}</span>
-                  <span class="stat-label">팔로잉</span>
+                  <span class="stat-number">{{ storeProfile?.followerCount || 0 }}</span>
+                  <span class="stat-label">팔로워</span>
                 </div>
               </div>
             </div>
             <div class="profile-bio">
-              <p class="profile-username">{{ user?.nickname || '사용자' }}</p>
+              <p class="profile-username store-name">{{ storeProfile?.storeName || '매장' }}</p>
+              <p v-if="storeProfile?.description" class="store-description">{{ storeProfile.description }}</p>
             </div>
+            <!-- 팔로우 버튼 -->
+            <button
+              v-if="isAuthenticated"
+              :class="['follow-btn', { following: storeProfile?.isFollowing }]"
+              @click="toggleStoreFollow"
+            >
+              {{ storeProfile?.isFollowing ? '팔로잉' : '팔로우' }}
+            </button>
+            <button v-else class="follow-btn" @click="goToLogin">
+              로그인하고 팔로우
+            </button>
           </div>
 
-          <!-- Not Logged In Section -->
-          <div v-else class="not-logged-in-section">
-            <p class="login-message">로그인하고 더 많은 기능을 이용해보세요!</p>
-            <button class="login-btn" @click="goToLogin">로그인</button>
-            <button class="signup-btn" @click="goToSignup">회원가입</button>
-          </div>
-
-          <!-- Menu Tabs (Logged In) -->
-          <div v-if="isAuthenticated" class="menu-tabs">
-            <button
-              :class="['menu-tab', { active: activeTab === 'feed' }]"
-              @click="activeTab = 'feed'"
-            >
-              <span class="tab-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-              <span class="tab-label">피드</span>
-            </button>
-            <button
-              :class="['menu-tab', { active: activeTab === 'stores' }]"
-              @click="activeTab = 'stores'"
-            >
-              <span class="tab-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-              <span class="tab-label">단골 매장</span>
-            </button>
+          <!-- Store Content Tabs (매장 중심 탭) -->
+          <div class="menu-tabs store-tabs">
             <button
               :class="['menu-tab', { active: activeTab === 'guestbook' }]"
               @click="activeTab = 'guestbook'"
@@ -159,26 +132,142 @@
                   <path d="M11 4H4C3.44772 4 3 4.44772 3 5V19C3 19.5523 3.44772 20 4 20H18C18.5523 20 19 19.5523 19 19V12M17.5 2.5L12 8L11 12L15 11L20.5 5.5C21.0523 4.94772 21.0523 4.05228 20.5 3.5L19.5 2.5C18.9477 1.94772 18.0523 1.94772 17.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </span>
-              <span class="tab-label">내 방명록</span>
+              <span class="tab-label">방명록</span>
             </button>
             <button
-              :class="['menu-tab', { active: activeTab === 'profile' }]"
-              @click="activeTab = 'profile'"
+              :class="['menu-tab', { active: activeTab === 'games' }]"
+              @click="activeTab = 'games'"
             >
               <span class="tab-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
-                  <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2"/>
+                  <path d="M6 12H10M8 10V14M15 13H15.01M18 11H18.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
                 </svg>
               </span>
-              <span class="tab-label">내 정보</span>
+              <span class="tab-label">게임</span>
+            </button>
+            <button
+              :class="['menu-tab', { active: activeTab === 'benefits' }]"
+              @click="activeTab = 'benefits'"
+            >
+              <span class="tab-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="tab-label">혜택</span>
             </button>
           </div>
 
+          <!-- 구분선 -->
+          <div class="section-divider"></div>
+
+          <!-- 내 정보 섹션 (로그인 시에만) -->
+          <div v-if="isAuthenticated" class="my-section">
+            <h3 class="section-title">내 정보</h3>
+            <div class="my-tabs">
+              <button
+                :class="['menu-tab compact', { active: activeTab === 'feed' }]"
+                @click="activeTab = 'feed'"
+              >
+                <span class="tab-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="tab-label">피드</span>
+              </button>
+              <button
+                :class="['menu-tab compact', { active: activeTab === 'stores' }]"
+                @click="activeTab = 'stores'"
+              >
+                <span class="tab-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="tab-label">단골매장</span>
+              </button>
+              <button
+                :class="['menu-tab compact', { active: activeTab === 'my-guestbook' }]"
+                @click="activeTab = 'my-guestbook'"
+              >
+                <span class="tab-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 4H4C3.44772 4 3 4.44772 3 5V19C3 19.5523 3.44772 20 4 20H18C18.5523 20 19 19.5523 19 19V12M17.5 2.5L12 8L11 12L15 11L20.5 5.5C21.0523 4.94772 21.0523 4.05228 20.5 3.5L19.5 2.5C18.9477 1.94772 18.0523 1.94772 17.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="tab-label">내 방명록</span>
+              </button>
+              <button
+                :class="['menu-tab compact', { active: activeTab === 'profile' }]"
+                @click="activeTab = 'profile'"
+              >
+                <span class="tab-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </span>
+                <span class="tab-label">내 정보</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Not Logged In Section -->
+          <div v-else class="not-logged-in-section compact">
+            <p class="login-message">로그인하고 더 많은 기능을 이용해보세요!</p>
+            <div class="login-buttons">
+              <button class="login-btn" @click="goToLogin">로그인</button>
+              <button class="signup-btn" @click="goToSignup">회원가입</button>
+            </div>
+          </div>
+
           <!-- Tab Content -->
-          <div v-if="isAuthenticated" class="tab-content">
-            <!-- 피드 (Instagram Home Feed Style) -->
-            <div v-if="activeTab === 'feed'" class="feed-section">
+          <div class="tab-content">
+            <!-- 매장 방명록 (Store Guestbook) -->
+            <div v-if="activeTab === 'guestbook'" class="store-guestbook-section">
+              <div class="coming-soon-content">
+                <div class="coming-soon-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 4H4C3.44772 4 3 4.44772 3 5V19C3 19.5523 3.44772 20 4 20H18C18.5523 20 19 19.5523 19 19V12M17.5 2.5L12 8L11 12L15 11L20.5 5.5C21.0523 4.94772 21.0523 4.05228 20.5 3.5L19.5 2.5C18.9477 1.94772 18.0523 1.94772 17.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <p class="coming-soon-title">{{ storeProfile?.storeName || '매장' }}의 방명록</p>
+                <p class="coming-soon-subtitle">메인 화면에서 방명록을 확인하세요!</p>
+              </div>
+            </div>
+
+            <!-- 매장 게임 (Store Games) -->
+            <div v-if="activeTab === 'games'" class="store-games-section">
+              <div class="coming-soon-content">
+                <div class="coming-soon-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 12H10M8 10V14M15 13H15.01M18 11H18.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  </svg>
+                </div>
+                <p class="coming-soon-title">{{ storeProfile?.storeName || '매장' }}의 게임</p>
+                <p class="coming-soon-subtitle">메인 화면에서 게임을 즐겨보세요!</p>
+              </div>
+            </div>
+
+            <!-- 매장 혜택 (Store Benefits) -->
+            <div v-if="activeTab === 'benefits'" class="store-benefits-section">
+              <div class="coming-soon-content">
+                <div class="coming-soon-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <p class="coming-soon-title">{{ storeProfile?.storeName || '매장' }}의 혜택</p>
+                <p class="coming-soon-subtitle">게임을 플레이하고 혜택을 받아보세요!</p>
+              </div>
+            </div>
+
+            <!-- 피드 (Instagram Home Feed Style) - 로그인 시에만 -->
+            <div v-if="activeTab === 'feed' && isAuthenticated" class="feed-section">
               <LoadingSpinner v-if="isLoadingFeed && feedMessages.length === 0" message="피드를 불러오는 중..." :size="60" />
 
               <div v-else-if="feedMessages.length === 0" class="empty-state">
@@ -470,8 +559,8 @@
               </div>
             </div>
 
-            <!-- 내 방명록 (Instagram Post Style) -->
-            <div v-if="activeTab === 'guestbook'" class="guestbook-section">
+            <!-- 내 방명록 (Instagram Post Style) - 로그인 시에만 -->
+            <div v-if="activeTab === 'my-guestbook' && isAuthenticated" class="guestbook-section">
               <!-- 헤더 통계 -->
               <div class="stores-header">
                 <div class="stores-count">
@@ -588,7 +677,7 @@ import followService from '@/services/followService'
 import gameSettingsService from '@/services/gameSettingsService'
 import type { Block, PageTheme } from '@/types/blocks'
 import type { MyGuestbookMessageResponse, FeedGuestbookMessage } from '@/services/guestbookService'
-import type { FollowedStoreInfo } from '@/services/followService'
+import type { FollowedStoreInfo, StoreProfileResponse } from '@/services/followService'
 
 // Import block components
 import HeaderBlock from '@/components/blocks/HeaderBlock.vue'
@@ -632,8 +721,12 @@ const isSidebarOpen = ref(false)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const user = computed(() => authStore.user)
 
-// Active tab state (default to feed for Instagram-like experience)
-const activeTab = ref('feed')
+// Active tab state (default to guestbook - store's content view)
+const activeTab = ref('guestbook')
+
+// Store profile (현재 보고 있는 매장)
+const storeProfile = ref<StoreProfileResponse | null>(null)
+const isLoadingStoreProfile = ref(false)
 
 // Followed stores
 const followedStores = ref<FollowedStoreInfo[]>([])
@@ -688,9 +781,16 @@ const tabDataLoaded = ref({
 // Sidebar functions
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
-  if (isSidebarOpen.value && isAuthenticated.value) {
-    // ✅ 성능 최적화: 활성 탭 데이터만 로드
-    loadTabData(activeTab.value)
+  if (isSidebarOpen.value) {
+    // 스토어 프로필 로드 (로그인 여부 상관없이)
+    if (!storeProfile.value && qrCodeId.value) {
+      loadStoreProfile()
+    }
+
+    if (isAuthenticated.value) {
+      // ✅ 성능 최적화: 활성 탭 데이터만 로드
+      loadTabData(activeTab.value)
+    }
   }
 }
 
@@ -705,7 +805,7 @@ const loadTabData = async (tab: string) => {
   if (tab === 'stores' && !tabDataLoaded.value.stores) {
     await loadFollowedStores()
     tabDataLoaded.value.stores = true
-  } else if (tab === 'guestbook' && !tabDataLoaded.value.guestbook) {
+  } else if (tab === 'my-guestbook' && !tabDataLoaded.value.guestbook) {
     await loadMyGuestbook()
     tabDataLoaded.value.guestbook = true
   } else if (tab === 'feed' && !tabDataLoaded.value.feed) {
@@ -720,6 +820,44 @@ watch(activeTab, (newTab) => {
     loadTabData(newTab)
   }
 })
+
+// Load store profile (현재 보고 있는 매장 정보)
+const loadStoreProfile = async () => {
+  if (!qrCodeId.value) return
+
+  isLoadingStoreProfile.value = true
+  try {
+    storeProfile.value = await followService.getStoreProfile(qrCodeId.value)
+  } catch (error) {
+    console.error('Failed to load store profile:', error)
+  } finally {
+    isLoadingStoreProfile.value = false
+  }
+}
+
+// Toggle follow for current store
+const toggleStoreFollow = async () => {
+  if (!isAuthenticated.value) {
+    goToLogin()
+    return
+  }
+
+  if (!qrCodeId.value || !storeProfile.value) return
+
+  try {
+    if (storeProfile.value.isFollowing) {
+      await followService.unfollowAdmin(qrCodeId.value)
+      storeProfile.value.isFollowing = false
+      storeProfile.value.followerCount = Math.max(0, storeProfile.value.followerCount - 1)
+    } else {
+      await followService.followAdmin(qrCodeId.value)
+      storeProfile.value.isFollowing = true
+      storeProfile.value.followerCount++
+    }
+  } catch (error) {
+    console.error('Failed to toggle follow:', error)
+  }
+}
 
 // Load followed stores
 const loadFollowedStores = async () => {
@@ -1285,7 +1423,165 @@ onUnmounted(() => {
   overflow-y: auto;
 }
 
-/* User Section - Instagram Profile Style */
+/* Store Profile Section */
+.store-profile-section {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid #efefef;
+}
+
+.store-avatar-ring {
+  background: linear-gradient(45deg, #14b8a6, #0d9488, #0f766e);
+}
+
+.store-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.store-description {
+  font-size: 0.8125rem;
+  color: #8e8e8e;
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+/* Follow Button */
+.follow-btn {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  margin-top: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+  color: white;
+  border: none;
+}
+
+.follow-btn:hover {
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+  transform: translateY(-1px);
+}
+
+.follow-btn.following {
+  background: #efefef;
+  color: #262626;
+}
+
+.follow-btn.following:hover {
+  background: #dbdbdb;
+  transform: none;
+}
+
+/* Section Divider */
+.section-divider {
+  height: 1px;
+  background: #efefef;
+  margin: 1rem -1.5rem;
+}
+
+/* My Section */
+.my-section {
+  padding: 0.5rem 0;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8e8e8e;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.my-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.menu-tab.compact {
+  flex: none;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  border-radius: 20px;
+  background: #f5f5f5;
+  flex-direction: row;
+  gap: 0.375rem;
+}
+
+.menu-tab.compact.active {
+  background: #262626;
+  color: white;
+}
+
+.menu-tab.compact .tab-icon {
+  display: flex;
+  align-items: center;
+}
+
+.menu-tab.compact .tab-label {
+  font-size: 0.8125rem;
+}
+
+/* Not Logged In Compact */
+.not-logged-in-section.compact {
+  padding: 0.75rem 0;
+}
+
+.not-logged-in-section.compact .login-message {
+  font-size: 0.8125rem;
+  margin-bottom: 0.75rem;
+}
+
+.login-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.login-buttons .login-btn,
+.login-buttons .signup-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+/* Store Content Tabs */
+.store-tabs {
+  margin-top: 0.5rem;
+}
+
+/* Coming Soon Content */
+.coming-soon-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.coming-soon-icon {
+  color: #14b8a6;
+  margin-bottom: 1rem;
+}
+
+.coming-soon-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #262626;
+  margin: 0 0 0.5rem;
+}
+
+.coming-soon-subtitle {
+  font-size: 0.875rem;
+  color: #8e8e8e;
+  margin: 0;
+}
+
+/* User Section - Instagram Profile Style (Legacy) */
 .user-section-instagram {
   padding: 1.25rem 0;
   border-bottom: 1px solid #efefef;
