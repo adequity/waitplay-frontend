@@ -91,13 +91,19 @@ const fetchBenefits = async () => {
     if (searchQuery.value) params.append('search', searchQuery.value)
     if (statusFilter.value) params.append('isActive', statusFilter.value === 'active' ? 'true' : 'false')
 
+    console.log('Fetching benefits from:', `${API_URL}/api/masteradmin/benefits?${params}`)
     const response = await fetch(`${API_URL}/api/masteradmin/benefits?${params}`, {
       headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
     })
-    if (!response.ok) throw new Error('Failed')
+    if (!response.ok) {
+      console.error('Benefits API error:', response.status, response.statusText)
+      throw new Error('Failed')
+    }
     const data = await response.json()
+    console.log('Benefits API response:', data)
     benefits.value = data.data || []
     totalPages.value = data.totalPages || 1
+    console.log('Loaded benefits count:', benefits.value.length)
   } catch (error) {
     console.error(error)
   } finally {
