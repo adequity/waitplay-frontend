@@ -747,8 +747,8 @@ export class MatchScene extends Phaser.Scene {
       frontImage = this.add.image(0, 0, value);
 
       // 이미지를 카드 크기에 맞게 조절 (cover 방식 - 카드를 꽉 채움)
-      const scaleX = (width * 0.85) / frontImage.width;
-      const scaleY = (height * 0.85) / frontImage.height;
+      const scaleX = (width * 0.95) / frontImage.width;
+      const scaleY = (height * 0.95) / frontImage.height;
       const scale = Math.max(scaleX, scaleY);  // cover 방식: 카드를 꽉 채움
       frontImage.setScale(scale);
       frontImage.setOrigin(0.5, 0.5);
@@ -757,10 +757,10 @@ export class MatchScene extends Phaser.Scene {
       const maskGraphics = this.make.graphics({ x: 0, y: 0 });
       maskGraphics.fillStyle(0xffffff);
       maskGraphics.fillRoundedRect(
-        container.x - width * 0.42,
-        container.y - height * 0.42,
-        width * 0.84,
-        height * 0.84,
+        container.x - width * 0.47,
+        container.y - height * 0.47,
+        width * 0.94,
+        height * 0.94,
         cornerRadius - 2
       );
       const mask = maskGraphics.createGeometryMask();
