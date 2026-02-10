@@ -6,9 +6,9 @@
 import * as Phaser from 'phaser';
 
 export const GAME_CONFIG = {
-  width: 375,
-  height: 667,
-  backgroundColor: '#ffffff',
+  width: window.innerWidth,
+  height: window.innerHeight,
+  backgroundColor: '#fdf2f8',  // 게임 배경색과 동일 (pink-50)
   parent: 'game-container',
   physics: {
     default: 'arcade',
@@ -18,11 +18,12 @@ export const GAME_CONFIG = {
     }
   },
   scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.NO_CENTER,
-    width: '100%',
-    height: '100%',
-    parent: 'game-container'
+    mode: Phaser.Scale.EXPAND,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    parent: 'game-container',
+    expandParent: true
   },
   render: {
     antialias: true,

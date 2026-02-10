@@ -353,7 +353,7 @@ h2 {
   padding: 0;
   margin: 0;
   z-index: 9999;
-  background: #ffffff;
+  background: #fdf2f8;  /* 게임 배경색과 동일 (pink-50) */
 }
 
 /* fullscreen-container는 위에서 정의됨 */
