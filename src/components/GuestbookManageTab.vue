@@ -68,43 +68,60 @@
       <p>고객이 방명록에 메시지를 남기면 여기에 표시됩니다.</p>
     </div>
 
-    <!-- Messages Grid (3열) -->
+    <!-- Messages Grid (3열) - 화이트 카드 스타일 -->
     <div v-else class="messages-grid">
       <div
         v-for="message in messages"
         :key="message.id"
         class="message-card"
         :class="{ pinned: message.isPinned }"
-        :style="{ backgroundColor: message.color }"
         @click="openMessageModal(message)"
       >
+        <!-- 컬러 악센트 바 -->
+        <div class="color-accent" :style="{ backgroundColor: message.color }"></div>
+
         <!-- Pinned Badge -->
         <div v-if="message.isPinned" class="pinned-badge">
           <IconBase name="pin" />
         </div>
 
+        <!-- 카드 헤더 -->
+        <div class="card-header">
+          <div class="card-author-info">
+            <div class="card-avatar" :style="{ backgroundColor: message.color }">
+              {{ message.userName?.charAt(0) || '?' }}
+            </div>
+            <div class="card-author-text">
+              <span class="card-author">{{ message.userName }}</span>
+              <span class="card-date">{{ formatDate(message.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- 카드 콘텐츠 -->
         <div class="card-content">
+          <!-- 이미지 썸네일 -->
+          <div v-if="message.imageUrl" class="card-thumbnail">
+            <img :src="message.imageUrl" alt="방명록 이미지" />
+          </div>
+          <!-- 텍스트 -->
           <p v-if="message.message" class="card-text">{{ message.message }}</p>
-          <img
-            v-if="message.imageUrl"
-            :src="message.imageUrl"
-            alt="방명록 이미지"
-            class="card-image"
-          />
         </div>
 
         <!-- 카드 푸터 -->
         <div class="card-footer">
-          <span class="card-author">{{ message.userName }}</span>
           <div class="card-stats">
-            <span class="card-stat">
+            <span class="card-stat" :class="{ liked: message.isLikedByMe }">
               <IconBase :name="message.isLikedByMe ? 'heart' : 'heart-outline'" />
               {{ message.likeCount }}
             </span>
-            <span v-if="message.replyCount > 0" class="card-stat">
+            <span class="card-stat">
               <IconBase name="message" />
               {{ message.replyCount }}
+            </span>
+            <span class="card-stat">
+              <IconBase name="eye" />
+              {{ message.viewCount }}
             </span>
           </div>
         </div>
@@ -730,11 +747,11 @@ onMounted(async () => {
   font-size: 15px;
 }
 
-/* Messages Grid - 3열 레이아웃 */
+/* Messages Grid - 3열 레이아웃 (Pinterest/Instagram 스타일) */
 .messages-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
 
 @media (max-width: 900px) {
@@ -749,11 +766,11 @@ onMounted(async () => {
   }
 }
 
+/* 화이트 카드 스타일 */
 .message-card {
-  aspect-ratio: 1;
-  border-radius: 4px;
-  padding: 16px;
-  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.15);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   position: relative;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -763,21 +780,27 @@ onMounted(async () => {
 }
 
 .message-card:hover {
-  transform: translateY(-4px) rotate(1deg);
-  box-shadow: 4px 6px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .message-card.pinned {
-  box-shadow: 0 0 0 3px #ff9500, 2px 3px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 2px #ff9500, 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
-/* Pinned Badge (그리드 카드용) */
+/* 컬러 악센트 바 */
+.color-accent {
+  height: 4px;
+  width: 100%;
+}
+
+/* Pinned Badge */
 .pinned-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -785,6 +808,7 @@ onMounted(async () => {
   color: white;
   border-radius: 50%;
   z-index: 1;
+  box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3);
 }
 
 .pinned-badge svg {
@@ -792,12 +816,73 @@ onMounted(async () => {
   height: 14px;
 }
 
+/* 카드 헤더 */
+.card-header {
+  padding: 14px 16px 0;
+}
+
+.card-author-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+.card-author-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.card-author {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-date {
+  font-size: 12px;
+  color: #86868b;
+}
+
 /* 카드 콘텐츠 */
 .card-content {
+  padding: 12px 16px;
   flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+/* 이미지 썸네일 */
+.card-thumbnail {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f5f7;
+}
+
+.card-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .card-text {
@@ -806,55 +891,42 @@ onMounted(async () => {
   color: #1d1d1f;
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   word-break: break-word;
 }
 
-.card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
 /* 카드 푸터 */
 .card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 8px;
-  margin-top: auto;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.card-author {
-  font-size: 12px;
-  font-weight: 600;
-  color: #1d1d1f;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 60%;
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f5;
 }
 
 .card-stats {
   display: flex;
-  gap: 8px;
+  gap: 16px;
 }
 
 .card-stat {
   display: flex;
   align-items: center;
-  gap: 2px;
-  font-size: 11px;
-  color: #666;
+  gap: 4px;
+  font-size: 13px;
+  color: #86868b;
 }
 
 .card-stat svg {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
+}
+
+.card-stat.liked {
+  color: #ff2d55;
+}
+
+.card-stat.liked svg {
+  color: #ff2d55;
 }
 
 /* =========================== */
