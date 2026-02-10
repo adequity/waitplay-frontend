@@ -6,8 +6,8 @@
 import * as Phaser from 'phaser';
 
 export const GAME_CONFIG = {
-  width: window.innerWidth,
-  height: window.innerHeight,
+  width: 390,   // iPhone 기준 세로 해상도
+  height: 844,
   backgroundColor: '#fdf2f8',  // 게임 배경색과 동일 (pink-50)
   parent: 'game-container',
   physics: {
@@ -18,12 +18,19 @@ export const GAME_CONFIG = {
     }
   },
   scale: {
-    mode: Phaser.Scale.EXPAND,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: window.innerWidth,
-    height: window.innerHeight,
     parent: 'game-container',
-    expandParent: true
+    width: 390,
+    height: 844,
+    min: {
+      width: 320,
+      height: 480
+    },
+    max: {
+      width: 600,
+      height: 1200
+    }
   },
   render: {
     antialias: true,

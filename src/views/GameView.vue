@@ -329,6 +329,7 @@ h2 {
   display: flex;
   justify-content: center;
   align-items: center;
+  background: #fdf2f8;  /* 게임 배경색과 동일 */
 }
 
 /* 전체화면 모드에서 게임 컨테이너 */
@@ -339,6 +340,7 @@ h2 {
   position: fixed;
   top: 0;
   left: 0;
+  background: #fdf2f8;  /* 게임 배경색과 동일 */
 }
 
 /* 전체화면 모드 스타일 */
