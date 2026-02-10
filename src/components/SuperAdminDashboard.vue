@@ -54,9 +54,7 @@
         <button class="btn-more" @click="viewAllStores">더보기</button>
       </div>
 
-      <div v-if="loading" class="loading-message">
-        데이터를 불러오는 중입니다...
-      </div>
+      <LoadingSpinner v-if="loading" message="데이터를 불러오는 중..." />
 
       <div v-else-if="topStores.length === 0" class="empty-message">
         아직 가맹점 데이터가 없습니다.
@@ -99,6 +97,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()

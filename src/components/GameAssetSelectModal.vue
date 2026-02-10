@@ -73,10 +73,7 @@
         </div>
 
         <!-- Loading State -->
-        <div v-if="isLoading" class="loading-state">
-          <div class="loading-spinner"></div>
-          <p>에셋을 불러오는 중...</p>
-        </div>
+        <LoadingSpinner v-if="isLoading" message="에셋을 불러오는 중..." />
 
         <!-- No Assets -->
         <div v-else-if="assets.length === 0 && !showUploadForm" class="empty-state">
@@ -132,6 +129,7 @@
 import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import {
   getSuperAdminAssets,
   selectGameAssets,

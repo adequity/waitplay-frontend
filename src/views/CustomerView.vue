@@ -179,10 +179,7 @@
           <div v-if="isAuthenticated" class="tab-content">
             <!-- 피드 (Instagram Home Feed Style) -->
             <div v-if="activeTab === 'feed'" class="feed-section">
-              <div v-if="isLoadingFeed && feedMessages.length === 0" class="loading-spinner">
-                <div class="spinner"></div>
-                <span>피드를 불러오는 중...</span>
-              </div>
+              <LoadingSpinner v-if="isLoadingFeed && feedMessages.length === 0" message="피드를 불러오는 중..." :size="60" />
 
               <div v-else-if="feedMessages.length === 0" class="empty-state">
                 <div class="empty-icon">
@@ -427,10 +424,7 @@
                 </div>
               </div>
 
-              <div v-if="isLoadingStores" class="loading-spinner">
-                <div class="spinner"></div>
-                <span>불러오는 중...</span>
-              </div>
+              <LoadingSpinner v-if="isLoadingStores" message="불러오는 중..." :size="60" />
 
               <div v-else-if="followedStores.length === 0" class="empty-state">
                 <div class="empty-icon">
@@ -486,10 +480,7 @@
                 </div>
               </div>
 
-              <div v-if="isLoadingMyMessages" class="loading-spinner">
-                <div class="spinner"></div>
-                <span>불러오는 중...</span>
-              </div>
+              <LoadingSpinner v-if="isLoadingMyMessages" message="불러오는 중..." :size="60" />
 
               <div v-else-if="myGuestbookMessages.length === 0" class="empty-state">
                 <div class="empty-icon">
@@ -610,6 +601,7 @@ import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import MarqueeBlock from '@/components/blocks/MarqueeBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
 import GuestbookBlock from '@/components/blocks/GuestbookBlock.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const route = useRoute()
 const router = useRouter()

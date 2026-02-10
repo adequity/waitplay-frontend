@@ -56,10 +56,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p>방명록을 불러오는 중...</p>
-    </div>
+    <LoadingSpinner v-if="isLoading" message="방명록을 불러오는 중..." />
 
     <!-- Empty State -->
     <div v-else-if="messages.length === 0" class="empty-state">
@@ -299,6 +296,7 @@ import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
 import type { ManageMessageResponse, ReplyResponse } from '@/services/guestbookService'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 

@@ -12,10 +12,7 @@
     </header>
 
     <!-- 로딩 상태 -->
-    <div v-if="isLoadingProfile" class="loading-state">
-      <div class="spinner"></div>
-      <span>매장 정보를 불러오는 중...</span>
-    </div>
+    <LoadingSpinner v-if="isLoadingProfile" message="매장 정보를 불러오는 중..." :size="60" />
 
     <!-- 매장 프로필 섹션 -->
     <template v-else-if="storeProfile">
@@ -115,10 +112,7 @@
       <div class="tab-content">
         <!-- 피드 탭 (방명록 그리드/피드) -->
         <div v-if="activeTab === 'feed'" class="feed-tab">
-          <div v-if="isLoadingMessages" class="loading-state">
-            <div class="spinner"></div>
-            <span>방명록을 불러오는 중...</span>
-          </div>
+          <LoadingSpinner v-if="isLoadingMessages" message="방명록을 불러오는 중..." :size="60" />
 
           <div v-else-if="messages.length === 0" class="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
@@ -220,10 +214,7 @@
 
         <!-- 팔로워 탭 -->
         <div v-if="activeTab === 'followers'" class="followers-tab">
-          <div v-if="isLoadingFollowers" class="loading-state">
-            <div class="spinner"></div>
-            <span>팔로워를 불러오는 중...</span>
-          </div>
+          <LoadingSpinner v-if="isLoadingFollowers" message="팔로워를 불러오는 중..." :size="60" />
 
           <div v-else-if="followers.length === 0" class="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
@@ -319,6 +310,7 @@ import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import type { StoreProfileResponse, FollowerInfo } from '@/services/followService'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const route = useRoute()
 const router = useRouter()

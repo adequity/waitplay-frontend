@@ -22,10 +22,7 @@
 
     <!-- Inquiry List -->
     <div class="inquiry-list">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>문의사항을 불러오는 중...</p>
-      </div>
+      <LoadingSpinner v-if="loading" message="문의사항을 불러오는 중..." />
 
       <div v-else-if="filteredInquiries.length === 0" class="empty-state">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -216,6 +213,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 interface Inquiry {
   id: number

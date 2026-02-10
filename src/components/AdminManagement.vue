@@ -54,8 +54,7 @@
           <tbody>
             <tr v-if="loading">
               <td colspan="8" class="loading-state">
-                <div class="spinner"></div>
-                <p>데이터를 불러오는 중...</p>
+                <LoadingSpinner message="데이터를 불러오는 중..." />
               </td>
             </tr>
             <tr v-else-if="filteredFranchises.length === 0">
@@ -98,6 +97,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 interface Franchise {
   id: string

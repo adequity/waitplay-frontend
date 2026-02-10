@@ -46,9 +46,7 @@
     </div>
 
     <!-- 방명록 슬라이더 -->
-    <div v-if="isLoadingMessages" class="loading-state">
-      <p>방명록을 불러오는 중...</p>
-    </div>
+    <LoadingSpinner v-if="isLoadingMessages" message="방명록을 불러오는 중..." :size="60" />
 
     <div v-else-if="messages.length === 0" class="empty-state">
       <p>아직 남겨진 메시지가 없습니다. 첫 메시지를 남겨보세요!</p>
@@ -589,6 +587,7 @@ import { useAuthStore } from '@/stores/auth'
 import guestbookService, { type StickerAsset } from '@/services/guestbookService'
 import followService from '@/services/followService'
 import type { GuestbookBlockData } from '@/types/blocks'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 interface Props {
   data: GuestbookBlockData

@@ -21,9 +21,7 @@
 
       <!-- Table -->
       <div class="table-container">
-        <div v-if="loading" class="loading-message">
-          데이터를 불러오는 중입니다...
-        </div>
+        <LoadingSpinner v-if="loading" message="데이터를 불러오는 중..." />
 
         <div v-else-if="notices.length === 0" class="empty-message">
           아직 등록된 공지사항이 없습니다.
@@ -183,6 +181,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import IconBase from '@/components/IconBase.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
