@@ -55,6 +55,10 @@
           </div>
         </div>
         <div class="qr-card-actions">
+          <button class="btn-action primary" @click="goToQR(qr)" title="바로가기">
+            <IconBase name="external-link" />
+            바로가기
+          </button>
           <button class="btn-action" @click="toggleActive(qr)" :title="qr.isActive ? '비활성화' : '활성화'">
             <IconBase :name="qr.isActive ? 'eye-off' : 'eye'" />
             {{ qr.isActive ? '비활성화' : '활성화' }}
@@ -175,6 +179,11 @@ const confirmDelete = async (qr: any) => {
 
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('ko-KR')
+}
+
+const goToQR = (qr: any) => {
+  const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'https://waitplay.co.kr'
+  window.open(`${frontendUrl}/customer?qr=${qr.id}`, '_blank')
 }
 
 watch(page, fetchQRCodes)
@@ -388,6 +397,17 @@ onMounted(() => {
 
 .btn-action:hover {
   background: #f0f0f0;
+}
+
+.btn-action.primary {
+  background: linear-gradient(135deg, #d4a853, #b8942e);
+  color: white;
+  border-color: transparent;
+}
+
+.btn-action.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 168, 83, 0.3);
 }
 
 .btn-action.danger:hover {
