@@ -324,9 +324,21 @@ h2 {
 }
 
 #game-container {
+  width: 100%;
+  height: calc(100vh - 120px);
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* 전체화면 모드에서 게임 컨테이너 */
+.fullscreen #game-container,
+#game-container.fullscreen-container {
+  width: 100vw !important;
+  height: 100vh !important;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 /* 전체화면 모드 스타일 */
@@ -344,16 +356,12 @@ h2 {
   background: #ffffff;
 }
 
-.fullscreen-container {
-  width: 100vw !important;
-  height: 100vh !important;
-  max-width: 100vw !important;
-  max-height: 100vh !important;
-}
+/* fullscreen-container는 위에서 정의됨 */
 
 .fullscreen-container canvas {
-  width: 100vw !important;
-  height: 100vh !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 .btn-exit-fullscreen {

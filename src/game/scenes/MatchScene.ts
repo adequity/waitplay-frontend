@@ -99,8 +99,9 @@ export class MatchScene extends Phaser.Scene {
   }
 
   create() {
-    const W = this.sys.game.config.width as number;
-    const H = this.sys.game.config.height as number;
+    // RESIZE 모드에서는 scale.width/height 사용
+    const W = this.scale.width;
+    const H = this.scale.height;
 
     // 그라데이션 배경
     this.createBackground(W, H);
