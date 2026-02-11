@@ -1,9 +1,16 @@
 /**
  * Phaser Game Engine Configuration
  * WaitPlay 게임 엔진 기본 설정
+ *
+ * [최적화] Phaser import 제거 - Scale 상수를 직접 정의
+ * Phaser.Scale.FIT = 1, Phaser.Scale.CENTER_BOTH = 1
+ * 이렇게 하면 config.ts import 시 Phaser 번들이 로드되지 않음
  */
 
-import * as Phaser from 'phaser';
+// Phaser Scale 상수 (Phaser import 없이 직접 정의)
+// https://newdocs.phaser.io/docs/3.60.0/Phaser.Scale.ScaleModes
+const SCALE_FIT = 1;  // Phaser.Scale.FIT
+const CENTER_BOTH = 1;  // Phaser.Scale.CENTER_BOTH
 
 export const GAME_CONFIG = {
   width: 390,   // iPhone 기준 세로 해상도
@@ -18,8 +25,8 @@ export const GAME_CONFIG = {
     }
   },
   scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    mode: SCALE_FIT,
+    autoCenter: CENTER_BOTH,
     parent: 'game-container',
     width: 390,
     height: 844,
