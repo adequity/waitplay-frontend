@@ -669,7 +669,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, type Component } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, defineAsyncComponent, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
@@ -679,18 +679,28 @@ import type { Block, PageTheme } from '@/types/blocks'
 import type { MyGuestbookMessageResponse, FeedGuestbookMessage } from '@/services/guestbookService'
 import type { FollowedStoreInfo, StoreProfileResponse } from '@/services/followService'
 
-// Import block components
+// ✅ 첫 화면에 필요한 가벼운 블록 - 동기 로딩
 import HeaderBlock from '@/components/blocks/HeaderBlock.vue'
 import ButtonBlock from '@/components/blocks/ButtonBlock.vue'
 import SocialLinksBlock from '@/components/blocks/SocialLinksBlock.vue'
-import VideoGridBlock from '@/components/blocks/VideoGridBlock.vue'
-import GamesCarouselBlock from '@/components/blocks/GamesCarouselBlock.vue'
-import PopularMenuBlock from '@/components/blocks/PopularMenuBlock.vue'
-import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import MarqueeBlock from '@/components/blocks/MarqueeBlock.vue'
+import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
-import GuestbookBlock from '@/components/blocks/GuestbookBlock.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
+
+// ✅ 무거운 블록 - 비동기 로딩 (스크롤 시 로드)
+const GuestbookBlock = defineAsyncComponent(() =>
+  import('@/components/blocks/GuestbookBlock.vue')
+)
+const VideoGridBlock = defineAsyncComponent(() =>
+  import('@/components/blocks/VideoGridBlock.vue')
+)
+const GamesCarouselBlock = defineAsyncComponent(() =>
+  import('@/components/blocks/GamesCarouselBlock.vue')
+)
+const PopularMenuBlock = defineAsyncComponent(() =>
+  import('@/components/blocks/PopularMenuBlock.vue')
+)
 
 const route = useRoute()
 const router = useRouter()

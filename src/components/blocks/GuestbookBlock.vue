@@ -1,14 +1,20 @@
 <template>
   <div
     class="guestbook-block"
+    ref="blockRef"
+    :class="{ 'bg-loaded': isBgLoaded }"
     :style="{
       '--text-color': data.textColor || '#374151',
-      backgroundImage: data.backgroundImageUrl ? `url(${data.backgroundImageUrl})` : 'none',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
       '--bg-overlay': getBackgroundOverlay()
     }"
   >
+    <!-- ✅ 배경 이미지 지연 로딩 레이어 -->
+    <div
+      v-if="data.backgroundImageUrl"
+      class="guestbook-bg"
+      :class="{ 'bg-loaded': isBgLoaded }"
+      :style="bgStyle"
+    ></div>
     <!-- 배경 오버레이 -->
     <div v-if="data.backgroundImageUrl && data.backgroundOverlay" class="bg-overlay"></div>
 
@@ -600,6 +606,53 @@ interface Props {
 const props = defineProps<Props>()
 const router = useRouter()
 const authStore = useAuthStore()
+
+// ✅ 배경 이미지 지연 로딩
+const blockRef = ref<HTMLElement | null>(null)
+const isBgLoaded = ref(false)
+let bgObserver: IntersectionObserver | null = null
+
+const bgStyle = computed(() => {
+  if (!isBgLoaded.value || !props.data.backgroundImageUrl) return {}
+  return {
+    backgroundImage: `url(${props.data.backgroundImageUrl})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center'
+  }
+})
+
+onMounted(() => {
+  if (!props.data.backgroundImageUrl) {
+    isBgLoaded.value = true
+    return
+  }
+
+  const preloadBg = () => {
+    const img = new Image()
+    img.onload = () => { isBgLoaded.value = true }
+    img.onerror = () => { isBgLoaded.value = true }
+    img.src = props.data.backgroundImageUrl!
+  }
+
+  if ('IntersectionObserver' in window && blockRef.value) {
+    bgObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          preloadBg()
+          bgObserver?.disconnect()
+        }
+      },
+      { rootMargin: '200px' }
+    )
+    bgObserver.observe(blockRef.value)
+  } else {
+    preloadBg()
+  }
+})
+
+onUnmounted(() => {
+  bgObserver?.disconnect()
+})
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const currentUserId = computed(() => authStore.user?.id)
@@ -1529,6 +1582,23 @@ const handleLike = async (message: any) => {
   position: relative;
   padding: 2rem 1rem;
   margin-bottom: 1.5rem;
+  background-color: #f5f5f5; /* 로딩 전 플레이스홀더 */
+}
+
+/* ✅ 배경 이미지 지연 로딩 레이어 */
+.guestbook-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.guestbook-bg.bg-loaded {
+  opacity: 1;
 }
 
 /* 배경 오버레이 (밝기 조절) */
@@ -1543,7 +1613,7 @@ const handleLike = async (message: any) => {
   z-index: 0;
 }
 
-.guestbook-block > *:not(.bg-overlay) {
+.guestbook-block > *:not(.bg-overlay):not(.guestbook-bg) {
   position: relative;
   z-index: 1;
 }
