@@ -1214,6 +1214,16 @@ const openDetailModal = async (message: any) => {
   isDetailModalOpen.value = true
   document.body.style.overflow = 'hidden'
 
+  // 조회수 증가
+  try {
+    const result = await guestbookService.incrementViewCount(message.id)
+    // 로컬 상태 업데이트
+    message.viewCount = result.viewCount
+    selectedMessageForDetail.value = { ...message, viewCount: result.viewCount }
+  } catch (error) {
+    console.error('조회수 증가 실패:', error)
+  }
+
   // 답글 로드
   await loadDetailReplies(message.id)
 }

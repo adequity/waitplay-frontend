@@ -48,12 +48,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { gameManager } from '../game/GameManager'
 import type { GameType } from '../game/config'
-import HyperPinball from '../game/pinball/components/HyperPinball.vue'
 import GameResultModal from '@/components/GameResultModal.vue'
+
+// 핀볼 컴포넌트 동적 로드 (Pixi.js + Rapier 번들 분리)
+const HyperPinball = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "game-pinball-vue" */ '../game/pinball/components/HyperPinball.vue')
+)
 
 // 게임 결과 데이터 타입
 interface GameResultData {
@@ -216,7 +220,7 @@ function handleGameReady() {
   isGameLoading.value = false
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 핀볼이 아닌 경우에만 Phaser 게임 초기화
   if (!isPinball.value && gameContainer.value) {
     try {
@@ -227,13 +231,15 @@ onMounted(() => {
         enterFullscreen()
       }
 
-      gameManager.initGame(gameType.value, 'game-container', qrCode.value)
+      // 게임 초기화 (Phaser 동적 로드)
+      await gameManager.initGame(gameType.value, 'game-container', qrCode.value)
 
       // Phaser 게임 이벤트 리스너 설정
       window.addEventListener('phaser-game-over', handlePhaserGameOver)
       window.addEventListener('phaser-game-ready', handleGameReady)
     } catch (error) {
       console.error('게임 초기화 실패:', error)
+      isGameLoading.value = false  // 에러 시 로딩 상태 해제
     }
   }
 })

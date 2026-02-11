@@ -16,6 +16,40 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // 게임 관련 라이브러리를 별도 청크로 분리 (초기 로드 최적화)
+        manualChunks: (id) => {
+          // Phaser 게임 엔진
+          if (id.includes('node_modules/phaser')) {
+            return 'vendor-phaser';
+          }
+          // Pixi.js (핀볼 게임용)
+          if (id.includes('node_modules/pixi') || id.includes('node_modules/@pixi')) {
+            return 'vendor-pixi';
+          }
+          // Rapier 물리 엔진 (핀볼 게임용)
+          if (id.includes('node_modules/@dimforge/rapier')) {
+            return 'vendor-rapier';
+          }
+          // 게임 Scene 파일들
+          if (id.includes('/game/scenes/')) {
+            const sceneName = id.split('/game/scenes/')[1]?.split('.')[0]?.toLowerCase();
+            if (sceneName) {
+              return `game-${sceneName}`;
+            }
+          }
+          // 핀볼 게임 모듈
+          if (id.includes('/game/pinball/')) {
+            return 'game-pinball';
+          }
+        }
+      }
+    },
+    // 청크 크기 경고 임계값 (게임 라이브러리는 별도 청크로 분리됨)
+    chunkSizeWarningLimit: 600
+  },
   server: {
     port: 3000,
     proxy: {

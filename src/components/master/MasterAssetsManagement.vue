@@ -8,11 +8,18 @@
     </div>
 
     <div class="filters-bar">
-      <select v-model="typeFilter" @change="fetchAssets">
-        <option value="">전체 유형</option>
-        <option value="image">이미지</option>
-        <option value="icon">아이콘</option>
-        <option value="logo">로고</option>
+      <select v-model="categoryFilter" @change="fetchAssets">
+        <option value="">전체 카테고리</option>
+        <option value="음식">음식</option>
+        <option value="음료">음료</option>
+        <option value="디저트">디저트</option>
+        <option value="기타">기타</option>
+      </select>
+      <select v-model="gameTypeFilter" @change="fetchAssets">
+        <option value="">전체 게임</option>
+        <option value="틀린그림찾기">틀린그림찾기</option>
+        <option value="기억력게임">기억력게임</option>
+        <option value="같은그림찾기">같은그림찾기</option>
       </select>
     </div>
 
@@ -21,7 +28,7 @@
     <div v-else class="assets-grid">
       <div v-for="asset in assets" :key="asset.id" class="asset-card">
         <div class="asset-preview">
-          <img v-if="asset.url" :src="asset.url" :alt="asset.name" @error="handleImageError" />
+          <img v-if="asset.imageUrl" :src="asset.imageUrl" :alt="asset.name" @error="handleImageError" />
           <div v-else class="no-image">
             <IconBase name="image" />
           </div>
@@ -29,12 +36,16 @@
         <div class="asset-info">
           <h3>{{ asset.name }}</h3>
           <p class="asset-meta">
-            <span class="type-badge">{{ getTypeLabel(asset.type) }}</span>
+            <span class="type-badge category">{{ asset.category }}</span>
+            <span class="type-badge game">{{ asset.gameType }}</span>
+          </p>
+          <p class="asset-stats">
+            <span>사용: {{ asset.usageCount || 0 }}회</span>
             <span>{{ formatDate(asset.createdAt) }}</span>
           </p>
         </div>
         <div class="asset-actions">
-          <button class="btn-action" @click="copyUrl(asset.url)" title="URL 복사">
+          <button class="btn-action" @click="copyUrl(asset.imageUrl)" title="URL 복사">
             <IconBase name="copy" />
           </button>
           <button class="btn-action danger" @click="confirmDelete(asset)" title="삭제">
@@ -71,23 +82,26 @@ const assets = ref<any[]>([])
 const page = ref(1)
 const pageSize = ref(24)
 const totalPages = ref(1)
-const typeFilter = ref('')
+const categoryFilter = ref('')
+const gameTypeFilter = ref('')
 
 const fetchAssets = async () => {
   try {
     loading.value = true
     const params = new URLSearchParams({ page: page.value.toString(), pageSize: pageSize.value.toString() })
-    if (typeFilter.value) params.append('type', typeFilter.value)
+    if (categoryFilter.value) params.append('category', categoryFilter.value)
+    if (gameTypeFilter.value) params.append('gameType', gameTypeFilter.value)
 
     const response = await fetch(`${API_URL}/api/masteradmin/assets?${params}`, {
       headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
-    assets.value = data.assets
-    totalPages.value = data.totalPages
+    assets.value = data.data || []
+    totalPages.value = data.totalPages || 1
   } catch (error) {
     console.error(error)
+    assets.value = []
   } finally {
     loading.value = false
   }
@@ -121,11 +135,6 @@ const handleImageError = (e: Event) => {
   img.style.display = 'none'
 }
 
-const getTypeLabel = (type: string) => {
-  const labels: Record<string, string> = { 'image': '이미지', 'icon': '아이콘', 'logo': '로고' }
-  return labels[type] || type
-}
-
 const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('ko-KR')
 
 watch(page, fetchAssets)
@@ -153,8 +162,11 @@ onMounted(() => fetchAssets())
 
 .asset-info { padding: 16px; }
 .asset-info h3 { font-size: 14px; font-weight: 600; color: #1d1d1f; margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.asset-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #86868b; margin: 0; }
-.type-badge { padding: 2px 8px; background: #f0f0f0; border-radius: 4px; font-weight: 500; }
+.asset-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #86868b; margin: 0 0 6px 0; flex-wrap: wrap; }
+.type-badge { padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+.type-badge.category { background: #e8f5e9; color: #2e7d32; }
+.type-badge.game { background: #e3f2fd; color: #1565c0; }
+.asset-stats { display: flex; align-items: center; gap: 12px; font-size: 11px; color: #86868b; margin: 0; }
 
 .asset-actions { display: flex; gap: 8px; padding: 0 16px 16px; }
 .btn-action { flex: 1; padding: 8px; border: 1px solid #e5e5ea; border-radius: 8px; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }

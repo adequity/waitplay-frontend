@@ -147,6 +147,8 @@ export class PinballScene extends Phaser.Scene {
   }
 
   private createBallTexture() {
+    // 텍스처가 이미 존재하면 재생성하지 않음 (성능 최적화)
+    if (this.textures.exists('ball')) return;
     const graphics = this.add.graphics();
     graphics.fillStyle(0xffffff, 1);
     graphics.fillCircle(8, 8, 8);
@@ -155,6 +157,7 @@ export class PinballScene extends Phaser.Scene {
   }
 
   private createPaddleTexture() {
+    if (this.textures.exists('paddle')) return;
     const graphics = this.add.graphics();
     graphics.fillStyle(0x667eea, 1);
     graphics.fillRoundedRect(0, 0, 100, 20, 10);
@@ -163,6 +166,7 @@ export class PinballScene extends Phaser.Scene {
   }
 
   private createBrickTexture() {
+    if (this.textures.exists('brick')) return;
     const graphics = this.add.graphics();
     graphics.fillStyle(0x8b5cf6, 1);
     graphics.fillRoundedRect(0, 0, 60, 20, 5);

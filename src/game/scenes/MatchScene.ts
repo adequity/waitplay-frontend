@@ -168,8 +168,8 @@ export class MatchScene extends Phaser.Scene {
           return;
         }
 
-        // 로드 에러 처리
-        this.load.on('loaderror', (file: Phaser.Loader.File) => {
+        // 로드 에러 처리 (once로 변경하여 메모리 누수 방지)
+        this.load.once('loaderror', (file: Phaser.Loader.File) => {
           const url = typeof file.url === 'string' ? file.url.substring(0, 100) : 'unknown';
           console.error('[MatchScene] Failed to load image:', file.key, url);
         });

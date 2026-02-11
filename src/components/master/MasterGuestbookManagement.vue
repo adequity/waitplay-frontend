@@ -478,9 +478,25 @@ const onReportFilterChange = () => {
   fetchMessages()
 }
 
-const openDetailModal = (msg: any) => {
+const openDetailModal = async (msg: any) => {
   selectedMessage.value = msg
   showDetailModal.value = true
+
+  // 조회수 증가
+  try {
+    const response = await fetch(`${API_URL}/api/guestbook/${msg.id}/view`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      // 로컬 상태 업데이트
+      msg.viewCount = data.viewCount
+      selectedMessage.value = { ...msg, viewCount: data.viewCount }
+    }
+  } catch (error) {
+    console.error('조회수 증가 실패:', error)
+  }
 }
 
 const closeDetailModal = () => {
