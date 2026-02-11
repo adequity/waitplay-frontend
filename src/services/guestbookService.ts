@@ -418,6 +418,29 @@ class GuestbookService {
     )
     return response.data
   }
+
+  /**
+   * Report a guestbook message for deletion (Admin only)
+   * @param messageId - 신고할 방명록 ID
+   * @param reason - 삭제 요청 사유
+   */
+  async reportMessage(messageId: string, reason: string): Promise<{ message: string; reportId: string; status: string }> {
+    const response = await apiClient.post<{ message: string; reportId: string; status: string }>(
+      `/api/guestbook/${messageId}/report`,
+      { reason }
+    )
+    return response.data
+  }
+
+  /**
+   * Get my reported messages (Admin only)
+   * @param status - 필터링할 상태 (pending, approved, rejected)
+   */
+  async getMyReports(status?: string): Promise<{ total: number; reports: any[] }> {
+    const params = status ? `?status=${status}` : ''
+    const response = await apiClient.get<{ total: number; reports: any[] }>(`/api/guestbook/my-reports${params}`)
+    return response.data
+  }
 }
 
 export default new GuestbookService()

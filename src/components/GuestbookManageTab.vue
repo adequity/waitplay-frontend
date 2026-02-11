@@ -211,6 +211,16 @@
               <IconBase name="pin" />
               <span>{{ selectedMessage.isPinned ? '고정 해제' : '상단 고정' }}</span>
             </button>
+
+            <button
+              class="action-btn report-btn"
+              :class="{ loading: reportingMessageId === selectedMessage.id }"
+              @click.stop="openReportModal(selectedMessage)"
+              :disabled="reportingMessageId === selectedMessage.id"
+            >
+              <IconBase name="flag" />
+              <span>삭제 요청</span>
+            </button>
           </div>
 
           <!-- 댓글 섹션 -->
@@ -287,6 +297,41 @@
         <img :src="selectedImage" alt="이미지 미리보기" />
       </div>
     </div>
+
+    <!-- Report Modal (삭제 요청) -->
+    <div v-if="showReportModal" class="modal-overlay" @click.self="closeReportModal">
+      <div class="report-modal">
+        <div class="report-modal-header">
+          <h3>방명록 삭제 요청</h3>
+          <button class="btn-close-modal" @click="closeReportModal">
+            <IconBase name="close" />
+          </button>
+        </div>
+        <div class="report-modal-body">
+          <p class="report-notice">관리자에게 방명록 삭제를 요청합니다. 삭제 사유를 입력해주세요.</p>
+          <div class="report-message-preview" v-if="reportingMessage">
+            <div class="preview-author">{{ reportingMessage.userName }}</div>
+            <div class="preview-content">{{ reportingMessage.message || '(이미지 방명록)' }}</div>
+          </div>
+          <textarea
+            v-model="reportReason"
+            class="report-textarea"
+            placeholder="삭제 사유를 입력해주세요... (예: 부적절한 내용, 광고성 글, 욕설 포함 등)"
+            rows="4"
+          ></textarea>
+        </div>
+        <div class="report-modal-footer">
+          <button class="btn-cancel" @click="closeReportModal">취소</button>
+          <button
+            class="btn-submit-report"
+            @click="submitReport"
+            :disabled="!reportReason.trim() || isSubmittingReport"
+          >
+            {{ isSubmittingReport ? '요청 중...' : '삭제 요청' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -331,6 +376,13 @@ const pinningMessageId = ref<string | null>(null)
 
 // 메시지 상세 모달
 const selectedMessage = ref<ManageMessageResponse | null>(null)
+
+// 신고(삭제 요청) 관련 상태
+const showReportModal = ref(false)
+const reportingMessage = ref<ManageMessageResponse | null>(null)
+const reportReason = ref('')
+const isSubmittingReport = ref(false)
+const reportingMessageId = ref<string | null>(null)
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
@@ -560,6 +612,41 @@ const deleteReply = async (messageId: string, replyId: string) => {
   } catch (error) {
     console.error('Failed to delete reply:', error)
     alert('댓글 삭제에 실패했습니다.')
+  }
+}
+
+// 신고(삭제 요청) 모달 열기
+const openReportModal = (message: ManageMessageResponse) => {
+  reportingMessage.value = message
+  reportReason.value = ''
+  showReportModal.value = true
+}
+
+// 신고 모달 닫기
+const closeReportModal = () => {
+  showReportModal.value = false
+  reportingMessage.value = null
+  reportReason.value = ''
+}
+
+// 신고 제출
+const submitReport = async () => {
+  if (!reportingMessage.value || !reportReason.value.trim() || isSubmittingReport.value) return
+
+  isSubmittingReport.value = true
+  reportingMessageId.value = reportingMessage.value.id
+
+  try {
+    await guestbookService.reportMessage(reportingMessage.value.id, reportReason.value.trim())
+    alert('삭제 요청이 접수되었습니다. 관리자가 검토 후 처리합니다.')
+    closeReportModal()
+    closeMessageModal()
+  } catch (error: any) {
+    console.error('Failed to submit report:', error)
+    alert(error.response?.data?.message || '삭제 요청에 실패했습니다.')
+  } finally {
+    isSubmittingReport.value = false
+    reportingMessageId.value = null
   }
 }
 
@@ -1461,6 +1548,136 @@ onMounted(async () => {
   color: white;
   font-size: 28px;
   cursor: pointer;
+}
+
+/* Report Button */
+.action-btn.report-btn {
+  background: #fff5f5;
+  color: #ff3b30;
+}
+
+.action-btn.report-btn:hover {
+  background: #ffe5e5;
+}
+
+/* Report Modal */
+.report-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 480px;
+  width: 90%;
+  overflow: hidden;
+}
+
+.report-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.report-modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.report-modal-body {
+  padding: 24px;
+}
+
+.report-notice {
+  font-size: 14px;
+  color: #86868b;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.report-message-preview {
+  background: #f9f9fb;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.preview-author {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 4px;
+}
+
+.preview-content {
+  font-size: 14px;
+  color: #86868b;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.report-textarea {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #e5e5ea;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.report-textarea:focus {
+  border-color: #ff3b30;
+}
+
+.report-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f5;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  background: #f5f5f7;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #86868b;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #e5e5ea;
+}
+
+.btn-submit-report {
+  padding: 10px 20px;
+  background: #ff3b30;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-submit-report:hover:not(:disabled) {
+  background: #e02d22;
+}
+
+.btn-submit-report:disabled {
+  background: #d2d2d7;
+  cursor: not-allowed;
 }
 
 /* Responsive */
