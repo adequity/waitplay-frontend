@@ -17,6 +17,9 @@ export default defineConfig({
     }
   },
   build: {
+    // ✅ modulepreload 비활성화 - 게임 번들이 index.html에서 preload되는 것 방지
+    // 게임 청크는 실제로 게임 페이지 접속 시에만 로드되어야 함
+    modulePreload: false,
     rollupOptions: {
       output: {
         // 게임 관련 라이브러리를 별도 청크로 분리 (초기 로드 최적화)
