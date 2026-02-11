@@ -1,7 +1,30 @@
 <template>
-  <div class="superadmin-view">
+  <div class="superadmin-view" :class="{ 'sidebar-open': isSidebarOpen }">
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+      <button class="hamburger-btn" @click="toggleSidebar" aria-label="메뉴 열기">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+      <div class="mobile-logo">
+        <IconBase name="logo" class="mobile-logo-icon" />
+        <span>SUPER</span>
+      </div>
+      <div class="mobile-avatar" @click="toggleSidebar">
+        <img v-if="authStore.user?.profileImage" :src="authStore.user.profileImage" alt="프로필" />
+        <IconBase v-else name="user" class="avatar-icon" />
+      </div>
+    </header>
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" @click="closeSidebar"></div>
+
     <!-- Left Sidebar Navigation -->
     <aside class="sidebar">
+      <div class="sidebar-close-btn" @click="closeSidebar">
+        <IconBase name="close" class="close-icon" />
+      </div>
       <div class="sidebar-header">
         <div class="logo superadmin-logo">
           <IconBase name="logo" class="logo-icon" />
@@ -17,7 +40,7 @@
         <button
           v-for="tab in tabs"
           :key="tab.id"
-          @click="activeTab = tab.id"
+          @click="selectTab(tab.id)"
           class="nav-item"
           :class="{ active: activeTab === tab.id }"
         >
@@ -97,6 +120,20 @@ const authStore = useAuthStore()
 const activeTab = ref('dashboard')
 const inviteCode = ref('')
 const copied = ref(false)
+const isSidebarOpen = ref(false)
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+}
+
+const closeSidebar = () => {
+  isSidebarOpen.value = false
+}
+
+const selectTab = (tabId: string) => {
+  activeTab.value = tabId
+  closeSidebar()
+}
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
@@ -510,10 +547,197 @@ onMounted(() => {
   padding: 40px;
 }
 
+/* Mobile Header */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-light);
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 200;
+}
+
+.hamburger-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 10px;
+  transition: background-color 0.2s;
+}
+
+.hamburger-btn:active {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.hamburger-line {
+  width: 22px;
+  height: 2px;
+  background-color: var(--text-dark);
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+.mobile-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-purple);
+}
+
+.mobile-logo-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--primary-purple);
+}
+
+.mobile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-purple-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid var(--primary-purple);
+  cursor: pointer;
+}
+
+.mobile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobile-avatar .avatar-icon {
+  width: 18px;
+  height: 18px;
+  color: white;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 150;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Sidebar Close Button */
+.sidebar-close-btn {
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sidebar-close-btn:active {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.close-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-gray);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .mobile-header {
+    display: flex;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    pointer-events: none;
+  }
+
+  .superadmin-view.sidebar-open .sidebar-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .sidebar {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+    z-index: 300;
+  }
+
+  .superadmin-view.sidebar-open .sidebar {
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-close-btn {
+    display: flex;
+  }
+
+  .main-content {
+    padding-top: 56px;
+  }
+
+  .content-wrapper {
+    padding: 16px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 280px;
+  }
+
+  .content-wrapper {
+    padding: 12px;
+  }
+
+  .nav-item {
+    padding: 14px 16px;
+  }
+
+  .invite-code-section {
+    padding: 12px;
+  }
+
+  .invite-code-text {
+    font-size: 12px;
+    letter-spacing: 1.5px;
   }
 }
 </style>
