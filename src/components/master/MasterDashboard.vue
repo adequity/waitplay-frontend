@@ -122,14 +122,14 @@
             최근 가입 계정
           </h3>
           <ul class="activity-list">
-            <li v-for="account in recentActivity.accounts" :key="account.id">
+            <li v-for="account in (recentActivity.accounts || [])" :key="account.id">
               <div class="activity-item">
                 <span class="item-name">{{ account.nickname || account.username }}</span>
                 <span class="item-role" :class="account.userRole">{{ getRoleLabel(account.userRole) }}</span>
               </div>
               <span class="item-date">{{ formatDate(account.createdAt) }}</span>
             </li>
-            <li v-if="recentActivity.accounts.length === 0" class="empty">
+            <li v-if="!recentActivity.accounts || recentActivity.accounts.length === 0" class="empty">
               최근 가입한 계정이 없습니다
             </li>
           </ul>
@@ -142,7 +142,7 @@
             최근 문의
           </h3>
           <ul class="activity-list">
-            <li v-for="inquiry in recentActivity.inquiries" :key="inquiry.id">
+            <li v-for="inquiry in (recentActivity.inquiries || [])" :key="inquiry.id">
               <div class="activity-item">
                 <span class="item-name">{{ inquiry.title }}</span>
                 <span class="item-status" :class="{ answered: inquiry.isAnswered }">
@@ -151,7 +151,7 @@
               </div>
               <span class="item-date">{{ formatDate(inquiry.createdAt) }}</span>
             </li>
-            <li v-if="recentActivity.inquiries.length === 0" class="empty">
+            <li v-if="!recentActivity.inquiries || recentActivity.inquiries.length === 0" class="empty">
               최근 문의가 없습니다
             </li>
           </ul>
@@ -164,14 +164,14 @@
             최근 방명록
           </h3>
           <ul class="activity-list">
-            <li v-for="msg in recentActivity.guestbook" :key="msg.id">
+            <li v-for="msg in (recentActivity.guestbook || [])" :key="msg.id">
               <div class="activity-item">
                 <span class="item-name">{{ msg.userName }}</span>
                 <span class="item-preview">{{ truncate(msg.message, 20) }}</span>
               </div>
               <span class="item-date">{{ formatDate(msg.createdAt) }}</span>
             </li>
-            <li v-if="recentActivity.guestbook.length === 0" class="empty">
+            <li v-if="!recentActivity.guestbook || recentActivity.guestbook.length === 0" class="empty">
               최근 방명록이 없습니다
             </li>
           </ul>
@@ -269,6 +269,12 @@ const fetchDashboard = async () => {
     }
   } catch (error) {
     console.error('Dashboard fetch error:', error)
+    // Ensure recentActivity is always defined
+    recentActivity.value = {
+      accounts: [],
+      inquiries: [],
+      guestbook: []
+    }
   } finally {
     loading.value = false
   }

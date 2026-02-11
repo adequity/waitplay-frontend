@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <div v-if="assets.length === 0" class="empty-state">
+      <div v-if="!assets || assets.length === 0" class="empty-state">
         <IconBase name="image" class="empty-icon" />
         <p>에셋이 없습니다</p>
       </div>

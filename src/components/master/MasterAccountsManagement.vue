@@ -93,7 +93,7 @@
               </div>
             </td>
           </tr>
-          <tr v-if="accounts.length === 0">
+          <tr v-if="!accounts || accounts.length === 0">
             <td colspan="6" class="empty-row">
               검색 결과가 없습니다
             </td>
@@ -384,6 +384,8 @@ const fetchAccounts = async () => {
     totalPages.value = data.totalPages ?? 1
   } catch (error) {
     console.error('Fetch accounts error:', error)
+    accounts.value = []
+    totalPages.value = 1
   } finally {
     loading.value = false
   }

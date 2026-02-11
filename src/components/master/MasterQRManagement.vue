@@ -68,7 +68,7 @@
         </div>
       </div>
 
-      <div v-if="qrcodes.length === 0" class="empty-state">
+      <div v-if="!qrcodes || qrcodes.length === 0" class="empty-state">
         <IconBase name="qr" class="empty-icon" />
         <p>QR 코드가 없습니다</p>
       </div>

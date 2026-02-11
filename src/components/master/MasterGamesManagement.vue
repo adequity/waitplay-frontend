@@ -61,7 +61,7 @@
           </div>
         </div>
 
-        <div v-if="templates.length === 0" class="empty-state">
+        <div v-if="!templates || templates.length === 0" class="empty-state">
           <IconBase name="gamepad" class="empty-icon" />
           <p>게임 템플릿이 없습니다</p>
           <button class="btn-primary" @click="showCreateModal = true">템플릿 추가하기</button>
@@ -115,7 +115,7 @@
           </div>
         </div>
 
-        <div v-if="adminAccounts.length === 0" class="empty-state">
+        <div v-if="!adminAccounts || adminAccounts.length === 0" class="empty-state">
           <IconBase name="users" class="empty-icon" />
           <p>Admin 계정이 없습니다</p>
         </div>
@@ -150,7 +150,7 @@
             </td>
             <td>{{ formatDate(score.playedAt) }}</td>
           </tr>
-          <tr v-if="scores.length === 0">
+          <tr v-if="!scores || scores.length === 0">
             <td colspan="4" class="empty-row">게임 기록이 없습니다</td>
           </tr>
         </tbody>

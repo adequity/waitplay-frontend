@@ -67,7 +67,7 @@
               </div>
             </td>
           </tr>
-          <tr v-if="messages.length === 0">
+          <tr v-if="!messages || messages.length === 0">
             <td colspan="6" class="empty-row">방명록이 없습니다</td>
           </tr>
         </tbody>
@@ -114,10 +114,12 @@ const fetchMessages = async () => {
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
-    messages.value = data.messages
-    totalPages.value = data.totalPages
+    messages.value = data.data || []
+    totalPages.value = data.totalPages || 1
   } catch (error) {
     console.error(error)
+    messages.value = []
+    totalPages.value = 1
   } finally {
     loading.value = false
   }
@@ -130,8 +132,8 @@ const debouncedSearch = () => {
 
 const togglePin = async (msg: any) => {
   try {
-    const response = await fetch(`${API_URL}/api/masteradmin/guestbook/${msg.id}/pin`, {
-      method: 'POST',
+    const response = await fetch(`${API_URL}/api/masteradmin/guestbook/${msg.id}/toggle-pin`, {
+      method: 'PATCH',
       headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
     })
     if (!response.ok) throw new Error('Failed')

@@ -51,7 +51,7 @@
         </div>
       </div>
 
-      <div v-if="benefits.length === 0" class="empty-state">
+      <div v-if="!benefits || benefits.length === 0" class="empty-state">
         <IconBase name="gift" class="empty-icon" />
         <p>혜택이 없습니다</p>
       </div>

@@ -60,7 +60,7 @@
         </div>
       </div>
 
-      <div v-if="inquiries.length === 0" class="empty-state">
+      <div v-if="!inquiries || inquiries.length === 0" class="empty-state">
         <IconBase name="message" class="empty-icon" />
         <p>문의가 없습니다</p>
       </div>

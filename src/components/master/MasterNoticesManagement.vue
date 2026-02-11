@@ -50,7 +50,7 @@
               </div>
             </td>
           </tr>
-          <tr v-if="notices.length === 0">
+          <tr v-if="!notices || notices.length === 0">
             <td colspan="5" class="empty-row">공지사항이 없습니다</td>
           </tr>
         </tbody>
