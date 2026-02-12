@@ -83,16 +83,6 @@
           </div>
         </div>
 
-        <!-- 더보기 버튼 (왼쪽 하단) -->
-        <div class="masonry-card more-card" @click="goToFullGuestbook">
-          <div class="more-card-content">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-            <span>더보기</span>
-            <span class="more-count">{{ totalMessageCount }}개</span>
-          </div>
-        </div>
       </div>
 
       <!-- 오른쪽 컬럼 -->
@@ -132,6 +122,17 @@
               </svg>
               <span>{{ message.likeCount || 0 }}</span>
             </button>
+          </div>
+        </div>
+
+        <!-- 더보기 버튼 (오른쪽 하단) -->
+        <div class="masonry-card more-card" @click="goToFullGuestbook">
+          <div class="more-card-content">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            <span>더보기</span>
+            <span class="more-count">{{ totalMessageCount }}개</span>
           </div>
         </div>
       </div>
