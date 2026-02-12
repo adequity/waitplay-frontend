@@ -266,14 +266,14 @@ async function shareToTwitter() {
 
 .floating-dock {
   position: absolute;
-  bottom: 20px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 4px 16px;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;
