@@ -71,3 +71,4 @@
     at nn (https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:14:1456)
     at t.__weh.t.__weh (https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:16:7270) @ https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:13
 [68241791ms] [WARNING] BGM 재생 실패: NotAllowedError: play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD @ https://waitplay.co.kr/assets/CustomerView-_8V0v1P_.js:0
+[68455073ms] [WARNING] BGM 재생 실패: NotAllowedError: play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD @ https://waitplay.co.kr/assets/CustomerView-iuYqQwmK.js:0

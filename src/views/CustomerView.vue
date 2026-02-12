@@ -33,6 +33,7 @@
       :show-music="isBgmEnabled && !!bgmUrl"
       :show-my-page="true"
       :is-music-playing="isBgmPlaying"
+      :theme-background-color="pageTheme.backgroundColor"
       @toggle-music="toggleBgm"
       @open-my-page="toggleSidebar"
     />

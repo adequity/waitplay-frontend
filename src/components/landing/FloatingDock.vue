@@ -1,7 +1,7 @@
 <template>
   <div class="floating-dock-container">
     <!-- 글래스모피즘 독 -->
-    <div class="floating-dock">
+    <div class="floating-dock" :class="{ 'dark-theme': isDarkTheme }">
       <!-- 음악 버튼 -->
       <button
         v-if="showMusic"
@@ -137,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import shareService from '@/services/shareService'
 
 const props = defineProps<{
@@ -149,7 +149,30 @@ const props = defineProps<{
   showMusic?: boolean
   showMyPage?: boolean
   isMusicPlaying?: boolean
+  themeBackgroundColor?: string
 }>()
+
+// 배경색이 어두운지 판단하는 함수
+function isDarkColor(color: string): boolean {
+  if (!color) return false
+
+  // hex 색상을 RGB로 변환
+  let hex = color.replace('#', '')
+  if (hex.length === 3) {
+    hex = hex.split('').map(c => c + c).join('')
+  }
+
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+
+  // 밝기 계산 (YIQ 공식)
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000
+  return brightness < 128
+}
+
+// 테마 배경색에 따라 다크모드 여부 결정
+const isDarkTheme = computed(() => isDarkColor(props.themeBackgroundColor || ''))
 
 const emit = defineEmits<{
   (e: 'toggleMusic'): void
@@ -496,20 +519,18 @@ async function shareToTwitter() {
   transform: translateX(-50%) translateY(10px);
 }
 
-/* 다크모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .floating-dock {
-    background: rgba(30, 30, 30, 0.9);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
+/* 다크 테마 (배경색 기반) */
+.floating-dock.dark-theme {
+  background: rgba(30, 30, 30, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+}
 
-  .dock-icon {
-    color: #fff;
-  }
+.floating-dock.dark-theme .dock-icon {
+  color: #fff;
+}
 
-  .dock-label {
-    color: #aaa;
-  }
+.floating-dock.dark-theme .dock-label {
+  color: #ccc;
 }
 
 /* 반응형 */
