@@ -1,0 +1,1 @@
+[ 1887442ms] [WARNING] BGM 재생 실패: NotAllowedError: play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD @ https://waitplay.co.kr/assets/CustomerView-DvTrihMl.js:587

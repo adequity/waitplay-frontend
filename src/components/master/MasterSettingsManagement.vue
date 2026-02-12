@@ -423,11 +423,11 @@ function openEditor(type: 'privacy' | 'terms') {
   const nextVersion = getNextVersion(type === 'privacy' ? privacyPolicies.value : termsPolicies.value)
 
   editorForm.value = {
-    title: activePolicy?.title || (type === 'privacy' ? '개인정보처리방침' : '이용약관'),
+    title: activePolicy?.title ?? (type === 'privacy' ? '개인정보처리방침' : '이용약관'),
     version: nextVersion,
-    effectiveDate: new Date().toISOString().split('T')[0],
+    effectiveDate: new Date().toISOString().split('T')[0] as string,
     changeSummary: '',
-    content: activePolicy?.content || getDefaultContent(type),
+    content: activePolicy?.content ?? getDefaultContent(type),
     isActive: false
   }
 
@@ -438,8 +438,11 @@ function openEditor(type: 'privacy' | 'terms') {
 function getNextVersion(policies: PolicyDocument[]): string {
   if (policies.length === 0) return '1.0'
   const versions = policies.map(p => {
-    const parts = p.version.split('.')
-    return parseFloat(parts[0]) + (parts[1] ? parseFloat(parts[1]) / 10 : 0)
+    const versionStr = p.version || '1.0'
+    const parts = versionStr.split('.')
+    const major = parts[0] ? parseFloat(parts[0]) : 1
+    const minor = parts[1] ? parseFloat(parts[1]) / 10 : 0
+    return major + minor
   })
   const maxVersion = Math.max(...versions)
   return (Math.floor(maxVersion) + 1) + '.0'

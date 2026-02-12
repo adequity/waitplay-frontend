@@ -1,0 +1,4 @@
+[   12868ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://api.waitplay.co.kr/api/qrcode/by-code/TERRACE001:0
+[   12871ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://api.waitplay.co.kr/api/landingpage/settings/qr/TERRACE001:0
+[   12877ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://api.waitplay.co.kr/api/landingpage/layout/by-code/TERRACE001:0
+[   12877ms] [ERROR] Failed to fetch layout data @ https://waitplay.co.kr/assets/CustomerView-CW3og-8S.js:659
