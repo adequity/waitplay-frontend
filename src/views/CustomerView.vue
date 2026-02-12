@@ -1166,7 +1166,11 @@ onMounted(async () => {
     // QR 코드 결과 처리
     if (qrResult.status === 'fulfilled' && qrResult.value) {
       qrCodeUuid = qrResult.value.id
-      console.log('QR scan logged successfully')
+      // ✅ qrCodeId에 실제 UUID 저장 (공유 API에서 필요)
+      if (qrCodeUuid) {
+        qrCodeId.value = qrCodeUuid
+      }
+      console.log('QR scan logged successfully, UUID:', qrCodeUuid)
     }
 
     // 설정 결과 처리
