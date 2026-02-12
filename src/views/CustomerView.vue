@@ -1072,12 +1072,15 @@ const playBgm = async () => {
 }
 
 const pauseBgm = () => {
+  console.log('pauseBgm called, bgmAudio:', !!bgmAudio.value)
   if (!bgmAudio.value) return
   bgmAudio.value.pause()
   isBgmPlaying.value = false
+  console.log('BGM paused, isBgmPlaying:', isBgmPlaying.value)
 }
 
 const toggleBgm = () => {
+  console.log('toggleBgm called, isBgmPlaying:', isBgmPlaying.value, 'bgmAudio:', !!bgmAudio.value)
   if (isBgmPlaying.value) {
     pauseBgm()
   } else {
