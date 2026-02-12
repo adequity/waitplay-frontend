@@ -7,7 +7,8 @@
         v-if="showMusic"
         class="dock-item"
         :class="{ active: isMusicPlaying }"
-        @click="toggleMusic"
+        @click.stop="toggleMusic"
+        @mousedown="() => console.log('music button mousedown')"
         @touchstart.prevent="onMusicTouchStart"
         @touchend.prevent="onMusicTouchEnd"
       >
