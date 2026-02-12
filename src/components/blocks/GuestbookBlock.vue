@@ -20,53 +20,40 @@
 
     <h2 class="guestbook-title">{{ data.title }}</h2>
 
-    <!-- 방명록 작성 버튼 (로그인한 사용자만) -->
-    <div v-if="isAuthenticated" class="write-section">
-      <!-- 커스텀 버튼 이미지가 있는 경우 -->
-      <button v-if="data.buttonImageUrl" @click="openDrawingModal" class="write-btn-custom">
-        <img
-          :src="data.buttonImageUrl"
-          alt="방명록 남기기"
-          class="custom-button-image"
-          :style="{ transform: `scale(${data.buttonImageScale || 1})` }"
-        />
-      </button>
-      <!-- 기본 버튼 -->
-      <button v-else @click="openDrawingModal" class="write-btn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-          <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-          <path d="M2 2l7.586 7.586"/>
-        </svg>
-        방명록 남기기
-      </button>
-    </div>
-
-    <!-- 로그인 유도 -->
-    <div v-else class="login-prompt">
-      <p>로그인하고 손글씨로 방명록을 남겨보세요!</p>
-      <div class="auth-buttons">
-        <button class="btn-login" @click="goToLogin">로그인</button>
-        <button class="btn-signup" @click="goToSignup">회원가입</button>
-      </div>
-    </div>
-
-    <!-- 방명록 슬라이더 -->
+    <!-- 방명록 Masonry 레이아웃 -->
     <LoadingSpinner v-if="isLoadingMessages" message="방명록을 불러오는 중..." :size="60" />
 
-    <div v-else-if="messages.length === 0" class="empty-state">
-      <p>아직 남겨진 메시지가 없습니다. 첫 메시지를 남겨보세요!</p>
-    </div>
+    <div v-else class="guestbook-masonry">
+      <!-- 왼쪽 컬럼 -->
+      <div class="masonry-column">
+        <!-- 작성하기 버튼 (로그인 시) -->
+        <div v-if="isAuthenticated" class="masonry-card write-card" @click="openDrawingModal">
+          <div class="write-card-content">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+              <path d="M2 2l7.586 7.586"/>
+            </svg>
+            <span>작성하기</span>
+          </div>
+        </div>
+        <!-- 로그인 유도 카드 -->
+        <div v-else class="masonry-card login-card">
+          <div class="login-card-content">
+            <p>로그인하고<br/>방명록을 남겨보세요!</p>
+            <button class="login-card-btn" @click="goToLogin">로그인</button>
+          </div>
+        </div>
 
-    <template v-else>
-      <!-- 2열 그리드 레이아웃 -->
-      <div class="guestbook-grid">
-        <!-- 방명록 카드들 (최대 5개) -->
+        <!-- 왼쪽 컬럼 메시지들 (짝수 인덱스: 0, 2, 4) -->
         <div
-          v-for="message in gridMessages"
+          v-for="(message, index) in leftColumnMessages"
           :key="message.id"
-          class="guestbook-card"
-          :class="{ 'my-post': isMyMessage(message) }"
+          class="masonry-card message-card"
+          :class="[
+            `card-size-${getCardSize(index * 2)}`,
+            { 'my-post': isMyMessage(message) }
+          ]"
           @click="openDetailModal(message)"
         >
           <div class="card-image-wrapper">
@@ -78,10 +65,9 @@
               loading="lazy"
               decoding="async"
             />
-            <!-- 내 글 뱃지 -->
             <span v-if="isMyMessage(message)" class="card-my-badge">MY</span>
           </div>
-          <div class="card-footer">
+          <div class="card-info">
             <span class="card-author">{{ message.userName }}</span>
             <button
               class="card-like-btn"
@@ -89,7 +75,7 @@
               @click.stop="handleLike(message)"
               :disabled="likingMessageId === message.id"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" :fill="message.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+              <svg width="12" height="12" viewBox="0 0 24 24" :fill="message.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
               <span>{{ message.likeCount || 0 }}</span>
@@ -97,22 +83,59 @@
           </div>
         </div>
 
-        <!-- 더보기 카드 (마지막 칸) -->
-        <div class="guestbook-card more-card" @click="goToFullGuestbook">
+        <!-- 더보기 버튼 (왼쪽 하단) -->
+        <div class="masonry-card more-card" @click="goToFullGuestbook">
           <div class="more-card-content">
-            <div class="more-card-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="16"/>
-                <line x1="8" y1="12" x2="16" y2="12"/>
-              </svg>
-            </div>
-            <span class="more-card-text">전체보기</span>
-            <span class="more-card-count">{{ totalMessageCount }}개</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            <span>더보기</span>
+            <span class="more-count">{{ totalMessageCount }}개</span>
           </div>
         </div>
       </div>
-    </template>
+
+      <!-- 오른쪽 컬럼 -->
+      <div class="masonry-column">
+        <!-- 오른쪽 컬럼 메시지들 (홀수 인덱스: 1, 3) -->
+        <div
+          v-for="(message, index) in rightColumnMessages"
+          :key="message.id"
+          class="masonry-card message-card"
+          :class="[
+            `card-size-${getCardSize(index * 2 + 1)}`,
+            { 'my-post': isMyMessage(message) }
+          ]"
+          @click="openDetailModal(message)"
+        >
+          <div class="card-image-wrapper">
+            <img
+              v-if="message.imageUrl"
+              :src="message.imageUrl"
+              :alt="`${message.userName}의 방명록`"
+              class="card-image"
+              loading="lazy"
+              decoding="async"
+            />
+            <span v-if="isMyMessage(message)" class="card-my-badge">MY</span>
+          </div>
+          <div class="card-info">
+            <span class="card-author">{{ message.userName }}</span>
+            <button
+              class="card-like-btn"
+              :class="{ 'liked': message.isLikedByMe }"
+              @click.stop="handleLike(message)"
+              :disabled="likingMessageId === message.id"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" :fill="message.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              <span>{{ message.likeCount || 0 }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- 전체화면 그리기 모달 -->
     <Teleport to="body">
@@ -726,8 +749,25 @@ const isLoadingReplies = ref(false)
 // 미리보기용 최신 5개 메시지
 const previewMessages = computed(() => messages.value.slice(0, 5))
 
-// 그리드용 메시지 (최대 5개, 홀수면 더보기 카드가 마지막 칸에 들어감)
-const gridMessages = computed(() => messages.value.slice(0, 5))
+// Masonry 레이아웃용 메시지 분배 (최대 5개)
+const masonryMessages = computed(() => messages.value.slice(0, 5))
+
+// 왼쪽 컬럼 메시지 (인덱스 0, 2, 4)
+const leftColumnMessages = computed(() =>
+  masonryMessages.value.filter((_, index) => index % 2 === 0)
+)
+
+// 오른쪽 컬럼 메시지 (인덱스 1, 3)
+const rightColumnMessages = computed(() =>
+  masonryMessages.value.filter((_, index) => index % 2 === 1)
+)
+
+// 카드 크기 결정 (불규칙한 Masonry 효과)
+const getCardSize = (index: number): string => {
+  // 패턴: small, large, medium, large, small
+  const sizes = ['small', 'large', 'medium', 'large', 'small'] as const
+  return sizes[index % sizes.length] ?? 'small'
+}
 
 // 스티커 에셋 분류
 const logoAssets = computed(() => stickerAssets.value.filter(a => a.type === 'logo'))
@@ -845,6 +885,9 @@ const goToFullGuestbook = () => {
   }
 }
 
+// 캔버스 비율 상수 (미리보기 카드와 동일하게 3:4)
+const CANVAS_ASPECT_RATIO = 3 / 4
+
 const initCanvas = () => {
   if (!canvasRef.value) return
 
@@ -852,13 +895,30 @@ const initCanvas = () => {
   const container = canvas.parentElement
 
   if (container) {
-    // 모달 내부 캔버스 크기 설정
+    // 컨테이너 크기 가져오기
     const containerWidth = container.clientWidth
     const containerHeight = container.clientHeight
 
-    // 캔버스를 컨테이너에 맞춤
-    canvas.width = containerWidth
-    canvas.height = containerHeight
+    // 3:4 비율로 캔버스 크기 계산 (컨테이너 안에 맞추면서 비율 유지)
+    let canvasWidth: number
+    let canvasHeight: number
+
+    // 컨테이너 비율과 목표 비율 비교
+    const containerRatio = containerWidth / containerHeight
+
+    if (containerRatio > CANVAS_ASPECT_RATIO) {
+      // 컨테이너가 더 넓음 → 높이 기준으로 맞춤
+      canvasHeight = containerHeight
+      canvasWidth = canvasHeight * CANVAS_ASPECT_RATIO
+    } else {
+      // 컨테이너가 더 좁음 → 너비 기준으로 맞춤
+      canvasWidth = containerWidth
+      canvasHeight = canvasWidth / CANVAS_ASPECT_RATIO
+    }
+
+    // 캔버스 크기 설정 (고정 비율 3:4)
+    canvas.width = Math.floor(canvasWidth)
+    canvas.height = Math.floor(canvasHeight)
 
     ctx.value = canvas.getContext('2d')
 
@@ -1701,41 +1761,138 @@ const handleLike = async (message: any) => {
 }
 
 /* ==================== */
-/* 2열 그리드 레이아웃 */
+/* Masonry 스타일 레이아웃 */
 /* ==================== */
-.guestbook-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-top: 0.5rem;
+.guestbook-masonry {
+  display: flex;
+  gap: 10px;
+  margin-top: 0.75rem;
 }
 
-.guestbook-card {
-  background: white;
-  border-radius: 16px;
+.masonry-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 공통 카드 스타일 - 플로팅 독 글래스모피즘 */
+.masonry-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-.guestbook-card:hover {
+.masonry-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-.guestbook-card.my-post {
-  box-shadow: 0 0 0 2px #4ECDC4, 0 2px 12px rgba(78, 205, 196, 0.2);
+.masonry-card:active {
+  transform: scale(0.98);
 }
 
-.card-image-wrapper {
+.masonry-card.my-post {
+  box-shadow:
+    0 0 0 2px #4ECDC4,
+    0 4px 24px rgba(78, 205, 196, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* 작성하기 카드 */
+.write-card {
+  padding: 20px;
+}
+
+.write-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #374151;
+}
+
+.write-card-content svg {
+  color: #4ECDC4;
+}
+
+.write-card-content span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 로그인 유도 카드 */
+.login-card {
+  padding: 16px;
+}
+
+.login-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.login-card-content p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.login-card-btn {
+  padding: 8px 20px;
+  background: #4ECDC4;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.login-card-btn:hover {
+  background: #3dbdb5;
+  transform: scale(1.02);
+}
+
+/* 메시지 카드 */
+.message-card .card-image-wrapper {
   position: relative;
-  aspect-ratio: 1;
-  background: #f9fafb;
+  background: rgba(249, 250, 251, 0.5);
   overflow: hidden;
 }
 
-.card-image {
+/* 카드 크기 변형 */
+.card-size-small .card-image-wrapper {
+  aspect-ratio: 1;
+}
+
+.card-size-medium .card-image-wrapper {
+  aspect-ratio: 4/5;
+}
+
+.card-size-large .card-image-wrapper {
+  aspect-ratio: 3/4;
+}
+
+.message-card .card-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1748,50 +1905,51 @@ const handleLike = async (message: any) => {
   padding: 2px 6px;
   background: #4ECDC4;
   color: white;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   border-radius: 4px;
 }
 
-.card-footer {
+/* 카드 정보 영역 */
+.card-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  background: white;
 }
 
 .card-author {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #374151;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 60%;
+  max-width: 55%;
 }
 
 .card-like-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   padding: 4px 8px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.5);
   border: none;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 11px;
   color: #9ca3af;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .card-like-btn:hover {
-  background: #fef2f2;
+  background: rgba(254, 242, 242, 0.8);
   color: #ef4444;
 }
 
 .card-like-btn.liked {
   color: #ef4444;
+  background: rgba(254, 242, 242, 0.6);
 }
 
 .card-like-btn.liked svg {
@@ -1800,47 +1958,30 @@ const handleLike = async (message: any) => {
 
 /* 더보기 카드 */
 .more-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.more-card:hover {
-  background: rgba(255, 255, 255, 0.8);
+  padding: 16px;
 }
 
 .more-card-content {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 24px;
-}
-
-.more-card-icon {
-  width: 48px;
-  height: 48px;
-  display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(78, 205, 196, 0.1);
-  border-radius: 50%;
-  color: #4ECDC4;
+  gap: 6px;
+  color: #6b7280;
 }
 
-.more-card-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
+.more-card-content svg {
+  color: #9ca3af;
 }
 
-.more-card-count {
+.more-card-content span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.more-card-content .more-count {
   font-size: 12px;
   color: #9ca3af;
+  font-weight: 400;
 }
 
 @keyframes heartPop {
@@ -3005,6 +3146,9 @@ const handleLike = async (message: any) => {
   position: relative;
   background: #f9fafb;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-canvas-container .canvas-placeholder {
