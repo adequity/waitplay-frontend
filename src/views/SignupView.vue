@@ -155,7 +155,7 @@
           <div class="terms-section">
             <label class="checkbox-label">
               <input type="checkbox" v-model="formData.agreeTerms" required class="checkbox-input" />
-              <span><a href="#" class="terms-link">이용약관</a> 및 <a href="#" class="terms-link">개인정보처리방침</a>에 동의합니다 (필수)</span>
+              <span><a href="/terms" target="_blank" class="terms-link" @click.stop>이용약관</a> 및 <a href="/privacy" target="_blank" class="terms-link" @click.stop>개인정보처리방침</a>에 동의합니다 (필수)</span>
             </label>
             <label class="checkbox-label">
               <input type="checkbox" v-model="formData.agreeMarketing" class="checkbox-input" />
