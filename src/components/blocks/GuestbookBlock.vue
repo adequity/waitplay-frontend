@@ -59,120 +59,58 @@
     </div>
 
     <template v-else>
-      <!-- 포스트잇 모드 -->
-      <template v-if="displayMode === 'postit'">
-        <div class="drawings-slider-container">
-          <div class="drawings-slider" ref="sliderRef">
-            <div
-              v-for="message in previewMessages"
-              :key="message.id"
-              class="post-it-slide"
-              :class="{ 'my-post': isMyMessage(message) }"
-              @click="openDetailModal(message)"
-            >
-              <div
-                class="post-it"
-                :class="[`post-it--${message.color}`, { 'my-post': isMyMessage(message) }]"
-                :style="{ transform: `rotate(${message.rotation}deg)` }"
-              >
-                <div class="post-it-content">
-                  <div class="post-it-image-container">
-                    <img
-                      v-if="message.imageUrl"
-                      :src="message.imageUrl"
-                      :alt="`${message.userName}의 방명록`"
-                      class="drawing-image"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <!-- 액션 버튼들 -->
-                    <div class="post-it-actions">
-                      <!-- 공유 버튼 -->
-                      <button
-                        class="action-btn share-btn"
-                        @click.stop="shareMessage(message)"
-                        title="공유하기"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <circle cx="18" cy="5" r="3"/>
-                          <circle cx="6" cy="12" r="3"/>
-                          <circle cx="18" cy="19" r="3"/>
-                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="message-footer">
-                    <div class="message-info">
-                      <span v-if="isMyMessage(message)" class="my-post-badge">MY</span>
-                      <span class="message-author">- {{ message.userName }}</span>
-                      <span class="message-date">{{ formatDate(message.createdAt) }}</span>
-                    </div>
-                    <button
-                      class="like-btn"
-                      :class="{ 'liked': message.isLikedByMe }"
-                      @click.stop="handleLike(message)"
-                      :disabled="likingMessageId === message.id"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" :fill="message.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                      </svg>
-                      <span>{{ message.likeCount || 0 }}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <!-- 낙서 모드 -->
-      <template v-else-if="displayMode === 'graffiti'">
-        <div class="graffiti-wall">
-          <div
-            v-for="(message, index) in previewMessages"
-            :key="message.id"
-            class="graffiti-item"
-            :style="getGraffitiStyle(index, message)"
-            @click="openDetailModal(message)"
-          >
+      <!-- 2열 그리드 레이아웃 -->
+      <div class="guestbook-grid">
+        <!-- 방명록 카드들 (최대 5개) -->
+        <div
+          v-for="message in gridMessages"
+          :key="message.id"
+          class="guestbook-card"
+          :class="{ 'my-post': isMyMessage(message) }"
+          @click="openDetailModal(message)"
+        >
+          <div class="card-image-wrapper">
             <img
               v-if="message.imageUrl"
               :src="message.imageUrl"
-              :alt="`${message.userName}의 낙서`"
-              class="graffiti-image"
+              :alt="`${message.userName}의 방명록`"
+              class="card-image"
               loading="lazy"
               decoding="async"
             />
-            <div class="graffiti-footer">
-              <span class="graffiti-author">{{ message.userName }}</span>
-              <button
-                class="like-btn like-btn-graffiti"
-                :class="{ 'liked': message.isLikedByMe }"
-                @click.stop="handleLike(message)"
-                :disabled="likingMessageId === message.id"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" :fill="message.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                </svg>
-                <span>{{ message.likeCount || 0 }}</span>
-              </button>
-            </div>
+            <!-- 내 글 뱃지 -->
+            <span v-if="isMyMessage(message)" class="card-my-badge">MY</span>
+          </div>
+          <div class="card-footer">
+            <span class="card-author">{{ message.userName }}</span>
+            <button
+              class="card-like-btn"
+              :class="{ 'liked': message.isLikedByMe }"
+              @click.stop="handleLike(message)"
+              :disabled="likingMessageId === message.id"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" :fill="message.isLikedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              <span>{{ message.likeCount || 0 }}</span>
+            </button>
           </div>
         </div>
-      </template>
 
-      <!-- 전체보기 버튼 (5개 초과 시에만 표시) -->
-      <div v-if="totalMessageCount > 5" class="view-all-section">
-        <button @click="goToFullGuestbook" class="view-all-btn">
-          <span>전체 방명록 보기</span>
-          <span class="message-count">({{ totalMessageCount }}개)</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>
+        <!-- 더보기 카드 (마지막 칸) -->
+        <div class="guestbook-card more-card" @click="goToFullGuestbook">
+          <div class="more-card-content">
+            <div class="more-card-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+              </svg>
+            </div>
+            <span class="more-card-text">전체보기</span>
+            <span class="more-card-count">{{ totalMessageCount }}개</span>
+          </div>
+        </div>
       </div>
     </template>
 
@@ -787,6 +725,9 @@ const isLoadingReplies = ref(false)
 
 // 미리보기용 최신 5개 메시지
 const previewMessages = computed(() => messages.value.slice(0, 5))
+
+// 그리드용 메시지 (최대 5개, 홀수면 더보기 카드가 마지막 칸에 들어감)
+const gridMessages = computed(() => messages.value.slice(0, 5))
 
 // 스티커 에셋 분류
 const logoAssets = computed(() => stickerAssets.value.filter(a => a.type === 'logo'))
@@ -1757,6 +1698,155 @@ const handleLike = async (message: any) => {
 
 .btn-signup:active {
   transform: scale(0.98);
+}
+
+/* ==================== */
+/* 2열 그리드 레이아웃 */
+/* ==================== */
+.guestbook-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 0.5rem;
+}
+
+.guestbook-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.guestbook-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.guestbook-card.my-post {
+  box-shadow: 0 0 0 2px #4ECDC4, 0 2px 12px rgba(78, 205, 196, 0.2);
+}
+
+.card-image-wrapper {
+  position: relative;
+  aspect-ratio: 1;
+  background: #f9fafb;
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-my-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 6px;
+  background: #4ECDC4;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: white;
+}
+
+.card-author {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60%;
+}
+
+.card-like-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-like-btn:hover {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.card-like-btn.liked {
+  color: #ef4444;
+}
+
+.card-like-btn.liked svg {
+  animation: heartPop 0.3s ease;
+}
+
+/* 더보기 카드 */
+.more-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.more-card:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.more-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+}
+
+.more-card-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(78, 205, 196, 0.1);
+  border-radius: 50%;
+  color: #4ECDC4;
+}
+
+.more-card-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.more-card-count {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
 }
 
 /* 낙서 모드 스타일 */
