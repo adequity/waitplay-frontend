@@ -12,7 +12,7 @@
       :key="block.id"
       :is="getBlockComponent(block.type)"
       :data="block.data"
-      :qrCodeId="qrCodeId"
+      :qrCodeId="qrCode"
     />
 
     <!-- Footer -->
@@ -24,7 +24,7 @@
 
     <!-- Floating Dock (글래스모피즘 독) -->
     <FloatingDock
-      v-if="qrCodeId"
+      v-if="qrCode"
       :qr-code-id="qrCodeId"
       :qr-code="qrCode"
       :landing-title="landingTitle"
