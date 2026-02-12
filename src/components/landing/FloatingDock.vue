@@ -1,7 +1,7 @@
 <template>
   <div class="floating-dock-container">
     <!-- 글래스모피즘 독 -->
-    <div class="floating-dock" :class="{ 'dock-hidden': isHidden }">
+    <div class="floating-dock">
       <!-- 음악 버튼 -->
       <button
         v-if="showMusic"
@@ -157,18 +157,9 @@ const emit = defineEmits<{
   (e: 'showVolumeControl'): void
 }>()
 
-const isHidden = ref(false)
 const showShareSheet = ref(false)
 const showCopyToast = ref(false)
-let lastScrollY = 0
 let musicTouchTimer: number | null = null
-
-// 스크롤에 따른 독 숨기기/보이기
-function handleScroll() {
-  const currentScrollY = window.scrollY
-  isHidden.value = currentScrollY > lastScrollY && currentScrollY > 100
-  lastScrollY = currentScrollY
-}
 
 // 음악 토글
 function toggleMusic() {
@@ -261,13 +252,6 @@ async function shareToTwitter() {
   }
 }
 
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll, { passive: true })
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
 </script>
 
 <style scoped>

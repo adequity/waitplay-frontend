@@ -1688,61 +1688,75 @@ const handleLike = async (message: any) => {
   transform-origin: center;
 }
 
-/* 로그인 유도 */
+/* 로그인 유도 - 글래스모피즘 스타일 */
 .login-prompt {
-  background: #f3f4f6;
-  border-radius: 12px;
-  padding: 2rem 1.5rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .login-prompt p {
-  color: #6b7280;
-  font-size: 15px;
-  margin: 0 0 1.25rem 0;
+  color: #374151;
+  font-size: 14px;
+  margin: 0 0 1rem 0;
   font-weight: 500;
 }
 
 .auth-buttons {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   justify-content: center;
 }
 
 .btn-login,
 .btn-signup {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.25rem;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
 .btn-login {
-  background: #4ECDC4;
+  background: rgba(78, 205, 196, 0.9);
   color: white;
+  box-shadow: 0 2px 8px rgba(78, 205, 196, 0.3);
 }
 
 .btn-login:hover {
-  background: #45b7b8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(78, 205, 196, 0.3);
+  background: rgba(78, 205, 196, 1);
+  transform: scale(1.02);
+}
+
+.btn-login:active {
+  transform: scale(0.98);
 }
 
 .btn-signup {
-  background: white;
+  background: rgba(255, 255, 255, 0.8);
   color: #4ECDC4;
-  border: 2px solid #4ECDC4;
+  border: 1.5px solid rgba(78, 205, 196, 0.5);
 }
 
 .btn-signup:hover {
-  background: #f0fffe;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(78, 205, 196, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(78, 205, 196, 0.8);
+  transform: scale(1.02);
+}
+
+.btn-signup:active {
+  transform: scale(0.98);
 }
 
 /* 낙서 모드 스타일 */
@@ -2779,7 +2793,7 @@ const handleLike = async (message: any) => {
   font-style: italic;
 }
 
-/* 전체보기 버튼 */
+/* 전체보기 버튼 - 글래스모피즘 스타일 */
 .view-all-section {
   margin-top: 1.5rem;
   text-align: center;
@@ -2789,30 +2803,43 @@ const handleLike = async (message: any) => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
-  background: transparent;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 14px;
+  padding: 0.625rem 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #374151;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .view-all-btn:hover {
-  background: #f9fafb;
-  border-color: #4ECDC4;
-  color: #4ECDC4;
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.02);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.view-all-btn:active {
+  transform: scale(0.98);
 }
 
 .view-all-btn .message-count {
-  color: #9ca3af;
+  color: #6b7280;
   font-weight: 400;
 }
 
 .view-all-btn:hover .message-count {
-  color: #4ECDC4;
+  color: #374151;
 }
 
 /* ==================== */
