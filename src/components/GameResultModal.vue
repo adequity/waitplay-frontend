@@ -95,14 +95,29 @@
               {{ isSubmitting ? '전송 중...' : '점수 제출' }}
             </button>
 
-            <!-- 다시하기 -->
-            <button class="btn-retry" @click="handleRetry">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 4v6h6M23 20v-6h-6"/>
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-              </svg>
-              다시 하기
-            </button>
+            <!-- 하단 버튼들 -->
+            <div class="bottom-actions">
+              <!-- 다시하기 -->
+              <button class="btn-retry" @click="handleRetry">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 4v6h6M23 20v-6h-6"/>
+                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                </svg>
+                다시 하기
+              </button>
+
+              <!-- 공유하기 -->
+              <button class="btn-share" @click="openShareSheet">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="18" cy="5" r="3"/>
+                  <circle cx="6" cy="12" r="3"/>
+                  <circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+                공유하기
+              </button>
+            </div>
           </div>
         </div>
 
@@ -155,6 +170,70 @@
         @close="handleCouponCreated"
         @coupon-created="handleCouponCode"
       />
+
+      <!-- 공유 시트 -->
+      <Transition name="sheet">
+        <div v-if="showShare" class="share-overlay" @click.self="closeShareSheet">
+          <div class="share-sheet">
+            <div class="share-header">
+              <h3>결과 공유하기</h3>
+              <button class="share-close-btn" @click="closeShareSheet">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="share-preview">
+              <div class="share-preview-card">
+                <span class="share-score">{{ score }}점</span>
+                <span class="share-game">{{ getGameName(gameType) }}</span>
+              </div>
+            </div>
+
+            <div class="share-options">
+              <button class="share-option kakao" @click="shareToKakao">
+                <div class="share-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#3C1E1E">
+                    <path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.86 5.26 4.64 6.68-.14.53-.92 3.37-.95 3.58 0 0-.02.16.08.22.1.06.22.01.22.01.29-.04 3.37-2.2 3.9-2.57.7.1 1.42.15 2.16.15 5.52 0 10-3.58 10-8S17.52 3 12 3z"/>
+                  </svg>
+                </div>
+                <span>카카오톡</span>
+              </button>
+
+              <button class="share-option link" @click="copyShareLink">
+                <div class="share-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                </div>
+                <span>링크 복사</span>
+              </button>
+
+              <button class="share-option twitter" @click="shareToTwitter">
+                <div class="share-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#000000">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </div>
+                <span>X</span>
+              </button>
+            </div>
+
+            <!-- 복사 완료 토스트 -->
+            <Transition name="toast">
+              <div v-if="showCopyToast" class="copy-toast">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+                링크가 복사되었습니다
+              </div>
+            </Transition>
+          </div>
+        </div>
+      </Transition>
     </div>
   </Teleport>
 </template>
@@ -164,6 +243,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { submitGameScore } from '@/services/gameScoreService'
 import benefitsService, { type BenefitDto } from '@/services/benefitsService'
+import shareService from '@/services/shareService'
 import AuthModal from '@/components/AuthModal.vue'
 import CouponRewardModal from '@/components/CouponRewardModal.vue'
 
@@ -207,6 +287,10 @@ const couponCode = ref('')
 const scoreId = ref('')
 const reward = ref<BenefitDto | null>(null)
 const qrCodeId = computed(() => props.qrCode)
+
+// Share state
+const showShare = ref(false)
+const showCopyToast = ref(false)
 
 // Computed values
 const score = computed(() => props.gameData?.score ?? 0)
@@ -393,6 +477,75 @@ function handleRetry() {
 // 닫기
 function handleClose() {
   emit('close')
+}
+
+// 공유 시트 열기/닫기
+function openShareSheet() {
+  showShare.value = true
+}
+
+function closeShareSheet() {
+  showShare.value = false
+}
+
+// 게임 이름 가져오기
+function getGameName(type: string): string {
+  const gameNames: Record<string, string> = {
+    'memory': '카드 매칭',
+    'spot-difference': '틀린그림찾기',
+    'pinball': '핀볼'
+  }
+  return gameNames[type] || '게임'
+}
+
+// 카카오톡 공유
+async function shareToKakao() {
+  if (!props.qrCode) return
+  try {
+    await shareService.shareToKakao(
+      props.qrCode,
+      `${getGameName(props.gameType)}에서 ${score.value}점 달성! 🎮`,
+      '도전해보세요!',
+      undefined,
+      'game_result',
+      props.gameType,
+      score.value
+    )
+    closeShareSheet()
+  } catch (error) {
+    console.error('카카오톡 공유 실패:', error)
+  }
+}
+
+// 링크 복사
+async function copyShareLink() {
+  if (!props.qrCode) return
+  try {
+    await shareService.copyLink(props.qrCode, 'game_result', props.gameType, score.value)
+    showCopyToast.value = true
+    setTimeout(() => {
+      showCopyToast.value = false
+    }, 2000)
+  } catch (error) {
+    console.error('링크 복사 실패:', error)
+  }
+}
+
+// X(Twitter) 공유
+async function shareToTwitter() {
+  if (!props.qrCode) return
+  try {
+    await shareService.shareToTwitter(
+      props.qrCode,
+      `${getGameName(props.gameType)}에서 ${score.value}점 달성! 🎮 도전해보세요!`,
+      'game_result',
+      props.gameType,
+      score.value
+    )
+    closeShareSheet()
+  } catch (error) {
+    console.error('X 공유 실패:', error)
+  }
 }
 </script>
 
@@ -809,5 +962,219 @@ function handleClose() {
 
 .coupon-notice::before {
   content: '⏱';
+}
+
+/* Bottom actions */
+.bottom-actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.btn-retry,
+.btn-share {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  transition: color 0.2s;
+}
+
+.btn-retry:hover,
+.btn-share:hover {
+  color: #64748b;
+}
+
+.btn-share {
+  color: #d4a853;
+}
+
+.btn-share:hover {
+  color: #b8942e;
+}
+
+/* Share Sheet */
+.share-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 10001;
+}
+
+.share-sheet {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px 40px;
+  position: relative;
+}
+
+.share-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.share-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.share-close-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #666;
+}
+
+.share-preview {
+  margin-bottom: 24px;
+}
+
+.share-preview-card {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  color: white;
+}
+
+.share-score {
+  display: block;
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.share-game {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.share-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  background: #f8f8f8;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.share-option:hover {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.share-option:active {
+  transform: scale(0.95);
+}
+
+.share-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.share-option.kakao .share-icon {
+  background: #FEE500;
+}
+
+.share-option.link .share-icon {
+  background: #e8e8e8;
+  color: #333;
+}
+
+.share-option.twitter .share-icon {
+  background: #000;
+}
+
+.share-option.twitter .share-icon svg {
+  fill: white;
+}
+
+.share-option span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Copy toast */
+.copy-toast {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #1d1d1f;
+  color: white;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Transitions */
+.sheet-enter-active,
+.sheet-leave-active {
+  transition: all 0.3s ease;
+}
+
+.sheet-enter-from,
+.sheet-leave-to {
+  opacity: 0;
+}
+
+.sheet-enter-from .share-sheet,
+.sheet-leave-to .share-sheet {
+  transform: translateY(100%);
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
 }
 </style>
