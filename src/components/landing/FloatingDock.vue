@@ -8,7 +8,6 @@
         class="dock-item"
         :class="{ active: isMusicPlaying }"
         @click.stop="toggleMusic"
-        @mousedown="() => console.log('music button mousedown')"
         @touchstart.prevent="onMusicTouchStart"
         @touchend.prevent="onMusicTouchEnd"
       >
@@ -187,7 +186,6 @@ let musicTouchTimer: number | null = null
 
 // 음악 토글
 function toggleMusic() {
-  console.log('FloatingDock toggleMusic clicked')
   emit('toggleMusic')
 }
 
@@ -200,9 +198,12 @@ function onMusicTouchStart() {
 
 function onMusicTouchEnd() {
   if (musicTouchTimer) {
+    // 롱프레스가 아닌 일반 터치 → 토글
     clearTimeout(musicTouchTimer)
     musicTouchTimer = null
+    toggleMusic()
   }
+  // 롱프레스였으면 (타이머가 이미 실행되어 null) 토글하지 않음
 }
 
 // 홈으로 스크롤

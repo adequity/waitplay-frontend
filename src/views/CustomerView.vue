@@ -1061,19 +1061,12 @@ const preloadBgm = () => {
 }
 
 const playBgm = async () => {
-  console.log('playBgm called, bgmAudio:', !!bgmAudio.value, 'bgmUrl:', !!bgmUrl.value)
-  if (!bgmAudio.value || !bgmUrl.value) {
-    console.log('playBgm early return - missing audio or url')
-    return
-  }
+  if (!bgmAudio.value || !bgmUrl.value) return
 
   try {
-    console.log('Attempting to play BGM...')
     await bgmAudio.value.play()
     isBgmPlaying.value = true
-    console.log('BGM playing successfully')
-  } catch (error) {
-    console.log('BGM play failed:', error)
+  } catch {
     // 브라우저 자동재생 정책으로 인한 실패는 무시 (사용자가 버튼 클릭 시 재생됨)
   }
 }
@@ -1085,7 +1078,6 @@ const pauseBgm = () => {
 }
 
 const toggleBgm = () => {
-  console.log('toggleBgm called from CustomerView')
   if (isBgmPlaying.value) {
     pauseBgm()
   } else {
