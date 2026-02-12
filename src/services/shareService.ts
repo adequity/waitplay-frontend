@@ -70,6 +70,9 @@ const shareService = {
       gameScore
     })
 
+    // 동적 OG 이미지 URL 생성 (매장별 배경 이미지 + 로고)
+    const ogImageUrl = `https://api.waitplay.co.kr/api/ogimage/landing/${qrCodeId}`
+
     // 카카오 SDK 공유
     if (window.Kakao && window.Kakao.Share) {
       window.Kakao.Share.sendDefault({
@@ -77,7 +80,7 @@ const shareService = {
         content: {
           title,
           description,
-          imageUrl: imageUrl || 'https://waitplay.co.kr/og-image.png',
+          imageUrl: imageUrl || ogImageUrl,
           link: {
             mobileWebUrl: result.shareUrl,
             webUrl: result.shareUrl
