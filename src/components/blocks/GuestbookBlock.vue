@@ -753,14 +753,14 @@ const previewMessages = computed(() => messages.value.slice(0, 5))
 // Masonry 레이아웃용 메시지 분배 (최대 5개)
 const masonryMessages = computed(() => messages.value.slice(0, 5))
 
-// 왼쪽 컬럼 메시지 (인덱스 0, 2, 4)
+// 왼쪽 컬럼 메시지 (2개: 인덱스 1, 3)
 const leftColumnMessages = computed(() =>
-  masonryMessages.value.filter((_, index) => index % 2 === 0)
+  masonryMessages.value.filter((_, index) => index === 1 || index === 3)
 )
 
-// 오른쪽 컬럼 메시지 (인덱스 1, 3)
+// 오른쪽 컬럼 메시지 (3개: 인덱스 0, 2, 4)
 const rightColumnMessages = computed(() =>
-  masonryMessages.value.filter((_, index) => index % 2 === 1)
+  masonryMessages.value.filter((_, index) => index === 0 || index === 2 || index === 4)
 )
 
 // 카드 크기 결정 (불규칙한 Masonry 효과)
