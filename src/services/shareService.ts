@@ -60,7 +60,7 @@ const shareService = {
   },
 
   // 카카오톡 공유
-  shareToKakao: async (qrCodeId: string, title: string, description: string, imageUrl?: string, context?: string, gameType?: string, gameScore?: number) => {
+  shareToKakao: async (qrCodeId: string, title: string, description: string, _imageUrl?: string, context?: string, gameType?: string, gameScore?: number) => {
     // 로그 기록
     const result = await shareService.logShare({
       qrCodeId,
@@ -71,6 +71,7 @@ const shareService = {
     })
 
     // 동적 OG 이미지 URL 생성 (매장별 배경 이미지 + 로고)
+    // 항상 동적 OG 이미지 사용 (배경 + 로고 합성)
     const ogImageUrl = `https://api.waitplay.co.kr/api/ogimage/landing/${qrCodeId}`
 
     // 카카오 SDK 공유
@@ -80,7 +81,7 @@ const shareService = {
         content: {
           title,
           description,
-          imageUrl: imageUrl || ogImageUrl,
+          imageUrl: ogImageUrl,
           link: {
             mobileWebUrl: result.shareUrl,
             webUrl: result.shareUrl
