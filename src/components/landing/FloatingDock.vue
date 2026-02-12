@@ -273,7 +273,7 @@ async function shareToTwitter() {
   align-items: center;
   gap: 8px;
   padding: 4px 16px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;

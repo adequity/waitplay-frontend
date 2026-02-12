@@ -7,3 +7,66 @@
 [63803791ms] [ERROR] TypeError: Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/LoginView-Dlm4Ngm9.js @ https://waitplay.co.kr/assets/vendor-vue-CX8iY9aC.js:31
 [63803958ms] [ERROR] TypeError: Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/LoginView-Dlm4Ngm9.js @ https://waitplay.co.kr/assets/vendor-vue-CX8iY9aC.js:31
 [63831577ms] [WARNING] Mixed Content: The page at 'https://waitplay.co.kr/customer?qr=MSCJ7ENA' was loaded over HTTPS, but requested an insecure element 'http://waitplay-production-4148.up.railway.app/uploads/logo_39e80ed2-2572-4cad-b7ba-f2d57c3d7212.jpg'. This request was automatically upgraded to HTTPS, For more information see https://blog.chromium.org/2019/10/no-more-mixed-messages-about-https.html @ https://waitplay.co.kr/customer?qr=MSCJ7ENA:0
+[67596187ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67596188ms] [ERROR] 카카오톡 공유 실패: y @ https://waitplay.co.kr/assets/CustomerView-CICe8CiP.js:0
+[67596810ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67596810ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/CustomerView-CICe8CiP.js:0
+[67609810ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67609811ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/CustomerView-CICe8CiP.js:0
+[67681870ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://waitplay.co.kr/assets/GameView-Bi77XNzO.js:0
+[67681871ms] [ERROR] TypeError: Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js @ https://waitplay.co.kr/assets/vendor-vue-B8cRQ9Qz.js:31
+[67681876ms] Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js
+[67683492ms] [ERROR] TypeError: Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js @ https://waitplay.co.kr/assets/vendor-vue-B8cRQ9Qz.js:31
+[67683493ms] Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js
+[67684225ms] [ERROR] TypeError: Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js @ https://waitplay.co.kr/assets/vendor-vue-B8cRQ9Qz.js:31
+[67684233ms] Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js
+[67684441ms] [ERROR] TypeError: Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js @ https://waitplay.co.kr/assets/vendor-vue-B8cRQ9Qz.js:31
+[67684442ms] Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js
+[67684608ms] [ERROR] TypeError: Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js @ https://waitplay.co.kr/assets/vendor-vue-B8cRQ9Qz.js:31
+[67684608ms] Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js
+[67691685ms] [ERROR] TypeError: Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js @ https://waitplay.co.kr/assets/vendor-vue-B8cRQ9Qz.js:31
+[67691691ms] Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js
+[67691691ms] [ERROR] TypeError: Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js @ https://waitplay.co.kr/assets/vendor-vue-B8cRQ9Qz.js:31
+[67691691ms] Failed to fetch dynamically imported module: https://waitplay.co.kr/assets/GameView-Bi77XNzO.js
+[67694550ms] [WARNING] BGM 재생 실패: NotAllowedError: play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD @ https://waitplay.co.kr/assets/CustomerView-DdcZ3F1n.js:0
+[67753431ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67753432ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67756512ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67756514ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67757229ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67757229ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67757395ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67757396ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67757562ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67757563ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67757645ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67757646ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67769859ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67769860ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67770062ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67770062ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67770231ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67770231ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67770412ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67770413ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67770562ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67770562ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67770651ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67770652ms] [ERROR] 링크 복사 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67800080ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67800081ms] [ERROR] 카카오톡 공유 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67800761ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67800762ms] [ERROR] 카카오톡 공유 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67800844ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://api.waitplay.co.kr/api/share/log:0
+[67800845ms] [ERROR] 카카오톡 공유 실패: y @ https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:0
+[67822535ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+    at Ym.fn (https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:1:21441)
+    at hd (https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:10:3323)
+    at ul (https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:10:3023)
+    at hd (https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:10:3242)
+    at get value (https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:10:15633)
+    at https://waitplay.co.kr/assets/GameView-D5D9TPL_.js:1:23112
+    at https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:16:7390
+    at Si (https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:14:1385)
+    at nn (https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:14:1456)
+    at t.__weh.t.__weh (https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:16:7270) @ https://waitplay.co.kr/assets/vendor-vue-CIkHJqZz.js:13
