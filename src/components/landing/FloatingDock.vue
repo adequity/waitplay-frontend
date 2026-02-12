@@ -193,7 +193,7 @@ function toggleMusic() {
 function onMusicTouchStart() {
   musicTouchTimer = window.setTimeout(() => {
     emit('showVolumeControl')
-  }, 500)
+  }, 1000)
 }
 
 function onMusicTouchEnd() {
