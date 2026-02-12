@@ -1066,8 +1066,8 @@ const playBgm = async () => {
   try {
     await bgmAudio.value.play()
     isBgmPlaying.value = true
-  } catch (error) {
-    console.warn('BGM 재생 실패:', error)
+  } catch {
+    // 브라우저 자동재생 정책으로 인한 실패는 무시 (사용자가 버튼 클릭 시 재생됨)
   }
 }
 
