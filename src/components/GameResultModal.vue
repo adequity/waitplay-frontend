@@ -310,7 +310,8 @@ interface GameData {
 interface Props {
   isOpen: boolean
   gameData: GameData
-  qrCode?: string
+  qrCode?: string // short code for game score, benefits API
+  qrCodeUuid?: string // UUID for share API
   gameType: string
 }
 
@@ -544,12 +545,15 @@ function getGameName(type: string): string {
   return gameNames[type] || '게임'
 }
 
+// 공유용 QR Code ID (UUID 우선, 없으면 short code 폴백)
+const shareQrCodeId = computed(() => props.qrCodeUuid || props.qrCode)
+
 // 카카오톡 공유
 async function shareToKakao() {
-  if (!props.qrCode) return
+  if (!shareQrCodeId.value) return
   try {
     await shareService.shareToKakao(
-      props.qrCode,
+      shareQrCodeId.value,
       `${getGameName(props.gameType)}에서 ${score.value}점 달성!`,
       '도전해보세요!',
       undefined,
@@ -565,9 +569,9 @@ async function shareToKakao() {
 
 // 링크 복사
 async function copyShareLink() {
-  if (!props.qrCode) return
+  if (!shareQrCodeId.value) return
   try {
-    await shareService.copyLink(props.qrCode, 'game_result', props.gameType, score.value)
+    await shareService.copyLink(shareQrCodeId.value, 'game_result', props.gameType, score.value)
     showCopyToast.value = true
     setTimeout(() => {
       showCopyToast.value = false
@@ -579,10 +583,10 @@ async function copyShareLink() {
 
 // X(Twitter) 공유
 async function shareToTwitter() {
-  if (!props.qrCode) return
+  if (!shareQrCodeId.value) return
   try {
     await shareService.shareToTwitter(
-      props.qrCode,
+      shareQrCodeId.value,
       `${getGameName(props.gameType)}에서 ${score.value}점 달성! 도전해보세요!`,
       'game_result',
       props.gameType,

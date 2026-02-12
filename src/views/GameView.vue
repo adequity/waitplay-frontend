@@ -39,7 +39,8 @@
       v-if="gameResultData"
       :is-open="showGameResultModal"
       :game-data="gameResultData"
-      :qr-code="qrCodeId"
+      :qr-code="qrCodeShort"
+      :qr-code-uuid="qrCodeUuid"
       :game-type="mapGameTypeForApi(gameType)"
       @close="handleResultClose"
       @restart="handleRestart"
@@ -89,8 +90,11 @@ const isPinball = computed(() => gameType.value === 'PINBALL')
 // 전체화면 지원 게임 (MATCH 카드 게임, SPOT 틀린그림찾기)
 const supportsFullscreen = computed(() => ['MATCH', 'SPOT'].includes(gameType.value))
 
-// QR Code ID from URL
-const qrCodeId = computed(() => route.query.qr as string | undefined)
+// QR Code ID from URL (short code)
+const qrCodeShort = computed(() => route.query.qr as string | undefined)
+
+// QR Code UUID for share API
+const qrCodeUuid = ref<string | undefined>(undefined)
 
 // Game result state
 const finalScore = ref(0)
@@ -221,6 +225,23 @@ function handleGameReady() {
 }
 
 onMounted(async () => {
+  // QR 코드 UUID 가져오기 (공유 기능용)
+  if (qrCodeShort.value) {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://api.waitplay.co.kr'
+      const response = await fetch(`${apiUrl}/api/qrcode/by-code/${encodeURIComponent(qrCodeShort.value)}`)
+      if (response.ok) {
+        const qrData = await response.json()
+        if (qrData?.id) {
+          qrCodeUuid.value = qrData.id
+          console.log('GameView QR UUID:', qrCodeUuid.value)
+        }
+      }
+    } catch (error) {
+      console.error('QR 코드 UUID 조회 실패:', error)
+    }
+  }
+
   // 핀볼이 아닌 경우에만 Phaser 게임 초기화
   if (!isPinball.value && gameContainer.value) {
     try {
