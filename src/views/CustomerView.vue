@@ -1099,9 +1099,12 @@ const handleFirstInteraction = () => {
 
 // 이벤트 리스너 제거 함수
 const removeInteractionListeners = () => {
+  window.removeEventListener('scroll', handleFirstInteraction)
   window.removeEventListener('touchstart', handleFirstInteraction)
+  window.removeEventListener('touchmove', handleFirstInteraction)
   window.removeEventListener('click', handleFirstInteraction)
   window.removeEventListener('keydown', handleFirstInteraction)
+  window.removeEventListener('wheel', handleFirstInteraction)
 }
 
 // Watch for theme changes and update body background
@@ -1242,12 +1245,15 @@ onMounted(async () => {
   }
 
   // BGM 사용자 인터랙션 이벤트 리스너 등록 (bgmUrl이 있을 때만)
-  // 참고: scroll, touchmove, wheel은 브라우저 자동재생 정책에서 유효한 제스처로 인정되지 않음
-  // 유효한 제스처: click, touchstart, keydown만 오디오 재생 허용
+  // scroll/touchmove/wheel: 버튼 표시용 (isBgmEnabled = true로 설정)
+  // 실제 재생은 유효한 제스처(click/touchstart/keydown)에서만 성공
   if (bgmUrl.value) {
+    window.addEventListener('scroll', handleFirstInteraction, { passive: true })
     window.addEventListener('touchstart', handleFirstInteraction, { passive: true })
+    window.addEventListener('touchmove', handleFirstInteraction, { passive: true })
     window.addEventListener('click', handleFirstInteraction, { passive: true })
     window.addEventListener('keydown', handleFirstInteraction, { passive: true })
+    window.addEventListener('wheel', handleFirstInteraction, { passive: true })
   }
 })
 
