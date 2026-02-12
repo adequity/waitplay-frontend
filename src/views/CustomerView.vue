@@ -1072,15 +1072,12 @@ const playBgm = async () => {
 }
 
 const pauseBgm = () => {
-  console.log('pauseBgm called, bgmAudio:', !!bgmAudio.value)
   if (!bgmAudio.value) return
   bgmAudio.value.pause()
   isBgmPlaying.value = false
-  console.log('BGM paused, isBgmPlaying:', isBgmPlaying.value)
 }
 
 const toggleBgm = () => {
-  console.log('toggleBgm called, isBgmPlaying:', isBgmPlaying.value, 'bgmAudio:', !!bgmAudio.value)
   if (isBgmPlaying.value) {
     pauseBgm()
   } else {
@@ -1088,13 +1085,20 @@ const toggleBgm = () => {
   }
 }
 
-// 첫 사용자 인터랙션 시 BGM 활성화 (모바일 자동재생 정책 우회)
-const handleFirstInteraction = () => {
+// 첫 사용자 인터랙션 시 BGM 버튼 활성화
+// click/touchstart: 유효한 제스처 → 자동 재생 시도
+// scroll/wheel/touchmove: 버튼만 표시 (재생은 버튼 클릭으로)
+const handleFirstInteraction = (event: Event) => {
   if (isBgmEnabled.value || !bgmUrl.value) return
 
   isBgmEnabled.value = true
-  // 오디오가 미리 로드되어 있으므로 즉시 재생
-  playBgm()
+
+  // 유효한 사용자 제스처인 경우에만 자동 재생 시도
+  const validGestures = ['click', 'touchstart', 'keydown']
+  if (validGestures.includes(event.type)) {
+    playBgm()
+  }
+  // scroll, wheel, touchmove는 버튼만 표시하고 재생은 사용자가 직접 클릭
 
   // 모든 이벤트 리스너 제거 (한 번만 실행)
   removeInteractionListeners()
