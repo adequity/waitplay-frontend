@@ -186,6 +186,7 @@ let musicTouchTimer: number | null = null
 
 // 음악 토글
 function toggleMusic() {
+  console.log('FloatingDock toggleMusic clicked')
   emit('toggleMusic')
 }
 

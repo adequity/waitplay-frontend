@@ -1085,6 +1085,7 @@ const pauseBgm = () => {
 }
 
 const toggleBgm = () => {
+  console.log('toggleBgm called from CustomerView')
   if (isBgmPlaying.value) {
     pauseBgm()
   } else {
