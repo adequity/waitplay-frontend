@@ -1688,15 +1688,15 @@ const handleLike = async (message: any) => {
   transform-origin: center;
 }
 
-/* 로그인 유도 - 글래스모피즘 스타일 */
+/* 로그인 유도 - 플로팅 독 스타일 */
 .login-prompt {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 1.25rem 1.5rem;
+  border-radius: 24px;
+  padding: 1rem 1.25rem;
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.12),
     0 1px 2px rgba(0, 0, 0, 0.08),
@@ -2803,29 +2803,29 @@ const handleLike = async (message: any) => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background: rgba(255, 255, 255, 0.85);
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   color: #374151;
   border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px;
+  border-radius: 24px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .view-all-btn:hover {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.8);
   transform: scale(1.02);
   box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.12),
-    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 4px 24px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
