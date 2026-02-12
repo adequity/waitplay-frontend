@@ -59,13 +59,15 @@ export default defineConfig({
   },
   build: {
     // ✅ 최신 브라우저 타겟으로 네이티브 top-level await 사용
-    // topLevelAwait 플러그인 없이도 WASM 로드 가능
     target: 'esnext',
-    // ✅ modulepreload 완전 비활성화 - false로 설정하면 HTML에서 preload 태그 자체가 제거됨
+    // ✅ modulepreload 완전 비활성화
     modulePreload: false,
-    // ✅ CSS 코드 분할 비활성화 - CSS 로딩 헬퍼가 게임 청크에 포함되는 것 방지
-    // 모든 CSS가 하나의 파일로 번들링됨 (초기 로드 약간 증가하지만 게임 의존성 제거)
+    // ✅ CSS 코드 분할 비활성화
     cssCodeSplit: false,
+    // ✅ 더 강력한 minify (esbuild 기본값보다 terser가 더 작은 결과)
+    minify: 'esbuild',
+    // ✅ CSS minify 최적화
+    cssMinify: 'esbuild',
     rollupOptions: {
       // ✅ 게임 관련 모듈을 완전히 분리하기 위한 외부 진입점 설정
       // Phaser/Pixi 게임은 /game 라우트에서만 필요
