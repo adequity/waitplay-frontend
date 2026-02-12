@@ -25,7 +25,47 @@
           <!-- 등급 -->
           <div class="grade-section">
             <div class="grade-icon" :style="{ background: gradeInfo.bgColor }">
-              <span class="grade-emoji">{{ gradeInfo.emoji }}</span>
+              <!-- Trophy -->
+              <svg v-if="gradeInfo.icon === 'trophy'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+              </svg>
+              <!-- Target/Bullseye -->
+              <svg v-else-if="gradeInfo.icon === 'target'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="6"/>
+                <circle cx="12" cy="12" r="2"/>
+              </svg>
+              <!-- Star -->
+              <svg v-else-if="gradeInfo.icon === 'star'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+              </svg>
+              <!-- Gamepad -->
+              <svg v-else-if="gradeInfo.icon === 'gamepad'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"/>
+              </svg>
+              <!-- Tent/Circus -->
+              <svg v-else-if="gradeInfo.icon === 'tent'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 22h20L12 2zm0 4.5L17.5 18h-11L12 6.5z"/>
+              </svg>
+              <!-- Medal Gold -->
+              <svg v-else-if="gradeInfo.icon === 'medal-gold'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                <path d="M12 6l1.5 3.5L17 10l-2.5 2.5.5 3.5-3-1.5-3 1.5.5-3.5L7 10l3.5-.5z"/>
+              </svg>
+              <!-- Medal Silver -->
+              <svg v-else-if="gradeInfo.icon === 'medal-silver'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                <path d="M9 8h6v2H9zm0 3h6v2H9zm0 3h6v2H9z"/>
+              </svg>
+              <!-- Medal Bronze -->
+              <svg v-else-if="gradeInfo.icon === 'medal-bronze'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                <path d="M12 7l2 4h-4z"/>
+              </svg>
+              <!-- Fallback: Gamepad -->
+              <svg v-else class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"/>
+              </svg>
             </div>
             <h2 class="grade-title">{{ gradeInfo.title }}</h2>
             <p v-if="reward" class="reward-name">{{ reward.title }}</p>
@@ -143,7 +183,13 @@
           <div class="coupon-code-section">
             <span class="coupon-code-label">쿠폰 코드</span>
             <span class="coupon-code">{{ couponCode }}</span>
-            <p class="coupon-notice">5분 내에 직원에게 제시하세요</p>
+            <p class="coupon-notice">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12,6 12,12 16,14"/>
+              </svg>
+              5분 내에 직원에게 제시하세요
+            </p>
           </div>
 
           <button class="btn-primary" @click="handleClose">확인</button>
@@ -250,7 +296,7 @@ import CouponRewardModal from '@/components/CouponRewardModal.vue'
 interface GameData {
   score: number
   time: number
-  grade: { emoji: string; text: string; color: string }
+  grade: { icon: string; text: string; color: string }
   // Memory game
   moves?: number
   combo?: number
@@ -296,9 +342,9 @@ const showCopyToast = ref(false)
 const score = computed(() => props.gameData?.score ?? 0)
 const gradeInfo = computed(() => {
   const grade = props.gameData?.grade
-  if (!grade) return { emoji: '🎮', title: '게임 완료', bgColor: '#e0e7ff' }
+  if (!grade) return { icon: 'gamepad', title: '게임 완료', bgColor: '#e0e7ff' }
   return {
-    emoji: grade.emoji,
+    icon: grade.icon || 'gamepad',
     title: grade.text,
     bgColor: getBgColorFromGrade(grade.color)
   }
@@ -504,7 +550,7 @@ async function shareToKakao() {
   try {
     await shareService.shareToKakao(
       props.qrCode,
-      `${getGameName(props.gameType)}에서 ${score.value}점 달성! 🎮`,
+      `${getGameName(props.gameType)}에서 ${score.value}점 달성!`,
       '도전해보세요!',
       undefined,
       'game_result',
@@ -537,7 +583,7 @@ async function shareToTwitter() {
   try {
     await shareService.shareToTwitter(
       props.qrCode,
-      `${getGameName(props.gameType)}에서 ${score.value}점 달성! 🎮 도전해보세요!`,
+      `${getGameName(props.gameType)}에서 ${score.value}점 달성! 도전해보세요!`,
       'game_result',
       props.gameType,
       score.value
@@ -691,8 +737,10 @@ async function shareToTwitter() {
   justify-content: center;
 }
 
-.grade-emoji {
-  font-size: 32px;
+.grade-svg {
+  width: 32px;
+  height: 32px;
+  color: white;
 }
 
 .grade-title {
@@ -958,10 +1006,6 @@ async function shareToTwitter() {
   align-items: center;
   justify-content: center;
   gap: 4px;
-}
-
-.coupon-notice::before {
-  content: '⏱';
 }
 
 /* Bottom actions */

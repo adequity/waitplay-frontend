@@ -63,7 +63,7 @@ const HyperPinball = defineAsyncComponent(() =>
 interface GameResultData {
   score: number
   time: number
-  grade: { emoji: string; text: string; color: string }
+  grade: { icon: string; text: string; color: string }
   // Memory game specific
   moves?: number
   combo?: number
@@ -146,7 +146,7 @@ interface PinballGameOverData {
   time: number
   maxCombo: number
   ballsUsed: number
-  grade: { emoji: string; text: string; color: string }
+  grade: { icon: string; text: string; color: string }
 }
 
 function handlePinballGameOver(data: PinballGameOverData) {

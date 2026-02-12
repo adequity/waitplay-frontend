@@ -22,47 +22,20 @@
       </p>
     </div>
 
-    <!-- BGM Toggle Button (스크롤로 활성화된 후에만 표시) -->
-    <button
-      v-if="isBgmEnabled && bgmUrl"
-      class="floating-bgm-btn"
-      @click="toggleBgm"
-      :aria-label="isBgmPlaying ? '배경음악 끄기' : '배경음악 켜기'"
-    >
-      <svg v-if="isBgmPlaying" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- 음악 재생 중 아이콘 (스피커 + 파동) -->
-        <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- 음악 꺼짐 아이콘 (스피커 + X) -->
-        <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </button>
-
-    <!-- Floating Navigation Button -->
-    <button class="floating-nav-btn" @click="toggleSidebar" aria-label="사이드바 열기/닫기">
-      <svg
-        v-if="!isSidebarOpen"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M3 12h18M3 6h18M3 18h18"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-        />
-      </svg>
-      <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-      </svg>
-    </button>
+    <!-- Floating Dock (글래스모피즘 독) -->
+    <FloatingDock
+      v-if="qrCodeId"
+      :qr-code-id="qrCodeId"
+      :qr-code="qrCode"
+      :landing-title="landingTitle"
+      :landing-description="landingDescription"
+      :landing-image="landingImage"
+      :show-music="isBgmEnabled && !!bgmUrl"
+      :show-my-page="true"
+      :is-music-playing="isBgmPlaying"
+      @toggle-music="toggleBgm"
+      @open-my-page="toggleSidebar"
+    />
 
     <!-- Sidebar Overlay -->
     <div v-if="isSidebarOpen" class="sidebar-overlay" @click="closeSidebar"></div>
@@ -687,6 +660,7 @@ import MarqueeBlock from '@/components/blocks/MarqueeBlock.vue'
 import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
+import FloatingDock from '@/components/landing/FloatingDock.vue'
 
 // ✅ 무거운 블록 - 비동기 로딩 (스크롤 시 로드)
 const GuestbookBlock = defineAsyncComponent(() =>
@@ -721,8 +695,14 @@ const pageTheme = ref<PageTheme>({
   textColor: '#ffffff'
 })
 
-// QR Code ID
+// QR Code ID & Code
 const qrCodeId = ref<string>('')
+const qrCode = ref<string>('')
+
+// Landing page info for sharing
+const landingTitle = ref<string>('')
+const landingDescription = ref<string>('')
+const landingImage = ref<string>('')
 
 // Sidebar state
 const isSidebarOpen = ref(false)
@@ -1141,12 +1121,13 @@ watch(() => pageTheme.value.backgroundColor, (newBgColor) => {
 onMounted(async () => {
   // Get storeId and QR code from route query
   const storeId = route.query.storeId as string
-  const qrCode = route.query.qr as string
+  const qrCodeQuery = route.query.qr as string
 
   // Store QR code for games and guestbook (early assignment)
-  if (qrCode) {
-    qrCodeId.value = qrCode
-    console.log('QR code set for games:', qrCode)
+  if (qrCodeQuery) {
+    qrCodeId.value = qrCodeQuery
+    qrCode.value = qrCodeQuery
+    console.log('QR code set for games:', qrCodeQuery)
   }
 
   // API URL
@@ -1160,18 +1141,18 @@ onMounted(async () => {
   // QR 코드 데이터를 저장해서 재사용
   let qrCodeUuid: string | null = null
 
-  if (!qrCode) return
+  if (!qrCodeQuery) return
 
   try {
     // ✅ 성능 최적화: API 호출 병렬화 (Promise.allSettled 사용)
     // QR 코드 조회, 설정 조회, 레이아웃 조회를 동시에 실행하여 로딩 시간 60% 단축
     const [qrResult, settingsResult, layoutResult] = await Promise.allSettled([
       // 1. QR 코드 API (스캔 로그 + UUID 획득)
-      fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCode)}`).then(r => r.ok ? r.json() : null),
+      fetch(`${API_URL}/api/qrcode/by-code/${encodeURIComponent(qrCodeQuery)}`).then(r => r.ok ? r.json() : null),
       // 2. 랜딩페이지 설정
-      fetch(`${API_URL}/api/landingpage/settings/qr/${encodeURIComponent(qrCode)}`).then(r => r.ok ? r.json() : null),
+      fetch(`${API_URL}/api/landingpage/settings/qr/${encodeURIComponent(qrCodeQuery)}`).then(r => r.ok ? r.json() : null),
       // 3. 레이아웃 (by-code 엔드포인트 우선 사용)
-      fetch(`${API_URL}/api/landingpage/layout/by-code/${encodeURIComponent(qrCode)}`).then(r => r.ok ? r.json() : null)
+      fetch(`${API_URL}/api/landingpage/layout/by-code/${encodeURIComponent(qrCodeQuery)}`).then(r => r.ok ? r.json() : null)
     ])
 
     // QR 코드 결과 처리
@@ -1187,6 +1168,11 @@ onMounted(async () => {
         logoUrl = settings.logoUrl || ''
         storeName = settings.storeName
         welcomeMessage = settings.welcomeMessage || welcomeMessage
+
+        // 공유용 정보 설정
+        landingTitle.value = settings.storeName
+        landingDescription.value = settings.welcomeMessage || ''
+        landingImage.value = settings.logoUrl || ''
       }
     }
 
@@ -1300,64 +1286,6 @@ onUnmounted(() => {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 12px;
   transition: color 0.3s ease;
-}
-
-/* BGM Toggle Button */
-.floating-bgm-btn {
-  position: fixed;
-  bottom: 2rem;
-  right: 6rem;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  z-index: 999;
-}
-
-.floating-bgm-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 30px rgba(240, 147, 251, 0.6);
-}
-
-.floating-bgm-btn:active {
-  transform: scale(0.95);
-}
-
-/* Floating Navigation Button */
-.floating-nav-btn {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  z-index: 999;
-}
-
-.floating-nav-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
-}
-
-.floating-nav-btn:active {
-  transform: scale(0.95);
 }
 
 /* Sidebar Overlay */
@@ -2684,20 +2612,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 640px) {
-  .floating-bgm-btn {
-    bottom: 1.5rem;
-    right: 5rem;
-    width: 44px;
-    height: 44px;
-  }
-
-  .floating-nav-btn {
-    bottom: 1.5rem;
-    right: 1.5rem;
-    width: 48px;
-    height: 48px;
-  }
-
   .sidebar {
     width: 100%;
     max-width: 100%;

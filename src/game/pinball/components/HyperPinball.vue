@@ -99,18 +99,18 @@ const props = defineProps<{
 
 // Emits
 const emit = defineEmits<{
-  (e: 'gameOver', data: { score: number; time: number; maxCombo: number; ballsUsed: number; grade: { emoji: string; text: string; color: string } }): void;
+  (e: 'gameOver', data: { score: number; time: number; maxCombo: number; ballsUsed: number; grade: { icon: string; text: string; color: string } }): void;
   (e: 'exit'): void;
   (e: 'restart'): void;
 }>();
 
 // 점수에 따른 등급 계산
-function getGrade(score: number): { emoji: string; text: string; color: string } {
-  if (score >= 100000) return { emoji: '🏆', text: '핀볼 레전드', color: '#f59e0b' }
-  if (score >= 50000) return { emoji: '🎯', text: '핀볼 마스터', color: '#f43f5e' }
-  if (score >= 25000) return { emoji: '🌟', text: '프로 플레이어', color: '#ec4899' }
-  if (score >= 10000) return { emoji: '🎮', text: '숙련된 게이머', color: '#8b5cf6' }
-  return { emoji: '🎪', text: '도전자', color: '#6b7280' }
+function getGrade(score: number): { icon: string; text: string; color: string } {
+  if (score >= 100000) return { icon: 'trophy', text: '핀볼 레전드', color: '#f59e0b' }
+  if (score >= 50000) return { icon: 'target', text: '핀볼 마스터', color: '#f43f5e' }
+  if (score >= 25000) return { icon: 'star', text: '프로 플레이어', color: '#ec4899' }
+  if (score >= 10000) return { icon: 'gamepad', text: '숙련된 게이머', color: '#8b5cf6' }
+  return { icon: 'tent', text: '도전자', color: '#6b7280' }
 }
 
 // Refs

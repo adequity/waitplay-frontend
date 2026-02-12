@@ -198,7 +198,7 @@
         </div>
       </div>
 
-      <div class="filters-bar">
+      <div class="filters-bar centered">
         <div class="filter-group">
           <select v-model="reportStatusFilter" class="filter-select" @change="fetchReports">
             <option value="">전체 상태</option>
@@ -219,6 +219,7 @@
               <th>신고자</th>
               <th>방명록</th>
               <th>사유</th>
+              <th>처리 코멘트</th>
               <th>요청일</th>
               <th>액션</th>
             </tr>
@@ -251,11 +252,17 @@
                 <span class="reason-text">{{ truncate(report.reason, 30) }}</span>
               </td>
               <td>
+                <span v-if="report.adminComment" class="admin-comment-text" :title="report.adminComment">
+                  {{ truncate(report.adminComment, 20) }}
+                </span>
+                <span v-else class="no-comment">-</span>
+              </td>
+              <td>
                 <span class="date-text">{{ formatDate(report.createdAt) }}</span>
               </td>
               <td>
                 <div class="action-buttons" v-if="report.status === 'pending'">
-                  <button class="btn-action approve" @click="handleReport(report.id, 'approve')" title="승인">
+                  <button class="btn-action approve" @click="openApproveModal(report)" title="승인">
                     <IconBase name="check" />
                   </button>
                   <button class="btn-action reject" @click="openRejectModal(report)" title="반려">
@@ -268,7 +275,7 @@
               </td>
             </tr>
             <tr v-if="!reports || reports.length === 0">
-              <td colspan="6" class="empty-row">삭제 요청이 없습니다</td>
+              <td colspan="7" class="empty-row">삭제 요청이 없습니다</td>
             </tr>
           </tbody>
         </table>
@@ -344,9 +351,15 @@
             <p class="reject-reason">{{ selectedReport.rejectReason }}</p>
           </div>
 
+          <!-- MasterAdmin 코멘트 (처리된 경우) -->
+          <div class="info-section" v-if="selectedReport.status !== 'pending' && selectedReport.adminComment">
+            <h4>관리자 코멘트</h4>
+            <p class="admin-comment-content">{{ selectedReport.adminComment }}</p>
+          </div>
+
           <!-- 액션 버튼 (대기 중인 경우만) -->
           <div class="action-section" v-if="selectedReport.status === 'pending'">
-            <button class="btn-approve" @click="handleReport(selectedReport.id, 'approve')">
+            <button class="btn-approve" @click="openApproveModal(selectedReport)">
               <IconBase name="check" />
               승인 (삭제)
             </button>
@@ -376,6 +389,13 @@
             placeholder="반려 사유를 입력해주세요..."
             rows="4"
           ></textarea>
+          <p class="comment-label">관리자 코멘트 (선택)</p>
+          <textarea
+            v-model="adminComment"
+            class="comment-textarea"
+            placeholder="추가 코멘트를 남길 수 있습니다..."
+            rows="2"
+          ></textarea>
         </div>
         <div class="reject-modal-footer">
           <button class="btn-cancel" @click="closeRejectModal">취소</button>
@@ -385,6 +405,41 @@
             :disabled="!rejectReason.trim() || isSubmittingReject"
           >
             {{ isSubmittingReject ? '처리 중...' : '반려' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 승인 확인 모달 -->
+    <div v-if="showApproveModal" class="modal-overlay" @click.self="closeApproveModal">
+      <div class="approve-modal">
+        <div class="approve-modal-header">
+          <h3>삭제 요청 승인</h3>
+          <button class="modal-close" @click="closeApproveModal">
+            <IconBase name="x" />
+          </button>
+        </div>
+        <div class="approve-modal-body">
+          <p class="approve-notice">
+            <IconBase name="alert-triangle" class="warning-icon" />
+            이 삭제 요청을 승인하면 방명록이 삭제됩니다.
+          </p>
+          <p class="comment-label">관리자 코멘트 (선택)</p>
+          <textarea
+            v-model="adminComment"
+            class="comment-textarea"
+            placeholder="추가 코멘트를 남길 수 있습니다..."
+            rows="2"
+          ></textarea>
+        </div>
+        <div class="approve-modal-footer">
+          <button class="btn-cancel" @click="closeApproveModal">취소</button>
+          <button
+            class="btn-submit-approve"
+            @click="submitApprove"
+            :disabled="isSubmittingApprove"
+          >
+            {{ isSubmittingApprove ? '처리 중...' : '승인 (삭제)' }}
           </button>
         </div>
       </div>
@@ -434,8 +489,14 @@ const showReportDetailModal = ref(false)
 const selectedReport = ref<any>(null)
 const showRejectModal = ref(false)
 const rejectReason = ref('')
+const adminComment = ref('')
 const isSubmittingReject = ref(false)
 const reportToReject = ref<any>(null)
+
+// 승인 모달
+const showApproveModal = ref(false)
+const isSubmittingApprove = ref(false)
+const reportToApprove = ref<any>(null)
 
 // 대기 중인 신고 수 (탭 배지용)
 const pendingReportsCount = computed(() => reportStats.value.pending)
@@ -592,14 +653,13 @@ const fetchReports = async () => {
 
 // 신고 처리 (승인/반려)
 const handleReport = async (reportId: string, action: 'approve' | 'reject') => {
-  if (action === 'approve') {
-    if (!confirm('이 삭제 요청을 승인하시겠습니까?\n승인 시 방명록이 삭제됩니다.')) return
-  }
-
   try {
     const body: any = { action }
     if (action === 'reject') {
       body.rejectReason = rejectReason.value
+    }
+    if (adminComment.value.trim()) {
+      body.adminComment = adminComment.value.trim()
     }
 
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook/reports/${reportId}`, {
@@ -625,6 +685,7 @@ const handleReport = async (reportId: string, action: 'approve' | 'reject') => {
 
     // 모달 닫기 및 데이터 새로고침
     closeRejectModal()
+    closeApproveModal()
     closeReportDetailModal()
     fetchReports()
   } catch (error: any) {
@@ -636,6 +697,7 @@ const handleReport = async (reportId: string, action: 'approve' | 'reject') => {
 const openRejectModal = (report: any) => {
   reportToReject.value = report
   rejectReason.value = ''
+  adminComment.value = ''
   showRejectModal.value = true
 }
 
@@ -643,8 +705,33 @@ const openRejectModal = (report: any) => {
 const closeRejectModal = () => {
   showRejectModal.value = false
   rejectReason.value = ''
+  adminComment.value = ''
   reportToReject.value = null
   isSubmittingReject.value = false
+}
+
+// 승인 모달 열기
+const openApproveModal = (report: any) => {
+  reportToApprove.value = report
+  adminComment.value = ''
+  showApproveModal.value = true
+}
+
+// 승인 모달 닫기
+const closeApproveModal = () => {
+  showApproveModal.value = false
+  adminComment.value = ''
+  reportToApprove.value = null
+  isSubmittingApprove.value = false
+}
+
+// 승인 제출
+const submitApprove = async () => {
+  if (!reportToApprove.value) return
+
+  isSubmittingApprove.value = true
+  await handleReport(reportToApprove.value.id, 'approve')
+  isSubmittingApprove.value = false
 }
 
 // 반려 제출
@@ -705,6 +792,7 @@ onMounted(() => {
 .subtitle { font-size: 15px; color: #86868b; margin: 0; }
 
 .filters-bar { display: flex; gap: 16px; margin-bottom: 24px; }
+.filters-bar.centered { justify-content: center; }
 .search-box { flex: 1; max-width: 400px; position: relative; }
 .search-box input { width: 100%; padding: 12px 16px 12px 44px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 14px; background: white; }
 .search-box input:focus { outline: none; border-color: #d4a853; }
@@ -1318,6 +1406,127 @@ onMounted(() => {
 }
 
 .btn-submit-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 코멘트 관련 스타일 */
+.comment-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 16px 0 8px 0;
+}
+
+.comment-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.comment-textarea:focus {
+  outline: none;
+  border-color: #d4a853;
+}
+
+.admin-comment-text {
+  font-size: 13px;
+  color: #6b7280;
+  cursor: help;
+}
+
+.no-comment {
+  color: #d1d5db;
+}
+
+.admin-comment-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+  margin: 0;
+  padding: 16px;
+  background: #f0f9ff;
+  border-radius: 12px;
+  border-left: 4px solid #0ea5e9;
+}
+
+/* 승인 모달 */
+.approve-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.approve-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.approve-modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #1d1d1f;
+}
+
+.approve-modal-body {
+  padding: 24px;
+}
+
+.approve-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #d97706;
+  margin: 0 0 16px 0;
+  padding: 14px 16px;
+  background: #fef3c7;
+  border-radius: 10px;
+}
+
+.warning-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.approve-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #f9fafb;
+}
+
+.btn-submit-approve {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #059669;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-submit-approve:hover:not(:disabled) {
+  background: #047857;
+}
+
+.btn-submit-approve:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

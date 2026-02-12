@@ -887,22 +887,22 @@ export class SpotScene extends Phaser.Scene {
     this.scene.pause();
   }
 
-  private getGrade(success: boolean): { emoji: string; text: string; color: string } {
+  private getGrade(success: boolean): { icon: string; text: string; color: string } {
     if (!success) {
-      return { emoji: '⏰', text: '다음에 다시 도전!', color: '#ef4444' };
+      return { icon: 'tent', text: '다음에 다시 도전!', color: '#ef4444' };
     }
 
     const timeRatio = this.elapsedTime / (this.timeLimit || 120);
     const hintsUsed = this.gameData!.hintsAllowed - this.hintsRemaining;
 
     if (timeRatio < 0.3 && hintsUsed === 0) {
-      return { emoji: '🏆', text: '탐정 마스터', color: '#f59e0b' };
+      return { icon: 'trophy', text: '탐정 마스터', color: '#f59e0b' };
     } else if (timeRatio < 0.5 && hintsUsed <= 1) {
-      return { emoji: '🎯', text: '명탐정', color: '#6366f1' };
+      return { icon: 'target', text: '명탐정', color: '#6366f1' };
     } else if (timeRatio < 0.7 && hintsUsed <= 2) {
-      return { emoji: '🔍', text: '훌륭한 관찰자', color: '#8b5cf6' };
+      return { icon: 'star', text: '훌륭한 관찰자', color: '#8b5cf6' };
     } else {
-      return { emoji: '👀', text: '초보 탐정', color: '#64748b' };
+      return { icon: 'gamepad', text: '초보 탐정', color: '#64748b' };
     }
   }
 }

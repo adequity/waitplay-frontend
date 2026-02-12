@@ -1156,12 +1156,12 @@ export class MatchScene extends Phaser.Scene {
     this.scene.pause();
   }
 
-  private getGrade(score: number): { emoji: string; text: string; color: string } {
+  private getGrade(score: number): { icon: string; text: string; color: string } {
     // Sweet Match 디저트 테마 등급
-    if (score >= 900) return { emoji: '🏆', text: '파티시에 마스터', color: '#f59e0b' };
-    if (score >= 750) return { emoji: '🍰', text: '케이크 장인', color: '#f43f5e' };
-    if (score >= 600) return { emoji: '🧁', text: '컵케이크 메이커', color: '#ec4899' };
-    if (score >= 450) return { emoji: '🍪', text: '쿠키 베이커', color: '#8b5cf6' };
-    return { emoji: '🍬', text: '캔디 수집가', color: '#6b7280' };
+    if (score >= 900) return { icon: 'trophy', text: '파티시에 마스터', color: '#f59e0b' };
+    if (score >= 750) return { icon: 'medal-gold', text: '케이크 장인', color: '#f43f5e' };
+    if (score >= 600) return { icon: 'medal-silver', text: '컵케이크 메이커', color: '#ec4899' };
+    if (score >= 450) return { icon: 'medal-bronze', text: '쿠키 베이커', color: '#8b5cf6' };
+    return { icon: 'star', text: '캔디 수집가', color: '#6b7280' };
   }
 }
