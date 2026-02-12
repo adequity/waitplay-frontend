@@ -294,8 +294,8 @@ async function shareToTwitter() {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 16px;
+  gap: 6px;
+  padding: 4px 10px;
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -318,7 +318,7 @@ async function shareToTwitter() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   padding: 8px 12px;
   background: transparent;
   border: none;
