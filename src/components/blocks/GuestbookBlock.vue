@@ -4,9 +4,9 @@
     ref="blockRef"
     :class="{ 'bg-loaded': isBgLoaded }"
     :style="{
-      '--text-color': props.data.textColor || '#374151',
+      '--text-color': data.textColor || '#374151',
       '--bg-overlay': getBackgroundOverlay(),
-      backgroundColor: !props.data.backgroundImageUrl && props.fallbackBackgroundColor ? props.fallbackBackgroundColor : undefined
+      backgroundColor: computedBackgroundColor
     }"
   >
     <!-- ✅ 배경 이미지 지연 로딩 레이어 -->
@@ -565,6 +565,14 @@ const authStore = useAuthStore()
 const blockRef = ref<HTMLElement | null>(null)
 const isBgLoaded = ref(false)
 let bgObserver: IntersectionObserver | null = null
+
+// ✅ 배경색 계산 (배경 이미지 없을 때 fallback 색상 사용)
+const computedBackgroundColor = computed(() => {
+  if (!props.data.backgroundImageUrl && props.fallbackBackgroundColor) {
+    return props.fallbackBackgroundColor
+  }
+  return undefined
+})
 
 const bgStyle = computed(() => {
   if (!isBgLoaded.value || !props.data.backgroundImageUrl) return {}
