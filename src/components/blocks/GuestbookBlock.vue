@@ -568,9 +568,13 @@ let bgObserver: IntersectionObserver | null = null
 
 // ✅ 배경색 계산 (배경 이미지 없을 때 fallback 색상 사용)
 const computedBackgroundColor = computed(() => {
+  console.log('[GuestbookBlock] backgroundImageUrl:', props.data.backgroundImageUrl)
+  console.log('[GuestbookBlock] fallbackBackgroundColor:', props.fallbackBackgroundColor)
   if (!props.data.backgroundImageUrl && props.fallbackBackgroundColor) {
+    console.log('[GuestbookBlock] Using fallback color:', props.fallbackBackgroundColor)
     return props.fallbackBackgroundColor
   }
+  console.log('[GuestbookBlock] No fallback, returning undefined')
   return undefined
 })
 
