@@ -5,7 +5,8 @@
     :class="{ 'bg-loaded': isBgLoaded }"
     :style="{
       '--text-color': data.textColor || '#374151',
-      '--bg-overlay': getBackgroundOverlay()
+      '--bg-overlay': getBackgroundOverlay(),
+      backgroundColor: !data.backgroundImageUrl && fallbackBackgroundColor ? fallbackBackgroundColor : undefined
     }"
   >
     <!-- ✅ 배경 이미지 지연 로딩 레이어 -->
@@ -29,12 +30,7 @@
         <!-- 작성하기 버튼 (로그인 시) -->
         <div v-if="isAuthenticated" class="masonry-card write-card" @click="openDrawingModal">
           <div class="write-card-content">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-              <path d="M2 2l7.586 7.586"/>
-            </svg>
-            <span>작성하기</span>
+            <img src="/write-icon.png" alt="작성하기" class="card-icon" />
           </div>
         </div>
         <!-- 로그인 유도 카드 -->
@@ -86,11 +82,7 @@
         <!-- 더보기 버튼 (왼쪽 하단) -->
         <div class="masonry-card more-card" @click="goToFullGuestbook">
           <div class="more-card-content">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-            <span>더보기</span>
-            <span class="more-count">{{ totalMessageCount }}개</span>
+            <img src="/more-icon.png" alt="더보기" class="card-icon" />
           </div>
         </div>
       </div>
@@ -562,6 +554,7 @@ interface Props {
   data: GuestbookBlockData
   qrCodeId: string
   isPreview?: boolean // 편집기 미리보기 모드
+  fallbackBackgroundColor?: string // 배경 이미지 없을 때 사용할 배경색 (랜딩 페이지 배경색)
 }
 
 const props = defineProps<Props>()
@@ -1826,8 +1819,10 @@ const handleLike = async (message: any) => {
   color: #374151;
 }
 
-.write-card-content svg {
-  color: #4ECDC4;
+.write-card-content .card-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
 }
 
 .write-card-content span {
@@ -1969,8 +1964,10 @@ const handleLike = async (message: any) => {
   color: #6b7280;
 }
 
-.more-card-content svg {
-  color: #9ca3af;
+.more-card-content .card-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
 }
 
 .more-card-content span {

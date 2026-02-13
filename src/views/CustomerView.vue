@@ -13,6 +13,7 @@
       :is="getBlockComponent(block.type)"
       :data="block.data"
       :qrCodeId="qrCode"
+      :fallbackBackgroundColor="block.type === 'guestbook' ? pageTheme.backgroundColor : undefined"
     />
 
     <!-- Footer -->
