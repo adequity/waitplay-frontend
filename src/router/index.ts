@@ -8,6 +8,19 @@ const routes: RouteRecordRaw[] = [
     redirect: '/login'
   },
   {
+    // 짧은 공유 URL - 백엔드 OG 태그 페이지로 리다이렉트
+    // /s/MSCJ7ENA → api.waitplay.co.kr/api/ogimage/share/MSCJ7ENA
+    path: '/s/:code',
+    name: 'share-redirect',
+    beforeEnter: (to) => {
+      const code = to.params.code as string
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://api.waitplay.co.kr'
+      window.location.href = `${apiUrl}/api/ogimage/share/${code}`
+      return false // 라우터 네비게이션 중단
+    },
+    component: { template: '<div>Redirecting...</div>' }
+  },
+  {
     path: '/customer',
     name: 'customer',
     component: () => import('../views/CustomerView.vue')
