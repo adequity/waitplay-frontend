@@ -1576,7 +1576,7 @@ const handleLike = async (message: any) => {
   position: relative;
   padding: 2rem 1rem;
   margin-bottom: 1.5rem;
-  background-color: #f5f5f5; /* 로딩 전 플레이스홀더 */
+  /* 배경색은 인라인 스타일로 적용 (fallbackBackgroundColor prop) */
 }
 
 /* ✅ 배경 이미지 지연 로딩 레이어 */
