@@ -1185,6 +1185,9 @@ onMounted(async () => {
         landingTitle.value = settings.storeName
         landingDescription.value = settings.welcomeMessage || ''
         landingImage.value = settings.logoUrl || ''
+
+        // 브라우저 탭 타이틀 설정
+        document.title = `${settings.storeName} | WaitPlay`
       }
     }
 
