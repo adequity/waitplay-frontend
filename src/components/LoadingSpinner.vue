@@ -11,8 +11,7 @@
       :style="{ width: size + 'px', height: size + 'px' }"
       @error="onVideoError"
     >
-      <source :src="videoSrc" type="video/webm" />
-      <source :src="videoSrcMp4" type="video/mp4" />
+      <source :src="videoSrc" type="video/mp4" />
     </video>
     <!-- 영상 로드 실패 시 폴백 스피너 -->
     <div v-else class="spinner" :style="{ width: size + 'px', height: size + 'px' }"></div>
@@ -50,7 +49,7 @@ const videoRef = ref<HTMLVideoElement | null>(null)
 const videoError = ref(false)
 
 // 영상 파일 경로 (public 폴더에 위치)
-const videoSrc = '/loading-character.webm'
+const videoSrc = '/loading-character.mp4'
 const videoSrcMp4 = '/loading-character.mp4'
 
 const hasVideo = computed(() => props.useVideo && !videoError.value)
