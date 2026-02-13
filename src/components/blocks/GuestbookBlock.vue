@@ -4,9 +4,9 @@
     ref="blockRef"
     :class="{ 'bg-loaded': isBgLoaded }"
     :style="{
-      '--text-color': data.textColor || '#374151',
+      '--text-color': props.data.textColor || '#374151',
       '--bg-overlay': getBackgroundOverlay(),
-      backgroundColor: !data.backgroundImageUrl && fallbackBackgroundColor ? fallbackBackgroundColor : undefined
+      backgroundColor: !props.data.backgroundImageUrl && props.fallbackBackgroundColor ? props.fallbackBackgroundColor : undefined
     }"
   >
     <!-- ✅ 배경 이미지 지연 로딩 레이어 -->
