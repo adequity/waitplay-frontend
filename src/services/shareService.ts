@@ -41,6 +41,19 @@ export interface ShareStatsSummary {
 }
 
 const shareService = {
+  // 카카오 SDK 초기화 확인
+  initKakaoSdk: () => {
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      const appKey = import.meta.env.VITE_KAKAO_APP_KEY
+      if (appKey) {
+        window.Kakao.init(appKey)
+        console.log('Kakao SDK initialized')
+      } else {
+        console.warn('VITE_KAKAO_APP_KEY is not set')
+      }
+    }
+  },
+
   // 공유 로그 기록
   logShare: async (data: ShareLogRequest) => {
     const response = await apiClient.post('/api/share/log', data)
@@ -61,6 +74,9 @@ const shareService = {
 
   // 카카오톡 공유
   shareToKakao: async (qrCodeId: string, title: string, description: string, _imageUrl?: string, context?: string, gameType?: string, gameScore?: number) => {
+    // 카카오 SDK 초기화
+    shareService.initKakaoSdk()
+
     // 로그 기록
     const result = await shareService.logShare({
       qrCodeId,
@@ -71,11 +87,10 @@ const shareService = {
     })
 
     // 동적 OG 이미지 URL 생성 (매장별 배경 이미지 + 로고)
-    // 항상 동적 OG 이미지 사용 (배경 + 로고 합성)
     const ogImageUrl = `https://api.waitplay.co.kr/api/ogimage/landing/${qrCodeId}`
 
     // 카카오 SDK 공유
-    if (window.Kakao && window.Kakao.Share) {
+    if (window.Kakao && window.Kakao.isInitialized() && window.Kakao.Share) {
       window.Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
@@ -97,6 +112,11 @@ const shareService = {
           }
         ]
       })
+    } else {
+      // SDK가 없거나 초기화되지 않으면 링크 복사로 폴백
+      console.warn('Kakao SDK not available or not initialized')
+      await navigator.clipboard.writeText(result.shareUrl)
+      alert('카카오톡 공유를 사용할 수 없어 링크가 복사되었습니다.')
     }
 
     return result
@@ -116,7 +136,7 @@ const shareService = {
     return result
   },
 
-  // 인스타그램 스토리 공유 (모바일에서만 가능)
+  // 인스타그램/일반 공유 (Web Share API 활용)
   shareToInstagram: async (qrCodeId: string, context?: string, gameType?: string, gameScore?: number) => {
     const result = await shareService.logShare({
       qrCodeId,
@@ -126,14 +146,22 @@ const shareService = {
       gameScore
     })
 
-    // 인스타그램 앱으로 이동 (모바일)
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-    if (isMobile) {
-      // 인스타그램 스토리 딥링크 (이미지가 필요)
-      window.open(`instagram://story-camera`, '_blank')
+    // Web Share API 지원 여부 확인 (모바일에서 주로 지원)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'WaitPlay',
+          text: '재미있는 게임을 즐기고 혜택을 받아보세요!',
+          url: result.shareUrl
+        })
+      } catch (err) {
+        // 사용자가 공유 취소한 경우
+        console.log('Share cancelled or failed:', err)
+      }
     } else {
-      // 데스크톱에서는 인스타그램 웹 열기
-      window.open('https://www.instagram.com/', '_blank')
+      // Web Share API 미지원 시 링크 복사
+      await navigator.clipboard.writeText(result.shareUrl)
+      alert('링크가 복사되었습니다. 인스타그램에 붙여넣기 하세요.')
     }
 
     return result
