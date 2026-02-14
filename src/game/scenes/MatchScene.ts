@@ -69,6 +69,13 @@ export class MatchScene extends Phaser.Scene {
   private logoUrl?: string;
   private hasLogo: boolean = false;
 
+  // UI 패널 요소 (새 디자인)
+  private progressBar?: Phaser.GameObjects.Graphics;
+  private progressFill?: Phaser.GameObjects.Graphics;
+  private timeCircle?: Phaser.GameObjects.Graphics;
+  private timeArc?: Phaser.GameObjects.Graphics;
+  private movesCard?: Phaser.GameObjects.Container;
+
   constructor() {
     super({ key: 'MatchScene' });
   }
@@ -253,7 +260,9 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private createUIPanel(W: number, H: number) {
-    // ==================== 상단 UI 패널 (Neumorphism 스타일) ====================
+    // ==================== 최적 조합 UI 패널 ====================
+    // 좌: 이동 수 카드 | 중앙: 매치 프로그레스 바 | 우: 시간 원형 게이지
+
     // 카드 그리드와 동일한 너비 계산
     const cols = 4;
     const rows = 4;
@@ -273,107 +282,171 @@ export class MatchScene extends Phaser.Scene {
     }
     const gridWidth = cardWidth * cols + gap * (cols + 1);
 
-    // 패널 너비를 그리드 너비와 동일하게
-    const panelWidth = gridWidth;
-    const panelHeight = H * 0.08;
-    const panelY = H * 0.05 + panelHeight / 2;
-    const borderRadius = 16;
+    const panelY = H * 0.07;
+    const panelHeight = H * 0.085;
 
-    // 패널 컨테이너
-    const panelContainer = this.add.container(W * 0.5, panelY);
+    // ========== 좌측: 이동 수 카드 ==========
+    const movesCardSize = panelHeight * 0.85;
+    const movesCardX = (W - gridWidth) / 2 + movesCardSize / 2 + 8;
 
-    // 패널 그림자 (shadow-lg shadow-slate-200/50)
-    const shadowGraphics = this.add.graphics();
-    shadowGraphics.fillStyle(0xcbd5e1, 0.3); // slate-300
-    shadowGraphics.fillRoundedRect(-panelWidth / 2, -panelHeight / 2 + 4, panelWidth, panelHeight, borderRadius);
-    panelContainer.add(shadowGraphics);
+    this.movesCard = this.add.container(movesCardX, panelY);
 
-    // 패널 배경 (Neumorphism)
-    const panelGraphics = this.add.graphics();
-    panelGraphics.fillStyle(0xfff7ed, 1); // orange-50 계열
-    panelGraphics.fillRoundedRect(-panelWidth / 2, -panelHeight / 2, panelWidth, panelHeight, borderRadius);
-    panelGraphics.lineStyle(1, 0xfed7aa, 0.8); // orange-200 테두리
-    panelGraphics.strokeRoundedRect(-panelWidth / 2, -panelHeight / 2, panelWidth, panelHeight, borderRadius);
-    panelContainer.add(panelGraphics);
+    // 카드 그림자
+    const movesShadow = this.add.graphics();
+    movesShadow.fillStyle(0x000000, 0.1);
+    movesShadow.fillRoundedRect(-movesCardSize / 2 + 3, -movesCardSize / 2 + 3, movesCardSize, movesCardSize, 12);
+    this.movesCard.add(movesShadow);
 
-    // 각 스탯 영역 간격
-    const statSpacing = panelWidth / 3;
+    // 카드 배경
+    const movesCardBg = this.add.graphics();
+    movesCardBg.fillStyle(0xffffff, 1);
+    movesCardBg.fillRoundedRect(-movesCardSize / 2, -movesCardSize / 2, movesCardSize, movesCardSize, 12);
+    movesCardBg.lineStyle(2, 0xfed7aa, 1); // orange-200
+    movesCardBg.strokeRoundedRect(-movesCardSize / 2, -movesCardSize / 2, movesCardSize, movesCardSize, 12);
+    this.movesCard.add(movesCardBg);
 
-    // ========== MOVES (이동 수) ==========
-    const movesX = -statSpacing;
-
-    // 라벨
-    const movesLabel = this.add.text(movesX, -panelHeight * 0.25, 'MOVES', {
-      fontSize: Math.floor(H * 0.016) + 'px',
-      color: '#94a3b8', // slate-400
+    // 이동 수 텍스트
+    this.movesText = this.add.text(0, -movesCardSize * 0.08, '0', {
+      fontSize: Math.floor(movesCardSize * 0.45) + 'px',
+      color: '#f97316', // orange-500
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
-    panelContainer.add(movesLabel);
+    this.movesCard.add(this.movesText);
 
-    // 값 (⚡ 아이콘 + 숫자)
-    this.movesText = this.add.text(movesX, panelHeight * 0.12, '⚡ 0', {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#f97316', // orange-500 (textMoves)
-      fontStyle: 'bold',
+    // "moves" 라벨
+    const movesLabel = this.add.text(0, movesCardSize * 0.28, 'moves', {
+      fontSize: Math.floor(movesCardSize * 0.18) + 'px',
+      color: '#9ca3af', // gray-400
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
-    panelContainer.add(this.movesText);
+    this.movesCard.add(movesLabel);
 
-    // ========== MATCHES (매치 수) ==========
-    const matchesX = 0;
+    // ========== 우측: 시간 원형 게이지 ==========
+    const timeCircleSize = panelHeight * 0.85;
+    const timeCircleX = (W + gridWidth) / 2 - timeCircleSize / 2 - 8;
 
-    // 라벨
-    const matchesLabel = this.add.text(matchesX, -panelHeight * 0.25, 'MATCHES', {
-      fontSize: Math.floor(H * 0.016) + 'px',
-      color: '#94a3b8',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-    panelContainer.add(matchesLabel);
+    const timeContainer = this.add.container(timeCircleX, panelY);
 
-    // 값 (⭐ 아이콘 + 숫자)
-    this.matchesText = this.add.text(matchesX, panelHeight * 0.12, '⭐ 0/' + this.TOTAL_PAIRS, {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#ec4899', // pink-500 (textMatches)
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-    panelContainer.add(this.matchesText);
+    // 원형 배경 (트랙)
+    this.timeCircle = this.add.graphics();
+    this.timeCircle.lineStyle(6, 0xe5e7eb, 1); // gray-200
+    this.timeCircle.strokeCircle(0, 0, timeCircleSize / 2 - 6);
+    timeContainer.add(this.timeCircle);
 
-    // ========== TIME (남은 시간) ==========
-    const timeX = statSpacing;
+    // 원형 진행률 (아크)
+    this.timeArc = this.add.graphics();
+    this.drawTimeArc(timeCircleSize / 2 - 6, 1, 0x10b981); // emerald-500
+    timeContainer.add(this.timeArc);
 
-    // 라벨
-    const timeLabel = this.add.text(timeX, -panelHeight * 0.25, 'TIME', {
-      fontSize: Math.floor(H * 0.016) + 'px',
-      color: '#94a3b8',
-      fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }).setOrigin(0.5);
-    panelContainer.add(timeLabel);
-
-    // 초기 시간 표시 (2:00 형식)
+    // 시간 텍스트
     const initMinutes = Math.floor(this.TIME_LIMIT / 60);
     const initSeconds = this.TIME_LIMIT % 60;
     const initTimeDisplay = `${initMinutes}:${initSeconds.toString().padStart(2, '0')}`;
 
-    // 값 (⏱️ 아이콘 + 남은시간)
-    this.timeText = this.add.text(timeX, panelHeight * 0.12, `⏱️ ${initTimeDisplay}`, {
-      fontSize: Math.floor(H * 0.032) + 'px',
-      color: '#8b5cf6', // violet-500 (textTime)
+    this.timeText = this.add.text(0, 0, initTimeDisplay, {
+      fontSize: Math.floor(timeCircleSize * 0.28) + 'px',
+      color: '#10b981', // emerald-500
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5);
-    panelContainer.add(this.timeText);
+    timeContainer.add(this.timeText);
+
+    // ========== 중앙: 매치 프로그레스 바 ==========
+    const progressWidth = gridWidth - movesCardSize * 2 - 40;
+    const progressHeight = 20;
+    const progressX = W / 2;
+    const progressY = panelY - 8;
+
+    // 프로그레스 바 배경
+    this.progressBar = this.add.graphics();
+    this.progressBar.fillStyle(0xe5e7eb, 1); // gray-200
+    this.progressBar.fillRoundedRect(-progressWidth / 2, -progressHeight / 2, progressWidth, progressHeight, progressHeight / 2);
+    this.progressBar.setPosition(progressX, progressY);
+
+    // 프로그레스 바 채움
+    this.progressFill = this.add.graphics();
+    this.progressFill.setPosition(progressX, progressY);
+    this.updateProgressBar(0);
+
+    // 매치 텍스트 (프로그레스 바 아래)
+    this.matchesText = this.add.text(progressX, progressY + progressHeight + 8, `0/${this.TOTAL_PAIRS} ⭐`, {
+      fontSize: Math.floor(H * 0.022) + 'px',
+      color: '#ec4899', // pink-500
+      fontStyle: 'bold',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }).setOrigin(0.5);
 
     // ==================== 콤보 텍스트 ====================
     this.comboText = this.add.text(W * 0.5, H * 0.135, '', {
-      fontSize: Math.floor(H * 0.038) + 'px',
-      color: '#f43f5e', // rose-500 (textCombo)
+      fontSize: Math.floor(H * 0.04) + 'px',
+      color: '#f43f5e', // rose-500
       fontStyle: 'bold',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }).setOrigin(0.5).setAlpha(0);
+  }
+
+  // 프로그레스 바 업데이트
+  private updateProgressBar(progress: number) {
+    if (!this.progressFill) return;
+
+    const W = this.scale.width;
+    const H = this.scale.height;
+
+    // 그리드 너비 재계산
+    const cols = 4;
+    const rows = 4;
+    const gameAreaTop = H * 0.15;
+    const gameAreaBottom = H * 0.96;
+    const gameAreaHeight = gameAreaBottom - gameAreaTop;
+    const gameAreaWidth = W * 0.94;
+    const gap = Math.min(W * 0.02, H * 0.012);
+    const cardRatio = 1.8;
+    const maxCardWidth = (gameAreaWidth - gap * (cols + 1)) / cols;
+    const maxCardHeight = (gameAreaHeight - gap * (rows + 1)) / rows;
+    let cardWidth = maxCardWidth;
+    let cardHeight = cardWidth * cardRatio;
+    if (cardHeight > maxCardHeight) {
+      cardHeight = maxCardHeight;
+      cardWidth = cardHeight / cardRatio;
+    }
+    const gridWidth = cardWidth * cols + gap * (cols + 1);
+
+    const panelHeight = H * 0.085;
+    const movesCardSize = panelHeight * 0.85;
+    const progressWidth = gridWidth - movesCardSize * 2 - 40;
+    const progressHeight = 20;
+
+    const fillWidth = progressWidth * Math.min(1, Math.max(0, progress));
+
+    this.progressFill.clear();
+    if (fillWidth > 0) {
+      // 그라데이션 효과 (pink gradient)
+      this.progressFill.fillStyle(0xec4899, 1); // pink-500
+      this.progressFill.fillRoundedRect(-progressWidth / 2, -progressHeight / 2, fillWidth, progressHeight, progressHeight / 2);
+
+      // 하이라이트
+      this.progressFill.fillStyle(0xf472b6, 0.5); // pink-400
+      this.progressFill.fillRoundedRect(-progressWidth / 2, -progressHeight / 2, fillWidth, progressHeight / 2, { tl: progressHeight / 2, tr: fillWidth >= progressWidth ? progressHeight / 2 : 0, bl: 0, br: 0 });
+    }
+  }
+
+  // 시간 원형 아크 그리기
+  private drawTimeArc(radius: number, progress: number, color: number) {
+    if (!this.timeArc) return;
+
+    this.timeArc.clear();
+    this.timeArc.lineStyle(6, color, 1);
+
+    // 진행률에 따른 아크 (12시 방향에서 시작, 시계 방향)
+    const startAngle = -Math.PI / 2; // 12시 방향
+    const endAngle = startAngle + (2 * Math.PI * progress);
+
+    if (progress > 0) {
+      this.timeArc.beginPath();
+      this.timeArc.arc(0, 0, radius, startAngle, endAngle, false);
+      this.timeArc.strokePath();
+    }
   }
 
   private createTitleScreen(W: number, H: number) {
@@ -927,24 +1000,47 @@ export class MatchScene extends Phaser.Scene {
     const seconds = this.timeRemaining % 60;
     const timeDisplay = minutes > 0
       ? `${minutes}:${seconds.toString().padStart(2, '0')}`
-      : `${seconds}초`;
+      : `${seconds}`;
 
-    // 시간이 30초 이하면 빨간색으로 경고
-    if (this.timeRemaining <= 30) {
-      this.timeText?.setColor('#ef4444'); // red-500
+    // 시간 진행률 계산
+    const timeProgress = this.timeRemaining / this.TIME_LIMIT;
 
-      // 10초 이하면 깜빡임 효과
+    // 색상 결정 (초록 → 노랑 → 빨강)
+    let timeColor: number;
+    let textColor: string;
+    if (this.timeRemaining > 60) {
+      // 1분 이상: 초록색
+      timeColor = 0x10b981; // emerald-500
+      textColor = '#10b981';
+    } else if (this.timeRemaining > 30) {
+      // 30초~1분: 노란색
+      timeColor = 0xf59e0b; // amber-500
+      textColor = '#f59e0b';
+    } else {
+      // 30초 이하: 빨간색
+      timeColor = 0xef4444; // red-500
+      textColor = '#ef4444';
+
+      // 10초 이하면 펄스 효과
       if (this.timeRemaining <= 10 && this.timeRemaining > 0) {
         this.tweens.add({
           targets: this.timeText,
-          alpha: 0.5,
-          duration: 200,
+          scale: { from: 1, to: 1.15 },
+          duration: 150,
           yoyo: true
         });
       }
     }
 
-    this.timeText?.setText(`⏱️ ${timeDisplay}`);
+    // 원형 게이지 업데이트
+    const H = this.scale.height;
+    const panelHeight = H * 0.085;
+    const timeCircleSize = panelHeight * 0.85;
+    this.drawTimeArc(timeCircleSize / 2 - 6, timeProgress, timeColor);
+
+    // 시간 텍스트 업데이트
+    this.timeText?.setText(timeDisplay);
+    this.timeText?.setColor(textColor);
 
     // 시간 초과 - 게임 종료
     if (this.timeRemaining <= 0) {
@@ -987,8 +1083,19 @@ export class MatchScene extends Phaser.Scene {
     // 두 장의 카드가 뒤집혔을 때
     if (this.flippedCards.length === 2) {
       this.moves++;
-      this.movesText?.setText('🚀 ' + this.moves);
+      this.movesText?.setText(String(this.moves));
       this.canFlip = false;
+
+      // 이동 수 카드 바운스 애니메이션
+      if (this.movesCard) {
+        this.tweens.add({
+          targets: this.movesCard,
+          scale: { from: 1, to: 1.15 },
+          duration: 100,
+          yoyo: true,
+          ease: 'Back.easeOut'
+        });
+      }
 
       this.time.delayedCall(200, () => {
         this.checkMatch();
@@ -1005,7 +1112,22 @@ export class MatchScene extends Phaser.Scene {
       this.matches++;
       this.consecutiveMatches++;
       this.maxCombo = Math.max(this.maxCombo, this.consecutiveMatches);
-      this.matchesText?.setText('⭐ ' + this.matches + '/' + this.TOTAL_PAIRS);
+
+      // 프로그레스 바 업데이트 (애니메이션)
+      const progress = this.matches / this.TOTAL_PAIRS;
+      this.updateProgressBar(progress);
+
+      // 매치 텍스트 업데이트
+      this.matchesText?.setText(`${this.matches}/${this.TOTAL_PAIRS} ⭐`);
+
+      // 매치 텍스트 바운스 효과
+      this.tweens.add({
+        targets: this.matchesText,
+        scale: { from: 1, to: 1.2 },
+        duration: 150,
+        yoyo: true,
+        ease: 'Back.easeOut'
+      });
 
       card1.isMatched = true;
       card2.isMatched = true;
@@ -1015,6 +1137,10 @@ export class MatchScene extends Phaser.Scene {
         this.showCombo();
       }
 
+      // 매치 성공 효과 - 별 파티클
+      this.createMatchParticles(card1.container.x, card1.container.y);
+      this.createMatchParticles(card2.container.x, card2.container.y);
+
       // 매치 성공 효과
       this.tweens.add({
         targets: [card1.container, card2.container],
@@ -1022,7 +1148,7 @@ export class MatchScene extends Phaser.Scene {
         duration: 150,
         yoyo: true,
         onComplete: () => {
-          // 성공 효과 - 녹색 틴트 적용
+          // 성공 효과 - 페이드 아웃
           card1.front.setAlpha(0.8);
           card2.front.setAlpha(0.8);
 
@@ -1094,21 +1220,56 @@ export class MatchScene extends Phaser.Scene {
     this.comboText?.setText(`${comboEmoji} ${this.consecutiveMatches} 콤보!`);
     this.comboText?.setAlpha(1);
 
-    this.tweens.add({
-      targets: this.comboText,
-      scale: { from: 0.5, to: 1.2 },
-      duration: 200,
-      yoyo: true,
-      onComplete: () => {
-        this.time.delayedCall(500, () => {
-          this.tweens.add({
-            targets: this.comboText,
-            alpha: 0,
-            duration: 300
-          });
-        });
-      }
+    // 콤보 텍스트 레인보우 글로우 효과 (4콤보 이상)
+    if (this.consecutiveMatches >= 4) {
+      this.tweens.add({
+        targets: this.comboText,
+        scale: { from: 0.5, to: 1.3 },
+        duration: 300,
+        yoyo: true,
+        ease: 'Elastic.easeOut'
+      });
+    } else {
+      this.tweens.add({
+        targets: this.comboText,
+        scale: { from: 0.5, to: 1.2 },
+        duration: 200,
+        yoyo: true
+      });
+    }
+
+    this.time.delayedCall(800, () => {
+      this.tweens.add({
+        targets: this.comboText,
+        alpha: 0,
+        duration: 300
+      });
     });
+  }
+
+  // 매치 성공 시 별 파티클 효과
+  private createMatchParticles(x: number, y: number) {
+    const particles = ['⭐', '✨', '💫', '🌟'];
+
+    for (let i = 0; i < 6; i++) {
+      const particle = this.add.text(x, y, particles[i % particles.length] || '⭐', {
+        fontSize: Math.floor(this.scale.height * 0.025) + 'px'
+      }).setOrigin(0.5);
+
+      const angle = (i / 6) * Math.PI * 2;
+      const distance = 60 + Math.random() * 40;
+
+      this.tweens.add({
+        targets: particle,
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance - 30,
+        alpha: 0,
+        scale: { from: 1, to: 0.3 },
+        duration: 600,
+        ease: 'Cubic.easeOut',
+        onComplete: () => particle.destroy()
+      });
+    }
   }
 
   private shuffleArray(array: string[]) {
