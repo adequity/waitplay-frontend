@@ -568,18 +568,29 @@ let bgObserver: IntersectionObserver | null = null
 
 // ✅ 배경색 계산 (우선순위: data.backgroundColor > fallbackBackgroundColor)
 const computedBackgroundColor = computed(() => {
+  // 디버그 로그
+  console.log('[GuestbookBlock] 배경색 계산:', {
+    backgroundImageUrl: props.data.backgroundImageUrl,
+    dataBackgroundColor: props.data.backgroundColor,
+    fallbackBackgroundColor: props.fallbackBackgroundColor
+  })
+
   // 배경 이미지가 있으면 배경색 사용 안함
   if (props.data.backgroundImageUrl) {
+    console.log('[GuestbookBlock] 배경 이미지 있음 → 배경색 사용 안함')
     return undefined
   }
   // 1순위: 블록 자체 배경색
   if (props.data.backgroundColor) {
+    console.log('[GuestbookBlock] 블록 자체 배경색 사용:', props.data.backgroundColor)
     return props.data.backgroundColor
   }
   // 2순위: 랜딩 페이지 배경색 (fallback)
   if (props.fallbackBackgroundColor) {
+    console.log('[GuestbookBlock] fallback 배경색 사용:', props.fallbackBackgroundColor)
     return props.fallbackBackgroundColor
   }
+  console.log('[GuestbookBlock] 배경색 없음')
   return undefined
 })
 

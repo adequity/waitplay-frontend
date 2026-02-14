@@ -1,0 +1,1 @@
+[     368ms] [ERROR] Failed to find a valid digest in the 'integrity' attribute for resource 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js' with computed SHA-384 integrity 'DKYJZ8NLiK8MN4/C5P2dtSmLQ4KwPaoqAfyA/DfmEc1VDxu4yyC7wy6K1Hs90nka'. The resource has been blocked. @ https://waitplay.co.kr/c/pcy2024:0
