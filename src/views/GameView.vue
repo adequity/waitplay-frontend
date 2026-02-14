@@ -225,43 +225,46 @@ function handleGameReady() {
 }
 
 onMounted(async () => {
-  // QR 코드 UUID 가져오기 (공유 기능용)
-  if (qrCodeShort.value) {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://api.waitplay.co.kr'
-      const response = await fetch(`${apiUrl}/api/qrcode/by-code/${encodeURIComponent(qrCodeShort.value)}`)
-      if (response.ok) {
-        const qrData = await response.json()
-        if (qrData?.id) {
-          qrCodeUuid.value = qrData.id
-          console.log('GameView QR UUID:', qrCodeUuid.value)
-        }
-      }
-    } catch (error) {
-      console.error('QR 코드 UUID 조회 실패:', error)
-    }
-  }
-
   // 핀볼이 아닌 경우에만 Phaser 게임 초기화
   if (!isPinball.value && gameContainer.value) {
-    try {
-      console.log('GameView QR Code:', qrCode.value)
-
-      // MATCH, SPOT 게임은 항상 풀스크린 모드로 시작 (기본값)
-      if (supportsFullscreen.value) {
-        enterFullscreen()
-      }
-
-      // 게임 초기화 (Phaser 동적 로드)
-      await gameManager.initGame(gameType.value, 'game-container', qrCode.value)
-
-      // Phaser 게임 이벤트 리스너 설정
-      window.addEventListener('phaser-game-over', handlePhaserGameOver)
-      window.addEventListener('phaser-game-ready', handleGameReady)
-    } catch (error) {
-      console.error('게임 초기화 실패:', error)
-      isGameLoading.value = false  // 에러 시 로딩 상태 해제
+    // MATCH, SPOT 게임은 항상 풀스크린 모드로 시작 (기본값)
+    if (supportsFullscreen.value) {
+      enterFullscreen()
     }
+
+    // Phaser 게임 이벤트 리스너 설정 (먼저 등록)
+    window.addEventListener('phaser-game-over', handlePhaserGameOver)
+    window.addEventListener('phaser-game-ready', handleGameReady)
+
+    // QR UUID 조회와 게임 초기화를 병렬로 실행 (성능 최적화)
+    const qrUuidPromise = qrCodeShort.value
+      ? (async () => {
+          try {
+            const apiUrl = import.meta.env.VITE_API_URL || 'https://api.waitplay.co.kr'
+            const response = await fetch(`${apiUrl}/api/qrcode/by-code/${encodeURIComponent(qrCodeShort.value!)}`)
+            if (response.ok) {
+              const qrData = await response.json()
+              if (qrData?.id) {
+                qrCodeUuid.value = qrData.id
+              }
+            }
+          } catch (error) {
+            console.error('QR 코드 UUID 조회 실패:', error)
+          }
+        })()
+      : Promise.resolve()
+
+    const gameInitPromise = (async () => {
+      try {
+        await gameManager.initGame(gameType.value, 'game-container', qrCode.value)
+      } catch (error) {
+        console.error('게임 초기화 실패:', error)
+        isGameLoading.value = false
+      }
+    })()
+
+    // 둘 다 완료될 때까지 대기
+    await Promise.all([qrUuidPromise, gameInitPromise])
   }
 })
 
