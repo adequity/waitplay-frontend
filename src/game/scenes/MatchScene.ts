@@ -254,9 +254,29 @@ export class MatchScene extends Phaser.Scene {
 
   private createUIPanel(W: number, H: number) {
     // ==================== 상단 UI 패널 (Neumorphism 스타일) ====================
-    const panelWidth = W * 0.94;
+    // 카드 그리드와 동일한 너비 계산
+    const cols = 4;
+    const rows = 4;
+    const gameAreaTop = H * 0.15;
+    const gameAreaBottom = H * 0.96;
+    const gameAreaHeight = gameAreaBottom - gameAreaTop;
+    const gameAreaWidth = W * 0.94;
+    const gap = Math.min(W * 0.02, H * 0.012);
+    const cardRatio = 1.8;
+    const maxCardWidth = (gameAreaWidth - gap * (cols + 1)) / cols;
+    const maxCardHeight = (gameAreaHeight - gap * (rows + 1)) / rows;
+    let cardWidth = maxCardWidth;
+    let cardHeight = cardWidth * cardRatio;
+    if (cardHeight > maxCardHeight) {
+      cardHeight = maxCardHeight;
+      cardWidth = cardHeight / cardRatio;
+    }
+    const gridWidth = cardWidth * cols + gap * (cols + 1);
+
+    // 패널 너비를 그리드 너비와 동일하게
+    const panelWidth = gridWidth;
     const panelHeight = H * 0.08;
-    const panelY = H * 0.05 + panelHeight / 2; // 상단 여백 + 패널 높이의 절반
+    const panelY = H * 0.05 + panelHeight / 2;
     const borderRadius = 16;
 
     // 패널 컨테이너
