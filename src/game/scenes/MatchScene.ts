@@ -247,37 +247,9 @@ export class MatchScene extends Phaser.Scene {
     this.loadingContainer = this.add.container(W * 0.5, H * 0.5);
   }
 
-  private createBackground(W: number, H: number) {
-    // 심플한 파스텔 그라데이션 배경
-    this.add.rectangle(W * 0.5, H * 0.25, W, H * 0.5, 0xfff5f5);
-    this.add.rectangle(W * 0.5, H * 0.75, W, H * 0.5, 0xfdf2f8);
-
-    // 부드러운 중간 레이어
-    this.add.rectangle(W * 0.5, H * 0.5, W, H * 0.3, 0xfff1f2, 0.5);
-
-    // 미니멀한 장식 - 작은 원 몇 개만
-    const decorColors = [0xfecdd3, 0xfda4af, 0xfb7185];
-    const positions = [
-      { x: W * 0.1, y: H * 0.15 },
-      { x: W * 0.9, y: H * 0.2 },
-      { x: W * 0.15, y: H * 0.85 },
-      { x: W * 0.85, y: H * 0.9 }
-    ];
-
-    positions.forEach((pos, i) => {
-      const color = decorColors[i % decorColors.length] || 0xfecdd3;
-      const circle = this.add.circle(pos.x, pos.y, 20 + i * 5, color, 0.15);
-
-      this.tweens.add({
-        targets: circle,
-        alpha: 0.08,
-        scale: 1.1,
-        duration: 3000 + i * 500,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-      });
-    });
+  private createBackground(_W: number, _H: number) {
+    // 배경색은 GAME_CONFIG.backgroundColor (#fdf2f8)로 통일
+    // Phaser config에서 이미 설정되어 있으므로 추가 배경 없음
   }
 
   private createUIPanel(W: number, H: number) {
