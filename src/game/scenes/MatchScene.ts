@@ -283,8 +283,8 @@ export class MatchScene extends Phaser.Scene {
   private createUIPanel(W: number, H: number) {
     // ==================== 상단 UI 패널 (Neumorphism 스타일) ====================
     const panelWidth = W * 0.94;
-    const panelHeight = H * 0.10;
-    const panelY = H * 0.06;
+    const panelHeight = H * 0.08;
+    const panelY = H * 0.05 + panelHeight / 2; // 상단 여백 + 패널 높이의 절반
     const borderRadius = 16;
 
     // 패널 컨테이너
