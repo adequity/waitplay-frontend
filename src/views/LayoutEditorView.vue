@@ -1518,7 +1518,8 @@ function getDefaultBlockData(type: BlockType): any {
         title: '방명록',
         messages: [],
         maxMessageLength: 200,
-        textColor: '#374151'
+        textColor: '#374151',
+        backgroundColor: pageTheme.value.backgroundColor // 랜딩 페이지 배경색 연동
       }
     case 'marquee':
       return {
@@ -1577,6 +1578,10 @@ async function editBlock(block: Block) {
     }
     if (editForm.value.backgroundOverlay === undefined) {
       editForm.value.backgroundOverlay = 0
+    }
+    // 배경색이 없으면 랜딩 페이지 배경색으로 초기화
+    if (!editForm.value.backgroundColor) {
+      editForm.value.backgroundColor = pageTheme.value.backgroundColor
     }
   }
 

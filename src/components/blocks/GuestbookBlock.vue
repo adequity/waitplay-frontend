@@ -566,15 +566,20 @@ const blockRef = ref<HTMLElement | null>(null)
 const isBgLoaded = ref(false)
 let bgObserver: IntersectionObserver | null = null
 
-// ✅ 배경색 계산 (배경 이미지 없을 때 fallback 색상 사용)
+// ✅ 배경색 계산 (우선순위: data.backgroundColor > fallbackBackgroundColor)
 const computedBackgroundColor = computed(() => {
-  console.log('[GuestbookBlock] backgroundImageUrl:', props.data.backgroundImageUrl)
-  console.log('[GuestbookBlock] fallbackBackgroundColor:', props.fallbackBackgroundColor)
-  if (!props.data.backgroundImageUrl && props.fallbackBackgroundColor) {
-    console.log('[GuestbookBlock] Using fallback color:', props.fallbackBackgroundColor)
+  // 배경 이미지가 있으면 배경색 사용 안함
+  if (props.data.backgroundImageUrl) {
+    return undefined
+  }
+  // 1순위: 블록 자체 배경색
+  if (props.data.backgroundColor) {
+    return props.data.backgroundColor
+  }
+  // 2순위: 랜딩 페이지 배경색 (fallback)
+  if (props.fallbackBackgroundColor) {
     return props.fallbackBackgroundColor
   }
-  console.log('[GuestbookBlock] No fallback, returning undefined')
   return undefined
 })
 
