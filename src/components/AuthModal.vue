@@ -143,9 +143,27 @@ async function handleStandardLogin() {
   }
 }
 
+// 카카오 SDK 동적 로드
+async function loadKakaoSdk(): Promise<void> {
+  if ((window as any).Kakao) return
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js'
+    script.crossOrigin = 'anonymous'
+    script.onload = () => resolve()
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
+
 async function handleKakaoLogin() {
-  // Kakao SDK login
-  if (typeof window !== 'undefined' && (window as any).Kakao) {
+  isLoading.value = true
+  error.value = ''
+
+  try {
+    // 카카오 SDK 동적 로드
+    await loadKakaoSdk()
+
     const Kakao = (window as any).Kakao
     if (!Kakao.isInitialized()) {
       Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY)
@@ -153,7 +171,6 @@ async function handleKakaoLogin() {
 
     Kakao.Auth.login({
       success: async (authObj: any) => {
-        isLoading.value = true
         try {
           const data = await authStore.login('kakao', authObj.access_token)
           emit('success', data.userId)
@@ -166,10 +183,12 @@ async function handleKakaoLogin() {
       fail: (err: any) => {
         console.error('Kakao login failed:', err)
         error.value = '카카오 로그인에 실패했습니다'
+        isLoading.value = false
       }
     })
-  } else {
-    error.value = '카카오 SDK가 로드되지 않았습니다'
+  } catch (err) {
+    error.value = '카카오 SDK 로드에 실패했습니다'
+    isLoading.value = false
   }
 }
 

@@ -40,16 +40,33 @@ export interface ShareStatsSummary {
   channelStats: ChannelStat[]
 }
 
+// 카카오 SDK 동적 로드 (필요할 때만)
+let kakaoSdkLoaded = false
+const loadKakaoSdk = (): Promise<void> => {
+  if (kakaoSdkLoaded || window.Kakao) {
+    return Promise.resolve()
+  }
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js'
+    script.crossOrigin = 'anonymous'
+    script.onload = () => {
+      kakaoSdkLoaded = true
+      resolve()
+    }
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
+
 const shareService = {
-  // 카카오 SDK 초기화 확인
-  initKakaoSdk: () => {
+  // 카카오 SDK 초기화 확인 (동적 로드 포함)
+  initKakaoSdk: async () => {
+    await loadKakaoSdk()
     if (window.Kakao && !window.Kakao.isInitialized()) {
       const appKey = import.meta.env.VITE_KAKAO_APP_KEY
       if (appKey) {
         window.Kakao.init(appKey)
-        console.log('Kakao SDK initialized')
-      } else {
-        console.warn('VITE_KAKAO_APP_KEY is not set')
       }
     }
   },
@@ -74,8 +91,8 @@ const shareService = {
 
   // 카카오톡 공유
   shareToKakao: async (qrCodeId: string, title: string, description: string, _imageUrl?: string, context?: string, gameType?: string, gameScore?: number) => {
-    // 카카오 SDK 초기화
-    shareService.initKakaoSdk()
+    // 카카오 SDK 동적 로드 및 초기화
+    await shareService.initKakaoSdk()
 
     // 로그 기록
     const result = await shareService.logShare({
