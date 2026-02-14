@@ -310,14 +310,6 @@ async function shareToTwitter() {
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.5);
   z-index: 1000;
-  /* 위치 고정 보장 */
-  will-change: auto;
-}
-
-.floating-dock.dock-hidden {
-  transform: translateX(-50%) translateY(100px);
-  opacity: 0;
-  pointer-events: none;
 }
 
 .dock-item {
