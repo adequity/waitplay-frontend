@@ -672,20 +672,26 @@ export class MatchScene extends Phaser.Scene {
     const gameAreaWidth = W * 0.96; // 좌우 여백 추가
 
     // 카드 간격 (부드러운 느낌)
-    const gapX = W * 0.025; // 가로 간격
-    const gapY = H * 0.015; // 세로 간격
+    const gap = Math.min(W * 0.025, H * 0.015); // 가로/세로 중 작은 값 사용
 
-    // 카드 크기 계산 - 화면에 꽉 차게
-    const cardWidth = (gameAreaWidth - gapX * (cols + 1)) / cols;
-    const cardHeight = (gameAreaHeight - gapY * (rows + 1)) / rows;
+    // 카드 크기 계산 - 정사각형 유지
+    const maxCardWidth = (gameAreaWidth - gap * (cols + 1)) / cols;
+    const maxCardHeight = (gameAreaHeight - gap * (rows + 1)) / rows;
+    const cardSize = Math.min(maxCardWidth, maxCardHeight); // 정사각형 보장
+    const cardWidth = cardSize;
+    const cardHeight = cardSize;
 
-    // 시작 위치 (좌우 여백 고려)
-    const startX = (W - gameAreaWidth) / 2 + gapX + cardWidth / 2;
-    const startY = gameAreaTop + gapY + cardHeight / 2;
+    // 실제 그리드 크기 계산
+    const gridWidth = cardSize * cols + gap * (cols + 1);
+    const gridHeight = cardSize * rows + gap * (rows + 1);
+
+    // 시작 위치 (중앙 정렬)
+    const startX = (W - gridWidth) / 2 + gap + cardWidth / 2;
+    const startY = gameAreaTop + (gameAreaHeight - gridHeight) / 2 + gap + cardHeight / 2;
 
     // 간격 계산
-    const spacingX = cardWidth + gapX;
-    const spacingY = cardHeight + gapY;
+    const spacingX = cardWidth + gap;
+    const spacingY = cardHeight + gap;
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {

@@ -9,12 +9,12 @@
 
 // Phaser Scale 상수 (Phaser import 없이 직접 정의)
 // https://newdocs.phaser.io/docs/3.60.0/Phaser.Scale.ScaleModes
-const SCALE_FIT = 1;  // Phaser.Scale.FIT
+const SCALE_RESIZE = 5;  // Phaser.Scale.RESIZE - 화면 크기에 맞게 게임 영역 조정
 const CENTER_BOTH = 1;  // Phaser.Scale.CENTER_BOTH
 
 export const GAME_CONFIG = {
-  width: 390,   // iPhone 기준 세로 해상도
-  height: 844,
+  width: 390,   // 기본 너비 (RESIZE 모드에서는 참고값)
+  height: 844,  // 기본 높이 (RESIZE 모드에서는 참고값)
   backgroundColor: '#fdf2f8',  // 게임 배경색과 동일 (pink-50)
   parent: 'game-container',
   physics: {
@@ -25,19 +25,11 @@ export const GAME_CONFIG = {
     }
   },
   scale: {
-    mode: SCALE_FIT,
+    mode: SCALE_RESIZE,
     autoCenter: CENTER_BOTH,
     parent: 'game-container',
-    width: 390,
-    height: 844,
-    min: {
-      width: 320,
-      height: 480
-    },
-    max: {
-      width: 600,
-      height: 1200
-    }
+    width: '100%',
+    height: '100%'
   },
   render: {
     antialias: true,
