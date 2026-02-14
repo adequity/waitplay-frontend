@@ -647,7 +647,7 @@ export class MatchScene extends Phaser.Scene {
     const gap = Math.min(W * 0.02, H * 0.012);
 
     // 카드 크기 계산 - 세로 직사각형 비율 유지
-    const cardRatio = 1.85; // 세로 : 가로 비율
+    const cardRatio = 1.8; // 세로 : 가로 비율
 
     // 가로 기준 최대 크기
     const maxCardWidth = (gameAreaWidth - gap * (cols + 1)) / cols;
