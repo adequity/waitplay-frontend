@@ -62,7 +62,7 @@
     <!-- 공유 시트 -->
     <Transition name="sheet">
       <div v-if="showShareSheet" class="share-sheet-overlay" @click.self="closeShareSheet">
-        <div class="share-sheet">
+        <div class="share-sheet" :class="{ 'dark-theme': isDarkTheme }">
           <div class="share-sheet-header">
             <h3>공유하기</h3>
             <button class="close-btn" @click="closeShareSheet">
@@ -376,10 +376,15 @@ async function shareToTwitter() {
 .share-sheet {
   width: 100%;
   max-width: 500px;
-  background: white;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 24px 24px 0 0;
   padding: 20px 20px 40px;
+  padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-bottom: none;
 }
 
 .share-sheet-header {
@@ -530,6 +535,33 @@ async function shareToTwitter() {
 }
 
 .floating-dock.dark-theme .dock-label {
+  color: #ccc;
+}
+
+/* 공유 시트 다크 테마 */
+.share-sheet.dark-theme {
+  background: rgba(30, 30, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.share-sheet.dark-theme .share-sheet-header h3 {
+  color: #fff;
+}
+
+.share-sheet.dark-theme .close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.share-sheet.dark-theme .share-option {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.share-sheet.dark-theme .share-option:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.share-sheet.dark-theme .share-option span {
   color: #ccc;
 }
 
