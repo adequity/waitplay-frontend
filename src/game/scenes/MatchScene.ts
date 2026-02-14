@@ -680,7 +680,7 @@ export class MatchScene extends Phaser.Scene {
     const maxCardHeight = (gameAreaHeight - gapY * (rows + 1)) / rows;
 
     // 원래 비율 (세로가 더 긴 직사각형) 유지
-    const cardRatio = 1.25; // 세로 : 가로 비율
+    const cardRatio = 1.7; // 세로 : 가로 비율
     let cardWidth = maxCardWidth;
     let cardHeight = cardWidth * cardRatio;
 
