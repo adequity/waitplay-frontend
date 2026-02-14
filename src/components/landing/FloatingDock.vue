@@ -293,6 +293,8 @@ async function shareToTwitter() {
   right: 0;
   z-index: 1000;
   pointer-events: none;
+  /* iOS safe area 지원 */
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .floating-dock {
@@ -315,6 +317,8 @@ async function shareToTwitter() {
   border: 1px solid rgba(255, 255, 255, 0.5);
   pointer-events: auto;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 위치 고정 보장 */
+  will-change: transform;
 }
 
 .floating-dock.dock-hidden {
