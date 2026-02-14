@@ -665,22 +665,24 @@ export class MatchScene extends Phaser.Scene {
     const cols = 4;
     const rows = 4;
 
-    // UI 영역(상단 패널) 고려한 게임 영역 계산 - 적절한 여백 추가
-    const gameAreaTop = H * 0.14; // UI 패널 아래 여백 추가
-    const gameAreaBottom = H * 0.98; // 하단 여백
+    // UI 영역(상단 패널) 고려한 게임 영역 계산
+    const gameAreaTop = H * 0.15; // UI 패널 아래 (패널 높이 + 여백)
+    const gameAreaBottom = H * 0.96; // 하단 여백
     const gameAreaHeight = gameAreaBottom - gameAreaTop;
-    const gameAreaWidth = W * 0.96; // 좌우 여백 추가
+    const gameAreaWidth = W * 0.94; // 좌우 여백
 
-    // 카드 간격 (부드러운 느낌)
-    const gapX = W * 0.025; // 가로 간격
-    const gapY = H * 0.015; // 세로 간격
+    // 카드 간격
+    const gap = Math.min(W * 0.02, H * 0.012);
 
-    // 카드 크기 계산 - 세로 직사각형 비율 유지하면서 화면에 맞춤
-    const maxCardWidth = (gameAreaWidth - gapX * (cols + 1)) / cols;
-    const maxCardHeight = (gameAreaHeight - gapY * (rows + 1)) / rows;
+    // 카드 크기 계산 - 세로 직사각형 비율 유지
+    const cardRatio = 1.35; // 세로 : 가로 비율 (적당한 직사각형)
 
-    // 원래 비율 (세로가 더 긴 직사각형) 유지
-    const cardRatio = 1.7; // 세로 : 가로 비율
+    // 가로 기준 최대 크기
+    const maxCardWidth = (gameAreaWidth - gap * (cols + 1)) / cols;
+    // 세로 기준 최대 크기
+    const maxCardHeight = (gameAreaHeight - gap * (rows + 1)) / rows;
+
+    // 비율 적용한 크기 계산
     let cardWidth = maxCardWidth;
     let cardHeight = cardWidth * cardRatio;
 
@@ -691,16 +693,16 @@ export class MatchScene extends Phaser.Scene {
     }
 
     // 실제 그리드 크기 계산
-    const gridWidth = cardWidth * cols + gapX * (cols + 1);
-    const gridHeight = cardHeight * rows + gapY * (rows + 1);
+    const gridWidth = cardWidth * cols + gap * (cols + 1);
+    const gridHeight = cardHeight * rows + gap * (rows + 1);
 
     // 시작 위치 (중앙 정렬)
-    const startX = (W - gridWidth) / 2 + gapX + cardWidth / 2;
-    const startY = gameAreaTop + (gameAreaHeight - gridHeight) / 2 + gapY + cardHeight / 2;
+    const startX = (W - gridWidth) / 2 + gap + cardWidth / 2;
+    const startY = gameAreaTop + (gameAreaHeight - gridHeight) / 2 + gap + cardHeight / 2;
 
     // 간격 계산
-    const spacingX = cardWidth + gapX;
-    const spacingY = cardHeight + gapY;
+    const spacingX = cardWidth + gap;
+    const spacingY = cardHeight + gap;
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
