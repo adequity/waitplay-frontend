@@ -578,6 +578,11 @@ async function copyShareLink() {
     }, 2000)
   } catch (error) {
     console.error('링크 복사 실패:', error)
+    // 클립보드 API 실패 시에도 토스트 표시
+    showCopyToast.value = true
+    setTimeout(() => {
+      showCopyToast.value = false
+    }, 2000)
   }
 }
 
@@ -1184,7 +1189,7 @@ async function shareToTwitter() {
 
 /* Copy toast */
 .copy-toast {
-  position: absolute;
+  position: fixed;
   bottom: 120px;
   left: 50%;
   transform: translateX(-50%);
@@ -1197,6 +1202,8 @@ async function shareToTwitter() {
   border-radius: 24px;
   font-size: 14px;
   font-weight: 500;
+  z-index: 10001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Transitions */
