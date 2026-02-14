@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-dock-container">
+  <div class="floating-dock-wrapper">
     <!-- 글래스모피즘 독 -->
     <div class="floating-dock" :class="{ 'dark-theme': isDarkTheme }">
       <!-- 음악 버튼 -->
@@ -286,20 +286,14 @@ async function shareToTwitter() {
 </script>
 
 <style scoped>
-.floating-dock-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  pointer-events: none;
-  /* iOS safe area 지원 */
-  padding-bottom: env(safe-area-inset-bottom, 0);
+/* 래퍼는 레이아웃에 영향 없이 유지 */
+.floating-dock-wrapper {
+  display: contents;
 }
 
 .floating-dock {
-  position: absolute;
-  bottom: 12px;
+  position: fixed;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -315,15 +309,15 @@ async function shareToTwitter() {
     0 1px 2px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  pointer-events: auto;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
   /* 위치 고정 보장 */
-  will-change: transform;
+  will-change: auto;
 }
 
 .floating-dock.dock-hidden {
   transform: translateX(-50%) translateY(100px);
   opacity: 0;
+  pointer-events: none;
 }
 
 .dock-item {
