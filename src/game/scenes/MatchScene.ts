@@ -847,8 +847,9 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private startGame() {
-    const W = this.sys.game.config.width as number;
-    const H = this.sys.game.config.height as number;
+    // RESIZE 모드에서는 scale.width/height 사용
+    const W = this.scale.width;
+    const H = this.scale.height;
 
     // 타이틀 요소 제거
     this.titleElements.forEach(elem => {
