@@ -532,6 +532,7 @@ function stopCouponTimer() {
 
 // Fetch eligible reward on modal open
 watch(() => props.isOpen, async (isOpen) => {
+  console.log('[GameResultModal] v2 - isOpen changed:', isOpen)
   if (isOpen) {
     step.value = 'result'
     playerName.value = ''
