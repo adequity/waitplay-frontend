@@ -532,7 +532,7 @@ function stopCouponTimer() {
 
 // Fetch eligible reward on modal open
 watch(() => props.isOpen, async (isOpen) => {
-  console.log('[GameResultModal] v2 - isOpen changed:', isOpen)
+  console.log('[GameResultModal] v3 - isOpen changed:', isOpen)
   if (isOpen) {
     step.value = 'result'
     playerName.value = ''
@@ -592,7 +592,7 @@ watch(() => props.isOpen, async (isOpen) => {
     // 모달 닫힐 때 타이머 정리
     stopCouponTimer()
   }
-})
+}, { immediate: true })
 
 // Confetti styles
 function getConfettiStyle(index: number) {
