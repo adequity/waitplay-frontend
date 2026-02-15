@@ -42,6 +42,8 @@
       :qr-code="qrCodeShort"
       :qr-code-uuid="qrCodeUuid"
       :game-type="mapGameTypeForApi(gameType)"
+      :store-name="gameStoreName"
+      :store-logo-url="gameStoreLogoUrl"
       @close="handleResultClose"
       @restart="handleRestart"
     />
@@ -95,6 +97,10 @@ const qrCodeShort = computed(() => route.query.qr as string | undefined)
 
 // QR Code UUID for share API
 const qrCodeUuid = ref<string | undefined>(undefined)
+
+// Store info for coupon display
+const gameStoreName = ref<string | undefined>(undefined)
+const gameStoreLogoUrl = ref<string | undefined>(undefined)
 
 // Game result state
 const finalScore = ref(0)
@@ -246,6 +252,13 @@ onMounted(async () => {
               const qrData = await response.json()
               if (qrData?.id) {
                 qrCodeUuid.value = qrData.id
+              }
+              // 매장 정보 저장
+              if (qrData?.storeName) {
+                gameStoreName.value = qrData.storeName
+              }
+              if (qrData?.logoUrl) {
+                gameStoreLogoUrl.value = qrData.logoUrl
               }
             }
           } catch (error) {

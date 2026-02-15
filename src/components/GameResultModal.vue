@@ -134,96 +134,100 @@
           </div>
         </div>
 
-        <!-- Step 2: 쿠폰 발급 완료 -->
-        <div v-else-if="step === 'coupon'" class="step-content">
-          <div class="success-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-          </div>
-          <h2 class="success-title">축하합니다!</h2>
-
-          <div class="coupon-card">
-            <div class="coupon-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z"/>
-              </svg>
+        <!-- Step 2: 쿠폰 카드 (인스타그램 얼리 액세스 스타일) -->
+        <div v-else-if="step === 'coupon'" class="step-content coupon-step">
+          <!-- 쿠폰 카드 -->
+          <div class="coupon-card-instagram">
+            <!-- 상단 뱃지 -->
+            <div class="coupon-top-badge">
+              <span class="badge-icon">🎁</span>
+              <span class="badge-text">쿠폰</span>
             </div>
-            <h3 class="coupon-title">{{ reward?.title }}</h3>
-            <p class="coupon-achievement">{{ reward?.requiredScore }}점 달성!</p>
-          </div>
 
-          <div class="coupon-code-section">
-            <span class="coupon-code-label">쿠폰 코드</span>
-            <span class="coupon-code">{{ couponCode }}</span>
-            <p class="coupon-notice">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- 매장 로고/프로필 -->
+            <div class="store-profile">
+              <div class="store-logo-wrapper">
+                <img
+                  v-if="storeLogoUrl"
+                  :src="storeLogoUrl"
+                  alt="매장 로고"
+                  class="store-logo-img"
+                />
+                <div v-else class="store-logo-placeholder">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- 혜택 정보 -->
+            <div class="benefit-info-card">
+              <h3 class="benefit-title-card">{{ reward?.title || '혜택' }}</h3>
+              <p class="store-name-card">{{ storeName || '매장' }}</p>
+            </div>
+
+            <!-- 바코드 스타일 쿠폰 코드 -->
+            <div class="barcode-section">
+              <div class="barcode-lines">
+                <span v-for="i in 30" :key="i" class="barcode-line" :style="getBarcodeStyle(i)"></span>
+              </div>
+              <p class="coupon-code-display">{{ couponCode }}</p>
+            </div>
+
+            <!-- 타이머 -->
+            <div class="timer-section">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12,6 12,12 16,14"/>
               </svg>
-              5분 내에 직원에게 제시하세요
-            </p>
+              <span class="timer-text">{{ formatRemainingTime }} 남음</span>
+            </div>
           </div>
 
-          <!-- 매장 코드 입력 (직원용 빠른 사용) -->
-          <div v-if="!couponUsed" class="store-code-section">
-            <div class="store-code-header">
-              <div class="store-code-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                  <polyline points="10 17 15 12 10 7"/>
-                  <line x1="15" y1="12" x2="3" y2="12"/>
-                </svg>
-              </div>
-              <p class="store-code-hint">직원용 빠른 처리</p>
+          <!-- 쿠폰 사용 완료 표시 -->
+          <div v-if="couponUsed" class="coupon-used-overlay">
+            <div class="used-stamp">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
+              <span>사용 완료</span>
             </div>
+          </div>
+
+          <!-- 매장 코드 입력 (쿠폰 미사용 시) -->
+          <div v-if="!couponUsed" class="store-code-section-new">
             <div class="store-code-input-wrapper">
               <input
                 v-model="storeCodeInput"
                 type="text"
-                class="store-code-input"
-                placeholder="매장 코드"
+                class="store-code-input-new"
+                placeholder="매장 코드 입력"
                 maxlength="10"
                 :disabled="isVerifyingStoreCode"
                 @keydown.enter="handleStoreCodeSubmit"
               />
               <button
-                class="btn-store-code"
+                class="btn-store-code-new"
                 :disabled="!storeCodeInput || isVerifyingStoreCode"
                 @click="handleStoreCodeSubmit"
               >
-                <svg v-if="!isVerifyingStoreCode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="20,6 9,17 4,12"/>
-                </svg>
-                <span v-else class="btn-loading"></span>
+                <span v-if="!isVerifyingStoreCode">사용</span>
+                <span v-else class="btn-loading-new"></span>
               </button>
             </div>
-            <p v-if="storeCodeError" class="store-code-error">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              {{ storeCodeError }}
-            </p>
+            <p v-if="storeCodeError" class="store-code-error-new">{{ storeCodeError }}</p>
           </div>
 
-          <!-- 쿠폰 사용 완료 표시 -->
-          <div v-else class="coupon-used-badge">
-            <div class="used-badge-content">
-              <div class="used-check-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                </svg>
-              </div>
-              <div class="used-badge-text">
-                <span class="used-title">사용 완료!</span>
-                <span class="used-subtitle">혜택을 받으세요</span>
-              </div>
-            </div>
+          <!-- 하단 버튼 -->
+          <div class="coupon-actions">
+            <button class="btn-coupon-confirm" @click="handleClose">
+              확인
+            </button>
+            <button class="btn-coupon-dismiss" @click="handleClose">
+              닫기
+            </button>
           </div>
-
-          <button class="btn-primary" @click="handleClose">확인</button>
         </div>
       </div>
 
@@ -317,7 +321,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { submitGameScore } from '@/services/gameScoreService'
 import benefitsService, { type BenefitDto } from '@/services/benefitsService'
@@ -347,6 +351,8 @@ interface Props {
   qrCode?: string // short code for game score, benefits API
   qrCodeUuid?: string // UUID for share API
   gameType: string
+  storeName?: string // 매장명
+  storeLogoUrl?: string // 매장 로고 URL
 }
 
 const props = defineProps<Props>()
@@ -378,6 +384,15 @@ const storeCodeInput = ref('')
 const isVerifyingStoreCode = ref(false)
 const storeCodeError = ref('')
 const couponUsed = ref(false)
+
+// 매장 정보 (props 또는 API에서 가져옴)
+const storeName = ref<string | undefined>(undefined)
+const storeLogoUrl = ref<string | undefined>(undefined)
+
+// 쿠폰 만료 타이머
+const couponExpiresAt = ref<Date | null>(null)
+const remainingSeconds = ref(300) // 기본 5분
+let timerInterval: ReturnType<typeof setInterval> | null = null
 
 // Computed values
 const score = computed(() => props.gameData?.score ?? 0)
@@ -470,6 +485,51 @@ function getBgColorFromGrade(color: string): string {
   return colorMap[color] || '#e0e7ff'
 }
 
+// 남은 시간 포맷
+const formatRemainingTime = computed(() => {
+  const mins = Math.floor(remainingSeconds.value / 60)
+  const secs = remainingSeconds.value % 60
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+})
+
+// 바코드 스타일 생성
+function getBarcodeStyle(index: number) {
+  const width = Math.random() > 0.5 ? 2 : 3
+  const height = 30 + Math.random() * 15
+  return {
+    width: `${width}px`,
+    height: `${height}px`
+  }
+}
+
+// 타이머 시작
+function startCouponTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+  }
+  remainingSeconds.value = 300 // 5분
+  couponExpiresAt.value = new Date(Date.now() + 300 * 1000)
+
+  timerInterval = setInterval(() => {
+    if (remainingSeconds.value > 0) {
+      remainingSeconds.value--
+    } else {
+      if (timerInterval) {
+        clearInterval(timerInterval)
+        timerInterval = null
+      }
+    }
+  }, 1000)
+}
+
+// 타이머 정리
+function stopCouponTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+}
+
 // Fetch eligible reward on modal open
 watch(() => props.isOpen, async (isOpen) => {
   if (isOpen) {
@@ -481,6 +541,13 @@ watch(() => props.isOpen, async (isOpen) => {
     couponCode.value = ''
     scoreId.value = ''
     reward.value = null
+    couponUsed.value = false
+    storeCodeInput.value = ''
+    storeCodeError.value = ''
+
+    // props에서 매장 정보 설정
+    storeName.value = props.storeName
+    storeLogoUrl.value = props.storeLogoUrl
 
     // Fetch benefits
     if (props.qrCode && props.gameData?.score) {
@@ -496,6 +563,9 @@ watch(() => props.isOpen, async (isOpen) => {
         console.error('Failed to fetch benefits:', error)
       }
     }
+  } else {
+    // 모달 닫힐 때 타이머 정리
+    stopCouponTimer()
   }
 })
 
@@ -585,6 +655,8 @@ function handleAuthSuccess(userId: string) {
 // 쿠폰 코드 수신
 function handleCouponCode(code: string) {
   couponCode.value = code
+  // 쿠폰 타이머 시작
+  startCouponTimer()
 }
 
 // 쿠폰 생성 완료
@@ -744,6 +816,11 @@ async function handleStoreCodeSubmit() {
     isVerifyingStoreCode.value = false
   }
 }
+
+// 컴포넌트 언마운트 시 타이머 정리
+onBeforeUnmount(() => {
+  stopCouponTimer()
+})
 </script>
 
 <style scoped>
@@ -1600,5 +1677,340 @@ async function handleStoreCodeSubmit() {
 .used-subtitle {
   font-size: 13px;
   opacity: 0.9;
+}
+
+/* ==========================================
+   인스타그램 얼리 액세스 스타일 쿠폰 카드
+   ========================================== */
+
+.coupon-step {
+  gap: 20px;
+}
+
+/* 쿠폰 카드 - 화이트→블루 그라데이션 */
+.coupon-card-instagram {
+  width: 100%;
+  background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 50%, #bae6fd 100%);
+  border-radius: 24px;
+  padding: 24px;
+  position: relative;
+  box-shadow:
+    0 4px 6px -1px rgba(59, 130, 246, 0.1),
+    0 2px 4px -1px rgba(59, 130, 246, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: cardFloat 0.5s ease-out;
+}
+
+@keyframes cardFloat {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 상단 뱃지 */
+.coupon-top-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.badge-icon {
+  font-size: 14px;
+}
+
+.badge-text {
+  letter-spacing: 0.5px;
+}
+
+/* 매장 로고/프로필 */
+.store-profile {
+  margin-top: 12px;
+}
+
+.store-logo-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 3px solid white;
+  overflow: hidden;
+}
+
+.store-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.store-logo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #3b82f6;
+}
+
+/* 혜택 정보 */
+.benefit-info-card {
+  text-align: center;
+}
+
+.benefit-title-card {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+}
+
+.store-name-card {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* 바코드 스타일 쿠폰 코드 */
+.barcode-section {
+  width: 100%;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.barcode-lines {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1px;
+  height: 45px;
+}
+
+.barcode-line {
+  background: #1e293b;
+  border-radius: 1px;
+}
+
+.coupon-code-display {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: 4px;
+  font-family: 'Courier New', monospace;
+  margin: 0;
+}
+
+/* 타이머 */
+.timer-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.timer-text {
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* 쿠폰 사용 완료 오버레이 */
+.coupon-used-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(16, 185, 129, 0.95);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlayFade 0.3s ease-out;
+}
+
+@keyframes overlayFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.used-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+
+.used-stamp svg {
+  animation: stampBounce 0.5s ease-out;
+}
+
+@keyframes stampBounce {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.used-stamp span {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* 매장 코드 입력 (새 스타일) */
+.store-code-section-new {
+  width: 100%;
+}
+
+.store-code-section-new .store-code-input-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.store-code-input-new {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.store-code-input-new:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.store-code-input-new::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.btn-store-code-new {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 60px;
+}
+
+.btn-store-code-new:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-store-code-new:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-loading-new {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.store-code-error-new {
+  font-size: 13px;
+  color: #ef4444;
+  margin: 8px 0 0 0;
+  text-align: center;
+}
+
+/* 하단 버튼 */
+.coupon-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-coupon-confirm {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-coupon-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-coupon-dismiss {
+  width: 100%;
+  padding: 12px 24px;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-coupon-dismiss:hover {
+  color: #475569;
+  background: #f1f5f9;
 }
 </style>
