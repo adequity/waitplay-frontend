@@ -69,100 +69,94 @@
           </button>
         </div>
 
-        <!-- Error State with Store Code Fallback -->
-        <div v-else-if="error && !benefitRedeemed" class="error-section">
-          <div class="error-header">
-            <div class="error-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-            </div>
-            <p class="error-message">{{ error }}</p>
-          </div>
+        <!-- Error Message (간결한 인라인) -->
+        <div v-else-if="error && !benefitRedeemed" class="error-inline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span>{{ error }}</span>
+        </div>
 
-          <!-- 점수 확인 정보 (직원용) -->
-          <div class="score-verification-box">
-            <div class="score-verification-header">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10 9 9 9 8 9"/>
-              </svg>
-              <span>점수 확인</span>
-            </div>
-            <div class="score-row">
-              <span class="score-label">획득 점수</span>
-              <span class="score-value highlight">{{ gameScore ?? '-' }}점</span>
-            </div>
-            <div class="score-row">
-              <span class="score-label">필요 점수</span>
-              <span class="score-value">{{ benefit.requiredScore }}점</span>
-            </div>
-            <div v-if="gameScore && gameScore >= benefit.requiredScore" class="score-status success">
-              <div class="status-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                </svg>
-              </div>
-              <span>조건 충족 - 혜택을 받을 수 있습니다</span>
-            </div>
-            <div v-else class="score-status fail">
-              <div class="status-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-                </svg>
-              </div>
-              <span>점수가 부족합니다</span>
-            </div>
+        <!-- 점수 확인 정보 (에러 시 표시, 독립 섹션) -->
+        <div v-if="error && !benefitRedeemed && !requiresLogin" class="score-verification-box">
+          <div class="score-verification-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <span>점수 확인</span>
           </div>
+          <div class="score-row">
+            <span class="score-label">획득 점수</span>
+            <span class="score-value highlight">{{ gameScore ?? '-' }}점</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">필요 점수</span>
+            <span class="score-value">{{ benefit.requiredScore }}점</span>
+          </div>
+          <div v-if="gameScore && gameScore >= benefit.requiredScore" class="score-status success">
+            <div class="status-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
+            </div>
+            <span>조건 충족 - 혜택을 받을 수 있습니다</span>
+          </div>
+          <div v-else class="score-status fail">
+            <div class="status-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+              </svg>
+            </div>
+            <span>점수가 부족합니다</span>
+          </div>
+        </div>
 
-          <!-- 매장 코드로 직접 인정받기 -->
-          <div class="store-code-fallback">
-            <div class="fallback-header">
-              <div class="fallback-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="7" height="7"/>
-                  <rect x="14" y="3" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/>
-                  <rect x="3" y="14" width="7" height="7"/>
-                </svg>
-              </div>
-              <p class="fallback-hint">매장 코드로 바로 인정받기</p>
-            </div>
-            <div class="store-code-input-wrapper">
-              <input
-                v-model="storeCodeInput"
-                type="text"
-                class="store-code-input"
-                placeholder="매장 코드 입력"
-                maxlength="10"
-                :disabled="isRedeemingDirect"
-                @keydown.enter="redeemBenefitDirect"
-              />
-              <button
-                class="btn-store-code"
-                :disabled="!storeCodeInput || isRedeemingDirect"
-                @click="redeemBenefitDirect"
-              >
-                <svg v-if="!isRedeemingDirect" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="20,6 9,17 4,12"/>
-                </svg>
-                <span v-else class="btn-loading"></span>
-              </button>
-            </div>
-            <p v-if="storeCodeError" class="store-code-error">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              {{ storeCodeError }}
-            </p>
+        <!-- 매장 코드로 직접 인정받기 (에러 시 표시, 독립 섹션) -->
+        <div v-if="error && !benefitRedeemed && !requiresLogin" class="store-code-section">
+          <div class="store-code-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span>매장 코드로 바로 인정받기</span>
           </div>
+          <div class="store-code-input-wrapper">
+            <input
+              v-model="storeCodeInput"
+              type="text"
+              class="store-code-input"
+              placeholder="매장 코드 입력"
+              maxlength="10"
+              :disabled="isRedeemingDirect"
+              @keydown.enter="redeemBenefitDirect"
+            />
+            <button
+              class="btn-store-code"
+              :disabled="!storeCodeInput || isRedeemingDirect"
+              @click="redeemBenefitDirect"
+            >
+              <svg v-if="!isRedeemingDirect" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              <span v-else class="btn-loading"></span>
+            </button>
+          </div>
+          <p v-if="storeCodeError" class="store-code-error">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {{ storeCodeError }}
+          </p>
         </div>
 
         <!-- 혜택 인정 완료 -->
@@ -562,11 +556,18 @@ function handleRequireLogin() {
   }
 }
 
-.error-section {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border: 2px solid #fca5a5;
-  border-radius: 16px;
-  padding: 20px;
+/* 에러 메시지 (간결한 인라인) */
+.error-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border-radius: 12px;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 600;
   animation: slideIn 0.3s ease-out;
 }
 
@@ -579,40 +580,6 @@ function handleRequireLogin() {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.error-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.error-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  animation: shake 0.5s ease-out;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0) rotate(0); }
-  20%, 60% { transform: translateX(-3px) rotate(-3deg); }
-  40%, 80% { transform: translateX(3px) rotate(3deg); }
-}
-
-.error-message {
-  color: #dc2626;
-  font-size: 15px;
-  font-weight: 600;
-  margin: 0;
-  text-align: center;
 }
 
 /* 점수 확인 박스 (직원용) */
@@ -703,39 +670,23 @@ function handleRequireLogin() {
   color: white;
 }
 
-/* Store code fallback (쿠폰 생성 실패 시) */
-.store-code-fallback {
-  margin-top: 16px;
-  padding: 16px;
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border: 2px solid #6ee7b7;
+/* 매장 코드 입력 섹션 (독립) */
+.store-code-section {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #86efac;
   border-radius: 14px;
+  padding: 16px;
 }
 
-.fallback-header {
+.store-code-header {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   margin-bottom: 14px;
-}
-
-.fallback-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.fallback-hint {
-  font-size: 14px;
+  color: #16a34a;
+  font-size: 15px;
   font-weight: 600;
-  color: #047857;
-  margin: 0;
 }
 
 .store-code-input-wrapper {
@@ -747,9 +698,9 @@ function handleRequireLogin() {
 
 .store-code-input {
   flex: 1;
-  min-width: 0; /* flex item이 컨테이너를 넘지 않도록 */
+  min-width: 0;
   padding: 14px 12px;
-  border: 2px solid #6ee7b7;
+  border: 2px solid #86efac;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 700;
@@ -759,7 +710,7 @@ function handleRequireLogin() {
   outline: none;
   background: white;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
   box-sizing: border-box;
 }
 
@@ -1069,7 +1020,7 @@ function handleRequireLogin() {
     height: 48px;
   }
 
-  .store-code-fallback {
+  .store-code-section {
     padding: 14px;
   }
 
