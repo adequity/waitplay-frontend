@@ -49,8 +49,28 @@
           <p>쿠폰 생성 중...</p>
         </div>
 
+        <!-- 로그인 필요 상태 -->
+        <div v-if="requiresLogin && !benefitRedeemed" class="login-required-section">
+          <div class="login-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <h3 class="login-title">로그인이 필요합니다</h3>
+          <p class="login-description">쿠폰을 받으려면 먼저 로그인해주세요</p>
+          <button class="btn-login" @click="handleRequireLogin">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            로그인하기
+          </button>
+        </div>
+
         <!-- Error State with Store Code Fallback -->
-        <div v-if="error && !benefitRedeemed" class="error-section">
+        <div v-else-if="error && !benefitRedeemed" class="error-section">
           <div class="error-header">
             <div class="error-icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -169,12 +189,16 @@
 
       <!-- Modal Footer -->
       <div class="modal-footer">
-        <template v-if="!couponCode && !isGenerating && !error && !benefitRedeemed">
-          <button class="btn-secondary" @click="close">나중에</button>
+        <template v-if="!couponCode && !isGenerating && !error && !benefitRedeemed && !requiresLogin">
+          <button class="btn-secondary" @click="handleRetry">다시하기</button>
           <button class="btn-primary" @click="generateCoupon">지금 받기</button>
         </template>
         <template v-else-if="couponCode || benefitRedeemed">
           <button class="btn-primary-full" @click="close">확인</button>
+        </template>
+        <template v-else-if="requiresLogin">
+          <button class="btn-secondary" @click="handleRetry">다시하기</button>
+          <button class="btn-primary" @click="handleRequireLogin">로그인</button>
         </template>
         <template v-else-if="error && !benefitRedeemed">
           <button class="btn-secondary" @click="close">닫기</button>
@@ -212,12 +236,15 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   close: []
+  retry: []
+  requireLogin: []
 }>()
 
 const couponCode = ref<string>('')
 const expiryMinutes = ref<number>(5)
 const isGenerating = ref(false)
 const error = ref<string>('')
+const requiresLogin = ref(false) // 로그인 필요 상태
 
 // Store code fallback state (쿠폰 생성 실패 시 매장 코드로 직접 인정)
 const storeCodeInput = ref('')
@@ -252,7 +279,13 @@ async function generateCoupon() {
     }
   } catch (err: any) {
     console.error('Failed to generate coupon:', err)
-    error.value = err.response?.data?.message || '쿠폰 생성에 실패했습니다'
+    const errorMessage = err.response?.data?.message || '쿠폰 생성에 실패했습니다'
+    error.value = errorMessage
+
+    // 사용자 미존재 에러 → 로그인 필요
+    if (errorMessage.includes('User not found') || errorMessage.includes('사용자를 찾을 수 없습니다')) {
+      requiresLogin.value = true
+    }
   } finally {
     isGenerating.value = false
   }
@@ -307,6 +340,19 @@ function close() {
   storeCodeError.value = ''
   isRedeemingDirect.value = false
   benefitRedeemed.value = false
+  requiresLogin.value = false
+}
+
+function handleRetry() {
+  // 모달 닫고 다시하기 이벤트 emit
+  close()
+  emit('retry')
+}
+
+function handleRequireLogin() {
+  // 로그인 필요 이벤트 emit
+  close()
+  emit('requireLogin')
 }
 </script>
 
@@ -695,22 +741,26 @@ function close() {
 .store-code-input-wrapper {
   display: flex;
   gap: 10px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .store-code-input {
   flex: 1;
-  padding: 14px 16px;
+  min-width: 0; /* flex item이 컨테이너를 넘지 않도록 */
+  padding: 14px 12px;
   border: 2px solid #6ee7b7;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   outline: none;
   background: white;
   transition: all 0.2s;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+  box-sizing: border-box;
 }
 
 .store-code-input:focus {
@@ -922,6 +972,67 @@ function close() {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+/* 로그인 필요 섹션 */
+.login-required-section {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid #93c5fd;
+  border-radius: 16px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.login-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: white;
+}
+
+.login-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e40af;
+  margin: 0 0 8px 0;
+}
+
+.login-description {
+  font-size: 14px;
+  color: #3b82f6;
+  margin: 0 0 20px 0;
+}
+
+.btn-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.btn-login:active {
+  transform: translateY(0);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .modal-container {
@@ -945,6 +1056,25 @@ function close() {
   .coupon-code {
     font-size: 24px;
     letter-spacing: 2px;
+  }
+
+  .store-code-input {
+    padding: 12px 10px;
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+
+  .btn-store-code {
+    width: 48px;
+    height: 48px;
+  }
+
+  .store-code-fallback {
+    padding: 14px;
+  }
+
+  .login-required-section {
+    padding: 16px;
   }
 }
 </style>
