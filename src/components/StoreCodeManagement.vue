@@ -1,42 +1,65 @@
 <template>
   <div class="store-code-management">
     <div class="header">
-      <h2>매장 코드 관리</h2>
-      <p class="subtitle">직원이 고객의 쿠폰을 빠르게 사용 처리할 수 있는 매장 코드입니다</p>
+      <div class="header-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h2>매장 코드</h2>
+        <p class="subtitle">직원이 고객의 쿠폰을 빠르게 사용 처리할 수 있습니다</p>
+      </div>
     </div>
 
     <!-- Loading State -->
     <div v-if="isLoading" class="loading-state">
-      <div class="spinner"></div>
+      <div class="loading-pulse">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+      </div>
       <p>불러오는 중...</p>
     </div>
 
     <!-- Store Code Display -->
     <div v-else class="code-section">
-      <div class="code-card">
-        <div class="code-label">현재 매장 코드</div>
-        <div class="code-display">
-          <span class="code-value" :class="{ 'blur': isCodeHidden }">
-            {{ isCodeHidden ? '••••••' : (storeCode || '없음') }}
+      <div class="code-card" :class="{ 'has-code': storeCode }">
+        <div class="code-card-header">
+          <span class="code-label">현재 매장 코드</span>
+          <span v-if="storeCode" class="code-status active">
+            <span class="status-dot"></span>
+            활성화됨
           </span>
-          <button
-            v-if="storeCode"
-            class="btn-toggle-visibility"
-            @click="isCodeHidden = !isCodeHidden"
-            :title="isCodeHidden ? '코드 보기' : '코드 숨기기'"
-          >
-            <IconBase :name="isCodeHidden ? 'eye' : 'eye-off'" class="toggle-icon" />
-          </button>
+        </div>
+
+        <div class="code-display">
+          <div class="code-value-wrapper">
+            <span class="code-value" :class="{ 'blur': isCodeHidden }">
+              {{ isCodeHidden ? '••••••' : (storeCode || '미설정') }}
+            </span>
+            <button
+              v-if="storeCode"
+              class="btn-toggle-visibility"
+              @click="isCodeHidden = !isCodeHidden"
+              :title="isCodeHidden ? '코드 보기' : '코드 숨기기'"
+            >
+              <IconBase :name="isCodeHidden ? 'eye' : 'eye-off'" class="toggle-icon" />
+            </button>
+          </div>
         </div>
 
         <div v-if="storeCode" class="code-actions">
-          <button class="btn-copy" @click="copyCode" :disabled="!storeCode">
+          <button class="btn-action btn-copy" @click="copyCode" :disabled="!storeCode">
             <IconBase name="copy" class="btn-icon" />
-            복사
+            <span>복사</span>
           </button>
-          <button class="btn-regenerate" @click="regenerateCode" :disabled="isRegenerating">
-            <IconBase name="refresh" class="btn-icon" />
-            {{ isRegenerating ? '생성 중...' : '새로 생성' }}
+          <button class="btn-action btn-regenerate" @click="regenerateCode" :disabled="isRegenerating">
+            <IconBase name="refresh" class="btn-icon" :class="{ 'spinning': isRegenerating }" />
+            <span>{{ isRegenerating ? '생성 중...' : '새로 생성' }}</span>
           </button>
         </div>
 
@@ -47,44 +70,90 @@
           @click="regenerateCode"
           :disabled="isRegenerating"
         >
-          {{ isRegenerating ? '생성 중...' : '매장 코드 생성' }}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          {{ isRegenerating ? '생성 중...' : '매장 코드 생성하기' }}
         </button>
-      </div>
-
-      <!-- Info Card -->
-      <div class="info-card">
-        <h3>
-          <IconBase name="info" class="info-icon" />
-          매장 코드 사용 방법
-        </h3>
-        <ol class="usage-steps">
-          <li>고객이 게임을 완료하고 쿠폰을 받으면 쿠폰 화면이 표시됩니다</li>
-          <li>쿠폰 화면 하단에 매장 코드 입력란이 있습니다</li>
-          <li>직원이 매장 코드를 입력하면 바로 쿠폰이 사용 처리됩니다</li>
-          <li>Admin 패널에서 따로 쿠폰을 확인할 필요가 없습니다</li>
-        </ol>
-        <div class="security-notice">
-          <IconBase name="lock" class="notice-icon" />
-          <p>매장 코드는 주기적으로 변경하는 것을 권장합니다</p>
-        </div>
       </div>
 
       <!-- Usage Statistics -->
       <div v-if="stats" class="stats-card">
-        <h3>매장 코드 사용 통계</h3>
+        <div class="stats-header">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            사용 통계
+          </h3>
+        </div>
         <div class="stats-grid">
           <div class="stat-item">
-            <span class="stat-value">{{ stats.todayUsed }}</span>
-            <span class="stat-label">오늘 사용</span>
+            <div class="stat-icon today">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12,6 12,12 16,14"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-value">{{ stats.todayUsed }}</span>
+              <span class="stat-label">오늘</span>
+            </div>
           </div>
           <div class="stat-item">
-            <span class="stat-value">{{ stats.weekUsed }}</span>
-            <span class="stat-label">이번 주</span>
+            <div class="stat-icon week">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-value">{{ stats.weekUsed }}</span>
+              <span class="stat-label">이번 주</span>
+            </div>
           </div>
           <div class="stat-item">
-            <span class="stat-value">{{ stats.totalUsed }}</span>
-            <span class="stat-label">전체</span>
+            <div class="stat-icon total">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-value">{{ stats.totalUsed }}</span>
+              <span class="stat-label">전체</span>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="info-card">
+        <div class="info-header">
+          <IconBase name="info" class="info-icon" />
+          <h3>사용 방법</h3>
+        </div>
+        <div class="usage-steps">
+          <div class="step-item">
+            <span class="step-number">1</span>
+            <span class="step-text">고객이 게임을 완료하고 쿠폰을 받습니다</span>
+          </div>
+          <div class="step-item">
+            <span class="step-number">2</span>
+            <span class="step-text">쿠폰 화면 하단에 매장 코드 입력란이 표시됩니다</span>
+          </div>
+          <div class="step-item">
+            <span class="step-number">3</span>
+            <span class="step-text">직원이 매장 코드를 입력하면 바로 사용 처리됩니다</span>
+          </div>
+        </div>
+        <div class="security-notice">
+          <IconBase name="lock" class="notice-icon" />
+          <p>보안을 위해 매장 코드는 주기적으로 변경하세요</p>
         </div>
       </div>
     </div>
@@ -210,21 +279,38 @@ onMounted(() => {
   max-width: 600px;
 }
 
+/* Header */
 .header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 24px;
 }
 
-.header h2 {
-  font-size: 24px;
+.header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.header-text h2 {
+  font-size: 22px;
   font-weight: 700;
   color: #1d1d1f;
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
 }
 
 .subtitle {
   font-size: 14px;
   color: #86868b;
   margin: 0;
+  line-height: 1.4;
 }
 
 /* Loading State */
@@ -233,21 +319,45 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px;
-  gap: 16px;
+  padding: 60px 20px;
+  gap: 20px;
 }
 
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e5e5ea;
-  border-top-color: #0071e3;
+.loading-pulse {
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  border: 3px solid #3b82f6;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  transform: translate(-50%, -50%);
+  animation: pulse 1.5s ease-out infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.pulse-ring:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.pulse-ring:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
 }
 
 .loading-state p {
@@ -260,67 +370,111 @@ onMounted(() => {
 .code-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 /* Code Card */
 .code-card {
   background: white;
-  border: 1px solid #e5e5ea;
-  border-radius: 16px;
+  border: 2px solid #e5e5ea;
+  border-radius: 20px;
   padding: 24px;
-  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.code-card.has-code {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.code-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
 .code-label {
   font-size: 13px;
+  font-weight: 500;
   color: #86868b;
-  margin-bottom: 12px;
+}
+
+.code-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: #16a34a;
+  border-radius: 50%;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .code-display {
-  display: flex;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.code-value-wrapper {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 12px;
-  margin-bottom: 20px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
 }
 
 .code-value {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 800;
-  letter-spacing: 4px;
-  color: #1d1d1f;
-  font-family: 'SF Mono', 'Menlo', monospace;
-  transition: filter 0.2s;
+  letter-spacing: 6px;
+  color: #1e293b;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  transition: filter 0.3s ease;
 }
 
 .code-value.blur {
-  filter: blur(6px);
+  filter: blur(8px);
   user-select: none;
 }
 
 .btn-toggle-visibility {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f7;
-  border: none;
-  border-radius: 50%;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .btn-toggle-visibility:hover {
-  background: #e5e5ea;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .toggle-icon {
-  width: 18px;
-  height: 18px;
-  color: #86868b;
+  width: 20px;
+  height: 20px;
+  color: #64748b;
 }
 
 .code-actions {
@@ -329,42 +483,54 @@ onMounted(() => {
   justify-content: center;
 }
 
-.btn-copy,
-.btn-regenerate {
+.btn-action {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border-radius: 10px;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  flex: 1;
+  max-width: 160px;
 }
 
 .btn-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .btn-copy {
-  background: #f5f5f7;
-  border: 1px solid #e5e5ea;
-  color: #1d1d1f;
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #475569;
 }
 
 .btn-copy:hover:not(:disabled) {
-  background: #e5e5ea;
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .btn-regenerate {
-  background: #0071e3;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border: none;
   color: white;
 }
 
 .btn-regenerate:hover:not(:disabled) {
-  background: #0077ed;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 .btn-regenerate:disabled,
@@ -374,11 +540,15 @@ onMounted(() => {
 }
 
 .btn-generate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
-  padding: 14px 24px;
-  background: linear-gradient(135deg, #0071e3 0%, #0077ed 100%);
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   color: white;
   font-size: 16px;
   font-weight: 600;
@@ -387,8 +557,8 @@ onMounted(() => {
 }
 
 .btn-generate:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
 .btn-generate:disabled {
@@ -396,78 +566,30 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-/* Info Card */
-.info-card {
-  background: #f5f5f7;
-  border-radius: 16px;
+/* Stats Card */
+.stats-card {
+  background: white;
+  border: 1px solid #e5e5ea;
+  border-radius: 20px;
   padding: 20px;
 }
 
-.info-card h3 {
+.stats-header {
+  margin-bottom: 16px;
+}
+
+.stats-header h3 {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 15px;
   font-weight: 600;
   color: #1d1d1f;
-  margin: 0 0 16px 0;
-}
-
-.info-icon {
-  width: 18px;
-  height: 18px;
-  color: #0071e3;
-}
-
-.usage-steps {
-  margin: 0 0 16px 0;
-  padding-left: 20px;
-}
-
-.usage-steps li {
-  font-size: 13px;
-  color: #1d1d1f;
-  line-height: 1.8;
-  margin-bottom: 4px;
-}
-
-.security-notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 12px;
-  background: #fff3cd;
-  border-radius: 10px;
-}
-
-.notice-icon {
-  width: 16px;
-  height: 16px;
-  color: #856404;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.security-notice p {
-  font-size: 12px;
-  color: #856404;
   margin: 0;
-  line-height: 1.5;
 }
 
-/* Stats Card */
-.stats-card {
-  background: white;
-  border: 1px solid #e5e5ea;
-  border-radius: 16px;
-  padding: 20px;
-}
-
-.stats-card h3 {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1d1d1f;
-  margin: 0 0 16px 0;
+.stats-header h3 svg {
+  color: #3b82f6;
 }
 
 .stats-grid {
@@ -478,23 +600,142 @@ onMounted(() => {
 
 .stat-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 12px;
-  background: #f5f5f7;
-  border-radius: 12px;
+  gap: 12px;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 14px;
+  transition: all 0.2s;
+}
+
+.stat-item:hover {
+  background: #f1f5f9;
+}
+
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon.today {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.stat-icon.week {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.stat-icon.total {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-item .stat-value {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  color: #0071e3;
+  color: #1e293b;
+  line-height: 1.2;
 }
 
 .stat-item .stat-label {
   font-size: 12px;
-  color: #86868b;
-  margin-top: 4px;
+  color: #64748b;
+}
+
+/* Info Card */
+.info-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.info-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+  color: #3b82f6;
+}
+
+.usage-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-text {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  padding-top: 2px;
+}
+
+.security-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 12px;
+}
+
+.notice-icon {
+  width: 18px;
+  height: 18px;
+  color: #92400e;
+  flex-shrink: 0;
+}
+
+.security-notice p {
+  font-size: 13px;
+  color: #92400e;
+  font-weight: 500;
+  margin: 0;
 }
 
 /* Toast */
@@ -505,39 +746,39 @@ onMounted(() => {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-radius: 12px;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: 14px;
   font-size: 14px;
-  font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   z-index: 1000;
 }
 
 .toast.success {
-  background: #1d1d1f;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
 }
 
 .toast.error {
-  background: #ff3b30;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
 }
 
 .toast-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .toast-enter-active,
 .toast-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .toast-enter-from,
 .toast-leave-to {
   opacity: 0;
-  transform: translateX(-50%) translateY(10px);
+  transform: translateX(-50%) translateY(20px) scale(0.9);
 }
 
 /* Responsive */
@@ -546,23 +787,39 @@ onMounted(() => {
     padding: 16px;
   }
 
+  .header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .header-icon {
+    width: 44px;
+    height: 44px;
+  }
+
   .code-value {
-    font-size: 24px;
-    letter-spacing: 2px;
+    font-size: 28px;
+    letter-spacing: 4px;
+  }
+
+  .code-value-wrapper {
+    padding: 12px 16px;
   }
 
   .code-actions {
     flex-direction: column;
   }
 
-  .btn-copy,
-  .btn-regenerate {
-    width: 100%;
-    justify-content: center;
+  .btn-action {
+    max-width: none;
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .stat-item {
+    justify-content: flex-start;
   }
 }
 </style>

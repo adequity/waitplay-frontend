@@ -51,10 +51,29 @@
 
         <!-- Error State with Store Code Fallback -->
         <div v-if="error && !benefitRedeemed" class="error-section">
-          <p class="error-message">{{ error }}</p>
+          <div class="error-header">
+            <div class="error-icon-wrapper">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <p class="error-message">{{ error }}</p>
+          </div>
 
           <!-- 점수 확인 정보 (직원용) -->
           <div class="score-verification-box">
+            <div class="score-verification-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+              <span>점수 확인</span>
+            </div>
             <div class="score-row">
               <span class="score-label">획득 점수</span>
               <span class="score-value highlight">{{ gameScore ?? '-' }}점</span>
@@ -64,28 +83,42 @@
               <span class="score-value">{{ benefit.requiredScore }}점</span>
             </div>
             <div v-if="gameScore && gameScore >= benefit.requiredScore" class="score-status success">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-              </svg>
-              조건 충족
+              <div class="status-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                </svg>
+              </div>
+              <span>조건 충족 - 혜택을 받을 수 있습니다</span>
             </div>
             <div v-else class="score-status fail">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-              </svg>
-              조건 미충족
+              <div class="status-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+                </svg>
+              </div>
+              <span>점수가 부족합니다</span>
             </div>
           </div>
 
           <!-- 매장 코드로 직접 인정받기 -->
           <div class="store-code-fallback">
-            <p class="fallback-hint">직원이 매장 코드를 입력하면 혜택이 인정됩니다</p>
+            <div class="fallback-header">
+              <div class="fallback-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+              </div>
+              <p class="fallback-hint">매장 코드로 바로 인정받기</p>
+            </div>
             <div class="store-code-input-wrapper">
               <input
                 v-model="storeCodeInput"
                 type="text"
                 class="store-code-input"
-                placeholder="매장 코드"
+                placeholder="매장 코드 입력"
                 maxlength="10"
                 :disabled="isRedeemingDirect"
                 @keydown.enter="redeemBenefitDirect"
@@ -95,21 +128,33 @@
                 :disabled="!storeCodeInput || isRedeemingDirect"
                 @click="redeemBenefitDirect"
               >
-                {{ isRedeemingDirect ? '처리 중...' : '인정받기' }}
+                <svg v-if="!isRedeemingDirect" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+                <span v-else class="btn-loading"></span>
               </button>
             </div>
-            <p v-if="storeCodeError" class="store-code-error">{{ storeCodeError }}</p>
+            <p v-if="storeCodeError" class="store-code-error">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {{ storeCodeError }}
+            </p>
           </div>
         </div>
 
         <!-- 혜택 인정 완료 -->
         <div v-if="benefitRedeemed" class="benefit-redeemed-section">
-          <div class="redeemed-badge">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-            </svg>
-            <span>혜택이 인정되었습니다!</span>
+          <div class="redeemed-animation">
+            <div class="redeemed-circle">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
+            </div>
           </div>
+          <h3 class="redeemed-title">혜택이 인정되었습니다!</h3>
           <p class="redeemed-notice">직원에게 혜택을 받으세요</p>
         </div>
 
@@ -472,37 +517,88 @@ function close() {
 }
 
 .error-section {
-  background: #fff5f5;
-  border: 1px solid #ff3b30;
-  border-radius: 12px;
-  padding: 16px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #fca5a5;
+  border-radius: 16px;
+  padding: 20px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.error-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  animation: shake 0.5s ease-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20%, 60% { transform: translateX(-3px) rotate(-3deg); }
+  40%, 80% { transform: translateX(3px) rotate(3deg); }
 }
 
 .error-message {
-  color: #ff3b30;
-  font-size: 14px;
-  margin: 0 0 16px 0;
+  color: #dc2626;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
   text-align: center;
 }
 
 /* 점수 확인 박스 (직원용) */
 .score-verification-box {
-  background: #f8fafc;
+  background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 16px;
   margin-bottom: 16px;
+}
+
+.score-verification-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .score-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: 10px 0;
 }
 
 .score-row:not(:last-of-type) {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .score-row .score-label {
@@ -518,126 +614,243 @@ function close() {
 
 .score-row .score-value.highlight {
   color: #3b82f6;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .score-status {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
-  margin-top: 8px;
+  margin-top: 12px;
+}
+
+.score-status .status-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .score-status.success {
-  background: #dcfce7;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   color: #16a34a;
 }
 
+.score-status.success .status-icon {
+  background: #16a34a;
+  color: white;
+}
+
 .score-status.fail {
-  background: #fee2e2;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
   color: #dc2626;
+}
+
+.score-status.fail .status-icon {
+  background: #dc2626;
+  color: white;
 }
 
 /* Store code fallback (쿠폰 생성 실패 시) */
 .store-code-fallback {
   margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px dashed #ffcdd2;
+  padding: 16px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 2px solid #6ee7b7;
+  border-radius: 14px;
+}
+
+.fallback-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.fallback-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
 }
 
 .fallback-hint {
-  font-size: 13px;
-  color: #666;
-  text-align: center;
-  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #047857;
+  margin: 0;
 }
 
 .store-code-input-wrapper {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .store-code-input {
   flex: 1;
-  padding: 12px 14px;
-  border: 2px solid #e5e5ea;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
+  padding: 14px 16px;
+  border: 2px solid #6ee7b7;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   outline: none;
   background: white;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
 }
 
 .store-code-input:focus {
-  border-color: #3b82f6;
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 .store-code-input:disabled {
-  background: #f9fafb;
+  background: #ecfdf5;
   opacity: 0.7;
 }
 
+.store-code-input::placeholder {
+  color: #6ee7b7;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
 .btn-store-code {
-  padding: 12px 20px;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-store-code:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-store-code:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .btn-store-code:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-loading {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .store-code-error {
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
   color: #dc2626;
-  margin: 8px 0 0 0;
-  text-align: center;
+  margin: 12px 0 0 0;
+  padding: 10px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  animation: errorShake 0.4s ease-out;
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
 }
 
 /* 혜택 인정 완료 */
 .benefit-redeemed-section {
   text-align: center;
-  padding: 20px;
+  padding: 24px 20px;
+  animation: fadeInUp 0.5s ease-out;
 }
 
-.redeemed-badge {
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.redeemed-animation {
+  margin-bottom: 16px;
+}
+
+.redeemed-circle {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  justify-content: center;
   color: white;
-  border-radius: 24px;
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 12px;
+  animation: successBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes successBounce {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.redeemed-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #10b981;
+  margin: 0 0 8px 0;
 }
 
 .redeemed-notice {
   font-size: 14px;
-  color: #666;
+  color: #64748b;
   margin: 0;
 }
 

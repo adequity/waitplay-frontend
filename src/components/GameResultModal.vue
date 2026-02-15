@@ -167,13 +167,22 @@
 
           <!-- 매장 코드 입력 (직원용 빠른 사용) -->
           <div v-if="!couponUsed" class="store-code-section">
-            <p class="store-code-hint">직원이 매장 코드를 입력하면 바로 사용됩니다</p>
+            <div class="store-code-header">
+              <div class="store-code-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                  <polyline points="10 17 15 12 10 7"/>
+                  <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+              </div>
+              <p class="store-code-hint">직원용 빠른 처리</p>
+            </div>
             <div class="store-code-input-wrapper">
               <input
                 v-model="storeCodeInput"
                 type="text"
                 class="store-code-input"
-                placeholder="매장 코드 입력"
+                placeholder="매장 코드"
                 maxlength="10"
                 :disabled="isVerifyingStoreCode"
                 @keydown.enter="handleStoreCodeSubmit"
@@ -183,18 +192,35 @@
                 :disabled="!storeCodeInput || isVerifyingStoreCode"
                 @click="handleStoreCodeSubmit"
               >
-                {{ isVerifyingStoreCode ? '확인 중...' : '사용' }}
+                <svg v-if="!isVerifyingStoreCode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+                <span v-else class="btn-loading"></span>
               </button>
             </div>
-            <p v-if="storeCodeError" class="store-code-error">{{ storeCodeError }}</p>
+            <p v-if="storeCodeError" class="store-code-error">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {{ storeCodeError }}
+            </p>
           </div>
 
           <!-- 쿠폰 사용 완료 표시 -->
           <div v-else class="coupon-used-badge">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-            </svg>
-            <span>사용 완료</span>
+            <div class="used-badge-content">
+              <div class="used-check-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                </svg>
+              </div>
+              <div class="used-badge-text">
+                <span class="used-title">사용 완료!</span>
+                <span class="used-subtitle">혜택을 받으세요</span>
+              </div>
+            </div>
           </div>
 
           <button class="btn-primary" @click="handleClose">확인</button>
@@ -1358,96 +1384,221 @@ async function handleStoreCodeSubmit() {
 /* Store code section (매장 코드 입력) */
 .store-code-section {
   width: 100%;
-  margin-top: 8px;
+  margin-top: 12px;
   padding: 16px;
-  background: #fefce8;
-  border: 1px dashed #eab308;
-  border-radius: 12px;
-}
-
-.store-code-hint {
-  font-size: 12px;
-  color: #a16207;
-  margin: 0 0 12px 0;
-  text-align: center;
-}
-
-.store-code-input-wrapper {
-  display: flex;
-  gap: 8px;
-}
-
-.store-code-input {
-  flex: 1;
-  padding: 12px 14px;
+  background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
   border: 2px solid #fde047;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  outline: none;
-  background: white;
-  transition: border-color 0.2s;
+  border-radius: 16px;
+  animation: slideUp 0.3s ease-out;
 }
 
-.store-code-input:focus {
-  border-color: #eab308;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.store-code-input:disabled {
-  background: #f9fafb;
-  opacity: 0.7;
-}
-
-.btn-store-code {
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.btn-store-code:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);
-}
-
-.btn-store-code:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.store-code-error {
-  font-size: 12px;
-  color: #dc2626;
-  margin: 8px 0 0 0;
-  text-align: center;
-}
-
-/* Coupon used badge (사용 완료 표시) */
-.coupon-used-badge {
+.store-code-header {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  margin-top: 8px;
+  margin-bottom: 14px;
 }
 
-.coupon-used-badge svg {
+.store-code-icon {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.store-code-hint {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0;
+}
+
+.store-code-input-wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.store-code-input {
+  flex: 1;
+  padding: 14px 16px;
+  border: 2px solid #fde047;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  outline: none;
+  background: white;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(234, 179, 8, 0.15);
+}
+
+.store-code-input:focus {
+  border-color: #eab308;
+  box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.2);
+}
+
+.store-code-input:disabled {
+  background: #fefce8;
+  opacity: 0.7;
+}
+
+.store-code-input::placeholder {
+  color: #d4a853;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+.btn-store-code {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+}
+
+.btn-store-code:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(234, 179, 8, 0.4);
+}
+
+.btn-store-code:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-store-code:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-loading {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.store-code-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #dc2626;
+  margin: 12px 0 0 0;
+  padding: 10px;
+  background: #fef2f2;
+  border-radius: 10px;
+  animation: shake 0.4s ease-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+/* Coupon used badge (사용 완료 표시) */
+.coupon-used-badge {
+  width: 100%;
+  padding: 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 16px;
+  margin-top: 12px;
+  animation: successPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes successPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.used-badge-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.used-check-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  animation: checkBounce 0.6s ease-out 0.2s both;
+}
+
+@keyframes checkBounce {
+  0% {
+    transform: scale(0);
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.used-badge-text {
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+.used-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.used-subtitle {
+  font-size: 13px;
+  opacity: 0.9;
 }
 </style>
