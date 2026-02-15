@@ -563,8 +563,15 @@ watch(() => props.isOpen, async (isOpen) => {
         const benefits = await benefitsService.getBenefitsByGame(props.qrCodeUuid, props.gameType)
         console.log('[GameResultModal] Benefits received:', benefits)
 
+        // 점수가 requiredScore(minScore) 이상이고 maxScore 이하인 혜택 찾기
         const eligible = benefits
-          .filter(b => b.isActive && b.requiredScore <= props.gameData.score)
+          .filter(b => {
+            if (!b.isActive) return false
+            const playerScore = props.gameData.score
+            const minScore = b.requiredScore
+            const maxScore = b.maxScore ?? Infinity // maxScore가 없으면 상한 없음
+            return playerScore >= minScore && playerScore <= maxScore
+          })
           .sort((a, b) => b.requiredScore - a.requiredScore)[0]
 
         console.log('[GameResultModal] Eligible benefit:', eligible)
