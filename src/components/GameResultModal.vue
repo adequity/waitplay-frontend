@@ -549,10 +549,10 @@ watch(() => props.isOpen, async (isOpen) => {
     storeName.value = props.storeName
     storeLogoUrl.value = props.storeLogoUrl
 
-    // Fetch benefits
-    if (props.qrCode && props.gameData?.score) {
+    // Fetch benefits (qrCodeUuid 사용 - API는 UUID를 기대함)
+    if (props.qrCodeUuid && props.gameData?.score) {
       try {
-        const benefits = await benefitsService.getBenefitsByGame(props.qrCode, props.gameType)
+        const benefits = await benefitsService.getBenefitsByGame(props.qrCodeUuid, props.gameType)
         const eligible = benefits
           .filter(b => b.isActive && b.requiredScore <= props.gameData.score)
           .sort((a, b) => b.requiredScore - a.requiredScore)[0]
