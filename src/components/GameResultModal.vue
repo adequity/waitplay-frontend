@@ -25,50 +25,23 @@
           <!-- 등급 -->
           <div class="grade-section">
             <div class="grade-icon" :style="{ background: gradeInfo.bgColor }">
-              <!-- Trophy -->
-              <svg v-if="gradeInfo.icon === 'trophy'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
-              </svg>
-              <!-- Target/Bullseye -->
-              <svg v-else-if="gradeInfo.icon === 'target'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <circle cx="12" cy="12" r="6"/>
-                <circle cx="12" cy="12" r="2"/>
-              </svg>
-              <!-- Star -->
-              <svg v-else-if="gradeInfo.icon === 'star'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-              </svg>
-              <!-- Gamepad -->
-              <svg v-else-if="gradeInfo.icon === 'gamepad'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"/>
-              </svg>
-              <!-- Tent/Circus -->
-              <svg v-else-if="gradeInfo.icon === 'tent'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 22h20L12 2zm0 4.5L17.5 18h-11L12 6.5z"/>
-              </svg>
-              <!-- Medal Gold -->
-              <svg v-else-if="gradeInfo.icon === 'medal-gold'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                <path d="M12 6l1.5 3.5L17 10l-2.5 2.5.5 3.5-3-1.5-3 1.5.5-3.5L7 10l3.5-.5z"/>
-              </svg>
-              <!-- Medal Silver -->
-              <svg v-else-if="gradeInfo.icon === 'medal-silver'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                <path d="M9 8h6v2H9zm0 3h6v2H9zm0 3h6v2H9z"/>
-              </svg>
-              <!-- Medal Bronze -->
-              <svg v-else-if="gradeInfo.icon === 'medal-bronze'" class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                <path d="M12 7l2 4h-4z"/>
-              </svg>
-              <!-- Fallback: Gamepad -->
-              <svg v-else class="grade-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"/>
-              </svg>
+              <!-- 커스텀 아이콘 (이미지 URL) -->
+              <img
+                v-if="reward?.customIconUrl"
+                :src="reward.customIconUrl"
+                alt="아이콘"
+                class="custom-icon-img"
+              />
+              <!-- 프리셋 아이콘 (IconBase 사용) -->
+              <IconBase
+                v-else
+                :name="gradeInfo.icon"
+                :size="32"
+                class="grade-svg"
+                :style="{ color: getIconColor(gradeInfo.icon) }"
+              />
             </div>
             <h2 class="grade-title">{{ gradeInfo.title }}</h2>
-            <p v-if="reward" class="reward-name">{{ reward.title }}</p>
           </div>
 
           <!-- 혜택이 있으면 표시 -->
@@ -292,6 +265,7 @@ import benefitsService, { type BenefitDto } from '@/services/benefitsService'
 import shareService from '@/services/shareService'
 import AuthModal from '@/components/AuthModal.vue'
 import CouponRewardModal from '@/components/CouponRewardModal.vue'
+import IconBase from '@/components/IconBase.vue'
 
 interface GameData {
   score: number
@@ -342,6 +316,15 @@ const showCopyToast = ref(false)
 // Computed values
 const score = computed(() => props.gameData?.score ?? 0)
 const gradeInfo = computed(() => {
+  // 혜택이 있으면 혜택의 아이콘/제목 사용
+  if (reward.value) {
+    return {
+      icon: reward.value.iconName || 'trophy',
+      title: reward.value.title,
+      bgColor: getBgColorFromIcon(reward.value.iconName || 'trophy')
+    }
+  }
+  // 혜택이 없으면 게임 내 등급 사용
   const grade = props.gameData?.grade
   if (!grade) return { icon: 'gamepad', title: '게임 완료', bgColor: '#e0e7ff' }
   return {
@@ -350,6 +333,36 @@ const gradeInfo = computed(() => {
     bgColor: getBgColorFromGrade(grade.color)
   }
 })
+
+function getBgColorFromIcon(iconName: string): string {
+  const iconColorMap: Record<string, string> = {
+    'trophy': '#fef3c7',      // amber
+    'medal-gold': '#fef3c7',  // amber
+    'medal-silver': '#f3f4f6', // gray
+    'medal-bronze': '#fed7aa', // orange
+    'star': '#fef3c7',        // amber
+    'gift': '#fce7f3',        // pink
+    'ticket': '#f3e8ff',      // purple
+    'sparkles': '#e0f2fe',    // cyan
+    'party-horn': '#ffedd5',  // orange
+  }
+  return iconColorMap[iconName] || '#e0e7ff'
+}
+
+function getIconColor(iconName: string): string {
+  const iconColors: Record<string, string> = {
+    'medal-bronze': '#cd7f32',
+    'medal-silver': '#a8a8a8',
+    'medal-gold': '#ffd700',
+    'trophy': '#ffd700',
+    'star': '#ffc107',
+    'gift': '#e91e63',
+    'ticket': '#9c27b0',
+    'sparkles': '#00bcd4',
+    'party-horn': '#ff5722',
+  }
+  return iconColors[iconName] || '#ffffff'
+}
 
 const gameStats = computed(() => {
   const data = props.gameData
@@ -550,10 +563,15 @@ const shareQrCodeId = computed(() => props.qrCodeUuid || props.qrCode)
 
 // 카카오톡 공유
 async function shareToKakao() {
-  if (!shareQrCodeId.value) return
+  const qrId = shareQrCodeId.value
+  if (!qrId) {
+    // QR 코드 없이도 기본 공유 시도
+    alert('공유 링크를 생성할 수 없습니다.')
+    return
+  }
   try {
     await shareService.shareToKakao(
-      shareQrCodeId.value,
+      qrId,
       `${getGameName(props.gameType)}에서 ${score.value}점 달성!`,
       '도전해보세요!',
       undefined,
@@ -564,35 +582,57 @@ async function shareToKakao() {
     closeShareSheet()
   } catch (error) {
     console.error('카카오톡 공유 실패:', error)
+    alert('카카오톡 공유에 실패했습니다. 다시 시도해주세요.')
   }
 }
 
 // 링크 복사
 async function copyShareLink() {
-  if (!shareQrCodeId.value) return
+  const qrId = shareQrCodeId.value
+  if (!qrId) {
+    // QR 코드 없으면 현재 URL 복사
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      showCopyToast.value = true
+      setTimeout(() => showCopyToast.value = false, 2000)
+    } catch {
+      alert('링크 복사에 실패했습니다.')
+    }
+    return
+  }
   try {
-    await shareService.copyLink(shareQrCodeId.value, 'game_result', props.gameType, score.value)
+    await shareService.copyLink(qrId, 'game_result', props.gameType, score.value)
     showCopyToast.value = true
-    setTimeout(() => {
-      showCopyToast.value = false
-    }, 2000)
+    setTimeout(() => showCopyToast.value = false, 2000)
   } catch (error) {
     console.error('링크 복사 실패:', error)
-    // 클립보드 API 실패 시에도 토스트 표시
-    showCopyToast.value = true
-    setTimeout(() => {
-      showCopyToast.value = false
-    }, 2000)
+    // API 실패 시 현재 URL 복사 폴백
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      showCopyToast.value = true
+      setTimeout(() => showCopyToast.value = false, 2000)
+    } catch {
+      alert('링크 복사에 실패했습니다.')
+    }
   }
 }
 
 // X(Twitter) 공유
 async function shareToTwitter() {
-  if (!shareQrCodeId.value) return
+  const qrId = shareQrCodeId.value
+  const shareText = `${getGameName(props.gameType)}에서 ${score.value}점 달성! 도전해보세요!`
+
+  if (!qrId) {
+    // QR 코드 없이 기본 X 공유
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
+    window.open(twitterUrl, '_blank', 'width=550,height=420')
+    closeShareSheet()
+    return
+  }
   try {
     await shareService.shareToTwitter(
-      shareQrCodeId.value,
-      `${getGameName(props.gameType)}에서 ${score.value}점 달성! 도전해보세요!`,
+      qrId,
+      shareText,
       'game_result',
       props.gameType,
       score.value
@@ -600,6 +640,10 @@ async function shareToTwitter() {
     closeShareSheet()
   } catch (error) {
     console.error('X 공유 실패:', error)
+    // API 실패 시 기본 X 공유 폴백
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
+    window.open(twitterUrl, '_blank', 'width=550,height=420')
+    closeShareSheet()
   }
 }
 </script>
@@ -749,7 +793,13 @@ async function shareToTwitter() {
 .grade-svg {
   width: 32px;
   height: 32px;
-  color: white;
+}
+
+.custom-icon-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 .grade-title {
