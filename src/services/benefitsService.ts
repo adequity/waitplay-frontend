@@ -7,6 +7,7 @@ export interface BenefitDto {
   title: string
   description?: string
   requiredScore: number
+  maxScore?: number
   couponPrefix?: string
   expiryDays: number
   maxIssuance?: number
@@ -28,6 +29,7 @@ export interface CreateBenefitRequest {
   title: string
   description?: string
   requiredScore: number
+  maxScore?: number
   couponPrefix?: string
   expiryDays?: number
   maxIssuance?: number
@@ -42,6 +44,7 @@ export interface UpdateBenefitRequest {
   title?: string
   description?: string
   requiredScore?: number
+  maxScore?: number
   couponPrefix?: string
   expiryDays?: number
   maxIssuance?: number

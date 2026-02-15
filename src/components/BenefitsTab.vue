@@ -483,6 +483,9 @@ async function loadGameSettings() {
       benefitsService.getBenefits(qrCodeId)
     ])
 
+    console.log('[BenefitsTab] Loaded settings:', settings)
+    console.log('[BenefitsTab] Loaded existingBenefits:', existingBenefits)
+
     // 활성화된 게임 중 혜택이 없는 게임에 대해 기본 혜택 자동 생성
     const gamesNeedingDefaults: string[] = []
 
@@ -502,14 +505,16 @@ async function loadGameSettings() {
       // Convert API benefits to steps format
       const steps: BenefitStep[] = gameBenefits.length > 0
         ? gameBenefits.map((b, index, arr) => {
+            // maxScore가 DB에 있으면 사용, 없으면 기존 로직으로 계산
             const nextBenefit = arr[index + 1]
+            const calculatedMaxScore = nextBenefit?.requiredScore
+              ? nextBenefit.requiredScore - 1
+              : b.requiredScore + 3
             return {
               id: b.id,
               name: b.title,
               minScore: b.requiredScore,
-              maxScore: nextBenefit?.requiredScore
-                ? nextBenefit.requiredScore - 1
-                : b.requiredScore + 3,
+              maxScore: b.maxScore ?? calculatedMaxScore,
               reward: b.description || '',
               // 아이콘 정보 (API에서 가져오거나 기본값)
               iconType: (b as any).iconType || 'preset',
@@ -553,6 +558,7 @@ async function createDefaultBenefitsForGames(qrCodeId: string, gameTypes: string
           title: step.name,
           description: step.reward,
           requiredScore: step.minScore,
+          maxScore: step.maxScore,
           isActive: true,
           iconType: step.iconType,
           iconName: step.iconName,
@@ -760,22 +766,26 @@ async function saveGameBenefits(game: GameBenefit) {
     for (const step of game.steps) {
       if (step.id && existingIds.has(step.id)) {
         // Update existing benefit
-        await benefitsService.updateBenefit(step.id, {
+        console.log('[BenefitsTab] Updating benefit:', step.id, 'minScore:', step.minScore, 'maxScore:', step.maxScore, 'name:', step.name)
+        const updateResult = await benefitsService.updateBenefit(step.id, {
           title: step.name,
           description: step.reward,
           requiredScore: step.minScore,
+          maxScore: step.maxScore,
           iconType: step.iconType,
           iconName: step.iconName,
           customIconUrl: step.customIconUrl
         })
+        console.log('[BenefitsTab] Update result:', updateResult)
       } else {
         // Create new benefit
-        console.log('[BenefitsTab] Creating new benefit:', step.name, step.minScore)
+        console.log('[BenefitsTab] Creating new benefit:', step.name, 'minScore:', step.minScore, 'maxScore:', step.maxScore)
         const newBenefit = await benefitsService.createBenefit(qrCodeId, {
           gameType: game.type,
           title: step.name,
           description: step.reward,
           requiredScore: step.minScore,
+          maxScore: step.maxScore,
           isActive: true,
           iconType: step.iconType,
           iconName: step.iconName,
