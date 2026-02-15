@@ -532,7 +532,7 @@ function stopCouponTimer() {
 
 // 혜택 로드 함수 (분리)
 async function loadBenefits() {
-  console.log('[GameResultModal] v4 - loadBenefits called')
+  console.log('[GameResultModal] v5 - loadBenefits called')
 
   step.value = 'result'
   playerName.value = ''
@@ -591,23 +591,25 @@ async function loadBenefits() {
   }
 }
 
-// 컴포넌트 마운트 시 바로 실행 (v-if로 인해 isOpen=true 상태로 마운트됨)
+// 컴포넌트 마운트 시 바로 실행
+// v-if="gameResultData"로 마운트되면서 isOpen이 아직 false일 수 있음
+// 따라서 마운트 시 무조건 로드 시도 (gameData가 있으면)
 onMounted(() => {
-  console.log('[GameResultModal] v4 - onMounted, isOpen:', props.isOpen)
-  if (props.isOpen) {
+  console.log('[GameResultModal] v5 - onMounted, isOpen:', props.isOpen, 'gameData:', !!props.gameData)
+  // gameData가 있으면 무조건 로드 (isOpen 상태와 무관하게)
+  if (props.gameData) {
     loadBenefits()
   }
 })
 
 // isOpen 변경 감지 (재사용 시)
 watch(() => props.isOpen, (isOpen) => {
-  console.log('[GameResultModal] v4 - watch isOpen:', isOpen)
-  if (isOpen) {
-    loadBenefits()
-  } else {
+  console.log('[GameResultModal] v5 - watch isOpen:', isOpen)
+  if (!isOpen) {
     // 모달 닫힐 때 타이머 정리
     stopCouponTimer()
   }
+  // isOpen이 true가 되어도 onMounted에서 이미 로드했으므로 여기서는 로드하지 않음
 })
 
 // Confetti styles
