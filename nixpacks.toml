@@ -3,6 +3,8 @@ nixPkgs = ["nodejs_22"]
 
 [phases.build]
 cmds = ["npm install", "npm run build"]
+# Force cache invalidation
+cacheKey = "v2-20260216"
 
 [start]
 cmd = "npx serve dist -s -l $PORT"
