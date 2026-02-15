@@ -348,8 +348,8 @@ interface GameData {
 interface Props {
   isOpen: boolean
   gameData: GameData
-  qrCode?: string // short code for game score, benefits API
-  qrCodeUuid?: string // UUID for share API
+  qrCode?: string // short code for game score submission
+  qrCodeUuid?: string // UUID for benefits API & share API
   gameType: string
   storeName?: string // 매장명
   storeLogoUrl?: string // 매장 로고 URL

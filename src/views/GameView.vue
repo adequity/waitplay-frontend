@@ -231,6 +231,32 @@ function handleGameReady() {
 }
 
 onMounted(async () => {
+  // QR UUID 조회 (모든 게임 공통 - 혜택 조회에 필요)
+  const qrUuidPromise = qrCodeShort.value
+    ? (async () => {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || 'https://api.waitplay.co.kr'
+          const response = await fetch(`${apiUrl}/api/qrcode/by-code/${encodeURIComponent(qrCodeShort.value!)}`)
+          if (response.ok) {
+            const qrData = await response.json()
+            if (qrData?.id) {
+              qrCodeUuid.value = qrData.id
+              console.log('[GameView] QR UUID loaded:', qrData.id)
+            }
+            // 매장 정보 저장
+            if (qrData?.storeName) {
+              gameStoreName.value = qrData.storeName
+            }
+            if (qrData?.logoUrl) {
+              gameStoreLogoUrl.value = qrData.logoUrl
+            }
+          }
+        } catch (error) {
+          console.error('QR 코드 UUID 조회 실패:', error)
+        }
+      })()
+    : Promise.resolve()
+
   // 핀볼이 아닌 경우에만 Phaser 게임 초기화
   if (!isPinball.value && gameContainer.value) {
     // MATCH, SPOT 게임은 항상 풀스크린 모드로 시작 (기본값)
@@ -241,31 +267,6 @@ onMounted(async () => {
     // Phaser 게임 이벤트 리스너 설정 (먼저 등록)
     window.addEventListener('phaser-game-over', handlePhaserGameOver)
     window.addEventListener('phaser-game-ready', handleGameReady)
-
-    // QR UUID 조회와 게임 초기화를 병렬로 실행 (성능 최적화)
-    const qrUuidPromise = qrCodeShort.value
-      ? (async () => {
-          try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'https://api.waitplay.co.kr'
-            const response = await fetch(`${apiUrl}/api/qrcode/by-code/${encodeURIComponent(qrCodeShort.value!)}`)
-            if (response.ok) {
-              const qrData = await response.json()
-              if (qrData?.id) {
-                qrCodeUuid.value = qrData.id
-              }
-              // 매장 정보 저장
-              if (qrData?.storeName) {
-                gameStoreName.value = qrData.storeName
-              }
-              if (qrData?.logoUrl) {
-                gameStoreLogoUrl.value = qrData.logoUrl
-              }
-            }
-          } catch (error) {
-            console.error('QR 코드 UUID 조회 실패:', error)
-          }
-        })()
-      : Promise.resolve()
 
     const gameInitPromise = (async () => {
       try {
@@ -278,6 +279,9 @@ onMounted(async () => {
 
     // 둘 다 완료될 때까지 대기
     await Promise.all([qrUuidPromise, gameInitPromise])
+  } else {
+    // 핀볼 게임은 QR UUID만 대기
+    await qrUuidPromise
   }
 })
 
