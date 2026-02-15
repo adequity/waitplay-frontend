@@ -530,69 +530,85 @@ function stopCouponTimer() {
   }
 }
 
-// Fetch eligible reward on modal open
-watch(() => props.isOpen, async (isOpen) => {
-  console.log('[GameResultModal] v3 - isOpen changed:', isOpen)
-  if (isOpen) {
-    step.value = 'result'
-    playerName.value = ''
-    isSubmitting.value = false
-    showAuthModal.value = false
-    showCouponModal.value = false
-    couponCode.value = ''
-    scoreId.value = ''
-    reward.value = null
-    couponUsed.value = false
-    storeCodeInput.value = ''
-    storeCodeError.value = ''
+// 혜택 로드 함수 (분리)
+async function loadBenefits() {
+  console.log('[GameResultModal] v4 - loadBenefits called')
 
-    // props에서 매장 정보 설정
-    storeName.value = props.storeName
-    storeLogoUrl.value = props.storeLogoUrl
+  step.value = 'result'
+  playerName.value = ''
+  isSubmitting.value = false
+  showAuthModal.value = false
+  showCouponModal.value = false
+  couponCode.value = ''
+  scoreId.value = ''
+  reward.value = null
+  couponUsed.value = false
+  storeCodeInput.value = ''
+  storeCodeError.value = ''
 
-    // Fetch benefits (qrCodeUuid 사용 - API는 UUID를 기대함)
-    console.log('[GameResultModal] Fetching benefits:', {
+  // props에서 매장 정보 설정
+  storeName.value = props.storeName
+  storeLogoUrl.value = props.storeLogoUrl
+
+  // Fetch benefits (qrCodeUuid 사용 - API는 UUID를 기대함)
+  console.log('[GameResultModal] Fetching benefits:', {
+    qrCodeUuid: props.qrCodeUuid,
+    qrCode: props.qrCode,
+    gameType: props.gameType,
+    score: props.gameData?.score
+  })
+
+  if (props.qrCodeUuid && props.gameData?.score) {
+    try {
+      const benefits = await benefitsService.getBenefitsByGame(props.qrCodeUuid, props.gameType)
+      console.log('[GameResultModal] Benefits received:', benefits)
+
+      // 점수가 requiredScore(minScore) 이상이고 maxScore 이하인 혜택 찾기
+      const eligible = benefits
+        .filter(b => {
+          if (!b.isActive) return false
+          const playerScore = props.gameData.score
+          const minScore = b.requiredScore
+          const maxScore = b.maxScore ?? Infinity // maxScore가 없으면 상한 없음
+          console.log(`[GameResultModal] Checking benefit: ${b.title}, playerScore=${playerScore}, minScore=${minScore}, maxScore=${maxScore}`)
+          return playerScore >= minScore && playerScore <= maxScore
+        })
+        .sort((a, b) => b.requiredScore - a.requiredScore)[0]
+
+      console.log('[GameResultModal] Eligible benefit:', eligible)
+
+      if (eligible) {
+        reward.value = eligible
+      }
+    } catch (error) {
+      console.error('Failed to fetch benefits:', error)
+    }
+  } else {
+    console.warn('[GameResultModal] Missing qrCodeUuid or score:', {
       qrCodeUuid: props.qrCodeUuid,
-      qrCode: props.qrCode,
-      gameType: props.gameType,
       score: props.gameData?.score
     })
+  }
+}
 
-    if (props.qrCodeUuid && props.gameData?.score) {
-      try {
-        const benefits = await benefitsService.getBenefitsByGame(props.qrCodeUuid, props.gameType)
-        console.log('[GameResultModal] Benefits received:', benefits)
+// 컴포넌트 마운트 시 바로 실행 (v-if로 인해 isOpen=true 상태로 마운트됨)
+onMounted(() => {
+  console.log('[GameResultModal] v4 - onMounted, isOpen:', props.isOpen)
+  if (props.isOpen) {
+    loadBenefits()
+  }
+})
 
-        // 점수가 requiredScore(minScore) 이상이고 maxScore 이하인 혜택 찾기
-        const eligible = benefits
-          .filter(b => {
-            if (!b.isActive) return false
-            const playerScore = props.gameData.score
-            const minScore = b.requiredScore
-            const maxScore = b.maxScore ?? Infinity // maxScore가 없으면 상한 없음
-            return playerScore >= minScore && playerScore <= maxScore
-          })
-          .sort((a, b) => b.requiredScore - a.requiredScore)[0]
-
-        console.log('[GameResultModal] Eligible benefit:', eligible)
-
-        if (eligible) {
-          reward.value = eligible
-        }
-      } catch (error) {
-        console.error('Failed to fetch benefits:', error)
-      }
-    } else {
-      console.warn('[GameResultModal] Missing qrCodeUuid or score:', {
-        qrCodeUuid: props.qrCodeUuid,
-        score: props.gameData?.score
-      })
-    }
+// isOpen 변경 감지 (재사용 시)
+watch(() => props.isOpen, (isOpen) => {
+  console.log('[GameResultModal] v4 - watch isOpen:', isOpen)
+  if (isOpen) {
+    loadBenefits()
   } else {
     // 모달 닫힐 때 타이머 정리
     stopCouponTimer()
   }
-}, { immediate: true })
+})
 
 // Confetti styles
 function getConfettiStyle(index: number) {
