@@ -550,18 +550,35 @@ watch(() => props.isOpen, async (isOpen) => {
     storeLogoUrl.value = props.storeLogoUrl
 
     // Fetch benefits (qrCodeUuid 사용 - API는 UUID를 기대함)
+    console.log('[GameResultModal] Fetching benefits:', {
+      qrCodeUuid: props.qrCodeUuid,
+      qrCode: props.qrCode,
+      gameType: props.gameType,
+      score: props.gameData?.score
+    })
+
     if (props.qrCodeUuid && props.gameData?.score) {
       try {
         const benefits = await benefitsService.getBenefitsByGame(props.qrCodeUuid, props.gameType)
+        console.log('[GameResultModal] Benefits received:', benefits)
+
         const eligible = benefits
           .filter(b => b.isActive && b.requiredScore <= props.gameData.score)
           .sort((a, b) => b.requiredScore - a.requiredScore)[0]
+
+        console.log('[GameResultModal] Eligible benefit:', eligible)
+
         if (eligible) {
           reward.value = eligible
         }
       } catch (error) {
         console.error('Failed to fetch benefits:', error)
       }
+    } else {
+      console.warn('[GameResultModal] Missing qrCodeUuid or score:', {
+        qrCodeUuid: props.qrCodeUuid,
+        score: props.gameData?.score
+      })
     }
   } else {
     // 모달 닫힐 때 타이머 정리
