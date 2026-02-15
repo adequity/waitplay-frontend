@@ -87,7 +87,7 @@
         <GuestbookManageTab v-if="activeTab === 'guestbook'" />
         <CustomersTab v-if="activeTab === 'customers'" />
         <CustomerSupportTab v-if="activeTab === 'cs'" />
-        <AffiliationRequest v-if="activeTab === 'settings'" />
+        <SettingsTab v-if="activeTab === 'settings'" />
       </div>
     </main>
   </div>
@@ -104,8 +104,8 @@ import GamesTab from '@/components/GamesTab.vue'
 import BenefitsTab from '@/components/BenefitsTab.vue'
 import CustomersTab from '@/components/CustomersTab.vue'
 import CustomerSupportTab from '@/components/CustomerSupportTab.vue'
-import AffiliationRequest from '@/components/AffiliationRequest.vue'
 import GuestbookManageTab from '@/components/GuestbookManageTab.vue'
+import SettingsTab from '@/components/SettingsTab.vue'
 
 const router = useRouter()
 const route = useRoute()

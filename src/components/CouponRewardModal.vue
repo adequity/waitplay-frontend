@@ -49,9 +49,68 @@
           <p>쿠폰 생성 중...</p>
         </div>
 
-        <!-- Error State -->
-        <div v-if="error" class="error-section">
+        <!-- Error State with Store Code Fallback -->
+        <div v-if="error && !benefitRedeemed" class="error-section">
           <p class="error-message">{{ error }}</p>
+
+          <!-- 점수 확인 정보 (직원용) -->
+          <div class="score-verification-box">
+            <div class="score-row">
+              <span class="score-label">획득 점수</span>
+              <span class="score-value highlight">{{ gameScore ?? '-' }}점</span>
+            </div>
+            <div class="score-row">
+              <span class="score-label">필요 점수</span>
+              <span class="score-value">{{ benefit.requiredScore }}점</span>
+            </div>
+            <div v-if="gameScore && gameScore >= benefit.requiredScore" class="score-status success">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
+              조건 충족
+            </div>
+            <div v-else class="score-status fail">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+              </svg>
+              조건 미충족
+            </div>
+          </div>
+
+          <!-- 매장 코드로 직접 인정받기 -->
+          <div class="store-code-fallback">
+            <p class="fallback-hint">직원이 매장 코드를 입력하면 혜택이 인정됩니다</p>
+            <div class="store-code-input-wrapper">
+              <input
+                v-model="storeCodeInput"
+                type="text"
+                class="store-code-input"
+                placeholder="매장 코드"
+                maxlength="10"
+                :disabled="isRedeemingDirect"
+                @keydown.enter="redeemBenefitDirect"
+              />
+              <button
+                class="btn-store-code"
+                :disabled="!storeCodeInput || isRedeemingDirect"
+                @click="redeemBenefitDirect"
+              >
+                {{ isRedeemingDirect ? '처리 중...' : '인정받기' }}
+              </button>
+            </div>
+            <p v-if="storeCodeError" class="store-code-error">{{ storeCodeError }}</p>
+          </div>
+        </div>
+
+        <!-- 혜택 인정 완료 -->
+        <div v-if="benefitRedeemed" class="benefit-redeemed-section">
+          <div class="redeemed-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+            </svg>
+            <span>혜택이 인정되었습니다!</span>
+          </div>
+          <p class="redeemed-notice">직원에게 혜택을 받으세요</p>
         </div>
 
         <!-- Instructions -->
@@ -65,12 +124,16 @@
 
       <!-- Modal Footer -->
       <div class="modal-footer">
-        <template v-if="!couponCode && !isGenerating">
+        <template v-if="!couponCode && !isGenerating && !error && !benefitRedeemed">
           <button class="btn-secondary" @click="close">나중에</button>
           <button class="btn-primary" @click="generateCoupon">지금 받기</button>
         </template>
-        <template v-else-if="couponCode">
+        <template v-else-if="couponCode || benefitRedeemed">
           <button class="btn-primary-full" @click="close">확인</button>
+        </template>
+        <template v-else-if="error && !benefitRedeemed">
+          <button class="btn-secondary" @click="close">닫기</button>
+          <button class="btn-primary" @click="generateCoupon">다시 시도</button>
         </template>
       </div>
     </div>
@@ -98,6 +161,7 @@ interface Props {
   userId: string
   gameScoreId?: string
   qrCode?: string // 팔로우 처리를 위한 QR 코드
+  gameScore?: number // 실제 획득 점수 (에러 시 직원 확인용)
 }
 
 const props = defineProps<Props>()
@@ -109,6 +173,12 @@ const couponCode = ref<string>('')
 const expiryMinutes = ref<number>(5)
 const isGenerating = ref(false)
 const error = ref<string>('')
+
+// Store code fallback state (쿠폰 생성 실패 시 매장 코드로 직접 인정)
+const storeCodeInput = ref('')
+const storeCodeError = ref('')
+const isRedeemingDirect = ref(false)
+const benefitRedeemed = ref(false)
 
 async function generateCoupon() {
   isGenerating.value = true
@@ -143,12 +213,55 @@ async function generateCoupon() {
   }
 }
 
+// 매장 코드로 혜택 직접 인정
+async function redeemBenefitDirect() {
+  if (!storeCodeInput.value) return
+
+  storeCodeError.value = ''
+  isRedeemingDirect.value = true
+
+  try {
+    const response = await couponsService.redeemBenefitDirect({
+      benefitId: props.benefit.id,
+      userId: props.userId,
+      storeCode: storeCodeInput.value,
+      gameScoreId: props.gameScoreId
+    })
+
+    if (response.success) {
+      benefitRedeemed.value = true
+      storeCodeInput.value = ''
+      error.value = '' // 에러 메시지 숨기기
+
+      // 자동 팔로우
+      if (props.qrCode) {
+        try {
+          await followService.followAdmin(props.qrCode)
+        } catch (followErr) {
+          console.warn('Auto-follow failed (non-critical):', followErr)
+        }
+      }
+    } else {
+      storeCodeError.value = response.message || '인정에 실패했습니다'
+    }
+  } catch (err: any) {
+    console.error('Failed to redeem benefit directly:', err)
+    storeCodeError.value = err.response?.data?.message || '매장 코드가 올바르지 않습니다'
+  } finally {
+    isRedeemingDirect.value = false
+  }
+}
+
 function close() {
   emit('close')
   // Reset state
   couponCode.value = ''
   error.value = ''
   isGenerating.value = false
+  storeCodeInput.value = ''
+  storeCodeError.value = ''
+  isRedeemingDirect.value = false
+  benefitRedeemed.value = false
 }
 </script>
 
@@ -368,8 +481,164 @@ function close() {
 .error-message {
   color: #ff3b30;
   font-size: 14px;
-  margin: 0;
+  margin: 0 0 16px 0;
   text-align: center;
+}
+
+/* 점수 확인 박스 (직원용) */
+.score-verification-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.score-row:not(:last-of-type) {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.score-row .score-label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.score-row .score-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.score-row .score-value.highlight {
+  color: #3b82f6;
+  font-size: 18px;
+}
+
+.score-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.score-status.success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.score-status.fail {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Store code fallback (쿠폰 생성 실패 시) */
+.store-code-fallback {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #ffcdd2;
+}
+
+.fallback-hint {
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+  margin: 0 0 12px 0;
+}
+
+.store-code-input-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.store-code-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px solid #e5e5ea;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  outline: none;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.store-code-input:focus {
+  border-color: #3b82f6;
+}
+
+.store-code-input:disabled {
+  background: #f9fafb;
+  opacity: 0.7;
+}
+
+.btn-store-code {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-store-code:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-store-code:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.store-code-error {
+  font-size: 12px;
+  color: #dc2626;
+  margin: 8px 0 0 0;
+  text-align: center;
+}
+
+/* 혜택 인정 완료 */
+.benefit-redeemed-section {
+  text-align: center;
+  padding: 20px;
+}
+
+.redeemed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.redeemed-notice {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
 }
 
 .instructions {

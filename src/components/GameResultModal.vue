@@ -165,6 +165,38 @@
             </p>
           </div>
 
+          <!-- 매장 코드 입력 (직원용 빠른 사용) -->
+          <div v-if="!couponUsed" class="store-code-section">
+            <p class="store-code-hint">직원이 매장 코드를 입력하면 바로 사용됩니다</p>
+            <div class="store-code-input-wrapper">
+              <input
+                v-model="storeCodeInput"
+                type="text"
+                class="store-code-input"
+                placeholder="매장 코드 입력"
+                maxlength="10"
+                :disabled="isVerifyingStoreCode"
+                @keydown.enter="handleStoreCodeSubmit"
+              />
+              <button
+                class="btn-store-code"
+                :disabled="!storeCodeInput || isVerifyingStoreCode"
+                @click="handleStoreCodeSubmit"
+              >
+                {{ isVerifyingStoreCode ? '확인 중...' : '사용' }}
+              </button>
+            </div>
+            <p v-if="storeCodeError" class="store-code-error">{{ storeCodeError }}</p>
+          </div>
+
+          <!-- 쿠폰 사용 완료 표시 -->
+          <div v-else class="coupon-used-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+            </svg>
+            <span>사용 완료</span>
+          </div>
+
           <button class="btn-primary" @click="handleClose">확인</button>
         </div>
       </div>
@@ -186,6 +218,7 @@
         :user-id="currentUserId"
         :game-score-id="scoreId"
         :qr-code="qrCodeId"
+        :game-score="score"
         @close="handleCouponCreated"
         @coupon-created="handleCouponCode"
       />
@@ -263,6 +296,7 @@ import { useAuthStore } from '@/stores/auth'
 import { submitGameScore } from '@/services/gameScoreService'
 import benefitsService, { type BenefitDto } from '@/services/benefitsService'
 import shareService from '@/services/shareService'
+import couponsService from '@/services/couponsService'
 import AuthModal from '@/components/AuthModal.vue'
 import CouponRewardModal from '@/components/CouponRewardModal.vue'
 import IconBase from '@/components/IconBase.vue'
@@ -312,6 +346,12 @@ const qrCodeId = computed(() => props.qrCode)
 // Share state
 const showShare = ref(false)
 const showCopyToast = ref(false)
+
+// Store code state (매장 코드로 빠른 쿠폰 사용)
+const storeCodeInput = ref('')
+const isVerifyingStoreCode = ref(false)
+const storeCodeError = ref('')
+const couponUsed = ref(false)
 
 // Computed values
 const score = computed(() => props.gameData?.score ?? 0)
@@ -644,6 +684,38 @@ async function shareToTwitter() {
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
     window.open(twitterUrl, '_blank', 'width=550,height=420')
     closeShareSheet()
+  }
+}
+
+// 매장 코드로 쿠폰 사용 처리
+async function handleStoreCodeSubmit() {
+  if (!storeCodeInput.value || !couponCode.value) return
+
+  storeCodeError.value = ''
+  isVerifyingStoreCode.value = true
+
+  try {
+    const response = await couponsService.redeemWithStoreCode({
+      couponCode: couponCode.value,
+      storeCode: storeCodeInput.value
+    })
+
+    if (response.success) {
+      couponUsed.value = true
+      storeCodeInput.value = ''
+    } else {
+      storeCodeError.value = response.message || '사용에 실패했습니다'
+    }
+  } catch (error: unknown) {
+    console.error('매장 코드 검증 실패:', error)
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { data?: { message?: string } } }
+      storeCodeError.value = axiosError.response?.data?.message || '매장 코드가 올바르지 않습니다'
+    } else {
+      storeCodeError.value = '매장 코드가 올바르지 않습니다'
+    }
+  } finally {
+    isVerifyingStoreCode.value = false
   }
 }
 </script>
@@ -1281,5 +1353,101 @@ async function shareToTwitter() {
 .toast-leave-to {
   opacity: 0;
   transform: translateX(-50%) translateY(10px);
+}
+
+/* Store code section (매장 코드 입력) */
+.store-code-section {
+  width: 100%;
+  margin-top: 8px;
+  padding: 16px;
+  background: #fefce8;
+  border: 1px dashed #eab308;
+  border-radius: 12px;
+}
+
+.store-code-hint {
+  font-size: 12px;
+  color: #a16207;
+  margin: 0 0 12px 0;
+  text-align: center;
+}
+
+.store-code-input-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.store-code-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px solid #fde047;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  outline: none;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.store-code-input:focus {
+  border-color: #eab308;
+}
+
+.store-code-input:disabled {
+  background: #f9fafb;
+  opacity: 0.7;
+}
+
+.btn-store-code {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-store-code:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);
+}
+
+.btn-store-code:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.store-code-error {
+  font-size: 12px;
+  color: #dc2626;
+  margin: 8px 0 0 0;
+  text-align: center;
+}
+
+/* Coupon used badge (사용 완료 표시) */
+.coupon-used-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.coupon-used-badge svg {
+  flex-shrink: 0;
 }
 </style>
