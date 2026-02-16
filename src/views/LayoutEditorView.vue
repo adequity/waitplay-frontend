@@ -138,7 +138,7 @@
             <input type="color" v-model="pageTheme.backgroundColor" class="color-dot-input" />
           </div>
           <div class="bgm-picker">
-            <button class="btn-bgm-settings" @click="showBgmModal = true">
+            <button class="btn-bgm-settings" @click="showBgmModal = true; loadBgmLibrary()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 18V5l12-2v13"/>
                 <circle cx="6" cy="18" r="3"/>
@@ -186,7 +186,7 @@
 
     <!-- BGM 설정 Modal -->
     <div v-if="showBgmModal" class="modal-overlay active" @click="showBgmModal = false">
-      <div class="modal-card" @click.stop>
+      <div class="modal-card bgm-modal-wide" @click.stop>
         <div class="modal-header">
           <h2>🎵 배경음악(BGM) 설정</h2>
           <button class="btn-icon-close" @click="closeBgmModal">✕</button>
@@ -194,6 +194,12 @@
         <div class="bgm-modal-content">
           <!-- 입력 방식 선택 탭 -->
           <div class="bgm-input-tabs">
+            <button
+              :class="['bgm-tab', { active: bgmInputType === 'library' }]"
+              @click="bgmInputType = 'library'; loadBgmLibrary()"
+            >
+              🎶 라이브러리
+            </button>
             <button
               :class="['bgm-tab', { active: bgmInputType === 'file' }]"
               @click="bgmInputType = 'file'"
@@ -206,6 +212,46 @@
             >
               🔗 URL 입력
             </button>
+          </div>
+
+          <!-- 라이브러리 선택 방식 -->
+          <div v-if="bgmInputType === 'library'" class="form-group">
+            <label class="form-label">BGM 라이브러리에서 선택</label>
+            <div v-if="bgmLibraryLoading" class="bgm-library-loading">
+              <span class="upload-spinner"></span>
+              라이브러리 로딩 중...
+            </div>
+            <div v-else-if="bgmLibraryTracks.length === 0" class="bgm-library-empty">
+              <p>사용 가능한 BGM이 없습니다.</p>
+              <p class="hint">관리자에게 문의하여 BGM을 추가해주세요.</p>
+            </div>
+            <div v-else class="bgm-library-grid">
+              <div
+                v-for="track in bgmLibraryTracks"
+                :key="track.id"
+                class="bgm-library-item"
+                :class="{ selected: selectedBgmTrackId === track.id || pageTheme.bgmUrl === track.fileUrl }"
+                @click="selectBgmTrack(track)"
+              >
+                <div class="bgm-library-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <circle cx="18" cy="16" r="3"/>
+                  </svg>
+                </div>
+                <div class="bgm-library-info">
+                  <span class="bgm-library-title">{{ track.title }}</span>
+                  <span class="bgm-library-artist" v-if="track.artist">{{ track.artist }}</span>
+                  <span class="bgm-library-category" v-if="track.category">{{ track.category }}</span>
+                </div>
+                <div class="bgm-library-check" v-if="selectedBgmTrackId === track.id || pageTheme.bgmUrl === track.fileUrl">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- 파일 업로드 방식 -->
@@ -224,7 +270,7 @@
                   <span class="upload-spinner"></span>
                   업로드 중...
                 </template>
-                <template v-else-if="pageTheme.bgmUrl && bgmFileName">
+                <template v-else-if="pageTheme.bgmUrl && bgmFileName && bgmInputType === 'file'">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2">
                     <path d="M9 18V5l12-2v13"/>
                     <circle cx="6" cy="18" r="3"/>
@@ -247,7 +293,7 @@
           </div>
 
           <!-- URL 입력 방식 -->
-          <div v-else class="form-group">
+          <div v-if="bgmInputType === 'url'" class="form-group">
             <label class="form-label">음악 URL (MP3, WAV 등)</label>
             <input
               type="url"
@@ -288,8 +334,8 @@
           <div class="bgm-info-box">
             <strong>💡 안내</strong>
             <ul>
-              <li>저작권에 주의하여 음원을 사용하세요.</li>
-              <li>용량이 큰 파일은 로딩 시간이 길어질 수 있습니다.</li>
+              <li>라이브러리에서 제공되는 음원은 저작권 걱정 없이 사용 가능합니다.</li>
+              <li>직접 업로드 시 저작권에 주의하여 음원을 사용하세요.</li>
             </ul>
           </div>
         </div>
@@ -1182,9 +1228,33 @@ const pageTheme = ref({
 const showBgmModal = ref(false)
 const bgmPreviewAudio = ref<HTMLAudioElement | null>(null)
 const isBgmPreviewing = ref(false)
-const bgmInputType = ref<'url' | 'file'>('file') // 기본값: 파일 업로드
+const bgmInputType = ref<'library' | 'url' | 'file'>('library') // 기본값: 라이브러리 선택
 const bgmFileUploading = ref(false)
 const bgmFileName = ref('')
+
+// BGM 라이브러리 관련
+import bgmService, { type BgmTrack } from '@/services/bgmService'
+const bgmLibraryTracks = ref<BgmTrack[]>([])
+const bgmLibraryLoading = ref(false)
+const selectedBgmTrackId = ref<string | null>(null)
+
+const loadBgmLibrary = async () => {
+  try {
+    bgmLibraryLoading.value = true
+    bgmLibraryTracks.value = await bgmService.getActiveTracks()
+  } catch (error) {
+    console.error('Failed to load BGM library:', error)
+    bgmLibraryTracks.value = []
+  } finally {
+    bgmLibraryLoading.value = false
+  }
+}
+
+const selectBgmTrack = (track: BgmTrack) => {
+  pageTheme.value.bgmUrl = track.fileUrl
+  selectedBgmTrackId.value = track.id
+  bgmFileName.value = track.title
+}
 
 // Available block types
 const availableBlockTypes = [
@@ -2022,6 +2092,7 @@ function removeBgm() {
   isBgmPreviewing.value = false
   pageTheme.value.bgmUrl = ''
   bgmFileName.value = ''
+  selectedBgmTrackId.value = null
 }
 
 function closeBgmModal() {
@@ -3663,6 +3734,135 @@ select.form-input {
   background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
   border-color: #3b82f6;
   color: #d946ef;
+}
+
+/* BGM Modal Wide */
+.bgm-modal-wide {
+  max-width: 600px;
+}
+
+/* BGM Library Styles */
+.bgm-library-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: #86868b;
+  font-size: 14px;
+}
+
+.bgm-library-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #86868b;
+}
+
+.bgm-library-empty p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.bgm-library-empty .hint {
+  font-size: 12px;
+  color: #aeaeb2;
+}
+
+.bgm-library-grid {
+  display: grid;
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.bgm-library-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bgm-library-item:hover {
+  background: #f0f0f2;
+  border-color: #d4d4d8;
+}
+
+.bgm-library-item.selected {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(29, 78, 216, 0.1) 100%);
+  border-color: #3b82f6;
+}
+
+.bgm-library-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.bgm-library-icon svg {
+  color: white;
+}
+
+.bgm-library-item.selected .bgm-library-icon {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.bgm-library-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bgm-library-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bgm-library-artist {
+  font-size: 12px;
+  color: #86868b;
+}
+
+.bgm-library-category {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  background: #e5e5ea;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #666;
+  width: fit-content;
+}
+
+.bgm-library-check {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #22c55e;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bgm-library-check svg {
+  color: white;
 }
 
 /* 파일 업로드 영역 */
