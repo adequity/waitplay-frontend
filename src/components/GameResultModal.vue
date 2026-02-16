@@ -134,6 +134,47 @@
           </div>
         </div>
 
+        <!-- Step 1.5: 점수 제출 완료 -->
+        <div v-else-if="step === 'submitted'" class="step-content submitted-step">
+          <!-- 성공 아이콘 -->
+          <div class="submitted-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+
+          <h2 class="submitted-title">점수가 등록되었습니다!</h2>
+          <p class="submitted-score">{{ score }}점</p>
+
+          <!-- 액션 버튼들 -->
+          <div class="submitted-actions">
+            <button class="btn-action btn-retry-full" @click="handleRetry">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 4v6h6M23 20v-6h-6"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+              </svg>
+              다시 하기
+            </button>
+
+            <button class="btn-action btn-other-game" @click="handleOtherGame">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                <circle cx="8" cy="12" r="2"/>
+                <circle cx="16" cy="12" r="2"/>
+              </svg>
+              다른 게임
+            </button>
+
+            <button class="btn-action btn-landing" @click="handleGoLanding">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              랜딩으로
+            </button>
+          </div>
+        </div>
+
         <!-- Step 2: 쿠폰 카드 (인스타그램 얼리 액세스 스타일) -->
         <div v-else-if="step === 'coupon'" class="step-content coupon-step">
           <!-- 쿠폰 카드 -->
@@ -322,6 +363,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { submitGameScore } from '@/services/gameScoreService'
 import benefitsService, { type BenefitDto } from '@/services/benefitsService'
@@ -362,9 +404,10 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 // State
-const step = ref<'result' | 'coupon'>('result')
+const step = ref<'result' | 'submitted' | 'coupon'>('result')
 const playerName = ref('')
 const isSubmitting = ref(false)
 const showAuthModal = ref(false)
@@ -643,8 +686,8 @@ async function handleSubmitScore() {
     })
 
     if (success) {
-      // 제출 성공 후 닫기
-      emit('close')
+      // 제출 성공 → 성공 화면으로 전환
+      step.value = 'submitted'
     }
   } catch (error) {
     console.error('Score submit failed:', error)
@@ -713,6 +756,31 @@ function handleCouponCreated() {
 // 다시하기
 function handleRetry() {
   emit('restart')
+}
+
+// 다른 게임 하기
+function handleOtherGame() {
+  emit('close')
+  // QR 코드가 있으면 해당 랜딩 페이지로, 없으면 홈으로
+  if (props.qrCode) {
+    router.push(`/qr/${props.qrCode}`)
+  } else if (props.qrCodeUuid) {
+    router.push(`/qr/${props.qrCodeUuid}`)
+  } else {
+    router.push('/')
+  }
+}
+
+// 랜딩 페이지로 이동
+function handleGoLanding() {
+  emit('close')
+  if (props.qrCode) {
+    router.push(`/qr/${props.qrCode}`)
+  } else if (props.qrCodeUuid) {
+    router.push(`/qr/${props.qrCodeUuid}`)
+  } else {
+    router.push('/')
+  }
 }
 
 // 닫기
@@ -2055,5 +2123,124 @@ onBeforeUnmount(() => {
 .btn-coupon-dismiss:hover {
   color: #475569;
   background: #f1f5f9;
+}
+
+/* ==========================================
+   점수 제출 완료 단계 스타일
+   ========================================== */
+
+.submitted-step {
+  gap: 20px;
+  padding-top: 16px;
+}
+
+.submitted-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes successBounce {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.submitted-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  animation: fadeInUp 0.4s ease-out 0.2s both;
+}
+
+.submitted-score {
+  font-size: 36px;
+  font-weight: 800;
+  color: #3b82f6;
+  margin: -8px 0 8px 0;
+  animation: fadeInUp 0.4s ease-out 0.3s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.submitted-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  animation: fadeInUp 0.4s ease-out 0.4s both;
+}
+
+.btn-action {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.btn-retry-full {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+
+.btn-retry-full:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+}
+
+.btn-other-game {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+}
+
+.btn-other-game:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45);
+}
+
+.btn-landing {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.btn-landing:hover {
+  background: #e2e8f0;
+  color: #334155;
 }
 </style>
