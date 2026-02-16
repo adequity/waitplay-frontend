@@ -250,6 +250,21 @@ async function generateCoupon() {
   isGenerating.value = true
   error.value = ''
 
+  // userId 검증
+  if (!props.userId || props.userId.trim() === '') {
+    console.error('[CouponRewardModal] userId is empty, requiring login')
+    error.value = '로그인이 필요합니다'
+    requiresLogin.value = true
+    isGenerating.value = false
+    return
+  }
+
+  console.log('[CouponRewardModal] Generating coupon:', {
+    benefitId: props.benefit.id,
+    userId: props.userId,
+    gameScoreId: props.gameScoreId
+  })
+
   try {
     // 1. 쿠폰 생성
     const response = await couponsService.generateCoupon({
@@ -289,8 +304,21 @@ async function generateCoupon() {
 async function redeemBenefitDirect() {
   if (!storeCodeInput.value) return
 
+  // userId 검증
+  if (!props.userId || props.userId.trim() === '') {
+    storeCodeError.value = '로그인이 필요합니다'
+    return
+  }
+
   storeCodeError.value = ''
   isRedeemingDirect.value = true
+
+  console.log('[CouponRewardModal] Redeeming benefit directly:', {
+    benefitId: props.benefit.id,
+    userId: props.userId,
+    storeCode: storeCodeInput.value,
+    gameScoreId: props.gameScoreId
+  })
 
   try {
     const response = await couponsService.redeemBenefitDirect({
@@ -370,6 +398,9 @@ function handleRequireLogin() {
   border-radius: 24px;
   width: 100%;
   max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: surfaceRise 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -387,10 +418,11 @@ function handleRequireLogin() {
 }
 
 .modal-header {
-  padding: 30px 30px 20px;
+  padding: 20px 24px 16px;
   text-align: center;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
+  flex-shrink: 0;
 }
 
 .header-content {
@@ -401,29 +433,30 @@ function handleRequireLogin() {
 }
 
 .celebration-icon {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 28px;
+  font-size: 24px;
   color: white;
 }
 
 .modal-title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   margin: 0;
 }
 
 .modal-body {
-  padding: 30px;
-  min-height: 200px;
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .benefit-info {
@@ -431,28 +464,28 @@ function handleRequireLogin() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .benefit-icon-wrapper {
-  width: 100px;
-  height: 100px;
+  width: 72px;
+  height: 72px;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .benefit-icon-wrapper i {
-  font-size: 48px;
+  font-size: 36px;
   color: white;
 }
 
 .benefit-icon-wrapper :deep(svg) {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   color: white;
 }
 
@@ -586,20 +619,19 @@ function handleRequireLogin() {
 .score-verification-box {
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 16px;
+  border-radius: 12px;
+  padding: 12px;
 }
 
 .score-verification-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
+  gap: 6px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
   border-bottom: 1px solid #f1f5f9;
   color: #64748b;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -607,7 +639,7 @@ function handleRequireLogin() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 6px 0;
 }
 
 .score-row:not(:last-of-type) {
@@ -615,35 +647,35 @@ function handleRequireLogin() {
 }
 
 .score-row .score-label {
-  font-size: 14px;
+  font-size: 13px;
   color: #64748b;
 }
 
 .score-row .score-value {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #1e293b;
 }
 
 .score-row .score-value.highlight {
   color: #3b82f6;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .score-status {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 14px;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 600;
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .score-status .status-icon {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -674,18 +706,18 @@ function handleRequireLogin() {
 .store-code-section {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   border: 1px solid #86efac;
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 12px;
 }
 
 .store-code-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 10px;
   color: #16a34a;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -699,10 +731,10 @@ function handleRequireLogin() {
 .store-code-input {
   flex: 1;
   min-width: 0;
-  padding: 14px 12px;
+  padding: 12px 10px;
   border: 2px solid #86efac;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 700;
   text-align: center;
   text-transform: uppercase;
@@ -875,19 +907,20 @@ function handleRequireLogin() {
 }
 
 .modal-footer {
-  padding: 20px 30px;
+  padding: 16px 20px;
   border-top: 1px solid #e5e5ea;
   display: flex;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .btn-primary,
 .btn-secondary,
 .btn-primary-full {
-  padding: 14px 28px;
+  padding: 12px 20px;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -926,49 +959,49 @@ function handleRequireLogin() {
 /* 로그인 필요 섹션 */
 .login-required-section {
   text-align: center;
-  padding: 20px;
+  padding: 16px;
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border: 2px solid #93c5fd;
-  border-radius: 16px;
+  border-radius: 12px;
   animation: slideIn 0.3s ease-out;
 }
 
 .login-icon-wrapper {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px;
+  margin: 0 auto 12px;
   color: white;
 }
 
 .login-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #1e40af;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .login-description {
-  font-size: 14px;
+  font-size: 13px;
   color: #3b82f6;
-  margin: 0 0 20px 0;
+  margin: 0 0 14px 0;
 }
 
 .btn-login {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px 28px;
+  gap: 6px;
+  padding: 12px 20px;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
