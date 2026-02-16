@@ -657,7 +657,7 @@ watch(() => props.isOpen, (isOpen) => {
 
 // Confetti styles
 function getConfettiStyle(index: number) {
-  const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+  const colors = ['#3b82f6', '#60a5fa', '#93c5fd', '#1d4ed8', '#2563eb', '#dbeafe']
   const color = colors[index % colors.length]
   const left = Math.random() * 100
   const delay = Math.random() * 2
@@ -1264,7 +1264,7 @@ onBeforeUnmount(() => {
 .success-icon {
   width: 72px;
   height: 72px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1723,7 +1723,7 @@ onBeforeUnmount(() => {
 .coupon-used-badge {
   width: 100%;
   padding: 20px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 16px;
   margin-top: 12px;
   animation: successPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1970,7 +1970,7 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(16, 185, 129, 0.95);
+  background: rgba(59, 130, 246, 0.95);
   border-radius: 24px;
   display: flex;
   align-items: center;
@@ -2137,14 +2137,14 @@ onBeforeUnmount(() => {
 .submitted-icon {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
 }
 
 @keyframes successBounce {
@@ -2224,14 +2224,14 @@ onBeforeUnmount(() => {
 }
 
 .btn-other-game {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
   color: white;
-  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 4px 14px rgba(96, 165, 250, 0.35);
 }
 
 .btn-other-game:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45);
+  box-shadow: 0 6px 20px rgba(96, 165, 250, 0.45);
 }
 
 .btn-landing {

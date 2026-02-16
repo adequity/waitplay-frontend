@@ -759,12 +759,12 @@ function handleRequireLogin() {
 }
 
 .score-status.success {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #16a34a;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
 }
 
 .score-status.success .status-icon {
-  background: #16a34a;
+  background: #3b82f6;
   color: white;
 }
 
@@ -780,8 +780,8 @@ function handleRequireLogin() {
 
 /* 매장 코드 입력 섹션 (독립) */
 .store-code-section {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border: 1px solid #86efac;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
   border-radius: 12px;
   padding: 12px;
 }
@@ -789,8 +789,8 @@ function handleRequireLogin() {
 /* 쿠폰 생성 후 매장코드 사용 섹션 */
 .store-code-section.coupon-redeem {
   margin-top: 16px;
-  background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
-  border: 1px solid #fde047;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
 }
 
 .store-code-header {
@@ -799,7 +799,7 @@ function handleRequireLogin() {
   justify-content: center;
   gap: 8px;
   margin-bottom: 10px;
-  color: #16a34a;
+  color: #1d4ed8;
   font-size: 14px;
   font-weight: 600;
 }
@@ -815,7 +815,7 @@ function handleRequireLogin() {
   flex: 1;
   min-width: 0;
   padding: 12px 10px;
-  border: 2px solid #86efac;
+  border: 2px solid #93c5fd;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 700;
@@ -825,22 +825,22 @@ function handleRequireLogin() {
   outline: none;
   background: white;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
   box-sizing: border-box;
 }
 
 .store-code-input:focus {
-  border-color: #10b981;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
 }
 
 .store-code-input:disabled {
-  background: #ecfdf5;
+  background: #eff6ff;
   opacity: 0.7;
 }
 
 .store-code-input::placeholder {
-  color: #6ee7b7;
+  color: #93c5fd;
   letter-spacing: 2px;
   font-weight: 500;
 }
@@ -851,19 +851,19 @@ function handleRequireLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-store-code:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .btn-store-code:active:not(:disabled) {
@@ -936,7 +936,7 @@ function handleRequireLogin() {
 .redeemed-circle {
   width: 72px;
   height: 72px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -960,7 +960,7 @@ function handleRequireLogin() {
 .redeemed-title {
   font-size: 20px;
   font-weight: 700;
-  color: #10b981;
+  color: #3b82f6;
   margin: 0 0 8px 0;
 }
 
