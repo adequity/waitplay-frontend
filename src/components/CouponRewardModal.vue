@@ -33,12 +33,54 @@
         </div>
 
         <!-- Coupon Display (after generation) -->
-        <div v-if="couponCode" class="coupon-section">
+        <div v-if="couponCode && !benefitRedeemed" class="coupon-section">
           <div class="coupon-code-box">
             <p class="coupon-label">쿠폰 코드</p>
             <p class="coupon-code">{{ couponCode }}</p>
             <p class="expiry-warning">
               <IconBase name="clock" class="warning-icon" /> {{ expiryMinutes }}분 내에 직원에게 제시하세요
+            </p>
+          </div>
+
+          <!-- 매장 코드로 바로 사용 (쿠폰 생성 후) -->
+          <div class="store-code-section coupon-redeem">
+            <div class="store-code-header">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              <span>매장 코드로 바로 사용</span>
+            </div>
+            <div class="store-code-input-wrapper">
+              <input
+                v-model="storeCodeInput"
+                type="text"
+                class="store-code-input"
+                placeholder="매장 코드 입력"
+                maxlength="10"
+                :disabled="isRedeemingWithCode"
+                @keydown.enter="redeemCouponWithStoreCode"
+              />
+              <button
+                class="btn-store-code"
+                :disabled="!storeCodeInput || isRedeemingWithCode"
+                @click="redeemCouponWithStoreCode"
+              >
+                <svg v-if="!isRedeemingWithCode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+                <span v-else class="btn-loading"></span>
+              </button>
+            </div>
+            <p v-if="storeCodeError" class="store-code-error">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {{ storeCodeError }}
             </p>
           </div>
         </div>
@@ -240,10 +282,11 @@ const isGenerating = ref(false)
 const error = ref<string>('')
 const requiresLogin = ref(false) // 로그인 필요 상태
 
-// Store code fallback state (쿠폰 생성 실패 시 매장 코드로 직접 인정)
+// Store code state
 const storeCodeInput = ref('')
 const storeCodeError = ref('')
-const isRedeemingDirect = ref(false)
+const isRedeemingDirect = ref(false) // 에러 시 직접 인정용
+const isRedeemingWithCode = ref(false) // 쿠폰 생성 후 매장코드로 사용
 const benefitRedeemed = ref(false)
 
 async function generateCoupon() {
@@ -352,6 +395,38 @@ async function redeemBenefitDirect() {
   }
 }
 
+// 쿠폰 생성 후 매장 코드로 바로 사용
+async function redeemCouponWithStoreCode() {
+  if (!storeCodeInput.value || !couponCode.value) return
+
+  storeCodeError.value = ''
+  isRedeemingWithCode.value = true
+
+  console.log('[CouponRewardModal] Redeeming coupon with store code:', {
+    couponCode: couponCode.value,
+    storeCode: storeCodeInput.value
+  })
+
+  try {
+    const response = await couponsService.redeemWithStoreCode({
+      couponCode: couponCode.value,
+      storeCode: storeCodeInput.value
+    })
+
+    if (response.success) {
+      benefitRedeemed.value = true
+      storeCodeInput.value = ''
+    } else {
+      storeCodeError.value = response.message || '사용에 실패했습니다'
+    }
+  } catch (err: any) {
+    console.error('Failed to redeem coupon with store code:', err)
+    storeCodeError.value = err.response?.data?.message || '매장 코드가 올바르지 않습니다'
+  } finally {
+    isRedeemingWithCode.value = false
+  }
+}
+
 function close() {
   emit('close')
   // Reset state
@@ -361,6 +436,7 @@ function close() {
   storeCodeInput.value = ''
   storeCodeError.value = ''
   isRedeemingDirect.value = false
+  isRedeemingWithCode.value = false
   benefitRedeemed.value = false
   requiresLogin.value = false
 }
@@ -708,6 +784,13 @@ function handleRequireLogin() {
   border: 1px solid #86efac;
   border-radius: 12px;
   padding: 12px;
+}
+
+/* 쿠폰 생성 후 매장코드 사용 섹션 */
+.store-code-section.coupon-redeem {
+  margin-top: 16px;
+  background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+  border: 1px solid #fde047;
 }
 
 .store-code-header {
