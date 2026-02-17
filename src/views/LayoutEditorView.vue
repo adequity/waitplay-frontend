@@ -135,7 +135,18 @@
           </div>
           <div class="theme-picker">
             <span style="font-size:12px; font-weight:600; color:#666;">배경색</span>
-            <input type="color" v-model="pageTheme.backgroundColor" class="color-dot-input" />
+            <input type="color" v-model="pageTheme.backgroundColor" class="color-dot-input" @input="onBackgroundColorChange" />
+          </div>
+          <div class="theme-picker">
+            <span style="font-size:12px; font-weight:600; color:#666;">글자색</span>
+            <input type="color" v-model="pageTheme.textColor" class="color-dot-input" />
+            <button
+              class="btn-auto-text-color"
+              @click="autoSetTextColor"
+              title="배경색에 맞춰 자동 설정"
+            >
+              자동
+            </button>
           </div>
           <div class="bgm-picker">
             <button class="btn-bgm-settings" @click="showBgmModal = true; loadBgmLibrary(); loadPlaylist()">
@@ -167,6 +178,7 @@
                 :is="getBlockComponent(block.type)"
                 :data="block.data"
                 :qrCodeId="qrCodeId"
+                :textColor="pageTheme.textColor"
                 :isPreview="true"
               />
 
@@ -602,6 +614,29 @@
                 >
                   <span class="badge-preview badge-none">-</span>
                   <span class="badge-label">숨김</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 카드 스타일 선택 -->
+            <div class="form-group">
+              <label class="form-label">카드 스타일</label>
+              <div class="card-style-selector">
+                <button
+                  type="button"
+                  :class="['card-style-btn', { active: (editForm.cardStyle || 'card') === 'card' }]"
+                  @click="editForm.cardStyle = 'card'"
+                >
+                  <span class="card-style-icon">▢</span>
+                  <span class="card-style-label">카드 배경</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['card-style-btn', { active: editForm.cardStyle === 'transparent' }]"
+                  @click="editForm.cardStyle = 'transparent'"
+                >
+                  <span class="card-style-icon">⊘</span>
+                  <span class="card-style-label">배경 없음</span>
                 </button>
               </div>
             </div>
@@ -1228,6 +1263,31 @@ const pageTheme = ref({
   bgmPlayMode: 'sequential' as 'sequential' | 'shuffle' // 재생 모드
 })
 
+// 배경색의 밝기를 계산하여 적절한 글자색 반환
+const getContrastTextColor = (bgColor: string): string => {
+  // hex to RGB
+  const hex = bgColor.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+
+  // 상대 밝기 계산 (W3C 공식)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+  // 밝은 배경이면 어두운 글자, 어두운 배경이면 밝은 글자
+  return luminance > 0.5 ? '#1a1a1a' : '#ffffff'
+}
+
+// 배경색 변경 시 글자색 자동 설정
+const onBackgroundColorChange = () => {
+  pageTheme.value.textColor = getContrastTextColor(pageTheme.value.backgroundColor)
+}
+
+// 수동으로 자동 글자색 설정
+const autoSetTextColor = () => {
+  pageTheme.value.textColor = getContrastTextColor(pageTheme.value.backgroundColor)
+}
+
 // BGM 설정 모달 상태
 const showBgmModal = ref(false)
 const bgmPreviewAudio = ref<HTMLAudioElement | null>(null)
@@ -1729,6 +1789,9 @@ async function editBlock(block: Block) {
     }
     if (!editForm.value.badgeStyle) {
       editForm.value.badgeStyle = 'badge'
+    }
+    if (!editForm.value.cardStyle) {
+      editForm.value.cardStyle = 'card'
     }
     // Ensure all items have badge field
     if (editForm.value.items) {
@@ -2768,6 +2831,23 @@ function removeMenuItem(index: number) {
 
 .color-dot-input {
   width: 24px; height: 24px; border: none; border-radius: 50%; cursor: pointer;
+}
+
+.btn-auto-text-color {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #666;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-auto-text-color:hover {
+  background: #e0e0e0;
+  color: #333;
 }
 
 .preview-container {
@@ -4619,6 +4699,55 @@ select.form-input {
 }
 
 .badge-style-selector .badge-btn.active .badge-label {
+  color: #1d4ed8;
+}
+
+/* 카드 스타일 선택기 */
+.card-style-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.card-style-selector .card-style-btn {
+  flex: 1;
+  padding: 14px 10px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-style-selector .card-style-btn:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.card-style-selector .card-style-btn.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.card-style-selector .card-style-icon {
+  font-size: 24px;
+  color: #6b7280;
+}
+
+.card-style-selector .card-style-btn.active .card-style-icon {
+  color: #3b82f6;
+}
+
+.card-style-selector .card-style-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.card-style-selector .card-style-btn.active .card-style-label {
   color: #1d4ed8;
 }
 

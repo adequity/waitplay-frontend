@@ -16,6 +16,7 @@
         :is="getBlockComponent(block.type)"
         :data="block.data"
         :qrCodeId="qrCode"
+        :textColor="pageTheme.textColor"
         :fallbackBackgroundColor="block.type === 'guestbook' ? pageTheme.backgroundColor : undefined"
       />
     </div>

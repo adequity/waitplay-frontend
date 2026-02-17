@@ -96,6 +96,8 @@ export interface PopularMenuBlockData {
   displayStyle?: 'list' | 'grid' | 'ranking'
   // 뱃지 스타일: none(숨김), rank(순위), badge(커스텀 텍스트)
   badgeStyle?: 'none' | 'rank' | 'badge'
+  // 카드 스타일: card(배경있는 카드), transparent(배경 없이 텍스트만)
+  cardStyle?: 'card' | 'transparent'
 }
 
 // Image Block

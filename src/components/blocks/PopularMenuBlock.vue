@@ -1,12 +1,12 @@
 <template>
-  <div class="popular-menu-block">
-    <div class="popular-menu-card">
+  <div class="popular-menu-block" :class="{ 'transparent-style': isTransparent }">
+    <div class="popular-menu-card" :class="{ 'no-card': isTransparent }">
       <div class="menu-card-header">
         <div>
-          <h3 class="menu-card-title">{{ data.title }}</h3>
-          <p v-if="data.subtitle" class="menu-card-subtitle">{{ data.subtitle }}</p>
+          <h3 class="menu-card-title" :style="{ color: textColor }">{{ data.title }}</h3>
+          <p v-if="data.subtitle" class="menu-card-subtitle" :style="{ color: subtitleColor }">{{ data.subtitle }}</p>
         </div>
-        <span v-if="hasMoreItems && displayStyle === 'grid'" class="swipe-hint">
+        <span v-if="hasMoreItems && displayStyle === 'grid'" class="swipe-hint" :style="{ color: mutedColor }">
           스와이프 →
         </span>
       </div>
@@ -43,9 +43,9 @@
                 </span>
               </div>
               <div class="grid-item-info">
-                <span class="grid-item-name">{{ item.name }}</span>
-                <span v-if="item.description" class="grid-item-description">{{ item.description }}</span>
-                <span v-if="item.price" class="grid-item-price">{{ item.price.toLocaleString() }}원</span>
+                <span class="grid-item-name" :style="{ color: textColor }">{{ item.name }}</span>
+                <span v-if="item.description" class="grid-item-description" :style="{ color: mutedColor }">{{ item.description }}</span>
+                <span v-if="item.price" class="grid-item-price" :style="{ color: priceColor }">{{ item.price.toLocaleString() }}원</span>
               </div>
             </div>
           </div>
@@ -83,10 +83,10 @@
             <span v-else class="ranking-thumb-fallback">{{ item.name ? item.name.charAt(0) : '?' }}</span>
           </div>
           <div class="ranking-info">
-            <span class="ranking-name">{{ item.name }}</span>
-            <span v-if="item.description" class="ranking-desc">{{ item.description }}</span>
+            <span class="ranking-name" :style="{ color: textColor }">{{ item.name }}</span>
+            <span v-if="item.description" class="ranking-desc" :style="{ color: mutedColor }">{{ item.description }}</span>
           </div>
-          <span v-if="item.price" class="ranking-price">{{ item.price.toLocaleString() }}원</span>
+          <span v-if="item.price" class="ranking-price" :style="{ color: priceColor }">{{ item.price.toLocaleString() }}원</span>
         </div>
       </div>
 
@@ -104,14 +104,14 @@
           </div>
           <div class="menu-info">
             <div class="menu-details">
-              <span class="menu-name">{{ item.name }}</span>
-              <span v-if="item.description" class="menu-description">{{ item.description }}</span>
+              <span class="menu-name" :style="{ color: textColor }">{{ item.name }}</span>
+              <span v-if="item.description" class="menu-description" :style="{ color: mutedColor }">{{ item.description }}</span>
             </div>
             <div class="menu-price-area">
               <span v-if="showBadge(item, index)" class="rank-badge" :class="getBadgeClass(index)">
                 {{ getBadgeText(item, index) }}
               </span>
-              <span v-if="item.price" class="menu-price">{{ item.price.toLocaleString() }}원</span>
+              <span v-if="item.price" class="menu-price" :style="{ color: priceColor }">{{ item.price.toLocaleString() }}원</span>
             </div>
           </div>
         </div>
@@ -126,6 +126,7 @@ import type { PopularMenuBlockData, MenuItem } from '@/types/blocks'
 
 interface Props {
   data: PopularMenuBlockData
+  textColor?: string // 페이지 테마 글자색
 }
 
 const props = defineProps<Props>()
@@ -135,6 +136,36 @@ const currentPage = ref(0)
 
 const displayStyle = computed(() => props.data.displayStyle || 'grid')
 const badgeStyle = computed(() => props.data.badgeStyle || 'badge')
+const isTransparent = computed(() => props.data.cardStyle === 'transparent')
+
+// 글자색 계산 (props로 받으면 사용, 없으면 기본값)
+const textColor = computed(() => props.textColor || '#ffffff')
+const subtitleColor = computed(() => {
+  // 글자색에 투명도 적용
+  const color = props.textColor || '#ffffff'
+  // hex를 rgba로 변환하여 투명도 적용
+  const hex = color.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, 0.6)`
+})
+const mutedColor = computed(() => {
+  const color = props.textColor || '#ffffff'
+  const hex = color.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, 0.5)`
+})
+const priceColor = computed(() => {
+  const color = props.textColor || '#ffffff'
+  const hex = color.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, 0.9)`
+})
 
 // 2개씩 페이지로 나누기 (2x1 가로 스와이프)
 const ITEMS_PER_PAGE = 2
@@ -220,6 +251,14 @@ const handleItemClick = (item: MenuItem) => {
   border-radius: 16px;
   padding: 20px;
   overflow: hidden;
+}
+
+/* 투명 스타일 - 카드 배경 없음 */
+.popular-menu-card.no-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 
 .menu-card-header {
