@@ -7,14 +7,18 @@
     }"
   >
     <!-- Dynamic Block Rendering -->
-    <component
+    <div
       v-for="block in visibleBlocks"
       :key="block.id"
-      :is="getBlockComponent(block.type)"
-      :data="block.data"
-      :qrCodeId="qrCode"
-      :fallbackBackgroundColor="block.type === 'guestbook' ? pageTheme.backgroundColor : undefined"
-    />
+      :id="`block-${block.type}`"
+    >
+      <component
+        :is="getBlockComponent(block.type)"
+        :data="block.data"
+        :qrCodeId="qrCode"
+        :fallbackBackgroundColor="block.type === 'guestbook' ? pageTheme.backgroundColor : undefined"
+      />
+    </div>
 
     <!-- Footer -->
     <div class="footer">
@@ -1269,6 +1273,19 @@ onMounted(async () => {
     window.addEventListener('click', handleFirstInteraction, { passive: true })
     window.addEventListener('keydown', handleFirstInteraction, { passive: true })
     window.addEventListener('wheel', handleFirstInteraction, { passive: true })
+  }
+
+  // Hash 기반 스크롤 (예: #games → 게임 블록으로 스크롤)
+  if (route.hash) {
+    const hashTarget = route.hash.replace('#', '')
+    // 약간의 딜레이 후 스크롤 (DOM 렌더링 완료 대기)
+    setTimeout(() => {
+      const targetElement = document.getElementById(`block-${hashTarget}`) ||
+                           document.getElementById(hashTarget)
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 300)
   }
 })
 

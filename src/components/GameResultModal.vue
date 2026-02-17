@@ -763,11 +763,11 @@ async function handleOtherGame() {
   emit('close')
   // 게임 정리를 위해 다음 틱까지 대기
   await nextTick()
-  // QR 코드가 있으면 해당 랜딩 페이지로, 없으면 홈으로
+  // QR 코드가 있으면 해당 랜딩 페이지의 게임 블록으로, 없으면 홈으로
   if (props.qrCode) {
-    router.push(`/qr/${props.qrCode}`)
+    router.push(`/qr/${props.qrCode}#games_carousel`)
   } else if (props.qrCodeUuid) {
-    router.push(`/qr/${props.qrCodeUuid}`)
+    router.push(`/qr/${props.qrCodeUuid}#games_carousel`)
   } else {
     router.push('/')
   }
