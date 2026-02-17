@@ -62,12 +62,33 @@ const loadKakaoSdk = (): Promise<void> => {
 const shareService = {
   // 카카오 SDK 초기화 확인 (동적 로드 포함)
   initKakaoSdk: async () => {
-    await loadKakaoSdk()
+    console.log('[KakaoSDK] Starting initialization...')
+
+    try {
+      await loadKakaoSdk()
+      console.log('[KakaoSDK] SDK loaded, window.Kakao:', !!window.Kakao)
+    } catch (error) {
+      console.error('[KakaoSDK] Failed to load SDK:', error)
+      throw error
+    }
+
     if (window.Kakao && !window.Kakao.isInitialized()) {
       const appKey = import.meta.env.VITE_KAKAO_APP_KEY
+      console.log('[KakaoSDK] App key exists:', !!appKey, 'key length:', appKey?.length)
+
       if (appKey) {
-        window.Kakao.init(appKey)
+        try {
+          window.Kakao.init(appKey)
+          console.log('[KakaoSDK] Initialized successfully:', window.Kakao.isInitialized())
+        } catch (initError) {
+          console.error('[KakaoSDK] Init failed:', initError)
+          throw initError
+        }
+      } else {
+        console.error('[KakaoSDK] VITE_KAKAO_APP_KEY is not set!')
       }
+    } else if (window.Kakao) {
+      console.log('[KakaoSDK] Already initialized')
     }
   },
 
@@ -107,31 +128,45 @@ const shareService = {
     const ogImageUrl = `https://api.waitplay.co.kr/api/ogimage/landing/${qrCodeId}`
 
     // 카카오 SDK 공유
+    console.log('[KakaoShare] Checking SDK state:', {
+      hasKakao: !!window.Kakao,
+      isInitialized: window.Kakao?.isInitialized?.(),
+      hasShare: !!window.Kakao?.Share
+    })
+
     if (window.Kakao && window.Kakao.isInitialized() && window.Kakao.Share) {
-      window.Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title,
-          description,
-          imageUrl: ogImageUrl,
-          link: {
-            mobileWebUrl: result.shareUrl,
-            webUrl: result.shareUrl
-          }
-        },
-        buttons: [
-          {
-            title: '참여하기',
+      try {
+        console.log('[KakaoShare] Sending share with:', { title, description, ogImageUrl, shareUrl: result.shareUrl })
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title,
+            description,
+            imageUrl: ogImageUrl,
             link: {
               mobileWebUrl: result.shareUrl,
               webUrl: result.shareUrl
             }
-          }
-        ]
-      })
+          },
+          buttons: [
+            {
+              title: '참여하기',
+              link: {
+                mobileWebUrl: result.shareUrl,
+                webUrl: result.shareUrl
+              }
+            }
+          ]
+        })
+        console.log('[KakaoShare] Share request sent')
+      } catch (shareError) {
+        console.error('[KakaoShare] Share failed:', shareError)
+        await navigator.clipboard.writeText(result.shareUrl)
+        alert('카카오톡 공유 중 오류가 발생했습니다. 링크가 복사되었습니다.')
+      }
     } else {
       // SDK가 없거나 초기화되지 않으면 링크 복사로 폴백
-      console.warn('Kakao SDK not available or not initialized')
+      console.warn('[KakaoShare] SDK not available or not initialized, falling back to clipboard')
       await navigator.clipboard.writeText(result.shareUrl)
       alert('카카오톡 공유를 사용할 수 없어 링크가 복사되었습니다.')
     }
