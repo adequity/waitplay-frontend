@@ -21,8 +21,12 @@
         <span class="stat-value">{{ tracks.filter(t => t.isActive).length }}</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">카테고리</span>
-        <span class="stat-value">{{ categories.length }}</span>
+        <span class="stat-label">총 재생 횟수</span>
+        <span class="stat-value">{{ totalPlayCount.toLocaleString() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">사용 중인 매장</span>
+        <span class="stat-value">{{ totalUsingAdmins }}</span>
       </div>
     </div>
 
@@ -53,6 +57,22 @@
             <span class="duration" v-if="track.durationSeconds">{{ formatDuration(track.durationSeconds) }}</span>
             <span class="status-badge" :class="track.isActive ? 'active' : 'inactive'">
               {{ track.isActive ? '활성' : '비활성' }}
+            </span>
+          </div>
+          <!-- 사용 통계 -->
+          <div class="track-stats">
+            <span class="stat-play-count" title="총 재생 횟수">
+              <IconBase name="play" class="stat-icon" />
+              {{ (track.totalPlayCount || 0).toLocaleString() }}회
+            </span>
+            <span
+              class="stat-admin-count"
+              :class="{ clickable: (track.uniqueAdminCount || 0) > 0 }"
+              @click="(track.uniqueAdminCount || 0) > 0 && showUsingAdmins(track)"
+              title="사용 중인 매장"
+            >
+              <IconBase name="store" class="stat-icon" />
+              {{ track.uniqueAdminCount || 0 }}개 매장
             </span>
           </div>
           <p class="track-date">{{ formatDate(track.createdAt) }}</p>
@@ -138,13 +158,39 @@
 
     <!-- Hidden audio element for preview -->
     <audio ref="audioPlayer" @ended="isPlaying = null"></audio>
+
+    <!-- Using Admins Modal -->
+    <div v-if="showAdminsModal" class="modal-overlay" @click.self="showAdminsModal = false">
+      <div class="modal-content modal-sm">
+        <div class="modal-header">
+          <h2>"{{ selectedTrackForAdmins?.title }}" 사용 매장</h2>
+          <button class="btn-close" @click="showAdminsModal = false">
+            <IconBase name="close" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <div v-if="selectedTrackAdmins.length === 0" class="empty-admins">
+            이 BGM을 사용하는 매장이 없습니다.
+          </div>
+          <ul v-else class="admins-list">
+            <li v-for="admin in selectedTrackAdmins" :key="admin.id" class="admin-item">
+              <IconBase name="store" class="admin-icon" />
+              <span class="admin-name">{{ admin.name }}</span>
+            </li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showAdminsModal = false">닫기</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import bgmService, { type BgmTrackAdmin, type CreateBgmTrackRequest } from '@/services/bgmService'
+import bgmService, { type BgmTrackStats, type CreateBgmTrackRequest, type AdminInfo } from '@/services/bgmService'
 import IconBase from '@/components/IconBase.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
@@ -152,7 +198,7 @@ const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
 const loading = ref(true)
-const tracks = ref<BgmTrackAdmin[]>([])
+const tracks = ref<BgmTrackStats[]>([])
 const categories = ref<string[]>([])
 const categoryFilter = ref('')
 const statusFilter = ref('')
@@ -162,6 +208,31 @@ const isPlaying = ref<string | null>(null)
 const audioPlayer = ref<HTMLAudioElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
+
+// 사용 통계 관련
+const showAdminsModal = ref(false)
+const selectedTrackForAdmins = ref<BgmTrackStats | null>(null)
+const selectedTrackAdmins = ref<AdminInfo[]>([])
+
+// 총계 계산
+const totalPlayCount = computed(() => {
+  return tracks.value.reduce((sum, t) => sum + (t.totalPlayCount || 0), 0)
+})
+
+const totalUsingAdmins = computed(() => {
+  // 중복 제거된 고유 매장 수
+  const uniqueAdmins = new Set<string>()
+  tracks.value.forEach(t => {
+    t.usingAdmins?.forEach(a => uniqueAdmins.add(a.id))
+  })
+  return uniqueAdmins.size
+})
+
+const showUsingAdmins = (track: BgmTrackStats) => {
+  selectedTrackForAdmins.value = track
+  selectedTrackAdmins.value = track.usingAdmins || []
+  showAdminsModal.value = true
+}
 
 const newTrack = ref<CreateBgmTrackRequest>({
   title: '',
@@ -187,11 +258,23 @@ const filteredTracks = computed(() => {
 const fetchTracks = async () => {
   try {
     loading.value = true
-    tracks.value = await bgmService.getAllTracksForAdmin()
+    // 통계 포함된 트랙 목록 조회
+    tracks.value = await bgmService.getTracksWithStats()
     categories.value = await bgmService.getCategories()
   } catch (error) {
     console.error('Failed to fetch BGM tracks:', error)
-    tracks.value = []
+    // 통계 API 실패 시 기본 API로 폴백
+    try {
+      const basicTracks = await bgmService.getAllTracksForAdmin()
+      tracks.value = basicTracks.map(t => ({
+        ...t,
+        totalPlayCount: 0,
+        uniqueAdminCount: 0,
+        usingAdmins: []
+      }))
+    } catch {
+      tracks.value = []
+    }
   } finally {
     loading.value = false
   }
@@ -201,7 +284,7 @@ const applyFilters = () => {
   // Filters are applied via computed property
 }
 
-const playPreview = (track: BgmTrackAdmin) => {
+const playPreview = (track: BgmTrackStats) => {
   if (!audioPlayer.value) return
 
   if (isPlaying.value === track.id) {
@@ -214,7 +297,7 @@ const playPreview = (track: BgmTrackAdmin) => {
   }
 }
 
-const toggleActive = async (track: BgmTrackAdmin) => {
+const toggleActive = async (track: BgmTrackStats) => {
   try {
     const userId = authStore.user?.id
     if (!userId) return
@@ -227,7 +310,7 @@ const toggleActive = async (track: BgmTrackAdmin) => {
   }
 }
 
-const confirmDelete = async (track: BgmTrackAdmin) => {
+const confirmDelete = async (track: BgmTrackStats) => {
   if (!confirm(`"${track.title}" BGM을 삭제하시겠습니까?`)) return
 
   try {
@@ -322,7 +405,14 @@ const submitTrack = async () => {
     }
 
     const created = await bgmService.createTrack(request, userId)
-    tracks.value.unshift(created)
+    // 새로 생성된 트랙에 통계 기본값 추가
+    const trackWithStats: BgmTrackStats = {
+      ...created,
+      totalPlayCount: 0,
+      uniqueAdminCount: 0,
+      usingAdmins: []
+    }
+    tracks.value.unshift(trackWithStats)
 
     closeUploadModal()
     alert('BGM이 추가되었습니다')
@@ -574,6 +664,38 @@ onUnmounted(() => {
   color: #c62828;
 }
 
+.track-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.stat-play-count,
+.stat-admin-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #86868b;
+}
+
+.stat-admin-count.clickable {
+  cursor: pointer;
+  color: #3b82f6;
+  transition: color 0.2s;
+}
+
+.stat-admin-count.clickable:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.stat-icon {
+  width: 14px;
+  height: 14px;
+}
+
 .track-date {
   font-size: 11px;
   color: #aeaeb2;
@@ -809,6 +931,62 @@ onUnmounted(() => {
 .btn-submit:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+/* Small Modal */
+.modal-sm {
+  max-width: 380px;
+}
+
+/* Admins List */
+.admins-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.admin-item:last-child {
+  border-bottom: none;
+}
+
+.admin-icon {
+  width: 20px;
+  height: 20px;
+  color: #86868b;
+}
+
+.admin-name {
+  font-size: 14px;
+  color: #1d1d1f;
+}
+
+.empty-admins {
+  text-align: center;
+  color: #86868b;
+  padding: 32px 0;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f5f5f5;
 }
 
 /* Responsive */

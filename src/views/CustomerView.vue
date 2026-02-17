@@ -693,7 +693,10 @@ const blocks = ref<Block[]>([])
 const bgmAudio = ref<HTMLAudioElement | null>(null)
 const isBgmPlaying = ref(false)
 const isBgmEnabled = ref(false) // 스크롤로 활성화되면 true
-const bgmUrl = ref<string>('') // API에서 로드될 BGM URL
+const bgmUrl = ref<string>('') // 레거시 단일 BGM URL
+const bgmPlaylist = ref<{ id: string; fileUrl: string; title?: string }[]>([]) // 플레이리스트
+const bgmPlayMode = ref<'sequential' | 'shuffle'>('sequential')
+const currentTrackIndex = ref(0)
 
 // Page theme - Default values (will be loaded from API)
 const pageTheme = ref<PageTheme>({
@@ -1054,25 +1057,86 @@ const formatRelativeDate = (dateString?: string) => {
 }
 
 // BGM Functions
+import bgmService from '@/services/bgmService'
+
+const getCurrentTrackUrl = (): string => {
+  if (bgmPlaylist.value.length > 0) {
+    return bgmPlaylist.value[currentTrackIndex.value]?.fileUrl || ''
+  }
+  return bgmUrl.value
+}
+
 const preloadBgm = () => {
-  if (!bgmUrl.value || bgmAudio.value) return
+  const trackUrl = getCurrentTrackUrl()
+  if (!trackUrl) return
 
   // 오디오 미리 로드 (사용자 인터랙션 전에 준비)
-  bgmAudio.value = new Audio(bgmUrl.value)
-  bgmAudio.value.loop = true
-  bgmAudio.value.volume = 0.5
-  bgmAudio.value.preload = 'auto' // 자동 프리로드
-  bgmAudio.value.load() // 즉시 로드 시작
+  if (!bgmAudio.value) {
+    bgmAudio.value = new Audio()
+    bgmAudio.value.volume = 0.5
+    bgmAudio.value.preload = 'auto'
+
+    // 트랙 종료 시 다음 트랙 재생
+    bgmAudio.value.addEventListener('ended', () => {
+      playNextTrack()
+    })
+  }
+
+  bgmAudio.value.src = trackUrl
+  // 단일 트랙이면 loop, 플레이리스트면 끝날 때 다음 트랙
+  bgmAudio.value.loop = bgmPlaylist.value.length <= 1
+  bgmAudio.value.load()
+}
+
+const playNextTrack = () => {
+  if (bgmPlaylist.value.length <= 1) return // 단일 트랙은 loop로 처리
+
+  // 현재 트랙 재생 로그
+  const currentTrack = bgmPlaylist.value[currentTrackIndex.value]
+  if (currentTrack && qrCodeId.value) {
+    bgmService.logPlayEvent(currentTrack.id, qrCodeId.value).catch(() => {})
+  }
+
+  // 다음 트랙 결정
+  if (bgmPlayMode.value === 'shuffle') {
+    // 랜덤 재생 (현재 곡 제외)
+    let nextIndex = currentTrackIndex.value
+    if (bgmPlaylist.value.length > 1) {
+      while (nextIndex === currentTrackIndex.value) {
+        nextIndex = Math.floor(Math.random() * bgmPlaylist.value.length)
+      }
+    }
+    currentTrackIndex.value = nextIndex
+  } else {
+    // 순차 재생
+    currentTrackIndex.value = (currentTrackIndex.value + 1) % bgmPlaylist.value.length
+  }
+
+  // 다음 트랙 재생
+  if (bgmAudio.value) {
+    bgmAudio.value.src = getCurrentTrackUrl()
+    bgmAudio.value.play().catch(() => {})
+  }
 }
 
 const playBgm = async () => {
-  if (!bgmAudio.value || !bgmUrl.value) return
+  const trackUrl = getCurrentTrackUrl()
+  if (!bgmAudio.value || !trackUrl) return
 
   try {
+    if (bgmAudio.value.src !== trackUrl) {
+      bgmAudio.value.src = trackUrl
+    }
     await bgmAudio.value.play()
     isBgmPlaying.value = true
+
+    // 재생 시작 로그
+    const currentTrack = bgmPlaylist.value[currentTrackIndex.value]
+    if (currentTrack && qrCodeId.value) {
+      bgmService.logPlayEvent(currentTrack.id, qrCodeId.value).catch(() => {})
+    }
   } catch {
-    // 브라우저 자동재생 정책으로 인한 실패는 무시 (사용자가 버튼 클릭 시 재생됨)
+    // 브라우저 자동재생 정책으로 인한 실패는 무시
   }
 }
 
@@ -1094,7 +1158,8 @@ const toggleBgm = () => {
 // click/touchstart: 유효한 제스처 → 자동 재생 시도
 // scroll/wheel/touchmove: 버튼만 표시 (재생은 버튼 클릭으로)
 const handleFirstInteraction = (event: Event) => {
-  if (isBgmEnabled.value || !bgmUrl.value) return
+  const hasBgm = bgmUrl.value || bgmPlaylist.value.length > 0
+  if (isBgmEnabled.value || !hasBgm) return
 
   isBgmEnabled.value = true
 
@@ -1215,8 +1280,40 @@ onMounted(async () => {
         const theme = JSON.parse(layoutData.themeJson)
         pageTheme.value = theme
 
-        // BGM URL 로드 및 미리 로드
-        if (theme.bgmUrl) {
+        // 재생 모드 로드
+        if (theme.bgmPlayMode) {
+          bgmPlayMode.value = theme.bgmPlayMode
+        }
+
+        // BGM 플레이리스트 로드 시도 (신규 방식)
+        if (qrCodeUuid) {
+          try {
+            const playlistData = await bgmService.getPlaylist(qrCodeUuid)
+            if (playlistData.tracks && playlistData.tracks.length > 0) {
+              bgmPlaylist.value = playlistData.tracks.map(t => ({
+                id: t.id,
+                fileUrl: t.fileUrl,
+                title: t.title
+              }))
+              bgmPlayMode.value = playlistData.playMode || 'sequential'
+              console.log('BGM Playlist loaded:', bgmPlaylist.value.length, 'tracks')
+              preloadBgm()
+            } else if (theme.bgmUrl) {
+              // 플레이리스트가 없으면 레거시 URL 사용
+              bgmUrl.value = theme.bgmUrl
+              console.log('BGM URL loaded (legacy):', theme.bgmUrl)
+              preloadBgm()
+            }
+          } catch {
+            // 플레이리스트 로드 실패 시 레거시 URL로 폴백
+            if (theme.bgmUrl) {
+              bgmUrl.value = theme.bgmUrl
+              console.log('BGM URL loaded (fallback):', theme.bgmUrl)
+              preloadBgm()
+            }
+          }
+        } else if (theme.bgmUrl) {
+          // QR UUID가 없으면 레거시 URL 사용
           bgmUrl.value = theme.bgmUrl
           console.log('BGM URL loaded:', theme.bgmUrl)
           preloadBgm()
@@ -1263,10 +1360,10 @@ onMounted(async () => {
     console.warn('Failed to load landing page data from API:', error)
   }
 
-  // BGM 사용자 인터랙션 이벤트 리스너 등록 (bgmUrl이 있을 때만)
+  // BGM 사용자 인터랙션 이벤트 리스너 등록 (bgmUrl 또는 플레이리스트가 있을 때)
   // scroll/touchmove/wheel: 버튼 표시용 (isBgmEnabled = true로 설정)
   // 실제 재생은 유효한 제스처(click/touchstart/keydown)에서만 성공
-  if (bgmUrl.value) {
+  if (bgmUrl.value || bgmPlaylist.value.length > 0) {
     window.addEventListener('scroll', handleFirstInteraction, { passive: true })
     window.addEventListener('touchstart', handleFirstInteraction, { passive: true })
     window.addEventListener('touchmove', handleFirstInteraction, { passive: true })

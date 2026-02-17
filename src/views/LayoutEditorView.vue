@@ -138,14 +138,14 @@
             <input type="color" v-model="pageTheme.backgroundColor" class="color-dot-input" />
           </div>
           <div class="bgm-picker">
-            <button class="btn-bgm-settings" @click="showBgmModal = true; loadBgmLibrary()">
+            <button class="btn-bgm-settings" @click="showBgmModal = true; loadBgmLibrary(); loadPlaylist()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 18V5l12-2v13"/>
                 <circle cx="6" cy="18" r="3"/>
                 <circle cx="18" cy="16" r="3"/>
               </svg>
               <span>BGM 설정</span>
-              <span v-if="pageTheme.bgmUrl" class="bgm-indicator">●</span>
+              <span v-if="selectedPlaylistTracks.length > 0" class="bgm-indicator">{{ selectedPlaylistTracks.length }}</span>
             </button>
           </div>
         </div>
@@ -184,17 +184,20 @@
 
     <!-- 4. Modals (Add / Edit) -->
 
-    <!-- BGM 설정 Modal -->
+    <!-- BGM 설정 Modal (플레이리스트) -->
     <div v-if="showBgmModal" class="modal-overlay active" @click="showBgmModal = false">
       <div class="modal-card bgm-modal-wide" @click.stop>
         <div class="modal-header">
-          <h2>🎵 배경음악(BGM) 설정</h2>
+          <h2>🎵 BGM 플레이리스트 설정</h2>
           <button class="btn-icon-close" @click="closeBgmModal">✕</button>
         </div>
-        <div class="bgm-modal-content">
-          <!-- 라이브러리 선택 방식 -->
-          <div class="form-group">
-            <label class="form-label">BGM 라이브러리에서 선택</label>
+        <div class="bgm-modal-content bgm-playlist-layout">
+          <!-- 왼쪽: 라이브러리 -->
+          <div class="bgm-library-panel">
+            <div class="bgm-panel-header">
+              <h3>BGM 라이브러리</h3>
+              <span class="track-count">{{ bgmLibraryTracks.length }}곡</span>
+            </div>
             <div v-if="bgmLibraryLoading" class="bgm-library-loading">
               <span class="upload-spinner"></span>
               라이브러리 로딩 중...
@@ -203,16 +206,19 @@
               <p>사용 가능한 BGM이 없습니다.</p>
               <p class="hint">관리자에게 문의하여 BGM을 추가해주세요.</p>
             </div>
-            <div v-else class="bgm-library-grid">
+            <div v-else class="bgm-library-list">
               <div
                 v-for="track in bgmLibraryTracks"
                 :key="track.id"
                 class="bgm-library-item"
-                :class="{ selected: selectedBgmTrackId === track.id || pageTheme.bgmUrl === track.fileUrl }"
-                @click="selectBgmTrack(track)"
+                :class="{ selected: isTrackSelected(track.id) }"
+                @click="toggleTrackSelection(track)"
               >
+                <div class="bgm-library-checkbox">
+                  <input type="checkbox" :checked="isTrackSelected(track.id)" @click.stop />
+                </div>
                 <div class="bgm-library-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18V5l12-2v13"/>
                     <circle cx="6" cy="18" r="3"/>
                     <circle cx="18" cy="16" r="3"/>
@@ -221,52 +227,78 @@
                 <div class="bgm-library-info">
                   <span class="bgm-library-title">{{ track.title }}</span>
                   <span class="bgm-library-artist" v-if="track.artist">{{ track.artist }}</span>
-                  <span class="bgm-library-category" v-if="track.category">{{ track.category }}</span>
                 </div>
-                <div class="bgm-library-check" v-if="selectedBgmTrackId === track.id || pageTheme.bgmUrl === track.fileUrl">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12"/>
+                <button class="btn-preview-small" @click.stop="previewTrack(track)" :title="previewingTrackId === track.id ? '정지' : '미리듣기'">
+                  <svg v-if="previewingTrackId !== track.id" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
                   </svg>
-                </div>
+                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="4" width="4" height="16"/>
+                    <rect x="14" y="4" width="4" height="16"/>
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
 
-          <div class="bgm-preview-section" v-if="pageTheme.bgmUrl">
-            <label class="form-label">미리듣기</label>
-            <div class="bgm-preview-controls">
-              <button
-                class="btn-preview"
-                @click="toggleBgmPreview"
-              >
-                <svg v-if="!isBgmPreviewing" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5 3 19 12 5 21 5 3"/>
-                </svg>
-                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="6" y="4" width="4" height="16"/>
-                  <rect x="14" y="4" width="4" height="16"/>
-                </svg>
-                {{ isBgmPreviewing ? '정지' : '재생' }}
-              </button>
-              <button
-                class="btn-remove-bgm"
-                @click="removeBgm"
-              >
-                BGM 제거
-              </button>
+          <!-- 오른쪽: 선택된 플레이리스트 -->
+          <div class="bgm-playlist-panel">
+            <div class="bgm-panel-header">
+              <h3>재생 목록</h3>
+              <span class="track-count">{{ selectedPlaylistTracks.length }}곡 선택</span>
             </div>
-          </div>
 
-          <div class="bgm-info-box">
-            <strong>💡 안내</strong>
-            <ul>
-              <li>라이브러리에서 제공되는 음원은 저작권 걱정 없이 사용 가능합니다.</li>
-              <li>직접 업로드 시 저작권에 주의하여 음원을 사용하세요.</li>
-            </ul>
+            <!-- 재생 모드 선택 -->
+            <div class="bgm-play-mode">
+              <label class="play-mode-option">
+                <input type="radio" v-model="bgmPlayMode" value="sequential" />
+                <span class="mode-label">🔁 순차 재생</span>
+              </label>
+              <label class="play-mode-option">
+                <input type="radio" v-model="bgmPlayMode" value="shuffle" />
+                <span class="mode-label">🔀 랜덤 재생</span>
+              </label>
+            </div>
+
+            <div v-if="selectedPlaylistTracks.length === 0" class="bgm-playlist-empty">
+              <p>왼쪽 라이브러리에서 BGM을 선택하세요</p>
+            </div>
+            <div v-else class="bgm-playlist-list">
+              <div
+                v-for="(track, index) in selectedPlaylistTracks"
+                :key="track.id"
+                class="bgm-playlist-item"
+              >
+                <span class="playlist-order">{{ index + 1 }}</span>
+                <div class="playlist-info">
+                  <span class="playlist-title">{{ track.title }}</span>
+                  <span class="playlist-artist" v-if="track.artist">{{ track.artist }}</span>
+                </div>
+                <button class="btn-remove-track" @click="removeFromPlaylist(track.id)" title="제거">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button v-if="selectedPlaylistTracks.length > 0" class="btn-clear-playlist" @click="clearPlaylist">
+              전체 제거
+            </button>
           </div>
         </div>
+
+        <div class="bgm-info-box">
+          <strong>💡 안내</strong>
+          <ul>
+            <li>여러 곡을 선택하면 순차 또는 랜덤으로 재생됩니다.</li>
+            <li>라이브러리에서 제공되는 음원은 저작권 걱정 없이 사용 가능합니다.</li>
+          </ul>
+        </div>
+
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeBgmModal">확인</button>
+          <button class="btn-secondary" @click="closeBgmModal">완료</button>
         </div>
       </div>
     </div>
@@ -1159,7 +1191,9 @@ const isBgmPreviewing = ref(false)
 import bgmService, { type BgmTrack } from '@/services/bgmService'
 const bgmLibraryTracks = ref<BgmTrack[]>([])
 const bgmLibraryLoading = ref(false)
-const selectedBgmTrackId = ref<string | null>(null)
+const selectedPlaylistTracks = ref<BgmTrack[]>([])
+const bgmPlayMode = ref<'sequential' | 'shuffle'>('sequential')
+const previewingTrackId = ref<string | null>(null)
 
 const loadBgmLibrary = async () => {
   try {
@@ -1173,9 +1207,61 @@ const loadBgmLibrary = async () => {
   }
 }
 
-const selectBgmTrack = (track: BgmTrack) => {
-  pageTheme.value.bgmUrl = track.fileUrl
-  selectedBgmTrackId.value = track.id
+const loadPlaylist = async () => {
+  if (!qrCodeId.value) return
+  try {
+    const response = await bgmService.getPlaylist(qrCodeId.value)
+    selectedPlaylistTracks.value = response.tracks
+    bgmPlayMode.value = response.playMode || 'sequential'
+  } catch (error) {
+    console.error('Failed to load playlist:', error)
+    // 플레이리스트가 없으면 기존 단일 BGM URL로 폴백
+    if (pageTheme.value.bgmUrl) {
+      const matchingTrack = bgmLibraryTracks.value.find(t => t.fileUrl === pageTheme.value.bgmUrl)
+      if (matchingTrack) {
+        selectedPlaylistTracks.value = [matchingTrack]
+      }
+    }
+  }
+}
+
+const isTrackSelected = (trackId: string): boolean => {
+  return selectedPlaylistTracks.value.some(t => t.id === trackId)
+}
+
+const toggleTrackSelection = (track: BgmTrack) => {
+  const index = selectedPlaylistTracks.value.findIndex(t => t.id === track.id)
+  if (index === -1) {
+    selectedPlaylistTracks.value.push(track)
+  } else {
+    selectedPlaylistTracks.value.splice(index, 1)
+  }
+}
+
+const removeFromPlaylist = (trackId: string) => {
+  selectedPlaylistTracks.value = selectedPlaylistTracks.value.filter(t => t.id !== trackId)
+}
+
+const clearPlaylist = () => {
+  selectedPlaylistTracks.value = []
+}
+
+const previewTrack = (track: BgmTrack) => {
+  if (previewingTrackId.value === track.id) {
+    // 정지
+    if (bgmPreviewAudio.value) {
+      bgmPreviewAudio.value.pause()
+    }
+    previewingTrackId.value = null
+  } else {
+    // 재생
+    if (!bgmPreviewAudio.value) {
+      bgmPreviewAudio.value = new Audio()
+    }
+    bgmPreviewAudio.value.src = track.fileUrl
+    bgmPreviewAudio.value.play()
+    previewingTrackId.value = track.id
+  }
 }
 
 // Available block types
@@ -2012,8 +2098,9 @@ function removeBgm() {
     bgmPreviewAudio.value = null
   }
   isBgmPreviewing.value = false
+  previewingTrackId.value = null
   pageTheme.value.bgmUrl = ''
-  selectedBgmTrackId.value = null
+  selectedPlaylistTracks.value = []
 }
 
 function closeBgmModal() {
@@ -2021,6 +2108,7 @@ function closeBgmModal() {
     bgmPreviewAudio.value.pause()
   }
   isBgmPreviewing.value = false
+  previewingTrackId.value = null
   showBgmModal.value = false
 }
 
@@ -2157,10 +2245,32 @@ async function saveLayout() {
       block.order = index
     })
 
+    // BGM 플레이리스트 저장
+    if (selectedPlaylistTracks.value.length > 0) {
+      try {
+        const trackIds = selectedPlaylistTracks.value.map(t => t.id)
+        await bgmService.savePlaylist(qrCodeId.value, trackIds, bgmPlayMode.value)
+        // 하위 호환성을 위해 첫 번째 트랙 URL도 저장
+        pageTheme.value.bgmUrl = selectedPlaylistTracks.value[0]?.fileUrl || ''
+      } catch (playlistError) {
+        console.error('Failed to save playlist:', playlistError)
+        // 플레이리스트 저장 실패해도 레이아웃 저장은 계속 진행
+      }
+    } else {
+      // 플레이리스트가 비어있으면 BGM URL도 제거
+      pageTheme.value.bgmUrl = ''
+    }
+
+    // 테마에 재생 모드 저장 (하위 호환성)
+    const themeWithPlayMode = {
+      ...pageTheme.value,
+      bgmPlayMode: bgmPlayMode.value
+    }
+
     const payload = {
       qrCodeId: qrCodeId.value,
       blocksJson: JSON.stringify(blocks.value),
-      themeJson: JSON.stringify(pageTheme.value)
+      themeJson: JSON.stringify(themeWithPlayMode)
     }
 
     const response = await fetch(`${API_BASE_URL}/api/landingpage/layout`, {
@@ -3623,7 +3733,228 @@ select.form-input {
 
 /* BGM Modal Wide */
 .bgm-modal-wide {
-  max-width: 600px;
+  max-width: 800px;
+  width: 95vw;
+}
+
+/* BGM Playlist Layout */
+.bgm-playlist-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  min-height: 400px;
+}
+
+.bgm-library-panel,
+.bgm-playlist-panel {
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.bgm-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.bgm-panel-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.track-count {
+  font-size: 12px;
+  color: #86868b;
+  background: #e5e5ea;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.bgm-library-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 320px;
+}
+
+.bgm-library-checkbox {
+  flex-shrink: 0;
+}
+
+.bgm-library-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #3b82f6;
+}
+
+.btn-preview-small {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e5ea;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.btn-preview-small:hover {
+  background: #d4d4d8;
+}
+
+.btn-preview-small svg {
+  color: #3b82f6;
+}
+
+/* Play Mode */
+.bgm-play-mode {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.play-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  flex: 1;
+  justify-content: center;
+  border: 1px solid #e5e5ea;
+  transition: all 0.2s;
+}
+
+.play-mode-option:has(input:checked) {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(29, 78, 216, 0.1) 100%);
+  border-color: #3b82f6;
+}
+
+.play-mode-option input[type="radio"] {
+  display: none;
+}
+
+.mode-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+/* Playlist Items */
+.bgm-playlist-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #86868b;
+  font-size: 13px;
+  text-align: center;
+}
+
+.bgm-playlist-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 280px;
+}
+
+.bgm-playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.playlist-order {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.playlist-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.playlist-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playlist-artist {
+  display: block;
+  font-size: 11px;
+  color: #86868b;
+}
+
+.btn-remove-track {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: all 0.2s;
+}
+
+.btn-remove-track:hover {
+  opacity: 1;
+  color: #ff3b30;
+}
+
+.btn-clear-playlist {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid #ff3b30;
+  color: #ff3b30;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clear-playlist:hover {
+  background: rgba(255, 59, 48, 0.1);
+}
+
+@media (max-width: 640px) {
+  .bgm-playlist-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .bgm-library-list,
+  .bgm-playlist-list {
+    max-height: 200px;
+  }
 }
 
 /* BGM Library Styles */
