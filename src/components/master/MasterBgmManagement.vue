@@ -276,11 +276,13 @@ const uploadAudioFile = async (file: File): Promise<string> => {
   })
 
   if (!response.ok) {
-    throw new Error('File upload failed')
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message || 'File upload failed')
   }
 
   const data = await response.json()
-  return data.url
+  // Backend returns FileUrl (camelCase: fileUrl) not url
+  return data.fileUrl
 }
 
 const submitTrack = async () => {
