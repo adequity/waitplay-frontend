@@ -62,6 +62,34 @@
         </div>
       </div>
 
+      <!-- Ranking Layout (앱스토어 스타일 순위 리스트) -->
+      <div v-else-if="displayStyle === 'ranking'" class="menu-ranking-list">
+        <div
+          class="ranking-item"
+          :class="{ clickable: item.link }"
+          v-for="(item, index) in data.items"
+          :key="index"
+          @click="handleItemClick(item)"
+        >
+          <span class="ranking-number" :class="getRankingClass(index)">{{ index + 1 }}</span>
+          <div class="ranking-thumb">
+            <img
+              v-if="item.thumbnailUrl || item.imageUrl"
+              :src="item.thumbnailUrl || item.imageUrl"
+              :alt="item.name"
+              loading="lazy"
+              decoding="async"
+            />
+            <span v-else class="ranking-thumb-fallback">{{ item.name ? item.name.charAt(0) : '?' }}</span>
+          </div>
+          <div class="ranking-info">
+            <span class="ranking-name">{{ item.name }}</span>
+            <span v-if="item.description" class="ranking-desc">{{ item.description }}</span>
+          </div>
+          <span v-if="item.price" class="ranking-price">{{ item.price.toLocaleString() }}원</span>
+        </div>
+      </div>
+
       <!-- List Layout (기존) -->
       <div v-else class="menu-rankings">
         <div
@@ -161,6 +189,14 @@ const getBadgeClass = (index: number): string => {
   if (index === 0) return 'rank-gold'
   if (index === 1) return 'rank-silver'
   if (index === 2) return 'rank-bronze'
+  return ''
+}
+
+// 랭킹 스타일용 순위 클래스
+const getRankingClass = (index: number): string => {
+  if (index === 0) return 'rank-1'
+  if (index === 1) return 'rank-2'
+  if (index === 2) return 'rank-3'
   return ''
 }
 
@@ -466,5 +502,124 @@ const handleItemClick = (item: MenuItem) => {
 .menu-grid-item.clickable:active,
 .menu-rank-item.clickable:active {
   transform: translateY(0);
+}
+
+/* ==================== Ranking Layout (앱스토어 스타일) ==================== */
+.menu-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ranking-item:last-child {
+  border-bottom: none;
+}
+
+.ranking-number {
+  min-width: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ranking-number.rank-1 {
+  color: #FFD700;
+  font-size: 19px;
+}
+
+.ranking-number.rank-2 {
+  color: #C0C0C0;
+  font-size: 18px;
+}
+
+.ranking-number.rank-3 {
+  color: #CD7F32;
+  font-size: 18px;
+}
+
+.ranking-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ranking-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ranking-thumb-fallback {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.ranking-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ranking-name {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ranking-desc {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ranking-price {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
+}
+
+.ranking-item.clickable {
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin: 0 -12px;
+  padding: 14px 12px;
+  border-radius: 12px;
+}
+
+.ranking-item.clickable:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ranking-item.clickable:active {
+  background: rgba(255, 255, 255, 0.08);
 }
 </style>

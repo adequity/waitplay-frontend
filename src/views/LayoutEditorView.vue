@@ -563,6 +563,15 @@
                   <span class="mode-label">리스트</span>
                   <span class="mode-desc">세로 목록 형태</span>
                 </button>
+                <button
+                  type="button"
+                  :class="['mode-btn', { active: editForm.displayStyle === 'ranking' }]"
+                  @click="editForm.displayStyle = 'ranking'"
+                >
+                  <span class="mode-icon">🏆</span>
+                  <span class="mode-label">랭킹</span>
+                  <span class="mode-desc">순위 강조 리스트</span>
+                </button>
               </div>
             </div>
 
@@ -606,7 +615,33 @@
                   :key="index"
                   class="menu-item-card"
                 >
-                  <div class="menu-item-thumbnail">
+                  <!-- 랭킹 스타일: 80x80 썸네일 -->
+                  <div v-if="editForm.displayStyle === 'ranking'" class="menu-item-ranking-thumb">
+                    <input
+                      type="file"
+                      :id="'menu-thumb-' + index"
+                      accept="image/*"
+                      @change="(e) => handleMenuThumbnailUpload(e, index)"
+                      style="display: none;"
+                    />
+                    <label
+                      :for="'menu-thumb-' + index"
+                      class="ranking-thumbnail-label"
+                      :class="{ 'has-image': item.thumbnailUrl }"
+                    >
+                      <img v-if="item.thumbnailUrl" :src="item.thumbnailUrl" alt="썸네일" />
+                      <span v-else class="ranking-thumb-placeholder">{{ item.name ? item.name.charAt(0) : '+' }}</span>
+                    </label>
+                    <button
+                      v-if="item.thumbnailUrl"
+                      type="button"
+                      class="btn-remove-ranking-thumb"
+                      @click="item.thumbnailUrl = ''"
+                      title="이미지 제거"
+                    >×</button>
+                  </div>
+                  <!-- 그리드/리스트 스타일: 기존 썸네일 -->
+                  <div v-else class="menu-item-thumbnail">
                     <input
                       type="file"
                       :id="'menu-image-' + index"
@@ -682,7 +717,7 @@
               <button
                 type="button"
                 class="btn-add-menu-item"
-                @click="editForm.items.push({ rank: editForm.items.length + 1, name: '', price: null, description: '', imageUrl: '', badge: '', link: '' })"
+                @click="editForm.items.push({ rank: editForm.items.length + 1, name: '', price: null, description: '', imageUrl: '', thumbnailUrl: '', badge: '', link: '' })"
               >
                 + 메뉴 추가
               </button>
@@ -2266,6 +2301,75 @@ async function handleMenuImageUpload(event: Event, index: number) {
     console.error('Menu image upload failed:', error)
   } finally {
     input.value = ''
+  }
+}
+
+// 랭킹 스타일용 썸네일 업로드 (80x80 정사각형, 서버에서 리사이징)
+async function handleMenuThumbnailUpload(event: Event, index: number) {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
+
+  const file = input.files[0]
+  if (!file) return
+
+  // 파일 크기 체크 (10MB - 서버에서 80x80으로 리사이징)
+  if (file.size > 10 * 1024 * 1024) {
+    alert('이미지 파일 크기는 10MB 이하만 가능합니다.')
+    return
+  }
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE_URL}/api/fileupload/thumbnail`, {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      throw new Error('Thumbnail upload failed')
+    }
+
+    const result = await response.json()
+    if (editForm.value.items && editForm.value.items[index]) {
+      editForm.value.items[index].thumbnailUrl = result.url
+    }
+  } catch (error) {
+    alert('썸네일 업로드에 실패했습니다.')
+    console.error('Thumbnail upload failed:', error)
+  } finally {
+    input.value = ''
+  }
+}
+
+// 기존 메뉴 이미지를 썸네일로 사용 (서버에서 리사이징)
+async function useExistingImageAsThumbnail(index: number) {
+  const item = editForm.value.items?.[index]
+  if (!item?.imageUrl) {
+    alert('기존 이미지가 없습니다. 먼저 메뉴 이미지를 업로드해주세요.')
+    return
+  }
+
+  try {
+    // 기존 이미지 URL에서 파일명 추출하여 썸네일 API 호출
+    const response = await fetch(`${API_BASE_URL}/api/fileupload/thumbnail-from-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl: item.imageUrl })
+    })
+
+    if (!response.ok) {
+      // 엔드포인트가 없으면 기존 이미지 그대로 사용
+      item.thumbnailUrl = item.imageUrl
+      return
+    }
+
+    const result = await response.json()
+    item.thumbnailUrl = result.url
+  } catch {
+    // 실패 시 기존 이미지 그대로 사용
+    item.thumbnailUrl = item.imageUrl
   }
 }
 
@@ -4767,6 +4871,77 @@ select.form-input {
 }
 
 .btn-remove-thumbnail:hover {
+  background: #dc2626;
+}
+
+/* 랭킹 스타일 썸네일 (80x80 정사각형) */
+.menu-item-ranking-thumb {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ranking-thumbnail-label {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.ranking-thumbnail-label:hover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.ranking-thumbnail-label.has-image {
+  border-style: solid;
+  border-color: #fbbf24;
+}
+
+.ranking-thumbnail-label img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ranking-thumb-placeholder {
+  font-size: 20px;
+  font-weight: 600;
+  color: #9ca3af;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  border-radius: 50%;
+}
+
+.btn-remove-ranking-thumb {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-remove-ranking-thumb:hover {
   background: #dc2626;
 }
 
