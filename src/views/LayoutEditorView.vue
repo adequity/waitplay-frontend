@@ -196,7 +196,17 @@
           <div class="bgm-library-panel">
             <div class="bgm-panel-header">
               <h3>BGM 라이브러리</h3>
-              <span class="track-count">{{ bgmLibraryTracks.length }}곡</span>
+              <span class="track-count">{{ filteredBgmTracks.length }}곡</span>
+            </div>
+            <!-- 검색 필터 -->
+            <div class="bgm-search-box">
+              <input
+                type="text"
+                v-model="bgmSearchQuery"
+                placeholder="곡 제목 또는 아티스트 검색..."
+                class="bgm-search-input"
+              />
+              <button v-if="bgmSearchQuery" class="bgm-search-clear" @click="bgmSearchQuery = ''">✕</button>
             </div>
             <div v-if="bgmLibraryLoading" class="bgm-library-loading">
               <span class="upload-spinner"></span>
@@ -208,7 +218,7 @@
             </div>
             <div v-else class="bgm-library-list">
               <div
-                v-for="track in bgmLibraryTracks"
+                v-for="track in filteredBgmTracks"
                 :key="track.id"
                 class="bgm-library-item"
                 :class="{ selected: isTrackSelected(track.id) }"
@@ -1195,6 +1205,19 @@ const bgmLibraryLoading = ref(false)
 const selectedPlaylistTracks = ref<BgmTrack[]>([])
 const bgmPlayMode = ref<'sequential' | 'shuffle'>('sequential')
 const previewingTrackId = ref<string | null>(null)
+const bgmSearchQuery = ref('')
+
+// 검색 필터링된 트랙 목록
+const filteredBgmTracks = computed(() => {
+  if (!bgmSearchQuery.value.trim()) {
+    return bgmLibraryTracks.value
+  }
+  const query = bgmSearchQuery.value.toLowerCase().trim()
+  return bgmLibraryTracks.value.filter(track =>
+    track.title.toLowerCase().includes(query) ||
+    (track.artist && track.artist.toLowerCase().includes(query))
+  )
+})
 
 const loadBgmLibrary = async () => {
   try {
@@ -3789,6 +3812,55 @@ select.form-input {
   background: #e5e5ea;
   padding: 2px 8px;
   border-radius: 10px;
+}
+
+.bgm-search-box {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.bgm-search-input {
+  width: 100%;
+  padding: 10px 32px 10px 12px;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  font-size: 13px;
+  background: #f5f5f7;
+  transition: border-color 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.bgm-search-input:focus {
+  outline: none;
+  border-color: #4f8cff;
+  background: #fff;
+}
+
+.bgm-search-input::placeholder {
+  color: #aeaeb2;
+}
+
+.bgm-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #d1d1d6;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.bgm-search-clear:hover {
+  background: #86868b;
 }
 
 .bgm-library-list {
