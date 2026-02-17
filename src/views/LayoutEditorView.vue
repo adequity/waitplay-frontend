@@ -308,7 +308,7 @@
         </div>
 
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeBgmModal">완료</button>
+          <button class="btn-action btn-primary" @click="closeBgmModal">완료</button>
         </div>
       </div>
     </div>
@@ -3737,6 +3737,28 @@ select.form-input {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.modal-footer .btn-action {
+  min-width: 100px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-footer .btn-primary {
+  background: linear-gradient(180deg, #0077ed 0%, #0071e3 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+}
+
+.modal-footer .btn-primary:hover {
+  background: linear-gradient(180deg, #0081ff 0%, #0077ed 100%);
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.4);
 }
 
 /* BGM 입력 탭 */
