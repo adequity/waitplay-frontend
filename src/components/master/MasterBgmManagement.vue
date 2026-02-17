@@ -266,16 +266,12 @@ const handleFileDrop = (event: DragEvent) => {
   }
 }
 
-const uploadFileToR2 = async (file: File): Promise<string> => {
+const uploadAudioFile = async (file: File): Promise<string> => {
   const formData = new FormData()
   formData.append('file', file)
-  formData.append('category', 'bgm')
 
-  const response = await fetch(`${API_URL}/api/files/upload`, {
+  const response = await fetch(`${API_URL}/api/FileUpload/audio`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${authStore.accessToken}`
-    },
     body: formData
   })
 
@@ -311,7 +307,7 @@ const submitTrack = async () => {
 
     // Upload file if selected
     if (selectedFile.value) {
-      fileUrl = await uploadFileToR2(selectedFile.value)
+      fileUrl = await uploadAudioFile(selectedFile.value)
     }
 
     const request: CreateBgmTrackRequest = {
