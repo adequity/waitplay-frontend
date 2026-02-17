@@ -1179,7 +1179,8 @@ const backgroundImageUploading = ref(false)
 const pageTheme = ref({
   backgroundColor: '#121212',
   textColor: '#ffffff',
-  bgmUrl: '' // 배경음악 URL
+  bgmUrl: '', // 배경음악 URL
+  bgmPlayMode: 'sequential' as 'sequential' | 'shuffle' // 재생 모드
 })
 
 // BGM 설정 모달 상태
@@ -2103,12 +2104,26 @@ function removeBgm() {
   selectedPlaylistTracks.value = []
 }
 
-function closeBgmModal() {
+async function closeBgmModal() {
   if (bgmPreviewAudio.value) {
     bgmPreviewAudio.value.pause()
   }
   isBgmPreviewing.value = false
   previewingTrackId.value = null
+
+  // 플레이리스트 즉시 저장
+  if (qrCodeId.value) {
+    try {
+      const trackIds = selectedPlaylistTracks.value.map(t => t.id)
+      await bgmService.savePlaylist(qrCodeId.value, trackIds, bgmPlayMode.value)
+      // 하위 호환성을 위해 첫 번째 트랙 URL도 테마에 저장
+      pageTheme.value.bgmUrl = selectedPlaylistTracks.value[0]?.fileUrl || ''
+      pageTheme.value.bgmPlayMode = bgmPlayMode.value
+    } catch (error) {
+      console.error('Failed to save playlist:', error)
+    }
+  }
+
   showBgmModal.value = false
 }
 
