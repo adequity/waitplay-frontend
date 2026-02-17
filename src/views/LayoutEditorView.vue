@@ -3707,8 +3707,8 @@ select.form-input {
 }
 
 .bgm-info-box {
-  margin-top: 20px;
-  padding: 16px;
+  margin: 0 20px 0 20px;
+  padding: 16px 20px;
   background: #f0f9ff;
   border: 1px solid #bae6fd;
   border-radius: 12px;
