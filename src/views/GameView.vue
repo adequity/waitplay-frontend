@@ -85,7 +85,10 @@ const isFullscreen = ref(false)  // onMounted에서 게임 타입에 따라 설�
 const isGameLoading = ref(true)
 
 // Game state
-const gameType = computed(() => (route.params.type as string).toUpperCase() as GameType)
+const gameType = computed(() => {
+  const type = route.params.type as string | undefined
+  return type ? type.toUpperCase() as GameType : 'MATCH' as GameType
+})
 const qrCode = computed(() => route.query.qr as string | undefined)
 const isPinball = computed(() => gameType.value === 'PINBALL')
 

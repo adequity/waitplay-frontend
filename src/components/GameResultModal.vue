@@ -362,7 +362,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { submitGameScore } from '@/services/gameScoreService'
@@ -759,8 +759,10 @@ function handleRetry() {
 }
 
 // 다른 게임 하기
-function handleOtherGame() {
+async function handleOtherGame() {
   emit('close')
+  // 게임 정리를 위해 다음 틱까지 대기
+  await nextTick()
   // QR 코드가 있으면 해당 랜딩 페이지로, 없으면 홈으로
   if (props.qrCode) {
     router.push(`/qr/${props.qrCode}`)
@@ -772,8 +774,10 @@ function handleOtherGame() {
 }
 
 // 랜딩 페이지로 이동
-function handleGoLanding() {
+async function handleGoLanding() {
   emit('close')
+  // 게임 정리를 위해 다음 틱까지 대기
+  await nextTick()
   if (props.qrCode) {
     router.push(`/qr/${props.qrCode}`)
   } else if (props.qrCodeUuid) {
