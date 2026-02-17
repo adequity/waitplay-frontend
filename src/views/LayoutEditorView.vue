@@ -2091,6 +2091,11 @@ async function resizeImage(file: File, maxWidth: number, maxHeight: number, qual
     const img = new Image()
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
+    const objectUrl = URL.createObjectURL(file)
+
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl)
+    }
 
     img.onload = () => {
       let { width, height } = img
@@ -2106,6 +2111,7 @@ async function resizeImage(file: File, maxWidth: number, maxHeight: number, qual
       canvas.height = height
 
       if (!ctx) {
+        cleanup()
         reject(new Error('Canvas context not available'))
         return
       }
@@ -2117,6 +2123,7 @@ async function resizeImage(file: File, maxWidth: number, maxHeight: number, qual
 
       canvas.toBlob(
         (blob) => {
+          cleanup()
           if (!blob) {
             reject(new Error('Failed to create blob'))
             return
@@ -2133,8 +2140,11 @@ async function resizeImage(file: File, maxWidth: number, maxHeight: number, qual
       )
     }
 
-    img.onerror = () => reject(new Error('Failed to load image'))
-    img.src = URL.createObjectURL(file)
+    img.onerror = () => {
+      cleanup()
+      reject(new Error('Failed to load image'))
+    }
+    img.src = objectUrl
   })
 }
 
@@ -2341,27 +2351,46 @@ async function handleMenuImageUpload(event: Event, index: number) {
   const input = event.target as HTMLInputElement
   if (!input.files || !input.files[0]) return
 
-  let file = input.files[0]
+  const file = input.files[0]
+  console.log('[MenuImageUpload] File selected:', file.name, file.type, file.size, 'bytes')
 
-  // 파일 크기 체크 (원본 기준 5MB - 리사이징 후 작아짐)
-  if (file.size > 5 * 1024 * 1024) {
-    alert('이미지 파일 크기는 5MB 이하만 가능합니다.')
+  // 파일 크기 체크 (원본 기준 10MB - 서버에서 리사이징)
+  if (file.size > 10 * 1024 * 1024) {
+    alert('이미지 파일 크기는 10MB 이하만 가능합니다.')
     return
   }
 
   try {
-    // 메뉴 썸네일용 리사이징 (144x144 - 72px의 2배 for Retina)
-    // 품질 0.85로 설정하여 용량 절감
-    const resizedFile = await resizeImage(file, 144, 144, 0.85)
-    console.log(`Menu image resized: ${file.size} bytes -> ${resizedFile.size} bytes`)
+    let fileToUpload: File = file
 
-    const url = await uploadImage(resizedFile)
+    // HEIC/HEIF 파일이 아닌 경우에만 클라이언트 리사이징 시도
+    // (HEIC은 canvas에서 지원 안됨, 서버에서 처리)
+    const isHeic = file.type === 'image/heic' || file.type === 'image/heif' ||
+                   file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
+
+    if (!isHeic) {
+      try {
+        // 메뉴 썸네일용 리사이징 (144x144 - 72px의 2배 for Retina)
+        const resizedFile = await resizeImage(file, 144, 144, 0.85)
+        console.log(`[MenuImageUpload] Resized: ${file.size} bytes -> ${resizedFile.size} bytes`)
+        fileToUpload = resizedFile
+      } catch (resizeError) {
+        console.warn('[MenuImageUpload] Resize failed, uploading original:', resizeError)
+        // 리사이징 실패 시 원본 업로드 (서버에서 리사이징)
+      }
+    } else {
+      console.log('[MenuImageUpload] HEIC detected, uploading original for server processing')
+    }
+
+    const url = await uploadImage(fileToUpload)
+    console.log('[MenuImageUpload] Upload success:', url)
+
     if (editForm.value.items && editForm.value.items[index]) {
       editForm.value.items[index].imageUrl = url
     }
   } catch (error) {
-    alert('이미지 업로드에 실패했습니다.')
-    console.error('Menu image upload failed:', error)
+    console.error('[MenuImageUpload] Failed:', error)
+    alert(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.')
   } finally {
     input.value = ''
   }
