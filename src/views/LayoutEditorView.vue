@@ -192,30 +192,8 @@
           <button class="btn-icon-close" @click="closeBgmModal">✕</button>
         </div>
         <div class="bgm-modal-content">
-          <!-- 입력 방식 선택 탭 -->
-          <div class="bgm-input-tabs">
-            <button
-              :class="['bgm-tab', { active: bgmInputType === 'library' }]"
-              @click="bgmInputType = 'library'; loadBgmLibrary()"
-            >
-              🎶 라이브러리
-            </button>
-            <button
-              :class="['bgm-tab', { active: bgmInputType === 'file' }]"
-              @click="bgmInputType = 'file'"
-            >
-              📁 파일 업로드
-            </button>
-            <button
-              :class="['bgm-tab', { active: bgmInputType === 'url' }]"
-              @click="bgmInputType = 'url'"
-            >
-              🔗 URL 입력
-            </button>
-          </div>
-
           <!-- 라이브러리 선택 방식 -->
-          <div v-if="bgmInputType === 'library'" class="form-group">
+          <div class="form-group">
             <label class="form-label">BGM 라이브러리에서 선택</label>
             <div v-if="bgmLibraryLoading" class="bgm-library-loading">
               <span class="upload-spinner"></span>
@@ -252,58 +230,6 @@
                 </div>
               </div>
             </div>
-          </div>
-
-          <!-- 파일 업로드 방식 -->
-          <div v-if="bgmInputType === 'file'" class="form-group">
-            <label class="form-label">오디오 파일 (MP3, WAV, OGG)</label>
-            <div class="file-upload-area">
-              <input
-                type="file"
-                id="bgm-file-input"
-                accept="audio/mp3,audio/mpeg,audio/wav,audio/ogg,audio/x-m4a,.mp3,.wav,.ogg,.m4a"
-                @change="handleBgmFileUpload"
-                style="display: none;"
-              />
-              <label for="bgm-file-input" class="file-upload-label" :class="{ uploading: bgmFileUploading }">
-                <template v-if="bgmFileUploading">
-                  <span class="upload-spinner"></span>
-                  업로드 중...
-                </template>
-                <template v-else-if="pageTheme.bgmUrl && bgmFileName && bgmInputType === 'file'">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2">
-                    <path d="M9 18V5l12-2v13"/>
-                    <circle cx="6" cy="18" r="3"/>
-                    <circle cx="18" cy="16" r="3"/>
-                  </svg>
-                  <span class="file-name">{{ bgmFileName }}</span>
-                  <span class="change-text">클릭하여 변경</span>
-                </template>
-                <template v-else>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
-                  </svg>
-                  <span>클릭하여 오디오 파일 선택</span>
-                  <span class="file-hint">MP3, WAV, OGG, M4A (최대 10MB)</span>
-                </template>
-              </label>
-            </div>
-          </div>
-
-          <!-- URL 입력 방식 -->
-          <div v-if="bgmInputType === 'url'" class="form-group">
-            <label class="form-label">음악 URL (MP3, WAV 등)</label>
-            <input
-              type="url"
-              class="form-input"
-              v-model="pageTheme.bgmUrl"
-              placeholder="https://example.com/music.mp3"
-            />
-            <p class="form-hint">
-              직접 링크 가능한 오디오 파일 URL을 입력하세요.
-            </p>
           </div>
 
           <div class="bgm-preview-section" v-if="pageTheme.bgmUrl">
@@ -1228,9 +1154,6 @@ const pageTheme = ref({
 const showBgmModal = ref(false)
 const bgmPreviewAudio = ref<HTMLAudioElement | null>(null)
 const isBgmPreviewing = ref(false)
-const bgmInputType = ref<'library' | 'url' | 'file'>('library') // 기본값: 라이브러리 선택
-const bgmFileUploading = ref(false)
-const bgmFileName = ref('')
 
 // BGM 라이브러리 관련
 import bgmService, { type BgmTrack } from '@/services/bgmService'
@@ -1253,7 +1176,6 @@ const loadBgmLibrary = async () => {
 const selectBgmTrack = (track: BgmTrack) => {
   pageTheme.value.bgmUrl = track.fileUrl
   selectedBgmTrackId.value = track.id
-  bgmFileName.value = track.title
 }
 
 // Available block types
@@ -2091,7 +2013,6 @@ function removeBgm() {
   }
   isBgmPreviewing.value = false
   pageTheme.value.bgmUrl = ''
-  bgmFileName.value = ''
   selectedBgmTrackId.value = null
 }
 
@@ -2165,42 +2086,6 @@ async function uploadAudio(file: File): Promise<string> {
 
   // 모든 시도 실패
   throw new Error('서버에서 오디오 업로드를 지원하지 않습니다. 관리자에게 문의하세요.')
-}
-
-// BGM 파일 선택 핸들러
-async function handleBgmFileUpload(event: Event) {
-  const input = event.target as HTMLInputElement
-  if (!input.files || !input.files[0]) return
-
-  const file = input.files[0]
-
-  // 파일 크기 체크 (10MB)
-  if (file.size > 10 * 1024 * 1024) {
-    alert('파일 크기는 10MB 이하만 가능합니다.')
-    return
-  }
-
-  // 파일 타입 체크
-  const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/x-m4a', 'audio/mp4']
-  if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg|m4a)$/i)) {
-    alert('MP3, WAV, OGG, M4A 파일만 업로드 가능합니다.')
-    return
-  }
-
-  bgmFileUploading.value = true
-
-  try {
-    const url = await uploadAudio(file)
-    pageTheme.value.bgmUrl = url
-    bgmFileName.value = file.name
-  } catch (error) {
-    alert('오디오 파일 업로드에 실패했습니다.')
-    console.error('BGM upload failed:', error)
-  } finally {
-    bgmFileUploading.value = false
-    // input 초기화 (같은 파일 다시 선택 가능하게)
-    input.value = ''
-  }
 }
 
 // 마퀴 이미지 업로드 핸들러
