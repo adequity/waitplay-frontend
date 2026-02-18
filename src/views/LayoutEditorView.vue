@@ -1193,17 +1193,31 @@
                 <label class="style-option" :class="{ active: editForm.displayStyle === 'carousel' }">
                   <input type="radio" v-model="editForm.displayStyle" value="carousel">
                   <div class="style-option-content">
-                    <span class="style-icon">🎠</span>
+                    <span class="style-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/><circle cx="17" cy="12" r="2" fill="currentColor" opacity="0.3"/></svg>
+                    </span>
                     <span class="style-name">캐러셀</span>
-                    <span class="style-desc">탭 네비게이션 + 어두운 카드</span>
+                    <span class="style-desc">탭 + 어두운 카드</span>
                   </div>
                 </label>
                 <label class="style-option" :class="{ active: editForm.displayStyle === 'portfolio' }">
                   <input type="radio" v-model="editForm.displayStyle" value="portfolio">
                   <div class="style-option-content">
-                    <span class="style-icon">📋</span>
+                    <span class="style-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="currentColor"/><path d="M7 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </span>
                     <span class="style-name">포트폴리오</span>
-                    <span class="style-desc">밝은 카드 + Play Now 버튼</span>
+                    <span class="style-desc">밝은 카드</span>
+                  </div>
+                </label>
+                <label class="style-option" :class="{ active: editForm.displayStyle === 'showcase' }">
+                  <input type="radio" v-model="editForm.displayStyle" value="showcase">
+                  <div class="style-option-content">
+                    <span class="style-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="2"/><rect x="6" y="5" width="12" height="10" rx="1" fill="currentColor" opacity="0.2"/><path d="M8 18h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </span>
+                    <span class="style-name">쇼케이스</span>
+                    <span class="style-desc">워터마크 + 프레임</span>
                   </div>
                 </label>
               </div>
@@ -1211,9 +1225,9 @@
             <div class="form-group">
               <label class="form-label">리더보드 표시</label>
               <label style="display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" v-model="editForm.showLeaderboard" :disabled="editForm.displayStyle === 'portfolio'">
+                <input type="checkbox" v-model="editForm.showLeaderboard" :disabled="editForm.displayStyle !== 'carousel'">
                 <span>게임 리더보드 보이기</span>
-                <span v-if="editForm.displayStyle === 'portfolio'" style="font-size: 12px; color: #999;">(포트폴리오 스타일에서는 미지원)</span>
+                <span v-if="editForm.displayStyle !== 'carousel'" style="font-size: 12px; color: #999;">(캐러셀 스타일에서만 지원)</span>
               </label>
             </div>
             <div class="form-group">

@@ -74,8 +74,8 @@ export interface GamesCarouselBlockData {
   enabledGames: string[] // ['brick-breaker', 'memory', 'spot-difference']
   showLeaderboard: boolean
   gamesOrder: GameOrderItem[]
-  // UI 스타일: carousel(기존 캐러셀), portfolio(포트폴리오 카드 스타일)
-  displayStyle?: 'carousel' | 'portfolio'
+  // UI 스타일: carousel(기존 캐러셀), portfolio(포트폴리오 카드), showcase(쇼케이스 - 워터마크+디바이스프레임)
+  displayStyle?: 'carousel' | 'portfolio' | 'showcase'
 }
 
 // Popular Menu Block

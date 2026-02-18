@@ -1,5 +1,8 @@
 <template>
-  <div class="games-carousel-block" :class="{ 'portfolio-style': displayStyle === 'portfolio' }">
+  <div class="games-carousel-block" :class="[
+    displayStyle === 'portfolio' ? 'portfolio-style' : '',
+    displayStyle === 'showcase' ? 'showcase-style' : ''
+  ]">
     <!-- ========== CAROUSEL 스타일 (기존) ========== -->
     <template v-if="displayStyle === 'carousel'">
       <!-- Game Tabs Navigation -->
@@ -51,8 +54,8 @@
       </div>
     </template>
 
-    <!-- ========== PORTFOLIO 스타일 (새로 추가) ========== -->
-    <template v-else>
+    <!-- ========== PORTFOLIO 스타일 ========== -->
+    <template v-else-if="displayStyle === 'portfolio'">
       <div class="portfolio-slider" @scroll="onPortfolioScroll" ref="portfolioSliderRef">
         <div
           v-for="game in allowedGames"
@@ -82,6 +85,48 @@
           class="portfolio-dot"
           :class="{ active: currentGameIndex === index }"
           @click="scrollToPortfolioGame(index)"
+        ></span>
+      </div>
+    </template>
+
+    <!-- ========== SHOWCASE 스타일 (워터마크 + 디바이스 프레임) ========== -->
+    <template v-else>
+      <div class="showcase-slider" @scroll="onShowcaseScroll" ref="showcaseSliderRef">
+        <div
+          v-for="game in allowedGames"
+          :key="game.type"
+          class="showcase-card"
+          @click="goToGame(game.type)"
+          @touchstart="handleTouchStart"
+          @touchend="(e) => handleTouchEnd(e, game.type)"
+        >
+          <!-- 워터마크 텍스트 -->
+          <div class="showcase-watermark">{{ game.name }}</div>
+
+          <!-- 디바이스 프레임 -->
+          <div class="showcase-device">
+            <div class="showcase-device-inner">
+              <div class="showcase-icon">
+                <component :is="game.icon" :size="80" color="#374151" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 카드 외부 설명 -->
+          <div class="showcase-info">
+            <p class="showcase-desc">{{ game.description }}</p>
+            <span class="showcase-cta">Play Game</span>
+          </div>
+        </div>
+      </div>
+      <!-- Page Indicator Dots -->
+      <div class="showcase-dots">
+        <span
+          v-for="(game, index) in allowedGames"
+          :key="game.type"
+          class="showcase-dot"
+          :class="{ active: currentGameIndex === index }"
+          @click="scrollToShowcaseGame(index)"
         ></span>
       </div>
     </template>
@@ -254,6 +299,7 @@ const router = useRouter()
 const currentGameIndex = ref(0)
 const gamesSliderRef = ref<HTMLElement | null>(null)
 const portfolioSliderRef = ref<HTMLElement | null>(null)
+const showcaseSliderRef = ref<HTMLElement | null>(null)
 const blockRef = ref<HTMLElement | null>(null)
 
 // displayStyle computed (기본값: carousel)
@@ -407,6 +453,25 @@ function scrollToPortfolioGame(index: number) {
   const slideWidth = portfolioSliderRef.value.offsetWidth
   const scrollPosition = index * (slideWidth * 0.9 + 16)
   portfolioSliderRef.value.scrollTo({
+    left: scrollPosition,
+    behavior: 'smooth'
+  })
+}
+
+// Showcase 스타일용 스크롤 핸들러
+function onShowcaseScroll() {
+  if (!showcaseSliderRef.value) return
+  const slideWidth = showcaseSliderRef.value.offsetWidth
+  const scrollLeft = showcaseSliderRef.value.scrollLeft
+  const newIndex = Math.round(scrollLeft / (slideWidth * 0.85 + 20))
+  currentGameIndex.value = newIndex
+}
+
+function scrollToShowcaseGame(index: number) {
+  if (!showcaseSliderRef.value) return
+  const slideWidth = showcaseSliderRef.value.offsetWidth
+  const scrollPosition = index * (slideWidth * 0.85 + 20)
+  showcaseSliderRef.value.scrollTo({
     left: scrollPosition,
     behavior: 'smooth'
   })
@@ -757,6 +822,157 @@ function goToGame(type: string) {
 }
 
 .portfolio-dot:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* ========== SHOWCASE 스타일 (워터마크 + 디바이스 프레임) ========== */
+.games-carousel-block.showcase-style {
+  padding: 0;
+}
+
+.showcase-slider {
+  display: flex;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  gap: 20px;
+  padding: 16px 1.5rem 20px;
+  margin: 0 -1.5rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  touch-action: pan-x;
+}
+
+.showcase-slider::-webkit-scrollbar {
+  display: none;
+  height: 0;
+}
+
+.showcase-card {
+  flex: 0 0 85%;
+  min-width: 85%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  position: relative;
+}
+
+/* 워터마크 텍스트 */
+.showcase-watermark {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.08);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 디바이스 프레임 */
+.showcase-device {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(145deg, #f5f5f7 0%, #e8e8ed 100%);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.showcase-card:active .showcase-device {
+  transform: scale(0.98);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.showcase-device-inner {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.showcase-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.showcase-icon :deep(svg) {
+  width: 80px;
+  height: 80px;
+}
+
+/* 카드 외부 설명 */
+.showcase-info {
+  margin-top: 16px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.showcase-desc {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.showcase-cta {
+  display: inline-block;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #007aff;
+  transition: color 0.2s ease;
+}
+
+.showcase-card:hover .showcase-cta {
+  color: #0056b3;
+}
+
+/* Showcase Page Indicator Dots */
+.showcase-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.showcase-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.showcase-dot.active {
+  background: #ffffff;
+  transform: scale(1.2);
+}
+
+.showcase-dot:hover:not(.active) {
   background: rgba(255, 255, 255, 0.5);
 }
 </style>
