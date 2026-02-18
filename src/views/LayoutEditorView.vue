@@ -2047,6 +2047,10 @@ async function uploadImage(file: File): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)
 
+  console.log('[uploadImage] Starting upload:', file.name, file.type, file.size, 'bytes')
+  console.log('[uploadImage] API URL:', `${API_BASE_URL}/api/FileUpload/image`)
+  console.log('[uploadImage] Auth token exists:', !!authStore.accessToken)
+
   try {
     const response = await fetch(`${API_BASE_URL}/api/FileUpload/image`, {
       method: 'POST',
@@ -2056,11 +2060,14 @@ async function uploadImage(file: File): Promise<string> {
       body: formData
     })
 
+    console.log('[uploadImage] Response status:', response.status, response.statusText)
+
     if (!response.ok) {
       // 서버 에러 메시지 파싱 시도
       let errorMessage = '이미지 업로드 실패'
       try {
         const errorData = await response.json()
+        console.log('[uploadImage] Error response:', errorData)
         errorMessage = errorData.message || errorMessage
       } catch {
         // JSON 파싱 실패 시 상태 코드 기반 메시지
@@ -2076,8 +2083,11 @@ async function uploadImage(file: File): Promise<string> {
     }
 
     const data = await response.json()
+    console.log('[uploadImage] Success response:', data)
+    console.log('[uploadImage] FileUrl:', data.fileUrl)
     return data.fileUrl
   } catch (error) {
+    console.error('[uploadImage] Error:', error)
     if (error instanceof TypeError) {
       throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.')
     }
@@ -2387,6 +2397,11 @@ async function handleMenuImageUpload(event: Event, index: number) {
 
     if (editForm.value.items && editForm.value.items[index]) {
       editForm.value.items[index].imageUrl = url
+      console.log('[MenuImageUpload] Set imageUrl for index', index, ':', editForm.value.items[index].imageUrl)
+    } else {
+      console.error('[MenuImageUpload] Cannot set imageUrl - editForm.items[' + index + '] is undefined')
+      console.log('[MenuImageUpload] editForm.value:', editForm.value)
+      console.log('[MenuImageUpload] editForm.value.items:', editForm.value.items)
     }
   } catch (error) {
     console.error('[MenuImageUpload] Failed:', error)
