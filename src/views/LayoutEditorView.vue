@@ -1188,10 +1188,32 @@
           <!-- Games Carousel Edit -->
           <template v-if="editingBlock.type === 'games_carousel'">
             <div class="form-group">
+              <label class="form-label">UI 스타일</label>
+              <div class="style-options">
+                <label class="style-option" :class="{ active: editForm.displayStyle === 'carousel' }">
+                  <input type="radio" v-model="editForm.displayStyle" value="carousel">
+                  <div class="style-option-content">
+                    <span class="style-icon">🎠</span>
+                    <span class="style-name">캐러셀</span>
+                    <span class="style-desc">탭 네비게이션 + 어두운 카드</span>
+                  </div>
+                </label>
+                <label class="style-option" :class="{ active: editForm.displayStyle === 'portfolio' }">
+                  <input type="radio" v-model="editForm.displayStyle" value="portfolio">
+                  <div class="style-option-content">
+                    <span class="style-icon">📋</span>
+                    <span class="style-name">포트폴리오</span>
+                    <span class="style-desc">밝은 카드 + Play Now 버튼</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
               <label class="form-label">리더보드 표시</label>
               <label style="display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" v-model="editForm.showLeaderboard">
+                <input type="checkbox" v-model="editForm.showLeaderboard" :disabled="editForm.displayStyle === 'portfolio'">
                 <span>게임 리더보드 보이기</span>
+                <span v-if="editForm.displayStyle === 'portfolio'" style="font-size: 12px; color: #999;">(포트폴리오 스타일에서는 미지원)</span>
               </label>
             </div>
             <div class="form-group">
@@ -1737,6 +1759,7 @@ function getDefaultBlockData(type: BlockType): any {
       return {
         enabledGames: ['pinball', 'memory', 'spot-difference'],
         showLeaderboard: true,
+        displayStyle: 'carousel',
         gamesOrder: [
           { type: 'pinball', name: '핀볼', icon: '🎯' },
           { type: 'brick-breaker', name: '벽돌깨기', icon: '🧱' },
@@ -1860,6 +1883,11 @@ async function editBlock(block: Block) {
 
   // Load game settings from API for games_carousel blocks
   if (block.type === 'games_carousel') {
+    // displayStyle 기본값 설정
+    if (!editForm.value.displayStyle) {
+      editForm.value.displayStyle = 'carousel'
+    }
+
     try {
       const settings = await gameSettingsService.getGameSettings(qrCodeId.value)
 
@@ -3122,6 +3150,62 @@ function removeMenuItem(index: number) {
 
 .form-group {
   margin-bottom: 20px;
+}
+
+/* UI 스타일 옵션 */
+.style-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.style-option {
+  position: relative;
+  cursor: pointer;
+}
+
+.style-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.style-option-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.style-option.active .style-option-content {
+  border-color: #0071e3;
+  background: #f0f7ff;
+}
+
+.style-option:hover:not(.active) .style-option-content {
+  border-color: #c7c7cc;
+  background: #f5f5f7;
+}
+
+.style-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.style-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.style-desc {
+  font-size: 12px;
+  color: #8e8e93;
+  margin-left: auto;
 }
 
 /* 2열 레이아웃 */
