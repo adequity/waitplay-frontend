@@ -1934,6 +1934,16 @@ function saveBlockEdit() {
   if (editingBlock.value) {
     const formData = JSON.parse(JSON.stringify(editForm.value))
 
+    // 디버깅: popular_menu 블록 저장 데이터 확인
+    if (editingBlock.value.type === 'popular_menu') {
+      console.log('[SaveBlockEdit] popular_menu formData:', {
+        displayStyle: formData.displayStyle,
+        badgeStyle: formData.badgeStyle,
+        cardStyle: formData.cardStyle,
+        itemsCount: formData.items?.length
+      })
+    }
+
     // Convert datetime-local back to ISO format for countdown blocks
     if (editingBlock.value.type === 'countdown' && formData.targetDate) {
       formData.targetDate = new Date(formData.targetDate).toISOString()
@@ -2535,6 +2545,16 @@ async function saveLayout() {
       qrCodeId: qrCodeId.value,
       blocksJson: JSON.stringify(blocks.value),
       themeJson: JSON.stringify(themeWithPlayMode)
+    }
+
+    // 디버깅: popular_menu 블록 데이터 확인
+    const popularMenuBlock = blocks.value.find(b => b.type === 'popular_menu')
+    if (popularMenuBlock) {
+      console.log('[SaveLayout] popular_menu block data:', {
+        displayStyle: (popularMenuBlock.data as any).displayStyle,
+        cardStyle: (popularMenuBlock.data as any).cardStyle,
+        badgeStyle: (popularMenuBlock.data as any).badgeStyle
+      })
     }
 
     const response = await fetch(`${API_BASE_URL}/api/landingpage/layout`, {
