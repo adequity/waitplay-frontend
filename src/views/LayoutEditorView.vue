@@ -2419,6 +2419,8 @@ async function handleMenuThumbnailUpload(event: Event, index: number) {
   const file = input.files[0]
   if (!file) return
 
+  console.log('[ThumbnailUpload] File selected:', file.name, file.type, file.size, 'bytes')
+
   // 파일 크기 체크 (10MB - 서버에서 80x80으로 리사이징)
   if (file.size > 10 * 1024 * 1024) {
     alert('이미지 파일 크기는 10MB 이하만 가능합니다.')
@@ -2429,22 +2431,35 @@ async function handleMenuThumbnailUpload(event: Event, index: number) {
     const formData = new FormData()
     formData.append('file', file)
 
+    console.log('[ThumbnailUpload] Uploading to:', `${API_BASE_URL}/api/fileupload/thumbnail`)
+
     const response = await fetch(`${API_BASE_URL}/api/fileupload/thumbnail`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      },
       body: formData
     })
 
+    console.log('[ThumbnailUpload] Response status:', response.status)
+
     if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[ThumbnailUpload] Error response:', errorText)
       throw new Error('Thumbnail upload failed')
     }
 
     const result = await response.json()
+    console.log('[ThumbnailUpload] Success response:', result)
+
     if (editForm.value.items && editForm.value.items[index]) {
-      editForm.value.items[index].thumbnailUrl = result.url
+      // 백엔드는 fileUrl을 반환함 (FileUrl -> camelCase)
+      editForm.value.items[index].thumbnailUrl = result.fileUrl
+      console.log('[ThumbnailUpload] Set thumbnailUrl:', result.fileUrl)
     }
   } catch (error) {
     alert('썸네일 업로드에 실패했습니다.')
-    console.error('Thumbnail upload failed:', error)
+    console.error('[ThumbnailUpload] Failed:', error)
   } finally {
     input.value = ''
   }
