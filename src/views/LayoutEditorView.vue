@@ -1219,7 +1219,7 @@
                       class="form-input margin-input"
                       v-model.number="editingBlock.marginTop"
                       placeholder="0"
-                      min="0"
+                      min="-50"
                       max="100"
                     />
                     <span class="margin-unit">px</span>
@@ -1233,7 +1233,7 @@
                       class="form-input margin-input"
                       v-model.number="editingBlock.marginBottom"
                       placeholder="16"
-                      min="0"
+                      min="-50"
                       max="100"
                     />
                     <span class="margin-unit">px</span>
