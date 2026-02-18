@@ -25,11 +25,16 @@
           @touchend="(e) => handleTouchEnd(e, game.type)"
         >
           <div class="game-slide-content">
-            <div class="game-icon-large">{{ game.icon }}</div>
+            <div class="game-icon-large">
+              <component :is="game.icon" :size="64" color="currentColor" />
+            </div>
             <h3 class="game-title-large">{{ game.name }}</h3>
             <p class="game-desc-large">{{ game.description }}</p>
             <div v-if="data.showLeaderboard" class="game-leaderboard">
-              <div class="leaderboard-title">🏆 리더보드</div>
+              <div class="leaderboard-title">
+              <component :is="TrophyIcon" :size="16" color="#ffd700" class="trophy-icon" />
+              리더보드
+            </div>
               <div v-if="game.rankings && game.rankings.length > 0">
                 <div class="leaderboard-item" v-for="(rank, index) in game.rankings.slice(0, 3)" :key="index">
                   <span class="leaderboard-rank">{{ index + 1 }}위</span>
@@ -58,7 +63,9 @@
           @touchend="(e) => handleTouchEnd(e, game.type)"
         >
           <div class="portfolio-card-inner">
-            <div class="portfolio-icon">{{ game.icon }}</div>
+            <div class="portfolio-icon">
+              <component :is="game.icon" :size="72" color="#1a1a1a" />
+            </div>
             <div class="portfolio-info">
               <h3 class="portfolio-title">{{ game.name }}</h3>
               <p class="portfolio-desc">{{ game.description }}</p>
@@ -82,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h, type FunctionalComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import type { GamesCarouselBlockData } from '@/types/blocks'
 
@@ -100,9 +107,145 @@ interface LeaderboardEntry {
 interface GameData {
   type: string
   name: string
-  icon: string
+  icon: FunctionalComponent<{ size?: number; color?: string }>
   description: string
   rankings: LeaderboardEntry[]
+}
+
+// SVG 아이콘 컴포넌트들
+const PinballIcon: FunctionalComponent<{ size?: number; color?: string }> = (props) => {
+  const size = props.size || 64
+  const color = props.color || 'currentColor'
+  return h('svg', {
+    width: size,
+    height: size,
+    viewBox: '0 0 64 64',
+    fill: 'none',
+    xmlns: 'http://www.w3.org/2000/svg'
+  }, [
+    // 핀볼 머신 몸체
+    h('rect', { x: 8, y: 12, width: 48, height: 44, rx: 6, fill: color, opacity: 0.15 }),
+    h('rect', { x: 8, y: 12, width: 48, height: 44, rx: 6, stroke: color, 'stroke-width': 2.5 }),
+    // 공
+    h('circle', { cx: 40, cy: 28, r: 6, fill: color }),
+    // 플리퍼 왼쪽
+    h('path', { d: 'M16 46 L28 42 L28 46 Z', fill: color }),
+    // 플리퍼 오른쪽
+    h('path', { d: 'M48 46 L36 42 L36 46 Z', fill: color }),
+    // 범퍼들
+    h('circle', { cx: 24, cy: 24, r: 4, fill: color, opacity: 0.6 }),
+    h('circle', { cx: 32, cy: 20, r: 3, fill: color, opacity: 0.6 }),
+  ])
+}
+
+const BrickBreakerIcon: FunctionalComponent<{ size?: number; color?: string }> = (props) => {
+  const size = props.size || 64
+  const color = props.color || 'currentColor'
+  return h('svg', {
+    width: size,
+    height: size,
+    viewBox: '0 0 64 64',
+    fill: 'none',
+    xmlns: 'http://www.w3.org/2000/svg'
+  }, [
+    // 벽돌들
+    h('rect', { x: 8, y: 8, width: 14, height: 8, rx: 2, fill: color }),
+    h('rect', { x: 25, y: 8, width: 14, height: 8, rx: 2, fill: color }),
+    h('rect', { x: 42, y: 8, width: 14, height: 8, rx: 2, fill: color }),
+    h('rect', { x: 8, y: 19, width: 14, height: 8, rx: 2, fill: color, opacity: 0.8 }),
+    h('rect', { x: 25, y: 19, width: 14, height: 8, rx: 2, fill: color, opacity: 0.8 }),
+    h('rect', { x: 42, y: 19, width: 14, height: 8, rx: 2, fill: color, opacity: 0.8 }),
+    h('rect', { x: 8, y: 30, width: 14, height: 8, rx: 2, fill: color, opacity: 0.6 }),
+    h('rect', { x: 25, y: 30, width: 14, height: 8, rx: 2, fill: color, opacity: 0.6 }),
+    h('rect', { x: 42, y: 30, width: 14, height: 8, rx: 2, fill: color, opacity: 0.6 }),
+    // 패들
+    h('rect', { x: 20, y: 52, width: 24, height: 6, rx: 3, fill: color }),
+    // 공
+    h('circle', { cx: 32, cy: 44, r: 4, fill: color }),
+  ])
+}
+
+const MemoryIcon: FunctionalComponent<{ size?: number; color?: string }> = (props) => {
+  const size = props.size || 64
+  const color = props.color || 'currentColor'
+  return h('svg', {
+    width: size,
+    height: size,
+    viewBox: '0 0 64 64',
+    fill: 'none',
+    xmlns: 'http://www.w3.org/2000/svg'
+  }, [
+    // 카드 1 (뒤집힌)
+    h('rect', { x: 6, y: 8, width: 22, height: 28, rx: 4, fill: color, opacity: 0.2 }),
+    h('rect', { x: 6, y: 8, width: 22, height: 28, rx: 4, stroke: color, 'stroke-width': 2 }),
+    h('text', { x: 17, y: 28, 'font-size': 16, 'font-weight': 'bold', fill: color, 'text-anchor': 'middle' }, '?'),
+    // 카드 2 (뒤집힌)
+    h('rect', { x: 36, y: 8, width: 22, height: 28, rx: 4, fill: color, opacity: 0.2 }),
+    h('rect', { x: 36, y: 8, width: 22, height: 28, rx: 4, stroke: color, 'stroke-width': 2 }),
+    h('text', { x: 47, y: 28, 'font-size': 16, 'font-weight': 'bold', fill: color, 'text-anchor': 'middle' }, '?'),
+    // 카드 3 (열림 - 하트)
+    h('rect', { x: 6, y: 40, width: 22, height: 18, rx: 3, fill: color }),
+    h('path', { d: 'M17 46 L14 49 L17 55 L20 49 Z', fill: 'white' }),
+    // 카드 4 (열림 - 하트)
+    h('rect', { x: 36, y: 40, width: 22, height: 18, rx: 3, fill: color }),
+    h('path', { d: 'M47 46 L44 49 L47 55 L50 49 Z', fill: 'white' }),
+  ])
+}
+
+const SpotDifferenceIcon: FunctionalComponent<{ size?: number; color?: string }> = (props) => {
+  const size = props.size || 64
+  const color = props.color || 'currentColor'
+  return h('svg', {
+    width: size,
+    height: size,
+    viewBox: '0 0 64 64',
+    fill: 'none',
+    xmlns: 'http://www.w3.org/2000/svg'
+  }, [
+    // 돋보기 원
+    h('circle', { cx: 26, cy: 26, r: 16, stroke: color, 'stroke-width': 3, fill: 'none' }),
+    // 돋보기 손잡이
+    h('line', { x1: 38, y1: 38, x2: 54, y2: 54, stroke: color, 'stroke-width': 4, 'stroke-linecap': 'round' }),
+    // 돋보기 안 체크마크
+    h('path', { d: 'M18 26 L24 32 L34 20', stroke: color, 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', fill: 'none' }),
+  ])
+}
+
+const TrophyIcon: FunctionalComponent<{ size?: number; color?: string }> = (props) => {
+  const size = props.size || 16
+  const color = props.color || 'currentColor'
+  return h('svg', {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    xmlns: 'http://www.w3.org/2000/svg'
+  }, [
+    h('path', {
+      d: 'M12 15C15.866 15 19 11.866 19 8V3H5V8C5 11.866 8.134 15 12 15Z',
+      fill: color
+    }),
+    h('path', {
+      d: 'M5 5H3C2.448 5 2 5.448 2 6V8C2 9.657 3.343 11 5 11V5Z',
+      fill: color,
+      opacity: 0.7
+    }),
+    h('path', {
+      d: 'M19 5H21C21.552 5 22 5.448 22 6V8C22 9.657 20.657 11 19 11V5Z',
+      fill: color,
+      opacity: 0.7
+    }),
+    h('rect', { x: 10, y: 15, width: 4, height: 4, fill: color }),
+    h('rect', { x: 7, y: 19, width: 10, height: 2, rx: 1, fill: color }),
+  ])
+}
+
+// 게임 타입별 아이콘 맵
+const gameIcons: Record<string, FunctionalComponent<{ size?: number; color?: string }>> = {
+  'pinball': PinballIcon,
+  'brick-breaker': BrickBreakerIcon,
+  'memory': MemoryIcon,
+  'spot-difference': SpotDifferenceIcon
 }
 
 const props = defineProps<Props>()
@@ -126,25 +269,25 @@ const gameDefinitions = [
   {
     type: 'pinball',
     name: '핀볼',
-    icon: '🎯',
+    icon: PinballIcon,
     description: '플리퍼로 공을 튕겨서 점수를 획득하세요'
   },
   {
     type: 'brick-breaker',
     name: '벽돌깨기',
-    icon: '🧱',
+    icon: BrickBreakerIcon,
     description: '공을 튕겨서 벽돌을 깨세요'
   },
   {
     type: 'memory',
     name: '같은 카드 찾기',
-    icon: '🃏',
+    icon: MemoryIcon,
     description: '같은 그림의 카드를 찾아보세요'
   },
   {
     type: 'spot-difference',
     name: '틀린 그림 찾기',
-    icon: '🔍',
+    icon: SpotDifferenceIcon,
     description: '두 그림의 다른 부분을 찾아보세요'
   }
 ]
@@ -401,8 +544,16 @@ function goToGame(type: string) {
 }
 
 .game-icon-large {
-  font-size: 64px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 16px;
+  color: #ffffff;
+}
+
+.game-icon-large :deep(svg) {
+  width: 64px;
+  height: 64px;
 }
 
 .game-title-large {
@@ -428,11 +579,18 @@ function goToGame(type: string) {
 }
 
 .leaderboard-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   font-size: 14px;
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 12px;
+}
+
+.trophy-icon {
+  flex-shrink: 0;
 }
 
 .leaderboard-item {
@@ -531,8 +689,15 @@ function goToGame(type: string) {
 }
 
 .portfolio-icon {
-  font-size: 72px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 20px;
+}
+
+.portfolio-icon :deep(svg) {
+  width: 72px;
+  height: 72px;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
