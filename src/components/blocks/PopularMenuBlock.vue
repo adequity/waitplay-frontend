@@ -131,23 +131,12 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// 디버깅: 받은 데이터 확인
-console.log('[PopularMenuBlock] Received data:', {
-  displayStyle: props.data.displayStyle,
-  cardStyle: props.data.cardStyle,
-  badgeStyle: props.data.badgeStyle,
-  itemsCount: props.data.items?.length
-})
-
 const gridContainer = ref<HTMLElement | null>(null)
 const currentPage = ref(0)
 
 const displayStyle = computed(() => props.data.displayStyle || 'grid')
 const badgeStyle = computed(() => props.data.badgeStyle || 'badge')
-const isTransparent = computed(() => {
-  console.log('[PopularMenuBlock] cardStyle check:', props.data.cardStyle, '-> isTransparent:', props.data.cardStyle === 'transparent')
-  return props.data.cardStyle === 'transparent'
-})
+const isTransparent = computed(() => props.data.cardStyle === 'transparent')
 
 // 글자색 계산 (props로 받으면 사용, 없으면 기본값)
 const textColor = computed(() => props.textColor || '#ffffff')

@@ -11,6 +11,10 @@
       v-for="block in visibleBlocks"
       :key="block.id"
       :id="`block-${block.type}`"
+      :style="{
+        marginTop: block.type !== 'header' ? `${block.marginTop ?? 0}px` : undefined,
+        marginBottom: block.type !== 'header' ? `${block.marginBottom ?? 16}px` : undefined
+      }"
     >
       <component
         :is="getBlockComponent(block.type)"

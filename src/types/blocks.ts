@@ -162,6 +162,8 @@ export interface BaseBlock {
   type: BlockType
   order: number
   isVisible: boolean
+  marginTop?: number // 상단 여백 (px, 기본값: 0)
+  marginBottom?: number // 하단 여백 (px, 기본값: 16)
 }
 
 // Specific Block Types

@@ -172,15 +172,22 @@
               }"
             >
               <!-- Dynamic Block Component Rendering (Logic Preserved) -->
-              <component
+              <div
                 v-for="block in visibleBlocks"
                 :key="block.id"
-                :is="getBlockComponent(block.type)"
-                :data="block.data"
-                :qrCodeId="qrCodeId"
-                :textColor="pageTheme.textColor"
-                :isPreview="true"
-              />
+                :style="{
+                  marginTop: block.type !== 'header' ? `${block.marginTop ?? 0}px` : undefined,
+                  marginBottom: block.type !== 'header' ? `${block.marginBottom ?? 16}px` : undefined
+                }"
+              >
+                <component
+                  :is="getBlockComponent(block.type)"
+                  :data="block.data"
+                  :qrCodeId="qrCodeId"
+                  :textColor="pageTheme.textColor"
+                  :isPreview="true"
+                />
+              </div>
 
               <!-- Footer -->
               <div class="footer">
@@ -1198,6 +1205,44 @@
             </div>
           </template>
 
+          <!-- 공통: 블록 여백 설정 (header 제외) -->
+          <template v-if="editingBlock && editingBlock.type !== 'header'">
+            <div class="form-divider"></div>
+            <div class="form-group">
+              <label class="form-label">블록 여백</label>
+              <div class="margin-settings">
+                <div class="margin-input-group">
+                  <label class="margin-label">상단</label>
+                  <div class="margin-input-wrapper">
+                    <input
+                      type="number"
+                      class="form-input margin-input"
+                      v-model.number="editingBlock.marginTop"
+                      placeholder="0"
+                      min="0"
+                      max="100"
+                    />
+                    <span class="margin-unit">px</span>
+                  </div>
+                </div>
+                <div class="margin-input-group">
+                  <label class="margin-label">하단</label>
+                  <div class="margin-input-wrapper">
+                    <input
+                      type="number"
+                      class="form-input margin-input"
+                      v-model.number="editingBlock.marginBottom"
+                      placeholder="16"
+                      min="0"
+                      max="100"
+                    />
+                    <span class="margin-unit">px</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
         </div>
 
 <div class="modal-actions">
@@ -1934,16 +1979,6 @@ function saveBlockEdit() {
   if (editingBlock.value) {
     const formData = JSON.parse(JSON.stringify(editForm.value))
 
-    // 디버깅: popular_menu 블록 저장 데이터 확인
-    if (editingBlock.value.type === 'popular_menu') {
-      console.log('[SaveBlockEdit] popular_menu formData:', {
-        displayStyle: formData.displayStyle,
-        badgeStyle: formData.badgeStyle,
-        cardStyle: formData.cardStyle,
-        itemsCount: formData.items?.length
-      })
-    }
-
     // Convert datetime-local back to ISO format for countdown blocks
     if (editingBlock.value.type === 'countdown' && formData.targetDate) {
       formData.targetDate = new Date(formData.targetDate).toISOString()
@@ -2057,10 +2092,6 @@ async function uploadImage(file: File): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)
 
-  console.log('[uploadImage] Starting upload:', file.name, file.type, file.size, 'bytes')
-  console.log('[uploadImage] API URL:', `${API_BASE_URL}/api/FileUpload/image`)
-  console.log('[uploadImage] Auth token exists:', !!authStore.accessToken)
-
   try {
     const response = await fetch(`${API_BASE_URL}/api/FileUpload/image`, {
       method: 'POST',
@@ -2070,17 +2101,12 @@ async function uploadImage(file: File): Promise<string> {
       body: formData
     })
 
-    console.log('[uploadImage] Response status:', response.status, response.statusText)
-
     if (!response.ok) {
-      // 서버 에러 메시지 파싱 시도
       let errorMessage = '이미지 업로드 실패'
       try {
         const errorData = await response.json()
-        console.log('[uploadImage] Error response:', errorData)
         errorMessage = errorData.message || errorMessage
       } catch {
-        // JSON 파싱 실패 시 상태 코드 기반 메시지
         if (response.status === 400) {
           errorMessage = '이미지 형식이 올바르지 않습니다.'
         } else if (response.status === 401) {
@@ -2093,11 +2119,8 @@ async function uploadImage(file: File): Promise<string> {
     }
 
     const data = await response.json()
-    console.log('[uploadImage] Success response:', data)
-    console.log('[uploadImage] FileUrl:', data.fileUrl)
     return data.fileUrl
   } catch (error) {
-    console.error('[uploadImage] Error:', error)
     if (error instanceof TypeError) {
       throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.')
     }
@@ -2372,7 +2395,6 @@ async function handleMenuImageUpload(event: Event, index: number) {
   if (!input.files || !input.files[0]) return
 
   const file = input.files[0]
-  console.log('[MenuImageUpload] File selected:', file.name, file.type, file.size, 'bytes')
 
   // 파일 크기 체크 (원본 기준 10MB - 서버에서 리사이징)
   if (file.size > 10 * 1024 * 1024) {
@@ -2384,37 +2406,24 @@ async function handleMenuImageUpload(event: Event, index: number) {
     let fileToUpload: File = file
 
     // HEIC/HEIF 파일이 아닌 경우에만 클라이언트 리사이징 시도
-    // (HEIC은 canvas에서 지원 안됨, 서버에서 처리)
     const isHeic = file.type === 'image/heic' || file.type === 'image/heif' ||
                    file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
 
     if (!isHeic) {
       try {
-        // 메뉴 썸네일용 리사이징 (144x144 - 72px의 2배 for Retina)
         const resizedFile = await resizeImage(file, 144, 144, 0.85)
-        console.log(`[MenuImageUpload] Resized: ${file.size} bytes -> ${resizedFile.size} bytes`)
         fileToUpload = resizedFile
-      } catch (resizeError) {
-        console.warn('[MenuImageUpload] Resize failed, uploading original:', resizeError)
+      } catch {
         // 리사이징 실패 시 원본 업로드 (서버에서 리사이징)
       }
-    } else {
-      console.log('[MenuImageUpload] HEIC detected, uploading original for server processing')
     }
 
     const url = await uploadImage(fileToUpload)
-    console.log('[MenuImageUpload] Upload success:', url)
 
     if (editForm.value.items && editForm.value.items[index]) {
       editForm.value.items[index].imageUrl = url
-      console.log('[MenuImageUpload] Set imageUrl for index', index, ':', editForm.value.items[index].imageUrl)
-    } else {
-      console.error('[MenuImageUpload] Cannot set imageUrl - editForm.items[' + index + '] is undefined')
-      console.log('[MenuImageUpload] editForm.value:', editForm.value)
-      console.log('[MenuImageUpload] editForm.value.items:', editForm.value.items)
     }
   } catch (error) {
-    console.error('[MenuImageUpload] Failed:', error)
     alert(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.')
   } finally {
     input.value = ''
@@ -2429,8 +2438,6 @@ async function handleMenuThumbnailUpload(event: Event, index: number) {
   const file = input.files[0]
   if (!file) return
 
-  console.log('[ThumbnailUpload] File selected:', file.name, file.type, file.size, 'bytes')
-
   // 파일 크기 체크 (10MB - 서버에서 80x80으로 리사이징)
   if (file.size > 10 * 1024 * 1024) {
     alert('이미지 파일 크기는 10MB 이하만 가능합니다.')
@@ -2441,8 +2448,6 @@ async function handleMenuThumbnailUpload(event: Event, index: number) {
     const formData = new FormData()
     formData.append('file', file)
 
-    console.log('[ThumbnailUpload] Uploading to:', `${API_BASE_URL}/api/fileupload/thumbnail`)
-
     const response = await fetch(`${API_BASE_URL}/api/fileupload/thumbnail`, {
       method: 'POST',
       headers: {
@@ -2451,25 +2456,17 @@ async function handleMenuThumbnailUpload(event: Event, index: number) {
       body: formData
     })
 
-    console.log('[ThumbnailUpload] Response status:', response.status)
-
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error('[ThumbnailUpload] Error response:', errorText)
       throw new Error('Thumbnail upload failed')
     }
 
     const result = await response.json()
-    console.log('[ThumbnailUpload] Success response:', result)
 
     if (editForm.value.items && editForm.value.items[index]) {
-      // 백엔드는 fileUrl을 반환함 (FileUrl -> camelCase)
       editForm.value.items[index].thumbnailUrl = result.fileUrl
-      console.log('[ThumbnailUpload] Set thumbnailUrl:', result.fileUrl)
     }
   } catch (error) {
     alert('썸네일 업로드에 실패했습니다.')
-    console.error('[ThumbnailUpload] Failed:', error)
   } finally {
     input.value = ''
   }
@@ -2545,16 +2542,6 @@ async function saveLayout() {
       qrCodeId: qrCodeId.value,
       blocksJson: JSON.stringify(blocks.value),
       themeJson: JSON.stringify(themeWithPlayMode)
-    }
-
-    // 디버깅: popular_menu 블록 데이터 확인
-    const popularMenuBlock = blocks.value.find(b => b.type === 'popular_menu')
-    if (popularMenuBlock) {
-      console.log('[SaveLayout] popular_menu block data:', {
-        displayStyle: (popularMenuBlock.data as any).displayStyle,
-        cardStyle: (popularMenuBlock.data as any).cardStyle,
-        badgeStyle: (popularMenuBlock.data as any).badgeStyle
-      })
     }
 
     const response = await fetch(`${API_BASE_URL}/api/landingpage/layout`, {
@@ -3199,6 +3186,41 @@ function removeMenuItem(index: number) {
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, #e5e5ea 20%, #e5e5ea 80%, transparent 100%);
   margin: 24px 0 20px 0;
+}
+
+/* Margin Settings */
+.margin-settings {
+  display: flex;
+  gap: 16px;
+}
+
+.margin-input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.margin-label {
+  font-size: 12px;
+  color: #86868b;
+  font-weight: 500;
+}
+
+.margin-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.margin-input {
+  width: 80px !important;
+  text-align: center;
+}
+
+.margin-unit {
+  font-size: 12px;
+  color: #86868b;
 }
 
 .form-section-title {
