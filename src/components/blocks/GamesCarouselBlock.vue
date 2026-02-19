@@ -1043,7 +1043,7 @@ function goToGame(type: string) {
   );
 }
 
-/* 텍스트 가독성을 위한 하단 그라데이션 */
+/* 텍스트 가독성을 위한 하단 그라데이션 (배경과 동일한 mask 적용) */
 .showcase-overlay {
   position: absolute;
   top: 0;
@@ -1056,6 +1056,21 @@ function goToGame(type: string) {
     rgba(0, 0, 0, 0.3) 100%
   );
   pointer-events: none;
+  /* 배경과 동일하게 상단/하단 페이드 적용 */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 16.67%,
+    black 83.33%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 16.67%,
+    black 83.33%,
+    transparent 100%
+  );
 }
 
 /* 카드 콘텐츠 - 하단 정렬 (Apple Arcade 스타일) */
