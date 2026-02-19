@@ -731,11 +731,18 @@ function goToGame(type: string) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 12px;
-  padding: 0 1.5rem;
-  margin: 0 -1.5rem;
+  padding: 0;
+  margin: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x;
+}
+
+.games-slider::before,
+.games-slider::after {
+  content: '';
+  flex: 0 0 calc(7.5% - 6px);
+  min-width: calc(7.5% - 6px);
 }
 
 .games-slider::-webkit-scrollbar {
@@ -884,7 +891,6 @@ function goToGame(type: string) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 16px;
-  /* 첫/마지막 카드 중앙 정렬을 위한 패딩 - ::before/::after로 처리 */
   padding: 8px 0 16px;
   margin: 0;
   scrollbar-width: none;
@@ -892,12 +898,11 @@ function goToGame(type: string) {
   touch-action: pan-x;
 }
 
-/* 첫 번째 카드 앞에 빈 공간 (카드를 중앙으로 밀어줌) */
+/* 첫/마지막 카드 중앙 정렬 */
 .portfolio-slider::before,
 .portfolio-slider::after {
   content: '';
-  /* 카드가 90%이므로, 양쪽에 5%씩 = (100% - 90%) / 2 */
-  flex: 0 0 calc(5% - 8px); /* gap 16px의 절반 빼줌 */
+  flex: 0 0 calc(5% - 8px);
   min-width: calc(5% - 8px);
 }
 
