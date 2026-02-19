@@ -117,15 +117,18 @@
           @touchend="(e) => handleTouchEnd(e, game.type)"
         >
           <!-- 배경 이미지 레이어 (mask-image로 상단/하단 페이드) -->
-          <div
+          <img
             v-if="game.backgroundImageUrl"
+            :src="game.backgroundImageUrl"
+            :alt="game.name"
+            loading="lazy"
+            decoding="async"
             class="showcase-bg"
             :style="{
-              backgroundImage: `url(${game.backgroundImageUrl})`,
               opacity: (game.bgOpacity ?? 100) / 100,
               filter: game.bgBlur ? `blur(${game.bgBlur}px)` : undefined
             }"
-          ></div>
+          />
 
           <!-- 텍스트 가독성을 위한 하단 오버레이 -->
           <div class="showcase-overlay"></div>
@@ -138,6 +141,8 @@
                 :src="game.iconUrl"
                 :alt="game.name"
                 class="showcase-game-icon"
+                loading="lazy"
+                decoding="async"
               />
             </div>
             <!-- 배경도 없고 아이콘도 없을 때 fallback 아이콘 표시 -->
@@ -1056,11 +1061,10 @@ function goToGame(type: string) {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   /* 상단/하단 페이드아웃 (6등분 기준: 상단 1/6, 하단 1/6 페이드) */
   -webkit-mask-image: linear-gradient(
     to bottom,

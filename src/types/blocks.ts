@@ -42,6 +42,7 @@ export interface HeaderBlockData {
   bannerHeight?: number // vh 단위 (50~100, 기본 80)
   bannerAutoPlay?: boolean // 자동 슬라이드 (기본 true)
   bannerInterval?: number // 자동 슬라이드 간격 (초, 기본 5)
+  bannerStoreAlign?: 'left' | 'center' | 'right' // 매장 정보 정렬 (기본 left)
 }
 
 // Button Block

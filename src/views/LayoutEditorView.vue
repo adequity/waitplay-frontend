@@ -413,9 +413,41 @@
 
             <!-- ===== 배너 스타일 ===== -->
             <template v-if="editForm.headerStyle === 'banner'">
-              <div class="form-group">
-                <label class="form-label">환영 메시지</label>
-                <textarea class="form-textarea" v-model="editForm.welcomeMessage" placeholder="환영 메시지 입력 (로고 옆에 표시됩니다)" style="min-height: 60px;"></textarea>
+              <!-- 매장이름, 환영메세지 2열 + 정렬 -->
+              <div class="form-row-2col">
+                <div class="form-group">
+                  <label class="form-label">환영 메시지</label>
+                  <textarea class="form-textarea" v-model="editForm.welcomeMessage" placeholder="환영 메시지 입력 (로고 옆에 표시됩니다)" style="min-height: 60px;"></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">정렬</label>
+                  <div class="align-toggle-group">
+                    <button
+                      class="align-toggle-btn"
+                      :class="{ active: (editForm.bannerStoreAlign || 'left') === 'left' }"
+                      @click="editForm.bannerStoreAlign = 'left'"
+                      title="좌측 정렬"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+                    </button>
+                    <button
+                      class="align-toggle-btn"
+                      :class="{ active: editForm.bannerStoreAlign === 'center' }"
+                      @click="editForm.bannerStoreAlign = 'center'"
+                      title="중앙 정렬"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+                    </button>
+                    <button
+                      class="align-toggle-btn"
+                      :class="{ active: editForm.bannerStoreAlign === 'right' }"
+                      @click="editForm.bannerStoreAlign = 'right'"
+                      title="우측 정렬"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <!-- 배너 높이 -->
@@ -2977,8 +3009,8 @@ async function handleBannerSlideImageUpload(event: Event, slideIndex: number) {
   }
 
   try {
-    // 클라이언트 리사이징
-    const resizedFile = await resizeImageFile(file)
+    // 클라이언트 리사이징 (배너는 모바일 뷰 기준 1280px, 품질 75%)
+    const resizedFile = await resizeImageFile(file, 1280, 1280, 0.75)
 
     const formData = new FormData()
     formData.append('file', resizedFile)
@@ -6149,6 +6181,37 @@ select.form-input {
 }
 
 .style-toggle-btn.active {
+  background: #eff6ff;
+  border-color: #0071e3;
+  color: #0071e3;
+}
+
+/* Align Toggle */
+.align-toggle-group {
+  display: flex;
+  gap: 6px;
+}
+
+.align-toggle-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1.5px solid #e5e5ea;
+  border-radius: 8px;
+  background: #fafafa;
+  color: #86868b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.align-toggle-btn:hover {
+  background: #f0f0f5;
+  color: #48484a;
+}
+
+.align-toggle-btn.active {
   background: #eff6ff;
   border-color: #0071e3;
   color: #0071e3;

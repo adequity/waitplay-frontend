@@ -56,10 +56,17 @@
             class="banner-slide"
             @click="onSlideClick(slide)"
           >
-            <div
+            <img
+              v-if="slide.imageUrl"
+              :src="shouldLoadSlide(index) ? slide.imageUrl : undefined"
+              :loading="index === 0 ? 'eager' : 'lazy'"
+              :fetchpriority="index === 0 ? 'high' : 'low'"
+              decoding="async"
+              alt=""
               class="banner-slide-bg"
-              :style="{ backgroundImage: slide.imageUrl ? `url(${slide.imageUrl})` : 'none' }"
-            ></div>
+              @load="onSlideImageLoad(index)"
+            />
+            <div v-else class="banner-slide-bg banner-slide-placeholder"></div>
             <!-- 하단 페이드 그라데이션 -->
             <div class="banner-slide-gradient" :style="bannerGradientStyle"></div>
             <!-- 슬라이드 텍스트 (선택사항) -->
@@ -91,7 +98,7 @@
       </div>
 
       <!-- 매장 정보 영역 (배너 아래) -->
-      <div class="banner-store-info">
+      <div class="banner-store-info" :class="`align-${bannerStoreAlign}`">
         <div class="banner-store-info-inner">
           <img
             v-if="data.logoUrl"
@@ -202,11 +209,13 @@ let observer: IntersectionObserver | null = null
 // ========== BANNER 스타일 전용 ==========
 const isBannerStyle = computed(() => props.data.headerStyle === 'banner')
 const bannerHeight = computed(() => props.data.bannerHeight || 65)
+const bannerStoreAlign = computed(() => props.data.bannerStoreAlign || 'left')
 const bannerSlides = computed<BannerSlide[]>(() => props.data.bannerSlides || [])
 const currentSlideIndex = ref(0)
 const bannerTrackRef = ref<HTMLElement | null>(null)
 const bannerSliderRef = ref<HTMLElement | null>(null)
 const slideLoadStates = ref<boolean[]>([])
+const slidesReadyToLoad = ref<boolean[]>([])
 
 let autoPlayTimer: ReturnType<typeof setInterval> | null = null
 
@@ -228,30 +237,32 @@ const bannerGradientStyle = computed(() => {
   }
 })
 
-// 슬라이드 이미지 프리로드
-const preloadSlideImages = () => {
-  const states = bannerSlides.value.map(() => false)
-  slideLoadStates.value = states
-  bannerSlides.value.forEach((slide, index) => {
-    if (!slide.imageUrl) {
-      const newStates = [...slideLoadStates.value]
-      newStates[index] = true
-      slideLoadStates.value = newStates
-      return
-    }
-    const img = new Image()
-    img.onload = () => {
-      const newStates = [...slideLoadStates.value]
-      newStates[index] = true
-      slideLoadStates.value = newStates
-    }
-    img.onerror = () => {
-      const newStates = [...slideLoadStates.value]
-      newStates[index] = true
-      slideLoadStates.value = newStates
-    }
-    img.src = slide.imageUrl
-  })
+// 슬라이드 로드 여부 판단 (첫 번째는 즉시, 나머지는 지연)
+const shouldLoadSlide = (index: number): boolean => {
+  if (index === 0) return true
+  return slidesReadyToLoad.value[index] === true
+}
+
+// 슬라이드 이미지 로드 완료
+const onSlideImageLoad = (index: number) => {
+  const newStates = [...slideLoadStates.value]
+  newStates[index] = true
+  slideLoadStates.value = newStates
+}
+
+// 첫 번째 슬라이드 로드 후 나머지 지연 로드
+const initSlideLoading = () => {
+  const count = bannerSlides.value.length
+  slideLoadStates.value = Array(count).fill(false)
+  slidesReadyToLoad.value = Array(count).fill(false)
+  // 첫 번째는 즉시
+  if (count > 0) slidesReadyToLoad.value[0] = true
+  // 나머지는 200ms 후 로드 시작
+  if (count > 1) {
+    setTimeout(() => {
+      slidesReadyToLoad.value = Array(count).fill(true)
+    }, 200)
+  }
 }
 
 // 스크롤 이벤트로 현재 슬라이드 인덱스 추적
@@ -305,7 +316,7 @@ const resetAutoPlay = () => {
 onMounted(() => {
   if (isBannerStyle.value) {
     // 배너 모드
-    preloadSlideImages()
+    initSlideLoading()
     nextTick(() => {
       startAutoPlay()
     })
@@ -348,7 +359,7 @@ onUnmounted(() => {
 // 슬라이드 변경 감지
 watch(() => props.data.bannerSlides, () => {
   if (isBannerStyle.value) {
-    preloadSlideImages()
+    initSlideLoading()
   }
 }, { deep: true })
 </script>
@@ -490,11 +501,15 @@ watch(() => props.data.bannerSlides, () => {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-size: cover;
-  background-position: center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   background-color: #1a1a1a;
+}
+
+.banner-slide-placeholder {
+  display: block;
 }
 
 .banner-slide-gradient {
@@ -646,6 +661,34 @@ watch(() => props.data.bannerSlides, () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 매장 정보 정렬 - 좌측 (기본) */
+.banner-store-info.align-left .banner-store-info-inner {
+  justify-content: flex-start;
+}
+
+/* 매장 정보 정렬 - 중앙 (로고 위, 텍스트 아래) */
+.banner-store-info.align-center .banner-store-info-inner {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.banner-store-info.align-center .banner-store-name,
+.banner-store-info.align-center .banner-welcome-line {
+  text-align: center;
+}
+
+/* 매장 정보 정렬 - 우측 */
+.banner-store-info.align-right .banner-store-info-inner {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.banner-store-info.align-right .banner-store-name,
+.banner-store-info.align-right .banner-welcome-line {
+  text-align: right;
 }
 
 @media (min-width: 768px) {
