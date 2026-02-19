@@ -689,7 +689,8 @@ function goToGame(type: string) {
 <style scoped>
 .games-carousel-block {
   /* margin은 부모 컨테이너(CustomerView)에서 block.marginTop/marginBottom으로 설정 */
-  width: 100%;
+  margin-left: 15px;
+  margin-right: 15px;
   overflow: hidden;
 }
 
@@ -731,7 +732,7 @@ function goToGame(type: string) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 12px;
-  padding: 0 15px;
+  padding: 0;
   margin: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -744,8 +745,8 @@ function goToGame(type: string) {
 }
 
 .game-slide {
-  flex: 0 0 calc(100% - 30px);
-  min-width: calc(100% - 30px);
+  flex: 0 0 100%;
+  min-width: 100%;
   scroll-snap-align: center;
   scroll-snap-stop: always;
   cursor: grab;
@@ -765,10 +766,6 @@ function goToGame(type: string) {
   text-align: center;
   transition: all 0.2s ease;
   aspect-ratio: 6 / 9;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }
 
 .game-slide:active .game-slide-content {
@@ -878,7 +875,7 @@ function goToGame(type: string) {
 
 /* ========== PORTFOLIO 스타일 ========== */
 .games-carousel-block.portfolio-style {
-  padding: 0;
+  /* 좌우 margin은 부모 .games-carousel-block에서 15px 적용 */
 }
 
 .portfolio-slider {
@@ -889,7 +886,7 @@ function goToGame(type: string) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 16px;
-  padding: 8px 15px 16px;
+  padding: 8px 0 16px;
   margin: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -902,8 +899,8 @@ function goToGame(type: string) {
 }
 
 .portfolio-card {
-  flex: 0 0 calc(100% - 30px);
-  min-width: calc(100% - 30px);
+  flex: 0 0 100%;
+  min-width: 100%;
   scroll-snap-align: center;
   scroll-snap-stop: always;
   cursor: pointer;
@@ -922,7 +919,6 @@ function goToGame(type: string) {
   text-align: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   aspect-ratio: 6 / 9;
-  justify-content: center;
 }
 
 .portfolio-card:active .portfolio-card-inner {
