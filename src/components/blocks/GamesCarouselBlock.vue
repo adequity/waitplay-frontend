@@ -766,6 +766,10 @@ function goToGame(type: string) {
   text-align: center;
   transition: all 0.2s ease;
   aspect-ratio: 6 / 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .game-slide:active .game-slide-content {
