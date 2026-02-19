@@ -572,7 +572,7 @@ const handleIconImageUpload = async (event: Event) => {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await fetch(`${API_URL}/api/upload/image`, {
+    const response = await fetch(`${API_URL}/api/fileupload/logo`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${authStore.accessToken}` },
       body: formData
@@ -580,7 +580,7 @@ const handleIconImageUpload = async (event: Event) => {
 
     if (!response.ok) throw new Error('Upload failed')
     const data = await response.json()
-    templateForm.value.iconImageUrl = data.url
+    templateForm.value.iconImageUrl = data.fileUrl
   } catch (error) {
     console.error(error)
     alert('이미지 업로드에 실패했습니다.')
@@ -603,7 +603,7 @@ const handleBackgroundImageUpload = async (event: Event) => {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await fetch(`${API_URL}/api/upload/image`, {
+    const response = await fetch(`${API_URL}/api/fileupload/background`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${authStore.accessToken}` },
       body: formData
@@ -611,7 +611,7 @@ const handleBackgroundImageUpload = async (event: Event) => {
 
     if (!response.ok) throw new Error('Upload failed')
     const data = await response.json()
-    templateForm.value.backgroundImageUrl = data.url
+    templateForm.value.backgroundImageUrl = data.fileUrl
   } catch (error) {
     console.error(error)
     alert('이미지 업로드에 실패했습니다.')
