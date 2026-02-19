@@ -1128,7 +1128,7 @@ function goToGame(type: string) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: transparent;
   margin-bottom: 20px;
 }
 
