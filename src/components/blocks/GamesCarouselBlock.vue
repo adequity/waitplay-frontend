@@ -1121,14 +1121,9 @@ function goToGame(type: string) {
 .showcase-icon-wrapper {
   width: 120px;
   height: 120px;
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
   margin-bottom: 20px;
 }
 
