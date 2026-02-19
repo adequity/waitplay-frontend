@@ -29,7 +29,13 @@
         >
           <div class="game-slide-content">
             <div class="game-icon-large">
-              <component :is="game.icon" :size="64" color="currentColor" />
+              <img
+                v-if="game.iconUrl"
+                :src="game.iconUrl"
+                :alt="game.name"
+                class="carousel-game-icon"
+              />
+              <component v-else :is="game.icon" :size="64" color="currentColor" />
             </div>
             <h3 class="game-title-large">{{ game.name }}</h3>
             <p class="game-desc-large">{{ game.description }}</p>
@@ -73,7 +79,7 @@
                 :alt="game.name"
                 class="portfolio-game-icon"
               />
-              <component v-else :is="game.icon" :size="72" color="#1a1a1a" />
+              <component v-else :is="game.icon" :size="100" color="#1a1a1a" />
             </div>
             <div class="portfolio-info">
               <h3 class="portfolio-title">{{ game.name }}</h3>
@@ -102,6 +108,8 @@
           v-for="game in allowedGames"
           :key="game.type"
           class="showcase-card"
+          :style="game.backgroundImageUrl ? { backgroundImage: `url(${game.backgroundImageUrl})` } : {}"
+          :class="{ 'has-bg-image': game.backgroundImageUrl }"
           @click="goToGame(game.type)"
           @touchstart="handleTouchStart"
           @touchend="(e) => handleTouchEnd(e, game.type)"
@@ -497,7 +505,8 @@ const allowedGames = computed(() => {
       // gamesOrder에서 iconUrl이 있으면 사용, 없으면 API의 iconImageUrl 사용
       return {
         ...game,
-        iconUrl: gameOrder.iconUrl || game.iconImageUrl
+        iconUrl: gameOrder.iconUrl || game.iconImageUrl,
+        backgroundImageUrl: game.backgroundImageUrl
       }
     }
     return null
@@ -505,7 +514,7 @@ const allowedGames = computed(() => {
 
   return orderedGames.filter(game =>
     props.data.enabledGames.includes(game!.type)
-  ) as (GameData & { iconUrl?: string })[]
+  ) as (GameData & { iconUrl?: string; backgroundImageUrl?: string | null })[]
 })
 
 function scrollToGame(index: number) {
@@ -708,6 +717,13 @@ function goToGame(type: string) {
   height: 64px;
 }
 
+.carousel-game-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
 .game-title-large {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   font-size: 22px;
@@ -858,16 +874,16 @@ function goToGame(type: string) {
 }
 
 .portfolio-icon :deep(svg) {
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: 100px;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
 .portfolio-game-icon {
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: 16px;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
@@ -967,6 +983,23 @@ function goToGame(type: string) {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  padding: 30px 20px;
+  border-radius: 24px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: transform 0.2s ease;
+}
+
+.showcase-card.has-bg-image {
+  background-color: rgba(0, 0, 0, 0.3);
+  background-blend-mode: overlay;
+}
+
+.showcase-card.has-bg-image .showcase-game-name,
+.showcase-card.has-bg-image .showcase-play-btn {
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 /* 게임 아이콘 래퍼 */
