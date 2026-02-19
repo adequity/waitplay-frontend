@@ -120,7 +120,11 @@
           <div
             v-if="game.backgroundImageUrl"
             class="showcase-bg"
-            :style="{ backgroundImage: `url(${game.backgroundImageUrl})` }"
+            :style="{
+              backgroundImage: `url(${game.backgroundImageUrl})`,
+              opacity: (game.bgOpacity ?? 100) / 100,
+              filter: game.bgBlur ? `blur(${game.bgBlur}px)` : undefined
+            }"
           ></div>
 
           <!-- 텍스트 가독성을 위한 하단 오버레이 -->
@@ -145,8 +149,16 @@
 
             <!-- 게임 정보 -->
             <div class="showcase-info">
-              <h3 class="showcase-game-name">{{ game.name }}</h3>
-              <p class="showcase-game-desc">{{ game.description }}</p>
+              <h3 class="showcase-game-name" :style="{
+                fontSize: game.nameFontSize ? `${game.nameFontSize}px` : undefined,
+                fontFamily: game.nameFontFamily || undefined,
+                textShadow: game.nameTextShadow ? `0 1px ${game.nameTextShadow * 2}px rgba(0,0,0,${Math.min(game.nameTextShadow * 0.15, 1)})` : undefined
+              }">{{ game.name }}</h3>
+              <p class="showcase-game-desc" :style="{
+                fontSize: game.descFontSize ? `${game.descFontSize}px` : undefined,
+                fontFamily: game.descFontFamily || undefined,
+                textShadow: game.descTextShadow ? `0 1px ${game.descTextShadow * 2}px rgba(0,0,0,${Math.min(game.descTextShadow * 0.15, 1)})` : undefined
+              }">{{ game.description }}</p>
             </div>
 
             <!-- 버튼 -->
@@ -195,6 +207,14 @@ interface GameData {
   iconImageUrl?: string | null
   backgroundImageUrl?: string | null
   buttonText?: string | null
+  bgOpacity?: number
+  bgBlur?: number
+  nameFontSize?: number
+  nameFontFamily?: string | null
+  nameTextShadow?: number
+  descFontSize?: number
+  descFontFamily?: string | null
+  descTextShadow?: number
 }
 
 // SVG 아이콘 컴포넌트들
@@ -391,7 +411,15 @@ async function loadAvailableGames() {
         rankings: [],
         iconImageUrl: game.iconImageUrl,
         backgroundImageUrl: game.backgroundImageUrl,
-        buttonText: game.buttonText
+        buttonText: game.buttonText,
+        bgOpacity: game.bgOpacity,
+        bgBlur: game.bgBlur,
+        nameFontSize: game.nameFontSize,
+        nameFontFamily: game.nameFontFamily,
+        nameTextShadow: game.nameTextShadow,
+        descFontSize: game.descFontSize,
+        descFontFamily: game.descFontFamily,
+        descTextShadow: game.descTextShadow
       }))
     } else {
       // Fallback: 기본 게임 목록 사용
@@ -537,7 +565,15 @@ const allowedGames = computed(() => {
         ...game,
         iconUrl: gameOrder.iconUrl || game.iconImageUrl,
         backgroundImageUrl: game.backgroundImageUrl,
-        buttonText: game.buttonText
+        buttonText: game.buttonText,
+        bgOpacity: game.bgOpacity,
+        bgBlur: game.bgBlur,
+        nameFontSize: game.nameFontSize,
+        nameFontFamily: game.nameFontFamily,
+        nameTextShadow: game.nameTextShadow,
+        descFontSize: game.descFontSize,
+        descFontFamily: game.descFontFamily,
+        descTextShadow: game.descTextShadow
       }
     }
     return null
@@ -1014,6 +1050,7 @@ function goToGame(type: string) {
   position: relative;
   min-height: 480px;
   background-color: transparent;
+  overflow: hidden;
 }
 
 /* 배경 이미지 레이어 (mask로 상단/하단 페이드 - 텍스트에 영향 없음) */

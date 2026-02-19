@@ -255,6 +255,82 @@
               </div>
             </div>
           </div>
+
+          <!-- 배경 이미지 스타일 -->
+          <div class="form-section">
+            <h3 class="section-title">배경 이미지 스타일</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>투명도 <span class="range-value">{{ templateForm.bgOpacity }}%</span></label>
+                <input v-model.number="templateForm.bgOpacity" type="range" min="0" max="100" step="5" />
+              </div>
+              <div class="form-group">
+                <label>블러 <span class="range-value">{{ templateForm.bgBlur }}px</span></label>
+                <input v-model.number="templateForm.bgBlur" type="range" min="0" max="20" step="1" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 폰트 관리 -->
+          <div class="form-section">
+            <h3 class="section-title">폰트 관리</h3>
+            <div class="form-subsection">
+              <h4 class="subsection-title">게임 이름</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>글자 크기 <span class="range-value">{{ templateForm.nameFontSize }}px</span></label>
+                  <input v-model.number="templateForm.nameFontSize" type="range" min="12" max="48" step="1" />
+                </div>
+                <div class="form-group">
+                  <label>폰트</label>
+                  <select v-model="templateForm.nameFontFamily">
+                    <option value="">기본 (시스템 폰트)</option>
+                    <option value="Noto Sans KR">Noto Sans KR</option>
+                    <option value="Nanum Gothic">나눔 고딕</option>
+                    <option value="Nanum Myeongjo">나눔 명조</option>
+                    <option value="Black Han Sans">블랙 한 산스</option>
+                    <option value="Jua">주아</option>
+                    <option value="Do Hyeon">도현</option>
+                    <option value="Gamja Flower">감자 꽃</option>
+                    <option value="Gothic A1">고딕 A1</option>
+                    <option value="IBM Plex Sans KR">IBM Plex Sans KR</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>그림자 강도 <span class="range-value">{{ templateForm.nameTextShadow }}</span></label>
+                  <input v-model.number="templateForm.nameTextShadow" type="range" min="0" max="10" step="1" />
+                </div>
+              </div>
+            </div>
+            <div class="form-subsection">
+              <h4 class="subsection-title">설명</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>글자 크기 <span class="range-value">{{ templateForm.descFontSize }}px</span></label>
+                  <input v-model.number="templateForm.descFontSize" type="range" min="10" max="36" step="1" />
+                </div>
+                <div class="form-group">
+                  <label>폰트</label>
+                  <select v-model="templateForm.descFontFamily">
+                    <option value="">기본 (시스템 폰트)</option>
+                    <option value="Noto Sans KR">Noto Sans KR</option>
+                    <option value="Nanum Gothic">나눔 고딕</option>
+                    <option value="Nanum Myeongjo">나눔 명조</option>
+                    <option value="Black Han Sans">블랙 한 산스</option>
+                    <option value="Jua">주아</option>
+                    <option value="Do Hyeon">도현</option>
+                    <option value="Gamja Flower">감자 꽃</option>
+                    <option value="Gothic A1">고딕 A1</option>
+                    <option value="IBM Plex Sans KR">IBM Plex Sans KR</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>그림자 강도 <span class="range-value">{{ templateForm.descTextShadow }}</span></label>
+                  <input v-model.number="templateForm.descTextShadow" type="range" min="0" max="10" step="1" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" @click="closeModals">취소</button>
@@ -307,7 +383,18 @@ const templateForm = ref({
   // 표기 이미지 관리
   iconImageUrl: '',
   backgroundImageUrl: '',
-  buttonText: '지금 도전하기'
+  buttonText: '지금 도전하기',
+  // 배경 스타일
+  bgOpacity: 100,
+  bgBlur: 0,
+  // 게임 이름 폰트
+  nameFontSize: 26,
+  nameFontFamily: '',
+  nameTextShadow: 0,
+  // 설명 폰트
+  descFontSize: 15,
+  descFontFamily: '',
+  descTextShadow: 0
 })
 
 // 이미지 업로드 상태
@@ -482,7 +569,15 @@ const editTemplate = (template: any) => {
     isDefault: template.isDefault,
     iconImageUrl: template.iconImageUrl || '',
     backgroundImageUrl: template.backgroundImageUrl || '',
-    buttonText: template.buttonText || '지금 도전하기'
+    buttonText: template.buttonText || '지금 도전하기',
+    bgOpacity: template.bgOpacity ?? 100,
+    bgBlur: template.bgBlur ?? 0,
+    nameFontSize: template.nameFontSize ?? 26,
+    nameFontFamily: template.nameFontFamily || '',
+    nameTextShadow: template.nameTextShadow ?? 0,
+    descFontSize: template.descFontSize ?? 15,
+    descFontFamily: template.descFontFamily || '',
+    descTextShadow: template.descTextShadow ?? 0
   }
   showEditModal.value = true
 }
@@ -527,7 +622,15 @@ const saveTemplate = async () => {
         isDefault: templateForm.value.isDefault,
         iconImageUrl: templateForm.value.iconImageUrl || null,
         backgroundImageUrl: templateForm.value.backgroundImageUrl || null,
-        buttonText: templateForm.value.buttonText || null
+        buttonText: templateForm.value.buttonText || null,
+        bgOpacity: templateForm.value.bgOpacity,
+        bgBlur: templateForm.value.bgBlur,
+        nameFontSize: templateForm.value.nameFontSize,
+        nameFontFamily: templateForm.value.nameFontFamily || null,
+        nameTextShadow: templateForm.value.nameTextShadow,
+        descFontSize: templateForm.value.descFontSize,
+        descFontFamily: templateForm.value.descFontFamily || null,
+        descTextShadow: templateForm.value.descTextShadow
       })
     })
     if (!response.ok) throw new Error('Failed')
@@ -553,7 +656,15 @@ const closeModals = () => {
     isDefault: false,
     iconImageUrl: '',
     backgroundImageUrl: '',
-    buttonText: '지금 도전하기'
+    buttonText: '지금 도전하기',
+    bgOpacity: 100,
+    bgBlur: 0,
+    nameFontSize: 26,
+    nameFontFamily: '',
+    nameTextShadow: 0,
+    descFontSize: 15,
+    descFontFamily: '',
+    descTextShadow: 0
   }
 }
 
@@ -868,4 +979,15 @@ onMounted(() => fetchAll())
 .btn-remove-image { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0, 0, 0, 0.6); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .btn-remove-image :deep(svg) { width: 14px; height: 14px; color: white; }
 .btn-remove-image:hover { background: rgba(220, 38, 38, 0.9); }
+
+/* Range Inputs & Font Management */
+.range-value { font-size: 12px; color: #d4a853; font-weight: 600; margin-left: 6px; }
+.form-group input[type="range"] { width: 100%; height: 6px; -webkit-appearance: none; appearance: none; background: #e5e5ea; border-radius: 3px; outline: none; margin-top: 8px; }
+.form-group input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #d4a853; cursor: pointer; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.form-group select { width: 100%; padding: 10px 12px; border: 1px solid #e5e5ea; border-radius: 8px; background: #fff; font-size: 14px; color: #1d1d1f; outline: none; transition: border-color 0.2s; }
+.form-group select:focus { border-color: #d4a853; }
+
+.form-subsection { margin-bottom: 20px; padding: 16px; background: #fafafa; border-radius: 10px; border: 1px solid #f0f0f0; }
+.form-subsection:last-child { margin-bottom: 0; }
+.subsection-title { font-size: 13px; font-weight: 600; color: #6e6e73; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px; }
 </style>

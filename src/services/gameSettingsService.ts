@@ -38,6 +38,14 @@ export interface AvailableGameDto {
   iconImageUrl?: string | null
   backgroundImageUrl?: string | null
   buttonText?: string | null
+  bgOpacity?: number
+  bgBlur?: number
+  nameFontSize?: number
+  nameFontFamily?: string | null
+  descFontSize?: number
+  descFontFamily?: string | null
+  nameTextShadow?: number
+  descTextShadow?: number
 }
 
 const gameSettingsService = {
