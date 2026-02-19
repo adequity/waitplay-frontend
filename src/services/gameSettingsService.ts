@@ -35,6 +35,9 @@ export interface AvailableGameDto {
   icon: string | null
   description: string | null
   displayOrder: number
+  iconImageUrl?: string | null
+  backgroundImageUrl?: string | null
+  buttonText?: string | null
 }
 
 const gameSettingsService = {
@@ -78,6 +81,15 @@ const gameSettingsService = {
    */
   async getAvailableGames(): Promise<AvailableGameDto[]> {
     const response = await api.get('/api/games/settings/available-games')
+    return response.data.games || []
+  },
+
+  /**
+   * Get available games for QR code (public - no auth required)
+   * Returns games assigned to the admin who owns this QR code
+   */
+  async getAvailableGamesPublic(qrCodeId: string): Promise<AvailableGameDto[]> {
+    const response = await api.get(`/api/games/settings/public/${qrCodeId}/games`)
     return response.data.games || []
   }
 }

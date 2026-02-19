@@ -1323,7 +1323,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import draggable from 'vuedraggable'
 import type { Block, BlockType } from '@/types/blocks'
-import gameSettingsService from '@/services/gameSettingsService'
+import gameSettingsService, { type AvailableGameDto } from '@/services/gameSettingsService'
 import apiClient from '@/services/api'
 
 // Import block components
@@ -1357,6 +1357,9 @@ const showAddBlockModal = ref(false)
 const editingBlock = ref<Block | null>(null)
 const editForm = ref<any>({})
 const previewDevice = ref<'mobile' | 'desktop'>('mobile')
+
+// Available games from API (Admin에게 할당된 게임 목록)
+const availableGamesForEditor = ref<AvailableGameDto[]>([])
 
 // File upload state
 const backgroundImageInput = ref<HTMLInputElement | null>(null)
@@ -1796,16 +1799,12 @@ function getDefaultBlockData(type: BlockType): any {
     case 'video_grid':
       return { videos: [], layout: 'grid-2' }
     case 'games_carousel':
+      // 기본값은 빈 배열 - editBlock에서 API로부터 게임 목록 로드
       return {
-        enabledGames: ['pinball', 'memory', 'spot-difference'],
+        enabledGames: [],
         showLeaderboard: true,
         displayStyle: 'carousel',
-        gamesOrder: [
-          { type: 'pinball', name: '핀볼', icon: '🎯' },
-          { type: 'brick-breaker', name: '벽돌깨기', icon: '🧱' },
-          { type: 'memory', name: '같은 카드 찾기', icon: '🃏' },
-          { type: 'spot-difference', name: '틀린 그림 찾기', icon: '🔍' }
-        ]
+        gamesOrder: []
       }
     case 'popular_menu':
       return { title: '인기 메뉴', subtitle: '', items: [] }
@@ -1929,15 +1928,27 @@ async function editBlock(block: Block) {
     }
 
     try {
+      // API에서 할당된 게임 목록 가져오기
+      const availableGames = await gameSettingsService.getAvailableGames()
       const settings = await gameSettingsService.getGameSettings(qrCodeId.value)
 
-      // Game definitions matching GamesTab
-      const gameDefinitions: Record<string, { name: string; icon: string }> = {
-        'pinball': { name: '핀볼', icon: '🎯' },
-        'brick-breaker': { name: '벽돌깨기', icon: '🧱' },
-        'memory': { name: '같은 카드 찾기', icon: '🃏' },
-        'spot-difference': { name: '틀린 그림 찾기', icon: '🔍' }
+      // 동적으로 게임 정의 생성 (API 데이터 기반)
+      const gameDefinitions: Record<string, { name: string; icon: string }> = {}
+      const defaultIcons: Record<string, string> = {
+        'pinball': '🎯',
+        'brick-breaker': '🧱',
+        'memory': '🃏',
+        'spot-difference': '🔍',
+        'roulette': '🎰',
+        'slot': '🎲'
       }
+
+      availableGames.forEach(game => {
+        gameDefinitions[game.gameKey] = {
+          name: game.name,
+          icon: defaultIcons[game.gameKey] || '🎮'
+        }
+      })
 
       // Update enabled games from API
       editForm.value.enabledGames = settings.enabledGames
@@ -1958,19 +1969,22 @@ async function editBlock(block: Block) {
         }))
       }
 
+      // availableGamesForEditor 저장 (게임 선택 UI용)
+      availableGamesForEditor.value = availableGames
+
       console.log('Game settings loaded for carousel:', settings)
+      console.log('Available games from API:', availableGames)
     } catch (error) {
       console.error('Failed to load game settings:', error)
       // Fallback to default games if API fails
       if (!editForm.value.gamesOrder || editForm.value.gamesOrder.length === 0) {
         editForm.value.gamesOrder = [
           { type: 'pinball', name: '핀볼', icon: '🎯' },
-          { type: 'memory', name: '같은 카드 찾기', icon: '🃏' },
-          { type: 'spot-difference', name: '틀린 그림 찾기', icon: '🔍' }
+          { type: 'memory', name: '같은 카드 찾기', icon: '🃏' }
         ]
       }
       if (!editForm.value.enabledGames || editForm.value.enabledGames.length === 0) {
-        editForm.value.enabledGames = ['pinball', 'memory', 'spot-difference']
+        editForm.value.enabledGames = ['pinball', 'memory']
       }
     }
   }

@@ -116,8 +116,8 @@
           <!-- 게임 이름 -->
           <h3 class="showcase-game-name">{{ game.name }}</h3>
 
-          <!-- 지금 도전하기 버튼 -->
-          <button class="showcase-play-btn">지금 도전하기</button>
+          <!-- 버튼 텍스트 (DB에서 가져온 값 또는 기본값) -->
+          <button class="showcase-play-btn">{{ game.buttonText || '지금 도전하기' }}</button>
         </div>
       </div>
       <!-- Page Indicator Dots -->
@@ -135,14 +135,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, h, type FunctionalComponent } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h, type FunctionalComponent, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import type { GamesCarouselBlockData } from '@/types/blocks'
+import gameSettingsService, { type AvailableGameDto } from '@/services/gameSettingsService'
 
 interface Props {
   data: GamesCarouselBlockData
   qrCodeId?: string
   isPreview?: boolean // 편집기 미리보기 모드
+  availableGamesFromParent?: AvailableGameDto[] // 부모 컴포넌트에서 전달받은 게임 목록
 }
 
 interface LeaderboardEntry {
@@ -156,6 +158,9 @@ interface GameData {
   icon: FunctionalComponent<{ size?: number; color?: string }>
   description: string
   rankings: LeaderboardEntry[]
+  iconImageUrl?: string | null
+  backgroundImageUrl?: string | null
+  buttonText?: string | null
 }
 
 // SVG 아이콘 컴포넌트들
@@ -286,12 +291,22 @@ const TrophyIcon: FunctionalComponent<{ size?: number; color?: string }> = (prop
   ])
 }
 
-// 게임 타입별 아이콘 맵
+// 게임 타입별 아이콘 맵 (fallback용)
 const gameIcons: Record<string, FunctionalComponent<{ size?: number; color?: string }>> = {
   'pinball': PinballIcon,
   'brick-breaker': BrickBreakerIcon,
   'memory': MemoryIcon,
   'spot-difference': SpotDifferenceIcon
+}
+
+// 게임 기본 정보 (fallback용 - API 실패시 또는 미리보기용)
+const fallbackGameDefinitions: Record<string, { name: string; description: string }> = {
+  'pinball': { name: '핀볼', description: '플리퍼로 공을 튕겨서 점수를 획득하세요' },
+  'brick-breaker': { name: '벽돌깨기', description: '공을 튕겨서 벽돌을 깨세요' },
+  'memory': { name: '같은 카드 찾기', description: '같은 그림의 카드를 찾아보세요' },
+  'spot-difference': { name: '틀린 그림 찾기', description: '두 그림의 다른 부분을 찾아보세요' },
+  'roulette': { name: '행운의 룰렛', description: '룰렛을 돌려서 운을 시험하세요' },
+  'slot': { name: '슬롯머신', description: '슬롯을 돌려 행운을 잡으세요' }
 }
 
 const props = defineProps<Props>()
@@ -309,40 +324,87 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 // ✅ 지연 로딩 상태
 const isLeaderboardLoaded = ref(false)
+const isGamesLoaded = ref(false)
 let observer: IntersectionObserver | null = null
 
-// 게임 기본 정보
-const gameDefinitions = [
-  {
-    type: 'pinball',
-    name: '핀볼',
-    icon: PinballIcon,
-    description: '플리퍼로 공을 튕겨서 점수를 획득하세요'
-  },
-  {
-    type: 'brick-breaker',
-    name: '벽돌깨기',
-    icon: BrickBreakerIcon,
-    description: '공을 튕겨서 벽돌을 깨세요'
-  },
-  {
-    type: 'memory',
-    name: '같은 카드 찾기',
-    icon: MemoryIcon,
-    description: '같은 그림의 카드를 찾아보세요'
-  },
-  {
-    type: 'spot-difference',
-    name: '틀린 그림 찾기',
-    icon: SpotDifferenceIcon,
-    description: '두 그림의 다른 부분을 찾아보세요'
-  }
-]
+// API에서 로드된 게임 목록
+const availableGamesFromApi = ref<AvailableGameDto[]>([])
 
-const allGames = ref<GameData[]>(gameDefinitions.map(game => ({
-  ...game,
-  rankings: []
-})))
+// API에서 가져온 게임 목록 또는 fallback 사용
+const allGames = ref<GameData[]>([])
+
+// API에서 게임 목록 로드
+async function loadAvailableGames() {
+  if (isGamesLoaded.value || props.isPreview) return
+
+  try {
+    if (props.availableGamesFromParent && props.availableGamesFromParent.length > 0) {
+      // 부모에서 전달받은 게임 목록 사용
+      availableGamesFromApi.value = props.availableGamesFromParent
+    } else if (props.qrCodeId) {
+      // API에서 게임 목록 로드
+      const games = await gameSettingsService.getAvailableGamesPublic(props.qrCodeId)
+      availableGamesFromApi.value = games
+    }
+
+    // GameData 형식으로 변환
+    if (availableGamesFromApi.value.length > 0) {
+      allGames.value = availableGamesFromApi.value.map(game => ({
+        type: game.gameKey,
+        name: game.name,
+        icon: gameIcons[game.gameKey] || PinballIcon,
+        description: game.description || fallbackGameDefinitions[game.gameKey]?.description || '',
+        rankings: [],
+        iconImageUrl: game.iconImageUrl,
+        backgroundImageUrl: game.backgroundImageUrl,
+        buttonText: game.buttonText
+      }))
+    } else {
+      // Fallback: 기본 게임 목록 사용
+      allGames.value = Object.keys(fallbackGameDefinitions).slice(0, 4).map(key => {
+        const def = fallbackGameDefinitions[key]
+        return {
+          type: key,
+          name: def?.name || key,
+          icon: gameIcons[key] || PinballIcon,
+          description: def?.description || '',
+          rankings: []
+        }
+      })
+    }
+
+    isGamesLoaded.value = true
+  } catch (error) {
+    console.error('Failed to load available games:', error)
+    // Fallback: 기본 게임 목록 사용
+    allGames.value = Object.keys(fallbackGameDefinitions).slice(0, 4).map(key => {
+      const def = fallbackGameDefinitions[key]
+      return {
+        type: key,
+        name: def?.name || key,
+        icon: gameIcons[key] || PinballIcon,
+        description: def?.description || '',
+        rankings: []
+      }
+    })
+    isGamesLoaded.value = true
+  }
+}
+
+// 미리보기 모드용 초기화
+function initForPreview() {
+  allGames.value = Object.keys(fallbackGameDefinitions).slice(0, 4).map(key => {
+    const def = fallbackGameDefinitions[key]
+    return {
+      type: key,
+      name: def?.name || key,
+      icon: gameIcons[key] || PinballIcon,
+      description: def?.description || '',
+      rankings: []
+    }
+  })
+  isGamesLoaded.value = true
+}
 
 // API에서 리더보드 데이터 가져오기
 async function fetchLeaderboard(gameType: string) {
@@ -367,10 +429,11 @@ async function fetchLeaderboard(gameType: string) {
 
 // 모든 게임의 리더보드 데이터 로드
 async function loadAllLeaderboards() {
-  if (isLeaderboardLoaded.value) return
+  if (isLeaderboardLoaded.value || !isGamesLoaded.value) return
   isLeaderboardLoaded.value = true
 
-  const promises = gameDefinitions.map(async (game) => {
+  // 현재 로드된 게임 목록에 리더보드 데이터 추가
+  const promises = allGames.value.map(async (game) => {
     const rankings = await fetchLeaderboard(game.type)
     return {
       ...game,
@@ -381,9 +444,15 @@ async function loadAllLeaderboards() {
   allGames.value = await Promise.all(promises)
 }
 
-onMounted(() => {
-  // 미리보기 모드에서는 API 호출 스킵
-  if (props.isPreview) return
+onMounted(async () => {
+  // 미리보기 모드에서는 fallback 게임 목록 사용
+  if (props.isPreview) {
+    initForPreview()
+    return
+  }
+
+  // 게임 목록 로드 (API에서)
+  await loadAvailableGames()
 
   // ✅ Intersection Observer로 뷰포트에 들어올 때만 리더보드 로드
   if ('IntersectionObserver' in window) {
@@ -413,11 +482,17 @@ onUnmounted(() => {
 })
 
 const allowedGames = computed(() => {
+  // 게임이 아직 로드되지 않았으면 빈 배열 반환
+  if (allGames.value.length === 0) return []
+
   const orderedGames = props.data.gamesOrder.map(gameOrder => {
     const game = allGames.value.find(g => g.type === gameOrder.type)
     if (game) {
-      // gamesOrder에서 iconUrl이 있으면 추가
-      return { ...game, iconUrl: gameOrder.iconUrl }
+      // gamesOrder에서 iconUrl이 있으면 사용, 없으면 API의 iconImageUrl 사용
+      return {
+        ...game,
+        iconUrl: gameOrder.iconUrl || game.iconImageUrl
+      }
     }
     return null
   }).filter(Boolean)
