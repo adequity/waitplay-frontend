@@ -19,10 +19,7 @@
     <!-- Game Templates Tab -->
     <div v-else-if="activeTab === 'templates'" class="templates-section">
       <div class="section-actions">
-        <button class="btn-primary" @click="showCreateModal = true">
-          <IconBase name="plus" /> 새 게임 템플릿
-        </button>
-        <button class="btn-secondary" @click="assignDefaultsToAll">
+        <button class="btn-primary" @click="assignDefaultsToAll">
           <IconBase name="users" /> 모든 Admin에 기본 게임 일괄 할당
         </button>
       </div>
@@ -65,7 +62,7 @@
         <div v-if="!templates || templates.length === 0" class="empty-state">
           <IconBase name="gamepad" class="empty-icon" />
           <p>게임 템플릿이 없습니다</p>
-          <button class="btn-primary" @click="showCreateModal = true">템플릿 추가하기</button>
+          <p class="empty-hint">데이터베이스에 게임 템플릿을 추가해주세요</p>
         </div>
       </div>
     </div>
@@ -164,11 +161,11 @@
       </div>
     </div>
 
-    <!-- Create/Edit Template Modal -->
-    <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click.self="closeModals">
+    <!-- Edit Template Modal -->
+    <div v-if="showEditModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal modal-wide">
         <div class="modal-header">
-          <h2>{{ showEditModal ? '게임 템플릿 수정' : '새 게임 템플릿' }}</h2>
+          <h2>게임 템플릿 수정</h2>
           <button class="btn-close" @click="closeModals"><IconBase name="close" /></button>
         </div>
         <div class="modal-body">
@@ -261,7 +258,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" @click="closeModals">취소</button>
-          <button class="btn-primary" @click="saveTemplate">{{ showEditModal ? '저장' : '생성' }}</button>
+          <button class="btn-primary" @click="saveTemplate">저장</button>
         </div>
       </div>
     </div>
@@ -297,7 +294,6 @@ const scoresPage = ref(1)
 const scoresTotalPages = ref(1)
 
 // Modal state
-const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const editingTemplate = ref<any>(null)
 const templateForm = ref({
@@ -508,48 +504,33 @@ const confirmDeleteTemplate = async (template: any) => {
 }
 
 const saveTemplate = async () => {
-  if (!templateForm.value.gameKey || !templateForm.value.name) {
-    alert('게임 키와 이름은 필수입니다.')
+  if (!templateForm.value.name) {
+    alert('게임 이름은 필수입니다.')
     return
   }
 
+  if (!editingTemplate.value) return
+
   try {
-    if (showEditModal.value && editingTemplate.value) {
-      // Update
-      const response = await fetch(`${API_URL}/api/masteradmin/game-templates/${editingTemplate.value.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: templateForm.value.name,
-          icon: templateForm.value.icon || null,
-          description: templateForm.value.description || null,
-          displayOrder: templateForm.value.displayOrder,
-          isActive: templateForm.value.isActive,
-          isDefault: templateForm.value.isDefault,
-          iconImageUrl: templateForm.value.iconImageUrl || null,
-          backgroundImageUrl: templateForm.value.backgroundImageUrl || null,
-          buttonText: templateForm.value.buttonText || null
-        })
+    const response = await fetch(`${API_URL}/api/masteradmin/game-templates/${editingTemplate.value.id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: templateForm.value.name,
+        icon: templateForm.value.icon || null,
+        description: templateForm.value.description || null,
+        displayOrder: templateForm.value.displayOrder,
+        isActive: templateForm.value.isActive,
+        isDefault: templateForm.value.isDefault,
+        iconImageUrl: templateForm.value.iconImageUrl || null,
+        backgroundImageUrl: templateForm.value.backgroundImageUrl || null,
+        buttonText: templateForm.value.buttonText || null
       })
-      if (!response.ok) throw new Error('Failed')
-    } else {
-      // Create
-      const response = await fetch(`${API_URL}/api/masteradmin/game-templates`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(templateForm.value)
-      })
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed')
-      }
-    }
+    })
+    if (!response.ok) throw new Error('Failed')
 
     closeModals()
     await fetchTemplates()
@@ -560,7 +541,6 @@ const saveTemplate = async () => {
 }
 
 const closeModals = () => {
-  showCreateModal.value = false
   showEditModal.value = false
   editingTemplate.value = null
   templateForm.value = {
@@ -849,6 +829,7 @@ onMounted(() => fetchAll())
 
 .empty-state { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; padding: 80px 0; color: #86868b; }
 .empty-icon { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5; }
+.empty-hint { font-size: 13px; margin-top: 8px; }
 
 .pagination { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 20px; }
 .pagination button { padding: 8px 16px; border: 1px solid #e5e5ea; border-radius: 8px; background: white; font-size: 14px; cursor: pointer; }
