@@ -1106,6 +1106,7 @@ function goToGame(type: string) {
 /* 카드 콘텐츠 - 하단 정렬 (Apple Arcade 스타일) */
 .showcase-content {
   position: absolute;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -1113,6 +1114,7 @@ function goToGame(type: string) {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   text-align: center;
   padding: 0 24px 40px;
 }
