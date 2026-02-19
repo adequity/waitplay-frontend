@@ -795,13 +795,21 @@ function goToGame(type: string) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 16px;
-  /* 카드가 90% 너비이므로, 중앙 정렬을 위해 양쪽에 5% 패딩 필요 */
-  /* calc((100% - 90%) / 2) = 5% */
-  padding: 8px calc(5% + 8px) 16px;
+  /* 첫/마지막 카드 중앙 정렬을 위한 패딩 - ::before/::after로 처리 */
+  padding: 8px 0 16px;
   margin: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x;
+}
+
+/* 첫 번째 카드 앞에 빈 공간 (카드를 중앙으로 밀어줌) */
+.portfolio-slider::before,
+.portfolio-slider::after {
+  content: '';
+  /* 카드가 90%이므로, 양쪽에 5%씩 = (100% - 90%) / 2 */
+  flex: 0 0 calc(5% - 8px); /* gap 16px의 절반 빼줌 */
+  min-width: calc(5% - 8px);
 }
 
 .portfolio-slider::-webkit-scrollbar {
