@@ -30,8 +30,9 @@
       <div class="templates-grid">
         <div v-for="template in templates" :key="template.id" class="template-card">
           <div class="template-header">
-            <div class="template-icon" :class="getIconBgClass(template.gameKey)">
-              <IconBase :name="getGameIcon(template.gameKey)" />
+            <div class="template-icon" :class="[getIconBgClass(template.gameKey), { 'has-image': template.iconImageUrl }]">
+              <img v-if="template.iconImageUrl" :src="template.iconImageUrl" :alt="template.name" class="template-icon-img" />
+              <IconBase v-else :name="getGameIcon(template.gameKey)" />
             </div>
             <div class="template-info">
               <h3>{{ template.name }}</h3>
@@ -165,42 +166,97 @@
 
     <!-- Create/Edit Template Modal -->
     <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click.self="closeModals">
-      <div class="modal">
+      <div class="modal modal-wide">
         <div class="modal-header">
           <h2>{{ showEditModal ? '게임 템플릿 수정' : '새 게임 템플릿' }}</h2>
           <button class="btn-close" @click="closeModals"><IconBase name="close" /></button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label>게임 키 (영문)</label>
-            <input v-model="templateForm.gameKey" type="text" placeholder="e.g., pinball, roulette" :disabled="showEditModal" />
-            <p class="form-hint">영문 소문자, 하이픈만 사용 가능. 수정 불가.</p>
+          <!-- 기본 정보 (2열 레이아웃) -->
+          <div class="form-section">
+            <h3 class="section-title">기본 정보</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>게임 키 (영문)</label>
+                <input v-model="templateForm.gameKey" type="text" placeholder="e.g., pinball, roulette" :disabled="showEditModal" />
+                <p class="form-hint">영문 소문자, 하이픈만 사용 가능. 수정 불가.</p>
+              </div>
+              <div class="form-group">
+                <label>게임 이름</label>
+                <input v-model="templateForm.name" type="text" placeholder="e.g., 핀볼" />
+              </div>
+              <div class="form-group">
+                <label>아이콘 (아이콘명)</label>
+                <input v-model="templateForm.icon" type="text" placeholder="e.g., gamepad" />
+              </div>
+              <div class="form-group">
+                <label>표시 순서</label>
+                <input v-model.number="templateForm.displayOrder" type="number" min="0" />
+              </div>
+              <div class="form-group full-width">
+                <label>설명</label>
+                <textarea v-model="templateForm.description" placeholder="게임 설명 (선택)"></textarea>
+              </div>
+              <div class="form-group">
+                <label>버튼 텍스트</label>
+                <input v-model="templateForm.buttonText" type="text" placeholder="지금 도전하기" />
+                <p class="form-hint">고객 페이지에 표시되는 버튼 문구</p>
+              </div>
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="templateForm.isActive" />
+                  활성화
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="templateForm.isDefault" />
+                  기본 할당
+                </label>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label>게임 이름</label>
-            <input v-model="templateForm.name" type="text" placeholder="e.g., 핀볼" />
-          </div>
-          <div class="form-group">
-            <label>아이콘</label>
-            <input v-model="templateForm.icon" type="text" placeholder="e.g., gamepad" />
-          </div>
-          <div class="form-group">
-            <label>설명</label>
-            <textarea v-model="templateForm.description" placeholder="게임 설명 (선택)"></textarea>
-          </div>
-          <div class="form-group">
-            <label>표시 순서</label>
-            <input v-model.number="templateForm.displayOrder" type="number" min="0" />
-          </div>
-          <div class="form-row">
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="templateForm.isActive" />
-              활성화
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="templateForm.isDefault" />
-              기본 할당 (새 Admin에게 자동 할당)
-            </label>
+
+          <!-- 표기 이미지 관리 -->
+          <div class="form-section">
+            <h3 class="section-title">표기 이미지 관리</h3>
+            <div class="form-grid">
+              <!-- 게임 아이콘 이미지 -->
+              <div class="form-group">
+                <label>게임 아이콘 이미지</label>
+                <div class="image-upload-area">
+                  <div v-if="templateForm.iconImageUrl" class="image-preview">
+                    <img :src="templateForm.iconImageUrl" alt="게임 아이콘" />
+                    <button class="btn-remove-image" @click="removeIconImage" type="button">
+                      <IconBase name="close" />
+                    </button>
+                  </div>
+                  <label v-else class="upload-placeholder" :class="{ uploading: uploadingIcon }">
+                    <input type="file" accept="image/png,image/jpeg,image/webp" @change="handleIconImageUpload" :disabled="uploadingIcon" />
+                    <IconBase :name="uploadingIcon ? 'refresh' : 'upload'" :class="{ spinning: uploadingIcon }" />
+                    <span>{{ uploadingIcon ? '업로드 중...' : 'PNG 이미지 업로드' }}</span>
+                  </label>
+                </div>
+                <p class="form-hint">권장: 200x200px, 투명 PNG</p>
+              </div>
+
+              <!-- 배경 이미지 -->
+              <div class="form-group">
+                <label>배경 이미지</label>
+                <div class="image-upload-area">
+                  <div v-if="templateForm.backgroundImageUrl" class="image-preview background-preview">
+                    <img :src="templateForm.backgroundImageUrl" alt="배경 이미지" />
+                    <button class="btn-remove-image" @click="removeBackgroundImage" type="button">
+                      <IconBase name="close" />
+                    </button>
+                  </div>
+                  <label v-else class="upload-placeholder" :class="{ uploading: uploadingBackground }">
+                    <input type="file" accept="image/png,image/jpeg,image/webp" @change="handleBackgroundImageUpload" :disabled="uploadingBackground" />
+                    <IconBase :name="uploadingBackground ? 'refresh' : 'upload'" :class="{ spinning: uploadingBackground }" />
+                    <span>{{ uploadingBackground ? '업로드 중...' : 'PNG 이미지 업로드' }}</span>
+                  </label>
+                </div>
+                <p class="form-hint">권장: 400x400px, 그라데이션 배경</p>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -251,8 +307,16 @@ const templateForm = ref({
   description: '',
   displayOrder: 0,
   isActive: true,
-  isDefault: false
+  isDefault: false,
+  // 표기 이미지 관리
+  iconImageUrl: '',
+  backgroundImageUrl: '',
+  buttonText: '지금 도전하기'
 })
+
+// 이미지 업로드 상태
+const uploadingIcon = ref(false)
+const uploadingBackground = ref(false)
 
 // Fetch game templates
 const fetchTemplates = async () => {
@@ -419,7 +483,10 @@ const editTemplate = (template: any) => {
     description: template.description || '',
     displayOrder: template.displayOrder,
     isActive: template.isActive,
-    isDefault: template.isDefault
+    isDefault: template.isDefault,
+    iconImageUrl: template.iconImageUrl || '',
+    backgroundImageUrl: template.backgroundImageUrl || '',
+    buttonText: template.buttonText || '지금 도전하기'
   }
   showEditModal.value = true
 }
@@ -461,7 +528,10 @@ const saveTemplate = async () => {
           description: templateForm.value.description || null,
           displayOrder: templateForm.value.displayOrder,
           isActive: templateForm.value.isActive,
-          isDefault: templateForm.value.isDefault
+          isDefault: templateForm.value.isDefault,
+          iconImageUrl: templateForm.value.iconImageUrl || null,
+          backgroundImageUrl: templateForm.value.backgroundImageUrl || null,
+          buttonText: templateForm.value.buttonText || null
         })
       })
       if (!response.ok) throw new Error('Failed')
@@ -500,8 +570,82 @@ const closeModals = () => {
     description: '',
     displayOrder: 0,
     isActive: true,
-    isDefault: false
+    isDefault: false,
+    iconImageUrl: '',
+    backgroundImageUrl: '',
+    buttonText: '지금 도전하기'
   }
+}
+
+// 이미지 업로드 핸들러
+const handleIconImageUpload = async (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드 가능합니다.')
+    return
+  }
+
+  uploadingIcon.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_URL}/api/upload/image`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authStore.accessToken}` },
+      body: formData
+    })
+
+    if (!response.ok) throw new Error('Upload failed')
+    const data = await response.json()
+    templateForm.value.iconImageUrl = data.url
+  } catch (error) {
+    console.error(error)
+    alert('이미지 업로드에 실패했습니다.')
+  } finally {
+    uploadingIcon.value = false
+  }
+}
+
+const handleBackgroundImageUpload = async (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드 가능합니다.')
+    return
+  }
+
+  uploadingBackground.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_URL}/api/upload/image`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authStore.accessToken}` },
+      body: formData
+    })
+
+    if (!response.ok) throw new Error('Upload failed')
+    const data = await response.json()
+    templateForm.value.backgroundImageUrl = data.url
+  } catch (error) {
+    console.error(error)
+    alert('이미지 업로드에 실패했습니다.')
+  } finally {
+    uploadingBackground.value = false
+  }
+}
+
+const removeIconImage = () => {
+  templateForm.value.iconImageUrl = ''
+}
+
+const removeBackgroundImage = () => {
+  templateForm.value.backgroundImageUrl = ''
 }
 
 const searchAdmins = () => {
@@ -593,6 +737,8 @@ onMounted(() => fetchAll())
 .template-header { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 12px; }
 .template-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .template-icon :deep(svg) { width: 24px; height: 24px; color: white; }
+.template-icon.has-image { background: #f5f5f7; }
+.template-icon-img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
 
 .bg-red { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
 .bg-purple { background: linear-gradient(135deg, #a855f7, #9333ea); }
@@ -679,6 +825,7 @@ onMounted(() => fetchAll())
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal { background: white; border-radius: 20px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+.modal.modal-wide { max-width: 700px; }
 .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 24px; border-bottom: 1px solid #f0f0f0; }
 .modal-header h2 { font-size: 20px; font-weight: 700; margin: 0; }
 .btn-close { width: 36px; height: 36px; border: none; background: #f0f0f0; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -707,4 +854,37 @@ onMounted(() => fetchAll())
 .pagination button { padding: 8px 16px; border: 1px solid #e5e5ea; border-radius: 8px; background: white; font-size: 14px; cursor: pointer; }
 .pagination button:hover:not(:disabled) { background: #f0f0f0; }
 .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Form Section & Grid */
+.form-section { margin-bottom: 24px; }
+.form-section:last-child { margin-bottom: 0; }
+.section-title { font-size: 15px; font-weight: 600; color: #1d1d1f; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid .form-group.full-width { grid-column: 1 / -1; }
+
+.checkbox-group { display: flex; gap: 20px; align-items: center; }
+
+/* Image Upload */
+.image-upload-area { margin-top: 8px; }
+.upload-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; border: 2px dashed #e5e5ea; border-radius: 12px; background: #fafafa; cursor: pointer; transition: all 0.2s; }
+.upload-placeholder:hover { border-color: #d4a853; background: #fef9f0; }
+.upload-placeholder.uploading { border-color: #d4a853; background: #fef9f0; cursor: wait; }
+.upload-placeholder input[type="file"] { display: none; }
+.upload-placeholder :deep(svg) { width: 24px; height: 24px; color: #86868b; }
+.upload-placeholder span { font-size: 13px; color: #86868b; }
+.upload-placeholder :deep(svg).spinning { animation: spin 1s linear infinite; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.image-preview { position: relative; width: 120px; height: 120px; border-radius: 12px; overflow: hidden; background: #f5f5f7; border: 1px solid #e5e5ea; }
+.image-preview.background-preview { width: 160px; height: 120px; }
+.image-preview img { width: 100%; height: 100%; object-fit: contain; }
+.background-preview img { object-fit: cover; }
+.btn-remove-image { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0, 0, 0, 0.6); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.btn-remove-image :deep(svg) { width: 14px; height: 14px; color: white; }
+.btn-remove-image:hover { background: rgba(220, 38, 38, 0.9); }
 </style>
