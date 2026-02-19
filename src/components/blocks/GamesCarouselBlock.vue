@@ -795,8 +795,10 @@ function goToGame(type: string) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 16px;
-  padding: 8px 1.5rem 16px;
-  margin: 0 -1.5rem;
+  /* 카드가 90% 너비이므로, 중앙 정렬을 위해 양쪽에 5% 패딩 필요 */
+  /* calc((100% - 90%) / 2) = 5% */
+  padding: 8px calc(5% + 8px) 16px;
+  margin: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x;
