@@ -1010,23 +1010,37 @@ function goToGame(type: string) {
   /* 배경 이미지 설정 */
   background-color: transparent;
   background-size: cover;
-  background-position: center top;
+  background-position: center;
   background-repeat: no-repeat;
+  /* 상단/하단 페이드아웃 (6등분 기준: 상단 1/6, 하단 1/6 페이드) */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 16.67%,
+    black 83.33%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 16.67%,
+    black 83.33%,
+    transparent 100%
+  );
 }
 
-/* 투명도 그라데이션 오버레이 (상단/하단이 투명하게 페이드) */
+/* 오버레이는 텍스트 가독성을 위한 하단 그라데이션만 (선택적) */
 .showcase-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  /* 상단: 투명 → 하단: 부모 배경색으로 페이드 (다음 블록과 자연스러운 연결) */
+  /* 하단 텍스트 가독성을 위한 미세한 그라데이션 */
   background: linear-gradient(180deg,
     transparent 0%,
-    transparent 50%,
-    rgba(0, 0, 0, 0.3) 75%,
-    rgba(0, 0, 0, 0.6) 100%
+    transparent 60%,
+    rgba(0, 0, 0, 0.2) 100%
   );
   pointer-events: none;
 }
