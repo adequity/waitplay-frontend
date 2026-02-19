@@ -1189,37 +1189,63 @@
           <template v-if="editingBlock.type === 'games_carousel'">
             <div class="form-group">
               <label class="form-label">UI 스타일</label>
-              <div class="style-options">
-                <label class="style-option" :class="{ active: editForm.displayStyle === 'carousel' }">
-                  <input type="radio" v-model="editForm.displayStyle" value="carousel">
-                  <div class="style-option-content">
-                    <span class="style-icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/><circle cx="17" cy="12" r="2" fill="currentColor" opacity="0.3"/></svg>
-                    </span>
-                    <span class="style-name">캐러셀</span>
-                    <span class="style-desc">탭 + 어두운 카드</span>
+              <div class="game-style-selector">
+                <!-- 좌측: 스타일 버튼 -->
+                <div class="game-style-buttons">
+                  <label class="game-style-btn" :class="{ active: editForm.displayStyle === 'carousel' }">
+                    <input type="radio" v-model="editForm.displayStyle" value="carousel">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/><circle cx="17" cy="12" r="2" fill="currentColor" opacity="0.3"/></svg>
+                    <span>캐러셀</span>
+                  </label>
+                  <label class="game-style-btn" :class="{ active: editForm.displayStyle === 'portfolio' }">
+                    <input type="radio" v-model="editForm.displayStyle" value="portfolio">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="currentColor"/><path d="M7 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span>포트폴리오</span>
+                  </label>
+                  <label class="game-style-btn" :class="{ active: editForm.displayStyle === 'showcase' }">
+                    <input type="radio" v-model="editForm.displayStyle" value="showcase">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="2"/><rect x="6" y="5" width="12" height="10" rx="1" fill="currentColor" opacity="0.2"/><path d="M8 18h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span>쇼케이스</span>
+                  </label>
+                </div>
+                <!-- 우측: 미리보기 -->
+                <div class="game-style-preview">
+                  <!-- 캐러셀 미리보기 -->
+                  <div v-if="editForm.displayStyle === 'carousel'" class="preview-carousel">
+                    <div class="preview-tabs">
+                      <span class="preview-tab active">같은 카드 찾기</span>
+                      <span class="preview-tab">틀린 그림</span>
+                    </div>
+                    <div class="preview-game-card dark">
+                      <div class="preview-game-icon">🃏</div>
+                      <div class="preview-game-name">같은 카드 찾기</div>
+                    </div>
                   </div>
-                </label>
-                <label class="style-option" :class="{ active: editForm.displayStyle === 'portfolio' }">
-                  <input type="radio" v-model="editForm.displayStyle" value="portfolio">
-                  <div class="style-option-content">
-                    <span class="style-icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="currentColor"/><path d="M7 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    </span>
-                    <span class="style-name">포트폴리오</span>
-                    <span class="style-desc">밝은 카드</span>
+                  <!-- 포트폴리오 미리보기 -->
+                  <div v-else-if="editForm.displayStyle === 'portfolio'" class="preview-portfolio">
+                    <div class="preview-portfolio-card">
+                      <div class="preview-game-icon large">🃏</div>
+                      <div class="preview-portfolio-info">
+                        <div class="preview-portfolio-name">같은 카드 찾기</div>
+                        <div class="preview-portfolio-desc">짝 맞추기 게임</div>
+                      </div>
+                    </div>
+                    <div class="preview-dots">
+                      <span class="preview-dot active"></span>
+                      <span class="preview-dot"></span>
+                    </div>
                   </div>
-                </label>
-                <label class="style-option" :class="{ active: editForm.displayStyle === 'showcase' }">
-                  <input type="radio" v-model="editForm.displayStyle" value="showcase">
-                  <div class="style-option-content">
-                    <span class="style-icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="2"/><rect x="6" y="5" width="12" height="10" rx="1" fill="currentColor" opacity="0.2"/><path d="M8 18h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    </span>
-                    <span class="style-name">쇼케이스</span>
-                    <span class="style-desc">워터마크 + 프레임</span>
+                  <!-- 쇼케이스 미리보기 -->
+                  <div v-else class="preview-showcase">
+                    <div class="preview-watermark">같은 카드 찾기</div>
+                    <div class="preview-device-frame">
+                      <div class="preview-device-inner">
+                        <div class="preview-game-icon">🃏</div>
+                      </div>
+                    </div>
+                    <div class="preview-showcase-cta">Play Game</div>
                   </div>
-                </label>
+                </div>
               </div>
             </div>
             <div class="form-group">
@@ -3220,6 +3246,212 @@ function removeMenuItem(index: number) {
   font-size: 12px;
   color: #8e8e93;
   margin-left: auto;
+}
+
+/* 게임 스타일 선택기 (좌우 분할) */
+.game-style-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.game-style-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-style-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.game-style-btn input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.game-style-btn.active {
+  border-color: #0071e3;
+  background: #f0f7ff;
+}
+
+.game-style-btn:hover:not(.active) {
+  border-color: #c7c7cc;
+  background: #f5f5f7;
+}
+
+.game-style-btn svg {
+  flex-shrink: 0;
+  color: #6e6e73;
+}
+
+.game-style-btn.active svg {
+  color: #0071e3;
+}
+
+.game-style-btn span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+/* 게임 스타일 미리보기 */
+.game-style-preview {
+  background: #1c1c1e;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 140px;
+}
+
+/* 캐러셀 미리보기 */
+.preview-carousel .preview-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.preview-carousel .preview-tab {
+  font-size: 9px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.preview-carousel .preview-tab.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.preview-carousel .preview-game-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+
+.preview-carousel .preview-game-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.preview-carousel .preview-game-name {
+  font-size: 10px;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* 포트폴리오 미리보기 */
+.preview-portfolio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.preview-portfolio-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.preview-portfolio .preview-game-icon.large {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.preview-portfolio-info {
+  text-align: center;
+}
+
+.preview-portfolio-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.preview-portfolio-desc {
+  font-size: 9px;
+  color: #8e8e93;
+  margin-top: 2px;
+}
+
+.preview-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.preview-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.preview-dot.active {
+  background: #fff;
+}
+
+/* 쇼케이스 미리보기 */
+.preview-showcase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.preview-watermark {
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.08);
+  position: absolute;
+  top: -4px;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+
+.preview-device-frame {
+  background: linear-gradient(145deg, #f5f5f7 0%, #e8e8ed 100%);
+  border-radius: 10px;
+  padding: 8px;
+  margin-top: 8px;
+}
+
+.preview-device-inner {
+  background: #fff;
+  border-radius: 6px;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-showcase .preview-game-icon {
+  font-size: 28px;
+}
+
+.preview-showcase-cta {
+  font-size: 10px;
+  font-weight: 600;
+  color: #007aff;
+  margin-top: 8px;
 }
 
 /* 2열 레이아웃 */
