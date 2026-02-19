@@ -588,22 +588,24 @@ watch(() => props.data.bannerSlides, () => {
 
 /* 매장 정보 영역 */
 .banner-store-info {
-  padding: 20px 20px 16px;
+  padding: 16px 20px 14px;
 }
 
 .banner-store-info-inner {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .banner-store-logo {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   object-fit: cover;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 3px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   flex-shrink: 0;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -620,9 +622,9 @@ watch(() => props.data.bannerSlides, () => {
 
 .banner-store-name {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
-  margin: 0 0 5px 0;
+  margin: 0 0 3px 0;
   letter-spacing: -0.01em;
   color: #ffffff;
   white-space: nowrap;
