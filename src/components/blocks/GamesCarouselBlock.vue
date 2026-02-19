@@ -101,7 +101,7 @@
       </div>
     </template>
 
-    <!-- ========== SHOWCASE 스타일 (세로형 카드) ========== -->
+    <!-- ========== SHOWCASE 스타일 (Apple Arcade 스타일) ========== -->
     <template v-else>
       <div class="showcase-slider" @scroll="onShowcaseScroll" ref="showcaseSliderRef">
         <div
@@ -114,10 +114,10 @@
           @touchstart="handleTouchStart"
           @touchend="(e) => handleTouchEnd(e, game.type)"
         >
-          <!-- 배경 오버레이 (배경 이미지 있을 때) -->
-          <div v-if="game.backgroundImageUrl" class="showcase-overlay"></div>
+          <!-- 투명도 그라데이션 오버레이 (하단 페이드) -->
+          <div class="showcase-overlay"></div>
 
-          <!-- 카드 콘텐츠 -->
+          <!-- 카드 콘텐츠 (하단 정렬) -->
           <div class="showcase-content">
             <!-- 게임 아이콘 -->
             <div class="showcase-icon-wrapper">
@@ -128,7 +128,7 @@
                 class="showcase-game-icon"
               />
               <div v-else class="showcase-fallback-icon">
-                <component :is="game.icon" :size="80" color="#374151" />
+                <component :is="game.icon" :size="60" color="#374151" />
               </div>
             </div>
 
@@ -955,7 +955,7 @@ function goToGame(type: string) {
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* ========== SHOWCASE 스타일 (세로형 카드, 좌우 여백 0) ========== */
+/* ========== SHOWCASE 스타일 (Apple Arcade 스타일, 풀스크린 배경) ========== */
 .games-carousel-block.showcase-style {
   padding: 0;
   margin: 0;
@@ -990,69 +990,62 @@ function goToGame(type: string) {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   position: relative;
-  min-height: 420px;
-  /* 배경 이미지가 없을 때는 투명 (부모 배경색 사용) */
+  min-height: 480px;
+  /* 배경 이미지 설정 */
   background-color: transparent;
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   background-repeat: no-repeat;
 }
 
-.showcase-card.has-bg-image {
-  background-color: transparent;
-}
-
-/* 배경 오버레이 (배경 이미지 있을 때만 적용, 투명도만 조절) */
+/* 투명도 그라데이션 오버레이 (상단/하단이 투명하게 페이드) */
 .showcase-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  /* 투명 → 살짝 어둡게 그라데이션 (텍스트 가독성용) */
+  /* 상단: 투명 → 하단: 부모 배경색으로 페이드 (다음 블록과 자연스러운 연결) */
   background: linear-gradient(180deg,
     transparent 0%,
-    transparent 40%,
-    rgba(0, 0, 0, 0.2) 70%,
-    rgba(0, 0, 0, 0.4) 100%
+    transparent 50%,
+    rgba(0, 0, 0, 0.3) 75%,
+    rgba(0, 0, 0, 0.6) 100%
   );
   pointer-events: none;
 }
 
-/* 카드 콘텐츠 */
+/* 카드 콘텐츠 - 하단 정렬 (Apple Arcade 스타일) */
 .showcase-content {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
-  padding: 40px 24px;
-  min-height: 420px;
+  padding: 0 24px 40px;
 }
 
-/* 게임 아이콘 래퍼 */
+/* 게임 아이콘 래퍼 (Apple Arcade 스타일 - 큰 앱 아이콘) */
 .showcase-icon-wrapper {
-  width: 160px;
-  height: 160px;
-  border-radius: 32px;
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
   overflow: hidden;
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.4),
-    0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #ffffff;
+  margin-bottom: 20px;
 }
 
 .showcase-card:active .showcase-icon-wrapper {
   transform: scale(0.95);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.3),
-    0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .showcase-game-icon {
@@ -1071,66 +1064,56 @@ function goToGame(type: string) {
 }
 
 .showcase-fallback-icon :deep(svg) {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
 }
 
 /* 게임 정보 영역 */
 .showcase-info {
-  margin-top: 28px;
+  margin-bottom: 16px;
 }
 
 /* 게임 이름 */
 .showcase-game-name {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   color: #ffffff;
-  margin: 0 0 12px 0;
-  /* 밝은/어두운 배경 모두에서 가독성 보장 */
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.8),
-    0 0 20px rgba(0, 0, 0, 0.5);
+  margin: 0 0 8px 0;
 }
 
 /* 게임 설명 */
 .showcase-game-desc {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
   margin: 0;
-  line-height: 1.5;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.8),
-    0 0 10px rgba(0, 0, 0, 0.4);
+  line-height: 1.4;
 }
 
-/* 지금 도전하기 버튼 */
+/* 버튼 (Apple Arcade 스타일 - 반투명 흰색) */
 .showcase-play-btn {
   display: inline-block;
-  padding: 16px 48px;
-  margin-top: 32px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 12px 32px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: none;
-  border-radius: 28px;
+  border-radius: 22px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 600;
-  color: #1a1a2e;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .showcase-play-btn:hover {
-  background: #ffffff;
-  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .showcase-card:active .showcase-play-btn {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.2);
   transform: scale(0.98);
 }
 
