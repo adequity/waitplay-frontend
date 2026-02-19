@@ -100,22 +100,25 @@
           @touchstart="handleTouchStart"
           @touchend="(e) => handleTouchEnd(e, game.type)"
         >
-          <!-- 워터마크 텍스트 -->
-          <div class="showcase-watermark">{{ game.name }}</div>
+          <!-- 정사각형 컨테이너 (워터마크 + 디바이스 포함) -->
+          <div class="showcase-square">
+            <!-- 워터마크 텍스트 (정사각형 상단) -->
+            <div class="showcase-watermark">{{ game.name }}</div>
 
-          <!-- 디바이스 프레임 -->
-          <div class="showcase-device">
-            <div class="showcase-device-inner">
-              <div class="showcase-icon">
-                <component :is="game.icon" :size="80" color="#374151" />
+            <!-- 디바이스 프레임 (태블릿 스타일) -->
+            <div class="showcase-device">
+              <div class="showcase-device-screen">
+                <div class="showcase-icon">
+                  <component :is="game.icon" :size="64" color="#374151" />
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- 카드 외부 설명 -->
+          <!-- 카드 외부 설명 (정사각형 바깥) -->
           <div class="showcase-info">
             <p class="showcase-desc">{{ game.description }}</p>
-            <span class="showcase-cta">Play Game</span>
+            <span class="showcase-cta">Play Game →</span>
           </div>
         </div>
       </div>
@@ -858,56 +861,68 @@ function goToGame(type: string) {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+}
+
+/* 정사각형 컨테이너 - Ditto 스타일 */
+.showcase-square {
   position: relative;
-}
-
-/* 워터마크 텍스트 */
-.showcase-watermark {
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-size: 42px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.08);
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* 디바이스 프레임 */
-.showcase-device {
-  position: relative;
-  z-index: 1;
-  background: linear-gradient(145deg, #f5f5f7 0%, #e8e8ed 100%);
-  border-radius: 20px;
-  padding: 16px;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    0 8px 24px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.showcase-card:active .showcase-device {
-  transform: scale(0.98);
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.06),
-    0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.showcase-device-inner {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 40px 24px;
+  aspect-ratio: 1 / 1;
+  background: #e8e8e8;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 160px;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.showcase-card:active .showcase-square {
+  transform: scale(0.98);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* 워터마크 텍스트 - 정사각형 상단에 흐리게 */
+.showcase-watermark {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.06);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 디바이스 프레임 (태블릿 스타일) */
+.showcase-device {
+  position: relative;
+  z-index: 2;
+  width: 80%;
+  background: #2c2c2e;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* 디바이스 스크린 (흰색 내부) */
+.showcase-device-screen {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
 }
 
 .showcase-icon {
@@ -917,31 +932,30 @@ function goToGame(type: string) {
 }
 
 .showcase-icon :deep(svg) {
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
 }
 
-/* 카드 외부 설명 */
+/* 카드 외부 설명 (정사각형 바깥) */
 .showcase-info {
   margin-top: 16px;
-  text-align: center;
-  position: relative;
-  z-index: 1;
+  text-align: left;
+  padding: 0 4px;
 }
 
 .showcase-desc {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 14px;
   color: rgba(255, 255, 255, 0.7);
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0;
   line-height: 1.5;
 }
 
 .showcase-cta {
   display: inline-block;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: #007aff;
   transition: color 0.2s ease;
 }
