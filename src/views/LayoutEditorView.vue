@@ -367,25 +367,147 @@
         <div class="edit-form-content">
           <!-- Example: Header Edit -->
           <template v-if="editingBlock.type === 'header'">
+            <!-- 헤더 스타일 선택 -->
+            <div class="form-group">
+              <label class="form-label">헤더 스타일</label>
+              <div class="style-toggle-group">
+                <button
+                  class="style-toggle-btn"
+                  :class="{ active: (editForm.headerStyle || 'default') === 'default' }"
+                  @click="editForm.headerStyle = 'default'"
+                >
+                  기본
+                </button>
+                <button
+                  class="style-toggle-btn"
+                  :class="{ active: editForm.headerStyle === 'banner' }"
+                  @click="editForm.headerStyle = 'banner'; initBannerSlides()"
+                >
+                  배너
+                </button>
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">매장 이름</label>
               <input type="text" class="form-input" v-model="editForm.storeName" placeholder="매장명 입력" />
             </div>
 
-            <!-- 배경 이미지 + 환영 메시지 2열 -->
-            <div class="form-row-2col">
-              <div class="form-group">
-                <label class="form-label">배경 이미지</label>
-                <input type="file" class="form-input" @change="handleBackgroundImageUpload" accept="image/*" style="margin-bottom: 8px;">
-                <div v-if="editForm.backgroundImage" style="margin-top: 8px;">
-                  <img :src="editForm.backgroundImage" alt="배경 미리보기" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e5ea;">
+            <!-- ===== 기본 스타일 ===== -->
+            <template v-if="(editForm.headerStyle || 'default') === 'default'">
+              <!-- 배경 이미지 + 환영 메시지 2열 -->
+              <div class="form-row-2col">
+                <div class="form-group">
+                  <label class="form-label">배경 이미지</label>
+                  <input type="file" class="form-input" @change="handleBackgroundImageUpload" accept="image/*" style="margin-bottom: 8px;">
+                  <div v-if="editForm.backgroundImage" style="margin-top: 8px;">
+                    <img :src="editForm.backgroundImage" alt="배경 미리보기" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e5ea;">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">환영 메시지</label>
+                  <textarea class="form-textarea" v-model="editForm.welcomeMessage" placeholder="환영 메시지 입력" style="min-height: 120px;"></textarea>
                 </div>
               </div>
+            </template>
+
+            <!-- ===== 배너 스타일 ===== -->
+            <template v-if="editForm.headerStyle === 'banner'">
               <div class="form-group">
                 <label class="form-label">환영 메시지</label>
-                <textarea class="form-textarea" v-model="editForm.welcomeMessage" placeholder="환영 메시지 입력" style="min-height: 120px;"></textarea>
+                <textarea class="form-textarea" v-model="editForm.welcomeMessage" placeholder="환영 메시지 입력 (로고 옆에 표시됩니다)" style="min-height: 60px;"></textarea>
               </div>
-            </div>
+
+              <!-- 배너 높이 -->
+              <div class="form-group">
+                <label class="form-label">배너 높이: {{ editForm.bannerHeight || 80 }}vh</label>
+                <input type="range" class="form-range" v-model.number="editForm.bannerHeight" min="50" max="100" step="5" />
+                <div class="range-labels">
+                  <span>50vh</span>
+                  <span>100vh</span>
+                </div>
+              </div>
+
+              <!-- 자동 슬라이드 -->
+              <div class="form-row-2col">
+                <div class="form-group">
+                  <label class="form-label">자동 슬라이드</label>
+                  <select class="form-input" v-model="editForm.bannerAutoPlay">
+                    <option :value="true">켜기</option>
+                    <option :value="false">끄기</option>
+                  </select>
+                </div>
+                <div class="form-group" v-if="editForm.bannerAutoPlay !== false">
+                  <label class="form-label">슬라이드 간격: {{ editForm.bannerInterval || 5 }}초</label>
+                  <input type="range" class="form-range" v-model.number="editForm.bannerInterval" min="2" max="10" step="1" />
+                  <div class="range-labels">
+                    <span>2초</span>
+                    <span>10초</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-divider"></div>
+              <h4 class="form-section-title">
+                배너 슬라이드
+                <span style="font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.5); margin-left: 8px;">
+                  {{ (editForm.bannerSlides || []).length }}장
+                </span>
+              </h4>
+              <div class="banner-spec-guide">
+                <p>권장 이미지: <strong>1080 x 1920px</strong> (9:16 세로) 또는 <strong>1080 x 1350px</strong> (4:5)</p>
+                <p>최대 10MB / PNG, JPG 지원 (자동 리사이징)</p>
+              </div>
+
+              <!-- 슬라이드 목록 -->
+              <div class="banner-slides-list">
+                <div
+                  v-for="(slide, index) in (editForm.bannerSlides || [])"
+                  :key="index"
+                  class="banner-slide-item"
+                >
+                  <div class="banner-slide-header">
+                    <span class="banner-slide-number">{{ index + 1 }}</span>
+                    <span class="banner-slide-label">슬라이드</span>
+                    <button class="btn-icon btn-danger-sm" @click="removeBannerSlide(index)" title="삭제">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+
+                  <!-- 이미지 업로드 -->
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <label class="form-label" style="font-size: 12px;">이미지 *</label>
+                    <input type="file" class="form-input" @change="handleBannerSlideImageUpload($event, index)" accept="image/*">
+                    <div v-if="slide.imageUrl" style="margin-top: 6px; position: relative;">
+                      <img :src="slide.imageUrl" alt="슬라이드 미리보기" style="width: 100%; max-height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                    </div>
+                  </div>
+
+                  <!-- 타이틀 + 부제목 -->
+                  <div class="form-row-2col" style="gap: 8px;">
+                    <div class="form-group" style="margin-bottom: 6px;">
+                      <label class="form-label" style="font-size: 12px;">타이틀 (선택)</label>
+                      <input type="text" class="form-input" v-model="slide.title" placeholder="배너 타이틀">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 6px;">
+                      <label class="form-label" style="font-size: 12px;">부제목 (선택)</label>
+                      <input type="text" class="form-input" v-model="slide.subtitle" placeholder="배너 부제목">
+                    </div>
+                  </div>
+
+                  <!-- 링크 URL -->
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 12px;">연결 URL (선택)</label>
+                    <input type="url" class="form-input" v-model="slide.linkUrl" placeholder="https://example.com">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 슬라이드 추가 버튼 -->
+              <button class="btn-add-slide" @click="addBannerSlide">
+                + 슬라이드 추가
+              </button>
+            </template>
 
             <!-- 폰트 스타일 옵션 -->
             <div class="form-divider"></div>
@@ -1868,6 +1990,19 @@ async function editBlock(block: Block) {
     if (!editForm.value.descFontSize) {
       editForm.value.descFontSize = 15
     }
+    // 배너 스타일 기본값
+    if (!editForm.value.headerStyle) {
+      editForm.value.headerStyle = 'default'
+    }
+    if (editForm.value.bannerHeight === undefined) {
+      editForm.value.bannerHeight = 80
+    }
+    if (editForm.value.bannerAutoPlay === undefined) {
+      editForm.value.bannerAutoPlay = true
+    }
+    if (editForm.value.bannerInterval === undefined) {
+      editForm.value.bannerInterval = 5
+    }
   }
 
   // Ensure links array exists for social_links blocks
@@ -2657,6 +2792,76 @@ function removeSocialLink(index: number) {
   editForm.value.links.splice(index, 1)
 }
 
+// 클라이언트 이미지 리사이징 유틸 (최대 1920px, JPEG 80% 품질)
+function resizeImageFile(file: File, maxWidth = 1920, maxHeight = 1920, quality = 0.8): Promise<File> {
+  return new Promise((resolve, reject) => {
+    // SVG는 리사이징 불필요
+    if (file.type === 'image/svg+xml') {
+      resolve(file)
+      return
+    }
+
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+
+      let { width, height } = img
+
+      // 이미 충분히 작으면 그대로
+      if (width <= maxWidth && height <= maxHeight && file.size <= 2 * 1024 * 1024) {
+        resolve(file)
+        return
+      }
+
+      // 비율 유지하며 축소
+      if (width > maxWidth) {
+        height = Math.round(height * (maxWidth / width))
+        width = maxWidth
+      }
+      if (height > maxHeight) {
+        width = Math.round(width * (maxHeight / height))
+        height = maxHeight
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        resolve(file)
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file)
+            return
+          }
+          const resizedFile = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          })
+          resolve(resizedFile)
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('이미지 로드 실패'))
+    }
+
+    img.src = url
+  })
+}
+
 // Background image upload functions
 async function handleBackgroundImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
@@ -2664,10 +2869,10 @@ async function handleBackgroundImageUpload(event: Event) {
 
   if (!file) return
 
-  // Validate file size (2MB max)
-  const maxSize = 2 * 1024 * 1024 // 2MB
+  // Validate file size (10MB max)
+  const maxSize = 10 * 1024 * 1024
   if (file.size > maxSize) {
-    alert('파일 크기는 2MB 이하여야 합니다.')
+    alert('파일 크기는 10MB 이하여야 합니다.')
     return
   }
 
@@ -2681,9 +2886,11 @@ async function handleBackgroundImageUpload(event: Event) {
   try {
     backgroundImageUploading.value = true
 
-    // Create FormData and upload
+    // 클라이언트 리사이징
+    const resizedFile = await resizeImageFile(file)
+
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', resizedFile)
 
     const response = await fetch(`${API_BASE_URL}/api/FileUpload/background`, {
       method: 'POST',
@@ -2720,6 +2927,87 @@ async function handleBackgroundImageUpload(event: Event) {
 function removeBackgroundImage() {
   if (confirm('배경 이미지를 삭제하시겠습니까?')) {
     editForm.value.backgroundImage = ''
+  }
+}
+
+// Banner slide helper functions
+function initBannerSlides() {
+  if (!editForm.value.bannerSlides || editForm.value.bannerSlides.length === 0) {
+    editForm.value.bannerSlides = [{ imageUrl: '', title: '', subtitle: '', linkUrl: '' }]
+  }
+  if (editForm.value.bannerHeight === undefined) {
+    editForm.value.bannerHeight = 80
+  }
+  if (editForm.value.bannerAutoPlay === undefined) {
+    editForm.value.bannerAutoPlay = true
+  }
+  if (editForm.value.bannerInterval === undefined) {
+    editForm.value.bannerInterval = 5
+  }
+}
+
+function addBannerSlide() {
+  if (!editForm.value.bannerSlides) editForm.value.bannerSlides = []
+  editForm.value.bannerSlides.push({ imageUrl: '', title: '', subtitle: '', linkUrl: '' })
+}
+
+function removeBannerSlide(index: number) {
+  if (editForm.value.bannerSlides && editForm.value.bannerSlides.length > 1) {
+    editForm.value.bannerSlides.splice(index, 1)
+  } else {
+    alert('최소 1개의 슬라이드가 필요합니다.')
+  }
+}
+
+async function handleBannerSlideImageUpload(event: Event, slideIndex: number) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    alert('파일 크기는 10MB 이하여야 합니다.')
+    return
+  }
+
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml']
+  if (!allowedTypes.includes(file.type)) {
+    alert('PNG, JPG, SVG 파일만 업로드 가능합니다.')
+    return
+  }
+
+  try {
+    // 클라이언트 리사이징
+    const resizedFile = await resizeImageFile(file)
+
+    const formData = new FormData()
+    formData.append('file', resizedFile)
+
+    const response = await fetch(`${API_BASE_URL}/api/FileUpload/background`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`
+      },
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to upload image')
+    }
+
+    const data = await response.json()
+
+    if (data.success && data.fileUrl) {
+      if (editForm.value.bannerSlides && editForm.value.bannerSlides[slideIndex]) {
+        editForm.value.bannerSlides[slideIndex].imageUrl = data.fileUrl
+      }
+    } else {
+      throw new Error(data.message || 'Upload failed')
+    }
+  } catch (error) {
+    console.error('Error uploading banner slide image:', error)
+    alert('이미지 업로드 중 오류가 발생했습니다.')
   }
 }
 
@@ -5834,5 +6122,135 @@ select.form-input {
 .sns-naver {
   background: #03C75A;
   color: white;
+}
+
+/* Header Style Toggle */
+.style-toggle-group {
+  display: flex;
+  gap: 8px;
+}
+
+.style-toggle-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.style-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.style-toggle-btn.active {
+  background: rgba(0, 122, 255, 0.2);
+  border-color: rgba(0, 122, 255, 0.5);
+  color: #007AFF;
+}
+
+/* Banner Slides List */
+.banner-slides-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.banner-slide-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.banner-slide-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.banner-slide-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 122, 255, 0.2);
+  color: #007AFF;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.banner-slide-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-danger-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 59, 48, 0.15);
+  color: #FF3B30;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.btn-danger-sm:hover {
+  background: rgba(255, 59, 48, 0.3);
+}
+
+.btn-add-slide {
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-slide:hover {
+  border-color: rgba(0, 122, 255, 0.5);
+  color: #007AFF;
+  background: rgba(0, 122, 255, 0.05);
+}
+
+.banner-spec-guide {
+  background: rgba(0, 122, 255, 0.08);
+  border: 1px solid rgba(0, 122, 255, 0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.banner-spec-guide p {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.6;
+}
+
+.banner-spec-guide strong {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
 }
 </style>

@@ -14,6 +14,13 @@ export type BlockType =
   | 'marquee'
 
 // Header Block
+export interface BannerSlide {
+  imageUrl: string
+  title?: string
+  subtitle?: string
+  linkUrl?: string // 클릭 시 이동할 URL
+}
+
 export interface HeaderBlockData {
   logoUrl?: string
   storeName: string
@@ -29,6 +36,12 @@ export interface HeaderBlockData {
   titleFontFamily?: 'default' | 'serif' | 'rounded' | 'handwriting'
   titleFontSize?: number // 24-48, default 32
   descFontSize?: number // 12-20, default 15
+  // 배너 스타일 옵션
+  headerStyle?: 'default' | 'banner'
+  bannerSlides?: BannerSlide[]
+  bannerHeight?: number // vh 단위 (50~100, 기본 80)
+  bannerAutoPlay?: boolean // 자동 슬라이드 (기본 true)
+  bannerInterval?: number // 자동 슬라이드 간격 (초, 기본 5)
 }
 
 // Button Block
