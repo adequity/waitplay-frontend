@@ -1079,7 +1079,7 @@ const preloadBgm = () => {
   if (!bgmAudio.value) {
     bgmAudio.value = new Audio()
     bgmAudio.value.volume = 0.5
-    bgmAudio.value.preload = 'auto'
+    bgmAudio.value.preload = 'metadata'
 
     // 트랙 종료 시 다음 트랙 재생
     bgmAudio.value.addEventListener('ended', () => {
@@ -1290,35 +1290,33 @@ onMounted(async () => {
           bgmPlayMode.value = theme.bgmPlayMode
         }
 
-        // BGM 플레이리스트 로드 시도 (신규 방식)
+        // BGM 플레이리스트 로드 (비동기 - 렌더링 차단 안함)
         if (qrCodeUuid) {
-          try {
-            const playlistData = await bgmService.getPlaylist(qrCodeUuid)
-            if (playlistData.tracks && playlistData.tracks.length > 0) {
-              bgmPlaylist.value = playlistData.tracks.map(t => ({
-                id: t.id,
-                fileUrl: t.fileUrl,
-                title: t.title
-              }))
-              bgmPlayMode.value = playlistData.playMode || 'sequential'
-              console.log('BGM Playlist loaded:', bgmPlaylist.value.length, 'tracks')
-              preloadBgm()
-            } else if (theme.bgmUrl) {
-              // 플레이리스트가 없으면 레거시 URL 사용
-              bgmUrl.value = theme.bgmUrl
-              console.log('BGM URL loaded (legacy):', theme.bgmUrl)
-              preloadBgm()
-            }
-          } catch {
-            // 플레이리스트 로드 실패 시 레거시 URL로 폴백
-            if (theme.bgmUrl) {
-              bgmUrl.value = theme.bgmUrl
-              console.log('BGM URL loaded (fallback):', theme.bgmUrl)
-              preloadBgm()
-            }
-          }
+          bgmService.getPlaylist(qrCodeUuid)
+            .then(playlistData => {
+              if (playlistData.tracks && playlistData.tracks.length > 0) {
+                bgmPlaylist.value = playlistData.tracks.map(t => ({
+                  id: t.id,
+                  fileUrl: t.fileUrl,
+                  title: t.title
+                }))
+                bgmPlayMode.value = playlistData.playMode || 'sequential'
+                console.log('BGM Playlist loaded:', bgmPlaylist.value.length, 'tracks')
+                preloadBgm()
+              } else if (theme.bgmUrl) {
+                bgmUrl.value = theme.bgmUrl
+                console.log('BGM URL loaded (legacy):', theme.bgmUrl)
+                preloadBgm()
+              }
+            })
+            .catch(() => {
+              if (theme.bgmUrl) {
+                bgmUrl.value = theme.bgmUrl
+                console.log('BGM URL loaded (fallback):', theme.bgmUrl)
+                preloadBgm()
+              }
+            })
         } else if (theme.bgmUrl) {
-          // QR UUID가 없으면 레거시 URL 사용
           bgmUrl.value = theme.bgmUrl
           console.log('BGM URL loaded:', theme.bgmUrl)
           preloadBgm()
