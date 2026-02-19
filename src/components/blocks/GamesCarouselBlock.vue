@@ -101,7 +101,7 @@
       </div>
     </template>
 
-    <!-- ========== SHOWCASE 스타일 (게임 아이콘 중심) ========== -->
+    <!-- ========== SHOWCASE 스타일 (세로형 카드) ========== -->
     <template v-else>
       <div class="showcase-slider" @scroll="onShowcaseScroll" ref="showcaseSliderRef">
         <div
@@ -114,24 +114,33 @@
           @touchstart="handleTouchStart"
           @touchend="(e) => handleTouchEnd(e, game.type)"
         >
-          <!-- 게임 아이콘 (중앙 배치) -->
-          <div class="showcase-icon-wrapper">
-            <img
-              v-if="game.iconUrl"
-              :src="game.iconUrl"
-              :alt="game.name"
-              class="showcase-game-icon"
-            />
-            <div v-else class="showcase-fallback-icon">
-              <component :is="game.icon" :size="80" color="#374151" />
+          <!-- 배경 오버레이 (배경 이미지 있을 때) -->
+          <div v-if="game.backgroundImageUrl" class="showcase-overlay"></div>
+
+          <!-- 카드 콘텐츠 -->
+          <div class="showcase-content">
+            <!-- 게임 아이콘 -->
+            <div class="showcase-icon-wrapper">
+              <img
+                v-if="game.iconUrl"
+                :src="game.iconUrl"
+                :alt="game.name"
+                class="showcase-game-icon"
+              />
+              <div v-else class="showcase-fallback-icon">
+                <component :is="game.icon" :size="80" color="#374151" />
+              </div>
             </div>
+
+            <!-- 게임 정보 -->
+            <div class="showcase-info">
+              <h3 class="showcase-game-name">{{ game.name }}</h3>
+              <p class="showcase-game-desc">{{ game.description }}</p>
+            </div>
+
+            <!-- 버튼 -->
+            <button class="showcase-play-btn">{{ game.buttonText || '지금 도전하기' }}</button>
           </div>
-
-          <!-- 게임 이름 -->
-          <h3 class="showcase-game-name">{{ game.name }}</h3>
-
-          <!-- 버튼 텍스트 (DB에서 가져온 값 또는 기본값) -->
-          <button class="showcase-play-btn">{{ game.buttonText || '지금 도전하기' }}</button>
         </div>
       </div>
       <!-- Page Indicator Dots -->
@@ -554,19 +563,19 @@ function scrollToPortfolioGame(index: number) {
   })
 }
 
-// Showcase 스타일용 스크롤 핸들러
+// Showcase 스타일용 스크롤 핸들러 (100% 너비)
 function onShowcaseScroll() {
   if (!showcaseSliderRef.value) return
   const slideWidth = showcaseSliderRef.value.offsetWidth
   const scrollLeft = showcaseSliderRef.value.scrollLeft
-  const newIndex = Math.round(scrollLeft / (slideWidth * 0.85 + 20))
+  const newIndex = Math.round(scrollLeft / slideWidth)
   currentGameIndex.value = newIndex
 }
 
 function scrollToShowcaseGame(index: number) {
   if (!showcaseSliderRef.value) return
   const slideWidth = showcaseSliderRef.value.offsetWidth
-  const scrollPosition = index * (slideWidth * 0.85 + 20)
+  const scrollPosition = index * slideWidth
   showcaseSliderRef.value.scrollTo({
     left: scrollPosition,
     behavior: 'smooth'
@@ -946,9 +955,10 @@ function goToGame(type: string) {
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* ========== SHOWCASE 스타일 (게임 아이콘 중심) ========== */
+/* ========== SHOWCASE 스타일 (세로형 카드, 좌우 여백 0) ========== */
 .games-carousel-block.showcase-style {
-  padding: 20px 0;
+  padding: 0;
+  margin: 0;
 }
 
 .showcase-slider {
@@ -958,9 +968,9 @@ function goToGame(type: string) {
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  gap: 20px;
-  padding: 40px 1.5rem 30px;
-  margin: 0 -1.5rem;
+  gap: 0;
+  padding: 0;
+  margin: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x;
@@ -972,45 +982,65 @@ function goToGame(type: string) {
 }
 
 .showcase-card {
-  flex: 0 0 70%;
-  min-width: 70%;
-  scroll-snap-align: center;
+  flex: 0 0 100%;
+  min-width: 100%;
+  scroll-snap-align: start;
   scroll-snap-stop: always;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 30px 20px;
-  border-radius: 24px;
+  position: relative;
+  min-height: 420px;
+  /* 배경 이미지가 없을 때는 투명 (부모 배경색 사용) */
+  background-color: transparent;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  transition: transform 0.2s ease;
 }
 
 .showcase-card.has-bg-image {
-  background-color: rgba(0, 0, 0, 0.3);
-  background-blend-mode: overlay;
+  background-color: transparent;
 }
 
-.showcase-card.has-bg-image .showcase-game-name,
-.showcase-card.has-bg-image .showcase-play-btn {
-  color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+/* 배경 오버레이 (배경 이미지 있을 때만 적용, 투명도만 조절) */
+.showcase-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* 투명 → 살짝 어둡게 그라데이션 (텍스트 가독성용) */
+  background: linear-gradient(180deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.2) 70%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  pointer-events: none;
+}
+
+/* 카드 콘텐츠 */
+.showcase-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
+  min-height: 420px;
 }
 
 /* 게임 아이콘 래퍼 */
 .showcase-icon-wrapper {
-  width: 140px;
-  height: 140px;
-  border-radius: 28px;
+  width: 160px;
+  height: 160px;
+  border-radius: 32px;
   overflow: hidden;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.25),
-    0 4px 12px rgba(0, 0, 0, 0.15);
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   align-items: center;
@@ -1021,8 +1051,8 @@ function goToGame(type: string) {
 .showcase-card:active .showcase-icon-wrapper {
   transform: scale(0.95);
   box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(0, 0, 0, 0.1);
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .showcase-game-icon {
@@ -1045,40 +1075,62 @@ function goToGame(type: string) {
   height: 80px;
 }
 
+/* 게임 정보 영역 */
+.showcase-info {
+  margin-top: 28px;
+}
+
 /* 게임 이름 */
 .showcase-game-name {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
   color: #ffffff;
-  margin: 24px 0 8px 0;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin: 0 0 12px 0;
+  /* 밝은/어두운 배경 모두에서 가독성 보장 */
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* 게임 설명 */
+.showcase-game-desc {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.5;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 0 10px rgba(0, 0, 0, 0.4);
 }
 
 /* 지금 도전하기 버튼 */
 .showcase-play-btn {
   display: inline-block;
-  padding: 12px 32px;
-  margin-top: 16px;
-  background: rgba(255, 255, 255, 0.2);
+  padding: 16px 48px;
+  margin-top: 32px;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 24px;
+  border: none;
+  border-radius: 28px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
-  color: #ffffff;
+  color: #1a1a2e;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .showcase-play-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #ffffff;
+  transform: scale(1.02);
 }
 
 .showcase-card:active .showcase-play-btn {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.9);
   transform: scale(0.98);
 }
 
@@ -1087,7 +1139,8 @@ function goToGame(type: string) {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-top: 8px;
+  padding: 16px 0;
+  background: transparent;
 }
 
 .showcase-dot {
@@ -1101,7 +1154,8 @@ function goToGame(type: string) {
 
 .showcase-dot.active {
   background: #ffffff;
-  transform: scale(1.2);
+  width: 24px;
+  border-radius: 4px;
 }
 
 .showcase-dot:hover:not(.active) {
