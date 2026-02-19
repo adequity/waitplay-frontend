@@ -108,7 +108,6 @@
           v-for="game in allowedGames"
           :key="game.type"
           class="showcase-card"
-          :style="game.backgroundImageUrl ? { backgroundImage: `url(${game.backgroundImageUrl})` } : {}"
           :class="{
             'has-bg-image': game.backgroundImageUrl,
             'no-icon': !game.iconUrl && game.backgroundImageUrl
@@ -117,7 +116,14 @@
           @touchstart="handleTouchStart"
           @touchend="(e) => handleTouchEnd(e, game.type)"
         >
-          <!-- 투명도 그라데이션 오버레이 (하단 페이드) -->
+          <!-- 배경 이미지 레이어 (mask-image로 상단/하단 페이드) -->
+          <div
+            v-if="game.backgroundImageUrl"
+            class="showcase-bg"
+            :style="{ backgroundImage: `url(${game.backgroundImageUrl})` }"
+          ></div>
+
+          <!-- 텍스트 가독성을 위한 하단 오버레이 -->
           <div class="showcase-overlay"></div>
 
           <!-- 카드 콘텐츠 (하단 정렬) -->
@@ -1007,8 +1013,16 @@ function goToGame(type: string) {
   user-select: none;
   position: relative;
   min-height: 480px;
-  /* 배경 이미지 설정 */
   background-color: transparent;
+}
+
+/* 배경 이미지 레이어 (mask로 상단/하단 페이드 - 텍스트에 영향 없음) */
+.showcase-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1029,18 +1043,17 @@ function goToGame(type: string) {
   );
 }
 
-/* 오버레이는 텍스트 가독성을 위한 하단 그라데이션만 (선택적) */
+/* 텍스트 가독성을 위한 하단 그라데이션 */
 .showcase-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  /* 하단 텍스트 가독성을 위한 미세한 그라데이션 */
   background: linear-gradient(180deg,
     transparent 0%,
     transparent 60%,
-    rgba(0, 0, 0, 0.2) 100%
+    rgba(0, 0, 0, 0.3) 100%
   );
   pointer-events: none;
 }
