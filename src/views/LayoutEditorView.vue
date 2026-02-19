@@ -450,7 +450,7 @@
               <div class="form-divider"></div>
               <h4 class="form-section-title">
                 배너 슬라이드
-                <span style="font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.5); margin-left: 8px;">
+                <span style="font-size: 12px; font-weight: 400; color: #86868b; margin-left: 8px;">
                   {{ (editForm.bannerSlides || []).length }}장
                 </span>
               </h4>
@@ -479,7 +479,7 @@
                     <label class="form-label" style="font-size: 12px;">이미지 *</label>
                     <input type="file" class="form-input" @change="handleBannerSlideImageUpload($event, index)" accept="image/*">
                     <div v-if="slide.imageUrl" style="margin-top: 6px; position: relative;">
-                      <img :src="slide.imageUrl" alt="슬라이드 미리보기" style="width: 100%; max-height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                      <img :src="slide.imageUrl" alt="슬라이드 미리보기" style="width: 100%; max-height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e5ea;">
                     </div>
                   </div>
 
@@ -6133,25 +6133,25 @@ select.form-input {
 .style-toggle-btn {
   flex: 1;
   padding: 10px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1.5px solid #e5e5ea;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.6);
+  background: #fafafa;
+  color: #86868b;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .style-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
+  background: #f0f0f5;
+  color: #48484a;
 }
 
 .style-toggle-btn.active {
-  background: rgba(0, 122, 255, 0.2);
-  border-color: rgba(0, 122, 255, 0.5);
-  color: #007AFF;
+  background: #eff6ff;
+  border-color: #0071e3;
+  color: #0071e3;
 }
 
 /* Banner Slides List */
@@ -6163,8 +6163,8 @@ select.form-input {
 }
 
 .banner-slide-item {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 12px;
 }
@@ -6194,15 +6194,15 @@ select.form-input {
   flex: 1;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
+  color: #48484a;
 }
 
 .btn-danger-sm {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(255, 59, 48, 0.15);
-  color: #FF3B30;
+  background: #fef2f2;
+  color: #ef4444;
   border: none;
   cursor: pointer;
   display: flex;
@@ -6212,16 +6212,16 @@ select.form-input {
 }
 
 .btn-danger-sm:hover {
-  background: rgba(255, 59, 48, 0.3);
+  background: #fee2e2;
 }
 
 .btn-add-slide {
   width: 100%;
   padding: 12px;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1.5px dashed #d1d5db;
   border-radius: 10px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.5);
+  color: #86868b;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -6229,14 +6229,14 @@ select.form-input {
 }
 
 .btn-add-slide:hover {
-  border-color: rgba(0, 122, 255, 0.5);
-  color: #007AFF;
-  background: rgba(0, 122, 255, 0.05);
+  border-color: #0071e3;
+  color: #0071e3;
+  background: #f0f7ff;
 }
 
 .banner-spec-guide {
-  background: rgba(0, 122, 255, 0.08);
-  border: 1px solid rgba(0, 122, 255, 0.15);
+  background: #f0f7ff;
+  border: 1px solid #bfdbfe;
   border-radius: 8px;
   padding: 10px 12px;
   margin-bottom: 14px;
@@ -6245,12 +6245,12 @@ select.form-input {
 .banner-spec-guide p {
   margin: 0;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: #6b7280;
   line-height: 1.6;
 }
 
 .banner-spec-guide strong {
-  color: rgba(255, 255, 255, 0.8);
+  color: #1d1d1f;
   font-weight: 600;
 }
 </style>
