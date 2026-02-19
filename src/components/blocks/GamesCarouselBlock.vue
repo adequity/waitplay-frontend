@@ -731,18 +731,11 @@ function goToGame(type: string) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 12px;
-  padding: 0;
+  padding: 0 15px;
   margin: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x;
-}
-
-.games-slider::before,
-.games-slider::after {
-  content: '';
-  flex: 0 0 calc(7.5% - 6px);
-  min-width: calc(7.5% - 6px);
 }
 
 .games-slider::-webkit-scrollbar {
@@ -751,8 +744,8 @@ function goToGame(type: string) {
 }
 
 .game-slide {
-  flex: 0 0 85%;
-  min-width: 85%;
+  flex: 0 0 calc(100% - 30px);
+  min-width: calc(100% - 30px);
   scroll-snap-align: center;
   scroll-snap-stop: always;
   cursor: grab;
@@ -771,6 +764,11 @@ function goToGame(type: string) {
   padding: 32px 24px;
   text-align: center;
   transition: all 0.2s ease;
+  aspect-ratio: 6 / 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .game-slide:active .game-slide-content {
@@ -891,19 +889,11 @@ function goToGame(type: string) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 16px;
-  padding: 8px 0 16px;
+  padding: 8px 15px 16px;
   margin: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x;
-}
-
-/* 첫/마지막 카드 중앙 정렬 */
-.portfolio-slider::before,
-.portfolio-slider::after {
-  content: '';
-  flex: 0 0 calc(5% - 8px);
-  min-width: calc(5% - 8px);
 }
 
 .portfolio-slider::-webkit-scrollbar {
@@ -912,8 +902,8 @@ function goToGame(type: string) {
 }
 
 .portfolio-card {
-  flex: 0 0 90%;
-  min-width: 90%;
+  flex: 0 0 calc(100% - 30px);
+  min-width: calc(100% - 30px);
   scroll-snap-align: center;
   scroll-snap-stop: always;
   cursor: pointer;
@@ -931,6 +921,8 @@ function goToGame(type: string) {
   align-items: center;
   text-align: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  aspect-ratio: 6 / 9;
+  justify-content: center;
 }
 
 .portfolio-card:active .portfolio-card-inner {
