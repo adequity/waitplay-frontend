@@ -420,7 +420,7 @@
 
               <!-- 배너 높이 -->
               <div class="form-group">
-                <label class="form-label">배너 높이: {{ editForm.bannerHeight || 80 }}vh</label>
+                <label class="form-label">배너 높이: {{ editForm.bannerHeight || 65 }}vh</label>
                 <input type="range" class="form-range" v-model.number="editForm.bannerHeight" min="50" max="100" step="5" />
                 <div class="range-labels">
                   <span>50vh</span>
@@ -1995,7 +1995,7 @@ async function editBlock(block: Block) {
       editForm.value.headerStyle = 'default'
     }
     if (editForm.value.bannerHeight === undefined) {
-      editForm.value.bannerHeight = 80
+      editForm.value.bannerHeight = 65
     }
     if (editForm.value.bannerAutoPlay === undefined) {
       editForm.value.bannerAutoPlay = true
@@ -2936,7 +2936,7 @@ function initBannerSlides() {
     editForm.value.bannerSlides = [{ imageUrl: '', title: '', subtitle: '', linkUrl: '' }]
   }
   if (editForm.value.bannerHeight === undefined) {
-    editForm.value.bannerHeight = 80
+    editForm.value.bannerHeight = 65
   }
   if (editForm.value.bannerAutoPlay === undefined) {
     editForm.value.bannerAutoPlay = true

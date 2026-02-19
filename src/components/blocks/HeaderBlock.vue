@@ -201,7 +201,7 @@ let observer: IntersectionObserver | null = null
 
 // ========== BANNER 스타일 전용 ==========
 const isBannerStyle = computed(() => props.data.headerStyle === 'banner')
-const bannerHeight = computed(() => props.data.bannerHeight || 80)
+const bannerHeight = computed(() => props.data.bannerHeight || 65)
 const bannerSlides = computed<BannerSlide[]>(() => props.data.bannerSlides || [])
 const currentSlideIndex = ref(0)
 const bannerTrackRef = ref<HTMLElement | null>(null)
