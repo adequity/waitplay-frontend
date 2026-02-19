@@ -689,8 +689,8 @@ function goToGame(type: string) {
 <style scoped>
 .games-carousel-block {
   /* margin은 부모 컨테이너(CustomerView)에서 block.marginTop/marginBottom으로 설정 */
-  margin-left: 15px;
-  margin-right: 15px;
+  margin-left: 30px;
+  margin-right: 30px;
   overflow: hidden;
 }
 
@@ -1008,8 +1008,8 @@ function goToGame(type: string) {
 
 /* ========== SHOWCASE 스타일 (Apple Arcade 스타일, 풀스크린 배경) ========== */
 .games-carousel-block.showcase-style {
-  padding: 0;
-  /* margin은 부모 컨테이너(CustomerView)에서 설정하므로 여기서 강제하지 않음 */
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .showcase-slider {
