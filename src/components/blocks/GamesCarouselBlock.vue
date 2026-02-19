@@ -67,7 +67,13 @@
         >
           <div class="portfolio-card-inner">
             <div class="portfolio-icon">
-              <component :is="game.icon" :size="72" color="#1a1a1a" />
+              <img
+                v-if="game.iconUrl"
+                :src="game.iconUrl"
+                :alt="game.name"
+                class="portfolio-game-icon"
+              />
+              <component v-else :is="game.icon" :size="72" color="#1a1a1a" />
             </div>
             <div class="portfolio-info">
               <h3 class="portfolio-title">{{ game.name }}</h3>
@@ -854,6 +860,14 @@ function goToGame(type: string) {
 .portfolio-icon :deep(svg) {
   width: 72px;
   height: 72px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.portfolio-game-icon {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 12px;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
