@@ -109,7 +109,10 @@
           :key="game.type"
           class="showcase-card"
           :style="game.backgroundImageUrl ? { backgroundImage: `url(${game.backgroundImageUrl})` } : {}"
-          :class="{ 'has-bg-image': game.backgroundImageUrl }"
+          :class="{
+            'has-bg-image': game.backgroundImageUrl,
+            'no-icon': !game.iconUrl && game.backgroundImageUrl
+          }"
           @click="goToGame(game.type)"
           @touchstart="handleTouchStart"
           @touchend="(e) => handleTouchEnd(e, game.type)"
@@ -119,15 +122,17 @@
 
           <!-- 카드 콘텐츠 (하단 정렬) -->
           <div class="showcase-content">
-            <!-- 게임 아이콘 -->
-            <div class="showcase-icon-wrapper">
+            <!-- 게임 아이콘 (있을 때만 표시) -->
+            <div v-if="game.iconUrl" class="showcase-icon-wrapper">
               <img
-                v-if="game.iconUrl"
                 :src="game.iconUrl"
                 :alt="game.name"
                 class="showcase-game-icon"
               />
-              <div v-else class="showcase-fallback-icon">
+            </div>
+            <!-- 배경도 없고 아이콘도 없을 때 fallback 아이콘 표시 -->
+            <div v-else-if="!game.backgroundImageUrl" class="showcase-icon-wrapper">
+              <div class="showcase-fallback-icon">
                 <component :is="game.icon" :size="60" color="#374151" />
               </div>
             </div>
