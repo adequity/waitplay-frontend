@@ -89,7 +89,7 @@
       </div>
     </template>
 
-    <!-- ========== SHOWCASE 스타일 (워터마크 + 디바이스 프레임) ========== -->
+    <!-- ========== SHOWCASE 스타일 (게임 아이콘 중심) ========== -->
     <template v-else>
       <div class="showcase-slider" @scroll="onShowcaseScroll" ref="showcaseSliderRef">
         <div
@@ -100,26 +100,24 @@
           @touchstart="handleTouchStart"
           @touchend="(e) => handleTouchEnd(e, game.type)"
         >
-          <!-- 정사각형 컨테이너 (워터마크 + 디바이스 포함) -->
-          <div class="showcase-square">
-            <!-- 워터마크 텍스트 (정사각형 상단) -->
-            <div class="showcase-watermark">{{ game.name }}</div>
-
-            <!-- 디바이스 프레임 (태블릿 스타일) -->
-            <div class="showcase-device">
-              <div class="showcase-device-screen">
-                <div class="showcase-icon">
-                  <component :is="game.icon" :size="64" color="#374151" />
-                </div>
-              </div>
+          <!-- 게임 아이콘 (중앙 배치) -->
+          <div class="showcase-icon-wrapper">
+            <img
+              v-if="game.iconUrl"
+              :src="game.iconUrl"
+              :alt="game.name"
+              class="showcase-game-icon"
+            />
+            <div v-else class="showcase-fallback-icon">
+              <component :is="game.icon" :size="80" color="#374151" />
             </div>
           </div>
 
-          <!-- 카드 외부 설명 (정사각형 바깥) -->
-          <div class="showcase-info">
-            <p class="showcase-desc">{{ game.description }}</p>
-            <span class="showcase-cta">Play Game →</span>
-          </div>
+          <!-- 게임 이름 -->
+          <h3 class="showcase-game-name">{{ game.name }}</h3>
+
+          <!-- 지금 도전하기 버튼 -->
+          <button class="showcase-play-btn">지금 도전하기</button>
         </div>
       </div>
       <!-- Page Indicator Dots -->
@@ -415,13 +413,18 @@ onUnmounted(() => {
 })
 
 const allowedGames = computed(() => {
-  const orderedGames = props.data.gamesOrder.map(gameOrder =>
-    allGames.value.find(game => game.type === gameOrder.type)
-  ).filter(Boolean)
+  const orderedGames = props.data.gamesOrder.map(gameOrder => {
+    const game = allGames.value.find(g => g.type === gameOrder.type)
+    if (game) {
+      // gamesOrder에서 iconUrl이 있으면 추가
+      return { ...game, iconUrl: gameOrder.iconUrl }
+    }
+    return null
+  }).filter(Boolean)
 
   return orderedGames.filter(game =>
     props.data.enabledGames.includes(game!.type)
-  ) as GameData[]
+  ) as (GameData & { iconUrl?: string })[]
 })
 
 function scrollToGame(index: number) {
@@ -828,9 +831,9 @@ function goToGame(type: string) {
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* ========== SHOWCASE 스타일 (워터마크 + 디바이스 프레임) ========== */
+/* ========== SHOWCASE 스타일 (게임 아이콘 중심) ========== */
 .games-carousel-block.showcase-style {
-  padding: 0;
+  padding: 20px 0;
 }
 
 .showcase-slider {
@@ -841,7 +844,7 @@ function goToGame(type: string) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 20px;
-  padding: 16px 1.5rem 20px;
+  padding: 40px 1.5rem 30px;
   margin: 0 -1.5rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -854,114 +857,97 @@ function goToGame(type: string) {
 }
 
 .showcase-card {
-  flex: 0 0 85%;
-  min-width: 85%;
+  flex: 0 0 70%;
+  min-width: 70%;
   scroll-snap-align: center;
   scroll-snap-stop: always;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-}
-
-/* 정사각형 컨테이너 - Ditto 스타일 */
-.showcase-square {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  background: #e8e8e8;
-  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.showcase-card:active .showcase-square {
-  transform: scale(0.98);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
-}
-
-/* 워터마크 텍스트 - 정사각형 상단에 흐리게 */
-.showcase-watermark {
-  position: absolute;
-  top: 12px;
-  left: 0;
-  right: 0;
   text-align: center;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-size: 32px;
-  font-weight: 800;
-  color: rgba(0, 0, 0, 0.06);
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 1;
 }
 
-/* 디바이스 프레임 (태블릿 스타일) */
-.showcase-device {
-  position: relative;
-  z-index: 2;
-  width: 80%;
-  background: #2c2c2e;
-  border-radius: 12px;
-  padding: 8px;
+/* 게임 아이콘 래퍼 */
+.showcase-icon-wrapper {
+  width: 140px;
+  height: 140px;
+  border-radius: 28px;
+  overflow: hidden;
   box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* 디바이스 스크린 (흰색 내부) */
-.showcase-device-screen {
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #ffffff;
-  border-radius: 6px;
-  padding: 24px 16px;
+}
+
+.showcase-card:active .showcase-icon-wrapper {
+  transform: scale(0.95);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.showcase-game-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.showcase-fallback-icon {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 120px;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f5f5f7 0%, #e8e8ed 100%);
 }
 
-.showcase-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.showcase-fallback-icon :deep(svg) {
+  width: 80px;
+  height: 80px;
 }
 
-.showcase-icon :deep(svg) {
-  width: 64px;
-  height: 64px;
+/* 게임 이름 */
+.showcase-game-name {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 24px 0 8px 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* 카드 외부 설명 (정사각형 바깥) */
-.showcase-info {
-  margin-top: 16px;
-  text-align: left;
-  padding: 0 4px;
-}
-
-.showcase-desc {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0 0 8px 0;
-  line-height: 1.5;
-}
-
-.showcase-cta {
+/* 지금 도전하기 버튼 */
+.showcase-play-btn {
   display: inline-block;
+  padding: 12px 32px;
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #007aff;
-  transition: color 0.2s ease;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.showcase-card:hover .showcase-cta {
-  color: #0056b3;
+.showcase-play-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.showcase-card:active .showcase-play-btn {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(0.98);
 }
 
 /* Showcase Page Indicator Dots */

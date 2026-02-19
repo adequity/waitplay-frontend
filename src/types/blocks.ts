@@ -68,6 +68,7 @@ export interface GameOrderItem {
   type: string
   name: string
   icon: string
+  iconUrl?: string // MasterAdmin에서 관리하는 게임 아이콘 이미지 URL
 }
 
 export interface GamesCarouselBlockData {
