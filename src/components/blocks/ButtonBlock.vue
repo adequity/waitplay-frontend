@@ -25,7 +25,6 @@ defineProps<Props>()
 <style scoped>
 .button-block {
   padding: 0 1.5rem;
-  margin-bottom: 12px;
 }
 
 .block-button {

@@ -1592,7 +1592,6 @@ const handleLike = async (message: any) => {
 .guestbook-block {
   position: relative;
   padding: 2rem 1rem;
-  margin-bottom: 1.5rem;
   /* 배경색은 인라인 스타일로 적용 (fallbackBackgroundColor prop) */
 }
 

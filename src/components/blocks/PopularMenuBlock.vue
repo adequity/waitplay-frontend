@@ -242,7 +242,6 @@ const handleItemClick = (item: MenuItem) => {
 <style scoped>
 .popular-menu-block {
   padding: 0 1.5rem;
-  margin-bottom: 12px;
 }
 
 .popular-menu-card {

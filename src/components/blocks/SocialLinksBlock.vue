@@ -45,7 +45,6 @@ function getSocialIcon(platform: string | undefined): string {
 <style scoped>
 .social-links-block {
   padding: 0 1.5rem;
-  margin-bottom: 1.5rem;
 }
 
 .social-links {

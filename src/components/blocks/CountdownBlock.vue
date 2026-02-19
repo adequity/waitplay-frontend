@@ -86,7 +86,6 @@ onUnmounted(() => {
 <style scoped>
 .countdown-block {
   padding: 2rem 1.5rem;
-  margin-bottom: 1.5rem;
 }
 
 .countdown-content {

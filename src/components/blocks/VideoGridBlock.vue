@@ -114,7 +114,6 @@ function openVideo(url: string) {
 <style scoped>
 .video-grid-block {
   padding: 0 1.5rem;
-  margin-bottom: 20px;
 }
 
 .block-title {
