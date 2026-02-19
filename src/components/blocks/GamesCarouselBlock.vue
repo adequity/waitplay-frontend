@@ -472,6 +472,15 @@ async function loadAllLeaderboards() {
   allGames.value = await Promise.all(promises)
 }
 
+// qrCodeId가 변경될 때 게임 목록 다시 로드
+watch(() => props.qrCodeId, async (newQrCodeId, oldQrCodeId) => {
+  if (newQrCodeId && newQrCodeId !== oldQrCodeId && !props.isPreview) {
+    // qrCodeId가 나중에 설정되면 게임 목록 로드
+    isGamesLoaded.value = false
+    await loadAvailableGames()
+  }
+}, { immediate: false })
+
 onMounted(async () => {
   // 미리보기 모드에서는 fallback 게임 목록 사용
   if (props.isPreview) {
@@ -517,10 +526,12 @@ const allowedGames = computed(() => {
     const game = allGames.value.find(g => g.type === gameOrder.type)
     if (game) {
       // gamesOrder에서 iconUrl이 있으면 사용, 없으면 API의 iconImageUrl 사용
+      // buttonText도 API에서 전달된 값 사용
       return {
         ...game,
         iconUrl: gameOrder.iconUrl || game.iconImageUrl,
-        backgroundImageUrl: game.backgroundImageUrl
+        backgroundImageUrl: game.backgroundImageUrl,
+        buttonText: game.buttonText
       }
     }
     return null
@@ -528,7 +539,7 @@ const allowedGames = computed(() => {
 
   return orderedGames.filter(game =>
     props.data.enabledGames.includes(game!.type)
-  ) as (GameData & { iconUrl?: string; backgroundImageUrl?: string | null })[]
+  ) as (GameData & { iconUrl?: string; backgroundImageUrl?: string | null; buttonText?: string | null })[]
 })
 
 function scrollToGame(index: number) {
