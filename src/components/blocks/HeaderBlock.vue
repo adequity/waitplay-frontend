@@ -465,6 +465,7 @@ watch(() => props.data.bannerSlides, () => {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  height: 100%;
 }
 
 .banner-track::-webkit-scrollbar {
@@ -476,11 +477,15 @@ watch(() => props.data.bannerSlides, () => {
   position: relative;
   scroll-snap-align: start;
   cursor: default;
+  height: 100%;
 }
 
 .banner-slide-bg {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-size: cover;
   background-position: center;
   background-color: #1a1a1a;
@@ -589,7 +594,7 @@ watch(() => props.data.bannerSlides, () => {
 .banner-store-info-inner {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .banner-store-logo {
@@ -617,7 +622,7 @@ watch(() => props.data.bannerSlides, () => {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   font-size: 18px;
   font-weight: 700;
-  margin: 0 0 2px 0;
+  margin: 0 0 5px 0;
   letter-spacing: -0.01em;
   color: #ffffff;
   white-space: nowrap;
