@@ -58,8 +58,7 @@
           >
             <div
               class="banner-slide-bg"
-              :class="{ 'bg-loaded': slideLoadStates[index] }"
-              :style="slideLoadStates[index] ? { backgroundImage: `url(${slide.imageUrl})` } : {}"
+              :style="{ backgroundImage: slide.imageUrl ? `url(${slide.imageUrl})` : 'none' }"
             ></div>
             <!-- 하단 페이드 그라데이션 -->
             <div class="banner-slide-gradient" :style="bannerGradientStyle"></div>
@@ -231,18 +230,25 @@ const bannerGradientStyle = computed(() => {
 
 // 슬라이드 이미지 프리로드
 const preloadSlideImages = () => {
-  slideLoadStates.value = bannerSlides.value.map(() => false)
+  const states = bannerSlides.value.map(() => false)
+  slideLoadStates.value = states
   bannerSlides.value.forEach((slide, index) => {
     if (!slide.imageUrl) {
-      slideLoadStates.value[index] = true
+      const newStates = [...slideLoadStates.value]
+      newStates[index] = true
+      slideLoadStates.value = newStates
       return
     }
     const img = new Image()
     img.onload = () => {
-      slideLoadStates.value[index] = true
+      const newStates = [...slideLoadStates.value]
+      newStates[index] = true
+      slideLoadStates.value = newStates
     }
     img.onerror = () => {
-      slideLoadStates.value[index] = true
+      const newStates = [...slideLoadStates.value]
+      newStates[index] = true
+      slideLoadStates.value = newStates
     }
     img.src = slide.imageUrl
   })
@@ -489,12 +495,6 @@ watch(() => props.data.bannerSlides, () => {
   background-size: cover;
   background-position: center;
   background-color: #1a1a1a;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-.banner-slide-bg.bg-loaded {
-  opacity: 1;
 }
 
 .banner-slide-gradient {
