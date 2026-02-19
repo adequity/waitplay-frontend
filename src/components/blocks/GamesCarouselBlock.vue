@@ -817,6 +817,7 @@ function goToGame(type: string) {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   padding: 16px;
+  align-self: stretch;
 }
 
 .leaderboard-title {
