@@ -40,7 +40,7 @@
       :landing-title="landingTitle"
       :landing-description="landingDescription"
       :landing-image="landingImage"
-      :show-music="isBgmEnabled && !!bgmUrl"
+      :show-music="isBgmEnabled && (!!bgmUrl || bgmPlaylist.length > 0)"
       :show-my-page="true"
       :is-music-playing="isBgmPlaying"
       :theme-background-color="pageTheme.backgroundColor"
