@@ -111,9 +111,9 @@
             :class="{ 'logo-loaded': isLogoLoaded }"
           />
           <div class="banner-store-text">
-            <h1 class="banner-store-name" :style="titleStyle">{{ data.storeName }}</h1>
+            <h1 class="banner-store-name" :style="bannerTitleStyle">{{ data.storeName }}</h1>
             <div class="banner-store-welcome">
-              <p v-for="(line, index) in welcomeLines" :key="index" class="banner-welcome-line" :style="descStyle">
+              <p v-for="(line, index) in welcomeLines" :key="index" class="banner-welcome-line">
                 {{ line }}
               </p>
             </div>
@@ -159,6 +159,14 @@ const titleStyle = computed(() => {
   return {
     fontFamily: fontFamilyMap[fontFamily],
     fontSize: `${fontSize}px`
+  }
+})
+
+// 배너 모드에서는 폰트 패밀리만 적용 (크기는 CSS에서 정렬별로 제어)
+const bannerTitleStyle = computed(() => {
+  const fontFamily = props.data.titleFontFamily || 'default'
+  return {
+    fontFamily: fontFamilyMap[fontFamily]
   }
 })
 
@@ -603,23 +611,23 @@ watch(() => props.data.bannerSlides, () => {
 
 /* 매장 정보 영역 */
 .banner-store-info {
-  padding: 16px 20px 14px;
+  padding: 18px 20px 14px;
 }
 
 .banner-store-info-inner {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .banner-store-logo {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   object-fit: cover;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   padding: 3px;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   flex-shrink: 0;
   opacity: 0;
@@ -637,14 +645,12 @@ watch(() => props.data.bannerSlides, () => {
 
 .banner-store-name {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 700;
-  margin: 0 0 3px 0;
+  margin: 0 0 4px 0;
   letter-spacing: -0.01em;
   color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .banner-store-welcome {
@@ -655,35 +661,47 @@ watch(() => props.data.bannerSlides, () => {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 13px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
   margin: 0;
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.5;
 }
 
-/* 매장 정보 정렬 - 좌측 (기본) */
+/* 매장 정보 정렬 - 좌측 (기본): 로고 왼쪽 + 텍스트 오른쪽 가로 배치 */
 .banner-store-info.align-left .banner-store-info-inner {
-  justify-content: flex-start;
+  flex-direction: row;
+  align-items: center;
+}
+
+.banner-store-info.align-left .banner-store-name,
+.banner-store-info.align-left .banner-welcome-line {
+  text-align: left;
 }
 
 /* 매장 정보 정렬 - 중앙 (로고 위, 텍스트 아래) */
 .banner-store-info.align-center .banner-store-info-inner {
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.banner-store-info.align-center .banner-store-name,
+.banner-store-info.align-center .banner-store-logo {
+  width: 56px;
+  height: 56px;
+}
+
+.banner-store-info.align-center .banner-store-name {
+  font-size: 22px;
+  text-align: center;
+}
+
 .banner-store-info.align-center .banner-welcome-line {
   text-align: center;
 }
 
-/* 매장 정보 정렬 - 우측 */
+/* 매장 정보 정렬 - 우측: 텍스트 왼쪽 + 로고 오른쪽 가로 배치 */
 .banner-store-info.align-right .banner-store-info-inner {
   flex-direction: row-reverse;
-  justify-content: flex-start;
+  align-items: center;
 }
 
 .banner-store-info.align-right .banner-store-name,
