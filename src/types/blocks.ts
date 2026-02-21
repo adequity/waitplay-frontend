@@ -43,6 +43,7 @@ export interface HeaderBlockData {
   bannerAutoPlay?: boolean // 자동 슬라이드 (기본 true)
   bannerInterval?: number // 자동 슬라이드 간격 (초, 기본 5)
   bannerStoreAlign?: 'left' | 'center' | 'right' // 매장 정보 정렬 (기본 left)
+  bannerStorePadding?: number // 매장 정보 좌우 패딩 (8~40, 기본 20)
 }
 
 // Button Block

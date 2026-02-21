@@ -98,7 +98,7 @@
       </div>
 
       <!-- 매장 정보 영역 (배너 아래) -->
-      <div class="banner-store-info" :class="`align-${bannerStoreAlign}`">
+      <div class="banner-store-info" :class="`align-${bannerStoreAlign}`" :style="bannerStoreInfoStyle">
         <div class="banner-store-info-inner">
           <img
             v-if="data.logoUrl"
@@ -218,6 +218,11 @@ let observer: IntersectionObserver | null = null
 const isBannerStyle = computed(() => props.data.headerStyle === 'banner')
 const bannerHeight = computed(() => props.data.bannerHeight || 65)
 const bannerStoreAlign = computed(() => props.data.bannerStoreAlign || 'left')
+const bannerStorePadding = computed(() => props.data.bannerStorePadding ?? 20)
+const bannerStoreInfoStyle = computed(() => ({
+  paddingLeft: `${bannerStorePadding.value}px`,
+  paddingRight: `${bannerStorePadding.value}px`
+}))
 const bannerSlides = computed<BannerSlide[]>(() => props.data.bannerSlides || [])
 const currentSlideIndex = ref(0)
 const bannerTrackRef = ref<HTMLElement | null>(null)

@@ -450,6 +450,12 @@
                 </div>
               </div>
 
+              <!-- 좌우 여백 -->
+              <div class="form-group">
+                <label class="form-label">좌우 여백 (px)</label>
+                <input type="number" class="form-input" v-model.number="editForm.bannerStorePadding" min="0" max="60" step="1" placeholder="20" style="width: 80px;" />
+              </div>
+
               <!-- 배너 높이 -->
               <div class="form-group">
                 <label class="form-label">배너 높이: {{ editForm.bannerHeight || 65 }}vh</label>
