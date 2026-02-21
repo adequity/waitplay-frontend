@@ -404,6 +404,8 @@ watch(() => props.visible, async (newVal) => {
     window.addEventListener('popstate', handlePopState)
     await nextTick()
     initCanvas()
+    // 모달 열릴 때 카메라 자동 실행
+    cameraInputRef.value?.click()
   } else {
     document.body.style.overflow = ''
     window.removeEventListener('popstate', handlePopState)
