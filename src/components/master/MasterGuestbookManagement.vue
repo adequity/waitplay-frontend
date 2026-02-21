@@ -40,6 +40,17 @@
         </svg>
         팔레트 관리
       </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'templates' }"
+        @click="activeTab = 'templates'"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <rect x="7" y="7" width="10" height="10" rx="1"/>
+        </svg>
+        템플릿 관리
+      </button>
     </div>
 
     <!-- 전체 방명록 탭 -->
@@ -391,6 +402,115 @@
       </div>
     </div>
 
+    <!-- 템플릿 관리 탭 -->
+    <div v-if="activeTab === 'templates'" class="palette-section">
+      <div class="palette-header">
+        <div>
+          <h2 class="palette-title">방명록 액자 템플릿</h2>
+          <p class="palette-desc">방명록 에디터에 표시될 액자/프레임 PNG 템플릿을 관리합니다. 투명 영역이 그리기 영역입니다.</p>
+        </div>
+        <button class="btn-add-color" @click="openTemplateModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          템플릿 추가
+        </button>
+      </div>
+
+      <!-- 템플릿 그리드 -->
+      <div v-if="templatesLoading" style="text-align: center; padding: 40px; color: #86868b;">로딩 중...</div>
+      <div v-else-if="templates.length === 0" style="text-align: center; padding: 40px; color: #86868b;">
+        등록된 템플릿이 없습니다. 템플릿을 추가해보세요.
+      </div>
+      <div v-else class="template-grid">
+        <div
+          v-for="tmpl in templates"
+          :key="tmpl.id"
+          class="template-card"
+          :class="{ inactive: !tmpl.isActive }"
+        >
+          <div class="template-preview">
+            <img :src="tmpl.thumbnailUrl || tmpl.imageUrl" :alt="tmpl.name" />
+          </div>
+          <div class="template-info">
+            <span class="template-name">{{ tmpl.name }}</span>
+            <div class="template-actions">
+              <label class="toggle-switch small">
+                <input type="checkbox" :checked="tmpl.isActive" @change="toggleTemplateActive(tmpl)" />
+                <span class="toggle-slider"></span>
+              </label>
+              <button class="template-action-btn" @click="openTemplateModal(tmpl)" title="편집">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button class="template-action-btn danger" @click="deleteTemplate(tmpl.id)" title="삭제">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 템플릿 추가/편집 모달 -->
+    <div v-if="showTemplateModal" class="modal-overlay" @click.self="showTemplateModal = false">
+      <div class="reject-modal" style="max-width: 480px;">
+        <div class="reject-modal-header">
+          <h3>{{ editingTemplate ? '템플릿 편집' : '템플릿 추가' }}</h3>
+          <button class="modal-close" @click="showTemplateModal = false">
+            <IconBase name="x" />
+          </button>
+        </div>
+        <div class="reject-modal-body" style="display: flex; flex-direction: column; gap: 16px;">
+          <div>
+            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #1d1d1f;">템플릿 이름</label>
+            <input
+              v-model="templateForm.name"
+              type="text"
+              placeholder="예: 생일 축하 액자"
+              style="width: 100%; padding: 10px 12px; border: 1px solid #d2d2d7; border-radius: 10px; font-size: 14px; outline: none; box-sizing: border-box;"
+            />
+          </div>
+          <div>
+            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #1d1d1f;">템플릿 이미지 (PNG, 투명 영역 포함)</label>
+            <div class="template-upload-area">
+              <img v-if="templateForm.imageUrl" :src="templateForm.imageUrl" class="template-upload-preview" />
+              <div v-else class="template-upload-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#86868b" stroke-width="1.5" stroke-linecap="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span>PNG 파일을 선택하세요</span>
+              </div>
+              <input
+                ref="templateFileInput"
+                type="file"
+                accept="image/png"
+                class="template-file-input"
+                @change="onTemplateFileSelect"
+              />
+            </div>
+            <p v-if="templateUploading" style="font-size: 12px; color: #0071e3; margin: 4px 0 0;">업로드 중...</p>
+          </div>
+        </div>
+        <div class="reject-modal-footer">
+          <button class="btn-cancel" @click="showTemplateModal = false">취소</button>
+          <button
+            class="btn-submit-approve"
+            :disabled="!templateForm.name || !templateForm.imageUrl || templateUploading"
+            @click="saveTemplate"
+          >
+            {{ editingTemplate ? '수정' : '추가' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 색상 편집 모달 -->
     <div v-if="showEditColorModal" class="modal-overlay" @click.self="showEditColorModal = false">
       <div class="reject-modal">
@@ -592,7 +712,7 @@ const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
 // 탭 관리
-const activeTab = ref<'messages' | 'reports' | 'palette'>('messages')
+const activeTab = ref<'messages' | 'reports' | 'palette' | 'templates'>('messages')
 
 const loading = ref(true)
 const messages = ref<any[]>([])
@@ -903,6 +1023,129 @@ const getStatusLabel = (status: string) => {
   }
 }
 
+// ========== 템플릿 관리 ==========
+const templates = ref<any[]>([])
+const templatesLoading = ref(false)
+const showTemplateModal = ref(false)
+const editingTemplate = ref<any>(null)
+const templateForm = ref({ name: '', imageUrl: '' })
+const templateUploading = ref(false)
+const templateFileInput = ref<HTMLInputElement | null>(null)
+
+const fetchTemplates = async () => {
+  try {
+    templatesLoading.value = true
+    const response = await fetch(`${API_URL}/api/masteradmin/guestbook/templates`, {
+      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+    })
+    if (!response.ok) throw new Error('Failed')
+    const data = await response.json()
+    templates.value = data.templates || []
+  } catch (error) {
+    console.error('Failed to fetch templates:', error)
+    templates.value = []
+  } finally {
+    templatesLoading.value = false
+  }
+}
+
+const openTemplateModal = (tmpl?: any) => {
+  if (tmpl) {
+    editingTemplate.value = tmpl
+    templateForm.value = { name: tmpl.name, imageUrl: tmpl.imageUrl }
+  } else {
+    editingTemplate.value = null
+    templateForm.value = { name: '', imageUrl: '' }
+  }
+  showTemplateModal.value = true
+}
+
+const saveTemplate = async () => {
+  try {
+    const url = editingTemplate.value
+      ? `${API_URL}/api/masteradmin/guestbook/templates/${editingTemplate.value.id}`
+      : `${API_URL}/api/masteradmin/guestbook/templates`
+    const method = editingTemplate.value ? 'PUT' : 'POST'
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: templateForm.value.name,
+        imageUrl: templateForm.value.imageUrl
+      })
+    })
+    if (!response.ok) throw new Error('Failed')
+
+    showTemplateModal.value = false
+    fetchTemplates()
+  } catch (error) {
+    console.error('Failed to save template:', error)
+    alert('템플릿 저장에 실패했습니다.')
+  }
+}
+
+const deleteTemplate = async (id: string) => {
+  if (!confirm('이 템플릿을 삭제하시겠습니까?')) return
+  try {
+    const response = await fetch(`${API_URL}/api/masteradmin/guestbook/templates/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+    })
+    if (!response.ok) throw new Error('Failed')
+    fetchTemplates()
+  } catch (error) {
+    console.error('Failed to delete template:', error)
+    alert('템플릿 삭제에 실패했습니다.')
+  }
+}
+
+const toggleTemplateActive = async (tmpl: any) => {
+  try {
+    const response = await fetch(`${API_URL}/api/masteradmin/guestbook/templates/${tmpl.id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ isActive: !tmpl.isActive })
+    })
+    if (!response.ok) throw new Error('Failed')
+    fetchTemplates()
+  } catch (error) {
+    console.error('Failed to toggle template:', error)
+    alert('상태 변경에 실패했습니다.')
+  }
+}
+
+const onTemplateFileSelect = async (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  try {
+    templateUploading.value = true
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_URL}/api/fileupload/image`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authStore.accessToken}` },
+      body: formData
+    })
+    if (!response.ok) throw new Error('Failed')
+    const data = await response.json()
+    templateForm.value.imageUrl = data.url
+  } catch (error) {
+    console.error('Failed to upload template image:', error)
+    alert('이미지 업로드에 실패했습니다.')
+  } finally {
+    templateUploading.value = false
+  }
+}
+
 // ========== 팔레트 관리 ==========
 const DEFAULT_PALETTE = [
   '#FFFFFF', '#000000', '#A6A6A6', '#FF4040', '#FF7B00',
@@ -1023,6 +1266,9 @@ watch(activeTab, (newTab) => {
   }
   if (newTab === 'palette' && paletteColors.value.length === DEFAULT_PALETTE.length && JSON.stringify(paletteColors.value) === JSON.stringify(DEFAULT_PALETTE)) {
     fetchPalette()
+  }
+  if (newTab === 'templates' && templates.value.length === 0) {
+    fetchTemplates()
   }
 })
 
@@ -1968,6 +2214,193 @@ onMounted(() => {
 }
 .preview-dot.is-white { border: 1.5px solid rgba(255, 255, 255, 0.4); }
 
+/* 템플릿 관리 */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.template-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s;
+}
+
+.template-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.template-card.inactive {
+  opacity: 0.5;
+}
+
+.template-preview {
+  aspect-ratio: 9 / 16;
+  background: repeating-conic-gradient(#e5e5ea 0% 25%, white 0% 50%) 50% / 16px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.template-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.template-info {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.template-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.template-action-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: #f0f0f0;
+  color: #86868b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.template-action-btn:hover {
+  background: #e5e5ea;
+  color: #1d1d1f;
+}
+
+.template-action-btn.danger:hover {
+  background: #fff0f0;
+  color: #ff3b30;
+}
+
+/* 토글 스위치 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+
+.toggle-switch.small {
+  width: 34px;
+  height: 18px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #e5e5ea;
+  border-radius: 22px;
+  transition: 0.3s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.toggle-switch.small .toggle-slider::before {
+  height: 14px;
+  width: 14px;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #34c759;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+}
+
+.toggle-switch.small input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+}
+
+/* 템플릿 업로드 */
+.template-upload-area {
+  position: relative;
+  border: 2px dashed #e5e5ea;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  aspect-ratio: 9 / 16;
+  max-height: 300px;
+  background: repeating-conic-gradient(#f5f5f7 0% 25%, white 0% 50%) 50% / 16px 16px;
+}
+
+.template-upload-area:hover {
+  border-color: #d4a853;
+}
+
+.template-upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.template-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 20px;
+  color: #86868b;
+  font-size: 13px;
+}
+
+.template-file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .tab-menu {
     width: 100%;
@@ -2008,6 +2441,10 @@ onMounted(() => {
 
   .add-color-row {
     flex-wrap: wrap;
+  }
+
+  .template-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
 }
 </style>

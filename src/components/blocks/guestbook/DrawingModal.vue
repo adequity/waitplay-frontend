@@ -62,6 +62,14 @@
                 </button>
               </div>
             </div>
+
+            <!-- 템플릿(액자) 오버레이 -->
+            <img
+              v-if="templateOverlayUrl"
+              :src="templateOverlayUrl"
+              class="template-overlay"
+              @load="onTemplateOverlayLoad"
+            />
           </div>
         </div>
 
@@ -175,6 +183,18 @@
               </svg>
             </button>
 
+            <!-- 액자(템플릿) -->
+            <button
+              class="tool-btn"
+              :class="{ active: showTemplatePicker }"
+              @click="showTemplatePicker = !showTemplatePicker"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <rect x="7" y="7" width="10" height="10" rx="1"/>
+              </svg>
+            </button>
+
             <!-- Undo -->
             <button
               class="tool-btn"
@@ -198,6 +218,41 @@
             </button>
           </div>
         </div>
+
+        <!-- ===== 템플릿(액자) 피커 ===== -->
+        <Transition name="draw-panel">
+          <div v-if="showTemplatePicker" class="template-picker-panel">
+            <div class="template-picker-scroll">
+              <!-- 없음 -->
+              <button
+                class="template-picker-item"
+                :class="{ selected: !selectedTemplateId }"
+                @click="applyTemplate(null)"
+              >
+                <div class="template-picker-thumb none-thumb">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
+                </div>
+                <span class="template-picker-label">없음</span>
+              </button>
+              <!-- 템플릿 목록 -->
+              <button
+                v-for="tmpl in availableTemplates"
+                :key="tmpl.id"
+                class="template-picker-item"
+                :class="{ selected: selectedTemplateId === tmpl.id }"
+                @click="applyTemplate(tmpl)"
+              >
+                <div class="template-picker-thumb">
+                  <img :src="tmpl.thumbnailUrl || tmpl.imageUrl" :alt="tmpl.name" />
+                </div>
+                <span class="template-picker-label">{{ tmpl.name }}</span>
+              </button>
+            </div>
+          </div>
+        </Transition>
 
         <!-- ===== BOTTOM BAR ===== -->
         <div class="editor-bottom-bar">
@@ -303,6 +358,13 @@ const isActivelyDrawing = ref(false)
 const drawToolsOpened = ref(false)
 const showDrawPanel = computed(() => drawToolsOpened.value && !isActivelyDrawing.value && activeMode.value === 'draw')
 
+// 템플릿(액자) 상태
+const availableTemplates = ref<any[]>([])
+const selectedTemplateId = ref<string | null>(null)
+const templateOverlayUrl = ref<string | null>(null)
+const templateOverlayImage = ref<HTMLImageElement | null>(null)
+const showTemplatePicker = ref(false)
+
 // 팔레트 색상
 const paletteColors = ref<string[]>([])
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
@@ -331,6 +393,37 @@ const fetchPaletteColors = async () => {
   } catch {
     // fallback: ColorPalette 내부 기본값 사용
   }
+}
+
+const fetchTemplates = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/guestbook/templates`)
+    if (!response.ok) return
+    const data = await response.json()
+    availableTemplates.value = data.templates || []
+    // 첫 번째 템플릿 자동 적용
+    if (availableTemplates.value.length > 0) {
+      applyTemplate(availableTemplates.value[0])
+    }
+  } catch {
+    // 템플릿 로드 실패해도 에디터 사용 가능
+  }
+}
+
+const applyTemplate = (tmpl: any | null) => {
+  if (tmpl) {
+    selectedTemplateId.value = tmpl.id
+    templateOverlayUrl.value = tmpl.imageUrl
+  } else {
+    selectedTemplateId.value = null
+    templateOverlayUrl.value = null
+    templateOverlayImage.value = null
+  }
+  showTemplatePicker.value = false
+}
+
+const onTemplateOverlayLoad = (e: Event) => {
+  templateOverlayImage.value = e.target as HTMLImageElement
 }
 
 const closeModal = () => {
@@ -503,6 +596,7 @@ watch(() => props.visible, async (newVal) => {
     await nextTick()
     initCanvas()
     fetchPaletteColors()
+    fetchTemplates()
     // 촬영하기로 진입한 경우 카메라 자동 실행
     if (props.initialMode === 'camera') {
       cameraInputRef.value?.click()
@@ -513,6 +607,10 @@ watch(() => props.visible, async (newVal) => {
     hasDrawing.value = false
     clearAllStickers()
     clearBackgroundImage()
+    selectedTemplateId.value = null
+    templateOverlayUrl.value = null
+    templateOverlayImage.value = null
+    showTemplatePicker.value = false
     if (!closedByPopState && history.state?.modal === 'guestbook') {
       history.back()
     }
@@ -646,6 +744,11 @@ const composeAndResizeImage = async (): Promise<string> => {
     }
 
     composedCtx.restore()
+  }
+
+  // 템플릿(액자) 오버레이 합성
+  if (templateOverlayImage.value) {
+    composedCtx.drawImage(templateOverlayImage.value, 0, 0, width, height)
   }
 
   if (props.displayMode === 'graffiti') {
@@ -1100,6 +1203,97 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ===== 템플릿(액자) 오버레이 ===== */
+.template-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 15;
+}
+
+/* ===== 템플릿 피커 ===== */
+.template-picker-panel {
+  position: absolute;
+  bottom: 80px;
+  right: 12px;
+  background: rgba(38, 38, 38, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  z-index: 30;
+  max-height: 50vh;
+  overflow: hidden;
+}
+
+.template-picker-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: calc(50vh - 16px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.template-picker-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.template-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.template-picker-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.template-picker-item.selected {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.template-picker-thumb {
+  width: 40px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: repeating-conic-gradient(rgba(255,255,255,0.1) 0% 25%, transparent 0% 50%) 50% / 8px 8px;
+}
+.template-picker-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.template-picker-thumb.none-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.template-picker-label {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
 }
 
 /* ===== 숨겨진 파일 입력 ===== */
