@@ -112,10 +112,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const loginForm = ref({
@@ -177,9 +178,11 @@ const handleLogin = async () => {
         router.push('/admin')
         break
       case 'user':
-      default:
-        router.push('/customer')
+      default: {
+        const qr = route.query.qr as string
+        router.push(qr ? `/customer?qr=${qr}` : '/customer')
         break
+      }
     }
   } catch (error: any) {
     console.error('Login failed:', error)
