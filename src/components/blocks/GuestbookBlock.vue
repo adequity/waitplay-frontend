@@ -169,12 +169,71 @@
       </Transition>
     </Teleport>
 
+    <!-- 템플릿(액자) 선택 화면 -->
+    <Teleport to="body">
+      <Transition name="template-picker-overlay">
+        <div v-if="isTemplatePickerOpen" class="template-picker-overlay">
+          <Transition name="template-picker-slide">
+            <div v-if="isTemplatePickerOpen" class="template-picker-screen">
+              <!-- 상단 바 -->
+              <div class="template-picker-header">
+                <button class="template-picker-close" @click="isTemplatePickerOpen = false">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+                <h3 class="template-picker-title">액자를 골라주세요</h3>
+                <div style="width: 22px;"></div>
+              </div>
+
+              <!-- 템플릿 그리드 -->
+              <div class="template-picker-body">
+                <div v-if="isLoadingTemplates" class="template-picker-loading">
+                  <div class="template-loading-spinner"></div>
+                </div>
+                <div v-else class="template-picker-grid">
+                  <!-- 없음 -->
+                  <button
+                    class="template-picker-card"
+                    :class="{ selected: !selectedTemplate }"
+                    @click="onTemplateSelected(null)"
+                  >
+                    <div class="template-card-preview none-preview">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                      </svg>
+                    </div>
+                    <span class="template-card-name">없음</span>
+                  </button>
+                  <!-- 템플릿 목록 -->
+                  <button
+                    v-for="tmpl in availableTemplates"
+                    :key="tmpl.id"
+                    class="template-picker-card"
+                    :class="{ selected: selectedTemplate?.id === tmpl.id }"
+                    @click="onTemplateSelected(tmpl)"
+                  >
+                    <div class="template-card-preview">
+                      <img :src="tmpl.thumbnailUrl || tmpl.imageUrl" :alt="tmpl.name" />
+                    </div>
+                    <span class="template-card-name">{{ tmpl.name }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- 그리기 모달 -->
     <DrawingModal
       :visible="isDrawingModalOpen"
       :qr-code-id="qrCodeId"
       :display-mode="displayMode"
       :initial-mode="drawingInitialMode"
+      :selected-template="selectedTemplate"
       @close="isDrawingModalOpen = false"
       @submitted="loadMessages"
     />
@@ -308,15 +367,47 @@ const isActionSheetOpen = ref(false)
 const isDrawingModalOpen = ref(false)
 const drawingInitialMode = ref<'camera' | 'draw'>('draw')
 
+// 템플릿(액자) 선택
+const isTemplatePickerOpen = ref(false)
+const isLoadingTemplates = ref(false)
+const availableTemplates = ref<any[]>([])
+const selectedTemplate = ref<any>(null)
+const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
+
+const fetchTemplates = async () => {
+  if (availableTemplates.value.length > 0) return // 이미 로드됨
+  isLoadingTemplates.value = true
+  try {
+    const response = await fetch(`${API_URL}/api/guestbook/templates`)
+    if (!response.ok) return
+    const data = await response.json()
+    availableTemplates.value = data.templates || []
+  } catch {
+    // 로드 실패해도 진행 가능
+  } finally {
+    isLoadingTemplates.value = false
+  }
+}
+
 const openWithCamera = () => {
   isActionSheetOpen.value = false
   drawingInitialMode.value = 'camera'
-  isDrawingModalOpen.value = true
+  selectedTemplate.value = null
+  fetchTemplates()
+  isTemplatePickerOpen.value = true
 }
 
 const openWithDraw = () => {
   isActionSheetOpen.value = false
   drawingInitialMode.value = 'draw'
+  selectedTemplate.value = null
+  fetchTemplates()
+  isTemplatePickerOpen.value = true
+}
+
+const onTemplateSelected = (tmpl: any) => {
+  selectedTemplate.value = tmpl
+  isTemplatePickerOpen.value = false
   isDrawingModalOpen.value = true
 }
 const isDetailModalOpen = ref(false)
@@ -785,4 +876,142 @@ const goToFullGuestbook = () => {
 .sheet-slide-leave-active { transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1); }
 .sheet-slide-enter-from,
 .sheet-slide-leave-to { transform: translateY(100%); }
+
+/* ===== 템플릿 선택 화면 ===== */
+.template-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #fff;
+}
+
+.template-picker-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.template-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.template-picker-close {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.template-picker-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.template-picker-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.template-picker-loading {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.template-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #4ecdc4;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.template-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.template-picker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.template-picker-card.selected {
+  border-color: #4ecdc4;
+  background: rgba(78, 205, 196, 0.06);
+}
+
+.template-picker-card:active {
+  transform: scale(0.96);
+}
+
+.template-card-preview {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.template-card-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.template-card-preview.none-preview {
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+}
+
+.template-card-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  text-align: center;
+  line-height: 1.2;
+  padding: 0 4px 8px;
+}
+
+/* 템플릿 선택 화면 트랜지션 */
+.template-picker-overlay-enter-active { transition: opacity 0.25s ease; }
+.template-picker-overlay-leave-active { transition: opacity 0.2s ease; }
+.template-picker-overlay-enter-from,
+.template-picker-overlay-leave-to { opacity: 0; }
+
+.template-picker-slide-enter-active { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.template-picker-slide-leave-active { transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1); }
+.template-picker-slide-enter-from,
+.template-picker-slide-leave-to { transform: translateY(100%); }
 </style>
