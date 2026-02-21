@@ -250,6 +250,7 @@ interface Props {
   visible: boolean
   qrCodeId: string
   displayMode: DisplayMode
+  initialMode?: 'camera' | 'draw'
 }
 
 const props = defineProps<Props>()
@@ -404,8 +405,10 @@ watch(() => props.visible, async (newVal) => {
     window.addEventListener('popstate', handlePopState)
     await nextTick()
     initCanvas()
-    // 모달 열릴 때 카메라 자동 실행
-    cameraInputRef.value?.click()
+    // 촬영하기로 진입한 경우 카메라 자동 실행
+    if (props.initialMode === 'camera') {
+      cameraInputRef.value?.click()
+    }
   } else {
     document.body.style.overflow = ''
     window.removeEventListener('popstate', handlePopState)

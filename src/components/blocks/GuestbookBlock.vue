@@ -28,7 +28,7 @@
       <!-- 왼쪽 컬럼 -->
       <div class="masonry-column">
         <!-- 작성하기 버튼 (로그인 시) -->
-        <div v-if="isAuthenticated" class="masonry-card write-card" @click="isDrawingModalOpen = true">
+        <div v-if="isAuthenticated" class="masonry-card write-card" @click="isActionSheetOpen = true">
           <div class="write-card-content">
             <img src="/write-icon.png" alt="작성하기" class="card-icon" />
           </div>
@@ -129,11 +129,52 @@
       </div>
     </div>
 
+    <!-- 작성 방식 선택 하단 시트 -->
+    <Teleport to="body">
+      <Transition name="sheet-overlay">
+        <div v-if="isActionSheetOpen" class="action-sheet-overlay" @click="isActionSheetOpen = false">
+          <Transition name="sheet-slide">
+            <div v-if="isActionSheetOpen" class="action-sheet" @click.stop>
+              <div class="sheet-handle"></div>
+              <div class="sheet-options">
+                <button class="sheet-option" @click="openWithCamera">
+                  <div class="sheet-option-icon camera-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                  </div>
+                  <div class="sheet-option-text">
+                    <span class="sheet-option-title">촬영하기</span>
+                    <span class="sheet-option-desc">사진을 찍고 꾸며보세요</span>
+                  </div>
+                </button>
+                <button class="sheet-option" @click="openWithDraw">
+                  <div class="sheet-option-icon draw-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                      <path d="M2 2l7.586 7.586"/>
+                    </svg>
+                  </div>
+                  <div class="sheet-option-text">
+                    <span class="sheet-option-title">꾸미기</span>
+                    <span class="sheet-option-desc">자유롭게 그림을 그려보세요</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- 그리기 모달 -->
     <DrawingModal
       :visible="isDrawingModalOpen"
       :qr-code-id="qrCodeId"
       :display-mode="displayMode"
+      :initial-mode="drawingInitialMode"
       @close="isDrawingModalOpen = false"
       @submitted="loadMessages"
     />
@@ -263,7 +304,21 @@ const isLoadingMessages = ref(false)
 const likingMessageId = ref<string | null>(null)
 
 // 모달 상태
+const isActionSheetOpen = ref(false)
 const isDrawingModalOpen = ref(false)
+const drawingInitialMode = ref<'camera' | 'draw'>('draw')
+
+const openWithCamera = () => {
+  isActionSheetOpen.value = false
+  drawingInitialMode.value = 'camera'
+  isDrawingModalOpen.value = true
+}
+
+const openWithDraw = () => {
+  isActionSheetOpen.value = false
+  drawingInitialMode.value = 'draw'
+  isDrawingModalOpen.value = true
+}
 const isDetailModalOpen = ref(false)
 const isShareModalOpen = ref(false)
 const selectedMessageForDetail = ref<any>(null)
@@ -635,4 +690,99 @@ const goToFullGuestbook = () => {
 .modal-fade-leave-to {
   opacity: 0;
 }
+
+/* ===== 하단 시트 ===== */
+.action-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.action-sheet {
+  width: 100%;
+  max-width: 500px;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px max(20px, env(safe-area-inset-bottom));
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.sheet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  width: 100%;
+}
+.sheet-option:active {
+  background: #f3f4f6;
+  transform: scale(0.98);
+}
+
+.sheet-option-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.camera-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.draw-icon {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.sheet-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sheet-option-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+.sheet-option-desc {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 시트 트랜지션 */
+.sheet-overlay-enter-active { transition: opacity 0.25s ease; }
+.sheet-overlay-leave-active { transition: opacity 0.2s ease; }
+.sheet-overlay-enter-from,
+.sheet-overlay-leave-to { opacity: 0; }
+
+.sheet-slide-enter-active { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.sheet-slide-leave-active { transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1); }
+.sheet-slide-enter-from,
+.sheet-slide-leave-to { transform: translateY(100%); }
 </style>
