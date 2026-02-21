@@ -112,6 +112,23 @@
             </svg>
           </button>
 
+          <!-- 카메라 촬영 -->
+          <button class="tool-btn" @click="openCamera">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </button>
+
+          <!-- 갤러리 -->
+          <button class="tool-btn" @click="openGallery">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </button>
+
           <!-- Undo -->
           <button
             class="tool-btn"
@@ -193,6 +210,23 @@
     </Transition>
   </Teleport>
 
+  <!-- 숨겨진 파일 입력 -->
+  <input
+    ref="cameraInputRef"
+    type="file"
+    accept="image/*"
+    capture="environment"
+    class="hidden-file-input"
+    @change="onFileSelected"
+  />
+  <input
+    ref="galleryInputRef"
+    type="file"
+    accept="image/*"
+    class="hidden-file-input"
+    @change="onFileSelected"
+  />
+
   <!-- 스티커 피커 -->
   <StickerPickerModal
     :visible="isStickerPickerOpen"
@@ -227,6 +261,8 @@ const emit = defineEmits<{
 const isSubmitting = ref(false)
 const isStickerPickerOpen = ref(false)
 const activeMode = ref<'draw' | 'sticker'>('draw')
+const cameraInputRef = ref<HTMLInputElement | null>(null)
+const galleryInputRef = ref<HTMLInputElement | null>(null)
 
 const closeModal = () => {
   emit('close')
@@ -258,6 +294,8 @@ const {
   redo,
   canUndo,
   canRedo,
+  setBackgroundImage,
+  clearBackgroundImage,
 } = useGuestbookCanvas({ displayMode: displayModeRef })
 
 // Sticker composable
@@ -309,6 +347,23 @@ const onColorSelected = () => {
   isEraser.value = false
 }
 
+// 카메라/갤러리
+const openCamera = () => {
+  cameraInputRef.value?.click()
+}
+
+const openGallery = () => {
+  galleryInputRef.value?.click()
+}
+
+const onFileSelected = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  await setBackgroundImage(file)
+  input.value = ''
+}
+
 // 캔버스 이벤트 래퍼
 const onCanvasMouseDown = (e: MouseEvent) => {
   if (activeMode.value !== 'draw') return
@@ -354,6 +409,7 @@ watch(() => props.visible, async (newVal) => {
     window.removeEventListener('popstate', handlePopState)
     hasDrawing.value = false
     clearAllStickers()
+    clearBackgroundImage()
     if (!closedByPopState && history.state?.modal === 'guestbook') {
       history.back()
     }
@@ -369,6 +425,7 @@ const onAddSticker = (payload: { type: string; content: string }) => {
 const handleClear = () => {
   clearCanvas()
   clearAllStickers()
+  clearBackgroundImage()
 }
 
 const handleClearStickers = () => {
@@ -842,5 +899,14 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ===== 숨겨진 파일 입력 ===== */
+.hidden-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 </style>

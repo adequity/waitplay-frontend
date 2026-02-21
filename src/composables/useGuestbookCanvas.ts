@@ -12,6 +12,9 @@ export function useGuestbookCanvas(options: CanvasOptions) {
   const isDrawing = ref(false)
   const hasDrawing = ref(false)
 
+  // 배경 이미지
+  const backgroundImage = ref<HTMLImageElement | null>(null)
+
   // 도구 설정
   const minBrushSize = 1
   const maxBrushSize = 20
@@ -82,6 +85,55 @@ export function useGuestbookCanvas(options: CanvasOptions) {
     ctx.value.lineWidth = brushSize.value
   }
 
+  /** 배경 이미지를 캔버스에 cover 방식으로 그리기 */
+  const drawBackground = () => {
+    if (!ctx.value || !canvasRef.value || !backgroundImage.value) return
+    const img = backgroundImage.value
+    const canvas = canvasRef.value
+    const imgRatio = img.width / img.height
+    const canvasRatio = canvas.width / canvas.height
+    let sx: number, sy: number, sw: number, sh: number
+    if (imgRatio > canvasRatio) {
+      sh = img.height
+      sw = sh * canvasRatio
+      sx = (img.width - sw) / 2
+      sy = 0
+    } else {
+      sw = img.width
+      sh = sw / canvasRatio
+      sx = 0
+      sy = (img.height - sh) / 2
+    }
+    ctx.value.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
+  }
+
+  /** File → 배경 이미지로 설정 */
+  const setBackgroundImage = (file: File): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const img = new Image()
+        img.onload = () => {
+          backgroundImage.value = img
+          if (ctx.value && canvasRef.value) {
+            saveState()
+            drawBackground()
+            hasDrawing.value = true
+          }
+          resolve()
+        }
+        img.onerror = reject
+        img.src = reader.result as string
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const clearBackgroundImage = () => {
+    backgroundImage.value = null
+  }
+
   const initCanvas = () => {
     if (!canvasRef.value) return
 
@@ -95,7 +147,9 @@ export function useGuestbookCanvas(options: CanvasOptions) {
     ctx.value = canvas.getContext('2d')
 
     if (ctx.value) {
-      if (getDisplayMode() === 'graffiti') {
+      if (backgroundImage.value) {
+        drawBackground()
+      } else if (getDisplayMode() === 'graffiti') {
         ctx.value.clearRect(0, 0, canvas.width, canvas.height)
       } else {
         ctx.value.fillStyle = '#FFFFFF'
@@ -187,6 +241,8 @@ export function useGuestbookCanvas(options: CanvasOptions) {
   const clearCanvas = () => {
     if (!ctx.value || !canvasRef.value) return
 
+    backgroundImage.value = null
+
     if (getDisplayMode() === 'graffiti') {
       ctx.value.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
     } else {
@@ -241,5 +297,9 @@ export function useGuestbookCanvas(options: CanvasOptions) {
     redo,
     canUndo,
     canRedo,
+    // 배경 이미지
+    backgroundImage,
+    setBackgroundImage,
+    clearBackgroundImage,
   }
 }
