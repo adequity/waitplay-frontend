@@ -1,14 +1,16 @@
 <template>
   <div class="vertical-brush-slider">
-    <!-- 브러시 미리보기 원 -->
-    <div
-      class="brush-preview"
-      :style="{
-        width: `${previewSize}px`,
-        height: `${previewSize}px`,
-        backgroundColor: color
-      }"
-    ></div>
+    <!-- 브러시 미리보기 (고정 크기 영역, 안에서 원만 변함) -->
+    <div class="brush-preview-area">
+      <div
+        class="brush-preview-dot"
+        :style="{
+          width: `${previewSize}px`,
+          height: `${previewSize}px`,
+          backgroundColor: color
+        }"
+      ></div>
+    </div>
 
     <!-- 세로 트랙 -->
     <div
@@ -45,15 +47,13 @@ const fillPercent = computed(() => {
 })
 
 const previewSize = computed(() => {
-  // 미리보기 원 크기: 8~32px 범위로 매핑
   const ratio = (props.size - props.min) / (props.max - props.min)
-  return 8 + ratio * 24
+  return 6 + ratio * 26
 })
 
 const updateFromY = (clientY: number) => {
   if (!trackRef.value) return
   const rect = trackRef.value.getBoundingClientRect()
-  // 위=max, 아래=min이므로 Y 반전
   const ratio = 1 - Math.max(0, Math.min(1, (clientY - rect.top) / rect.height))
   const value = Math.round(props.min + ratio * (props.max - props.min))
   emit('update:size', value)
@@ -108,10 +108,19 @@ const onTouchEnd = () => {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.brush-preview {
+/* 미리보기 영역: 고정 크기 박스, 안에 원이 중앙 정렬 */
+.brush-preview-area {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brush-preview-dot {
   border-radius: 50%;
   transition: width 0.1s, height 0.1s;
-  flex-shrink: 0;
 }
 
 .slider-track {

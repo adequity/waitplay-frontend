@@ -1,6 +1,22 @@
 <template>
   <div class="color-palette">
-    <div class="color-scroll" ref="scrollRef">
+    <div class="color-scroll">
+      <!-- 컬러 피커 버튼 (맨 앞) -->
+      <div class="color-picker-btn">
+        <div class="picker-icon" :style="{ backgroundColor: color }">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        </div>
+        <input
+          type="color"
+          :value="color"
+          class="native-color-input"
+          @input="onCustomColor"
+        />
+      </div>
+
+      <!-- 프리셋 색상들 -->
       <button
         v-for="c in PRESET_COLORS"
         :key="c"
@@ -11,16 +27,6 @@
       >
         <span v-if="c === '#FFFFFF'" class="white-border"></span>
       </button>
-      <!-- 커스텀 색상 선택 -->
-      <div class="color-dot custom-color-dot">
-        <div class="rainbow-ring"></div>
-        <input
-          type="color"
-          :value="color"
-          class="custom-color-input"
-          @input="onCustomColor"
-        />
-      </div>
     </div>
   </div>
 </template>
@@ -76,6 +82,43 @@ const onCustomColor = (e: Event) => {
   display: none;
 }
 
+/* 컬러 피커 버튼 */
+.color-picker-btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.picker-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: border-color 0.15s;
+}
+.color-picker-btn:hover .picker-icon {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.native-color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+/* 프리셋 색상 */
 .color-dot {
   width: 28px;
   height: 28px;
@@ -96,41 +139,11 @@ const onCustomColor = (e: Event) => {
   box-shadow: 0 0 0 2.5px rgba(0, 0, 0, 0.95), 0 0 0 4.5px rgba(255, 255, 255, 0.9);
 }
 
-/* 흰색은 테두리가 없으면 안 보이므로 내부 테두리 추가 */
 .white-border {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   border: 1.5px solid rgba(255, 255, 255, 0.4);
   pointer-events: none;
-}
-
-/* 커스텀 색상 버튼 */
-.custom-color-dot {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.rainbow-ring {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: conic-gradient(
-    #ff0000, #ff8800, #ffff00, #00ff00,
-    #00ffff, #0000ff, #8800ff, #ff0088, #ff0000
-  );
-  pointer-events: none;
-}
-
-.custom-color-input {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  border: none;
-  padding: 0;
 }
 </style>
