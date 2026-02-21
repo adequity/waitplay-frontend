@@ -1,0 +1,264 @@
+import { ref, computed, type Ref } from 'vue'
+
+export type DisplayMode = 'postit' | 'graffiti'
+
+export interface CanvasOptions {
+  displayMode: Ref<DisplayMode> | DisplayMode
+}
+
+export function useGuestbookCanvas(options: CanvasOptions) {
+  const canvasRef = ref<HTMLCanvasElement | null>(null)
+  const ctx = ref<CanvasRenderingContext2D | null>(null)
+  const isDrawing = ref(false)
+  const hasDrawing = ref(false)
+
+  // 도구 설정
+  const minBrushSize = 1
+  const maxBrushSize = 20
+  const selectedColor = ref('#000000')
+  const brushSize = ref(4)
+
+  // 지우개
+  const isEraser = ref(false)
+  const toggleEraser = () => { isEraser.value = !isEraser.value }
+
+  // Undo/Redo 스택
+  const MAX_UNDO_STEPS = 15
+  const undoStack: ImageData[] = []
+  const redoStack: ImageData[] = []
+  const canUndo = computed(() => undoStack.length > 0)
+  const canRedo = computed(() => redoStack.length > 0)
+
+  const saveState = () => {
+    if (!ctx.value || !canvasRef.value) return
+    const imageData = ctx.value.getImageData(0, 0, canvasRef.value.width, canvasRef.value.height)
+    undoStack.push(imageData)
+    if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift()
+    redoStack.length = 0
+  }
+
+  const undo = () => {
+    if (!ctx.value || !canvasRef.value || undoStack.length === 0) return
+    const current = ctx.value.getImageData(0, 0, canvasRef.value.width, canvasRef.value.height)
+    redoStack.push(current)
+    const prev = undoStack.pop()!
+    ctx.value.putImageData(prev, 0, 0)
+    if (undoStack.length === 0) hasDrawing.value = false
+  }
+
+  const redo = () => {
+    if (!ctx.value || !canvasRef.value || redoStack.length === 0) return
+    const current = ctx.value.getImageData(0, 0, canvasRef.value.width, canvasRef.value.height)
+    undoStack.push(current)
+    const next = redoStack.pop()!
+    ctx.value.putImageData(next, 0, 0)
+    hasDrawing.value = true
+  }
+
+  // 터치 좌표 추적
+  let lastX = 0
+  let lastY = 0
+
+  // 캔버스 비율 상수 (3:4)
+  const CANVAS_ASPECT_RATIO = 3 / 4
+
+  const getDisplayMode = (): DisplayMode => {
+    const mode = options.displayMode
+    return typeof mode === 'string' ? mode : mode.value
+  }
+
+  /** 지우개/펜 모드에 따라 ctx 설정 */
+  const applyBrushStyle = () => {
+    if (!ctx.value) return
+    if (isEraser.value) {
+      if (getDisplayMode() === 'graffiti') {
+        ctx.value.globalCompositeOperation = 'destination-out'
+        ctx.value.strokeStyle = 'rgba(0,0,0,1)'
+      } else {
+        ctx.value.globalCompositeOperation = 'source-over'
+        ctx.value.strokeStyle = '#FFFFFF'
+      }
+    } else {
+      ctx.value.globalCompositeOperation = 'source-over'
+      ctx.value.strokeStyle = selectedColor.value
+    }
+    ctx.value.lineWidth = brushSize.value
+  }
+
+  const initCanvas = () => {
+    if (!canvasRef.value) return
+
+    const canvas = canvasRef.value
+    const container = canvas.parentElement
+    if (!container) return
+
+    const containerWidth = container.clientWidth
+    const containerHeight = container.clientHeight
+
+    let canvasWidth: number
+    let canvasHeight: number
+
+    const containerRatio = containerWidth / containerHeight
+
+    if (containerRatio > CANVAS_ASPECT_RATIO) {
+      canvasHeight = containerHeight
+      canvasWidth = canvasHeight * CANVAS_ASPECT_RATIO
+    } else {
+      canvasWidth = containerWidth
+      canvasHeight = canvasWidth / CANVAS_ASPECT_RATIO
+    }
+
+    canvas.width = Math.floor(canvasWidth)
+    canvas.height = Math.floor(canvasHeight)
+
+    ctx.value = canvas.getContext('2d')
+
+    if (ctx.value) {
+      if (getDisplayMode() === 'graffiti') {
+        ctx.value.clearRect(0, 0, canvas.width, canvas.height)
+      } else {
+        ctx.value.fillStyle = '#FFFFFF'
+        ctx.value.fillRect(0, 0, canvas.width, canvas.height)
+      }
+      ctx.value.lineCap = 'round'
+      ctx.value.lineJoin = 'round'
+    }
+
+    // 초기화 시 스택 리셋
+    undoStack.length = 0
+    redoStack.length = 0
+  }
+
+  const startDrawing = (e: MouseEvent) => {
+    if (!ctx.value || !canvasRef.value) return
+
+    saveState()
+    isDrawing.value = true
+    hasDrawing.value = true
+
+    const rect = canvasRef.value.getBoundingClientRect()
+    lastX = e.clientX - rect.left
+    lastY = e.clientY - rect.top
+
+    ctx.value.beginPath()
+    ctx.value.moveTo(lastX, lastY)
+  }
+
+  const draw = (e: MouseEvent) => {
+    if (!isDrawing.value || !ctx.value || !canvasRef.value) return
+
+    const rect = canvasRef.value.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    applyBrushStyle()
+    ctx.value.lineTo(x, y)
+    ctx.value.stroke()
+
+    lastX = x
+    lastY = y
+  }
+
+  const handleTouchStart = (e: TouchEvent) => {
+    if (!ctx.value || !canvasRef.value) return
+
+    const touch = e.touches[0]
+    if (!touch) return
+
+    saveState()
+    isDrawing.value = true
+    hasDrawing.value = true
+
+    const rect = canvasRef.value.getBoundingClientRect()
+    lastX = touch.clientX - rect.left
+    lastY = touch.clientY - rect.top
+
+    ctx.value.beginPath()
+    ctx.value.moveTo(lastX, lastY)
+  }
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!isDrawing.value || !ctx.value || !canvasRef.value) return
+
+    const touch = e.touches[0]
+    if (!touch) return
+
+    const rect = canvasRef.value.getBoundingClientRect()
+    const x = touch.clientX - rect.left
+    const y = touch.clientY - rect.top
+
+    applyBrushStyle()
+    ctx.value.lineTo(x, y)
+    ctx.value.stroke()
+
+    lastX = x
+    lastY = y
+  }
+
+  const stopDrawing = () => {
+    if (isDrawing.value && ctx.value) {
+      // 스트로크 후 composite 모드 복원
+      ctx.value.globalCompositeOperation = 'source-over'
+    }
+    isDrawing.value = false
+  }
+
+  const clearCanvas = () => {
+    if (!ctx.value || !canvasRef.value) return
+
+    if (getDisplayMode() === 'graffiti') {
+      ctx.value.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+    } else {
+      ctx.value.fillStyle = '#FFFFFF'
+      ctx.value.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+    }
+
+    hasDrawing.value = false
+    undoStack.length = 0
+    redoStack.length = 0
+  }
+
+  /** 스티커 선택 해제를 위한 콜백 (DrawingModal에서 설정) */
+  let onCanvasTouchCallback: (() => void) | null = null
+
+  const setOnCanvasTouch = (cb: () => void) => {
+    onCanvasTouchCallback = cb
+  }
+
+  // 캔버스 터치 시 스티커 선택 해제를 트리거하는 래퍼
+  const startDrawingWithDeselect = (e: MouseEvent) => {
+    onCanvasTouchCallback?.()
+    startDrawing(e)
+  }
+
+  const handleTouchStartWithDeselect = (e: TouchEvent) => {
+    onCanvasTouchCallback?.()
+    handleTouchStart(e)
+  }
+
+  return {
+    canvasRef,
+    ctx,
+    isDrawing,
+    hasDrawing,
+    selectedColor,
+    brushSize,
+    minBrushSize,
+    maxBrushSize,
+    initCanvas,
+    startDrawing: startDrawingWithDeselect,
+    draw,
+    handleTouchStart: handleTouchStartWithDeselect,
+    handleTouchMove,
+    stopDrawing,
+    clearCanvas,
+    setOnCanvasTouch,
+    // 새 기능
+    isEraser,
+    toggleEraser,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  }
+}
