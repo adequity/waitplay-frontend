@@ -1125,6 +1125,11 @@ const onTemplateFileSelect = async (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
 
+  if (file.size > 10 * 1024 * 1024) {
+    alert('파일 크기는 10MB 이하여야 합니다.')
+    return
+  }
+
   try {
     templateUploading.value = true
     const formData = new FormData()
@@ -1137,7 +1142,7 @@ const onTemplateFileSelect = async (e: Event) => {
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
-    templateForm.value.imageUrl = data.url
+    templateForm.value.imageUrl = data.fileUrl
   } catch (error) {
     console.error('Failed to upload template image:', error)
     alert('이미지 업로드에 실패했습니다.')
