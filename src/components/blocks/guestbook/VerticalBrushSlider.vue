@@ -91,15 +91,10 @@ const onTouchEnd = () => {
 
 <style scoped>
 .vertical-brush-slider {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  z-index: 20;
   padding: 14px 10px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
