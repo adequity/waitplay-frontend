@@ -59,9 +59,6 @@ export function useGuestbookCanvas(options: CanvasOptions) {
   let lastX = 0
   let lastY = 0
 
-  // 캔버스 비율 상수 (3:4)
-  const CANVAS_ASPECT_RATIO = 3 / 4
-
   const getDisplayMode = (): DisplayMode => {
     const mode = options.displayMode
     return typeof mode === 'string' ? mode : mode.value
@@ -92,24 +89,8 @@ export function useGuestbookCanvas(options: CanvasOptions) {
     const container = canvas.parentElement
     if (!container) return
 
-    const containerWidth = container.clientWidth
-    const containerHeight = container.clientHeight
-
-    let canvasWidth: number
-    let canvasHeight: number
-
-    const containerRatio = containerWidth / containerHeight
-
-    if (containerRatio > CANVAS_ASPECT_RATIO) {
-      canvasHeight = containerHeight
-      canvasWidth = canvasHeight * CANVAS_ASPECT_RATIO
-    } else {
-      canvasWidth = containerWidth
-      canvasHeight = canvasWidth / CANVAS_ASPECT_RATIO
-    }
-
-    canvas.width = Math.floor(canvasWidth)
-    canvas.height = Math.floor(canvasHeight)
+    canvas.width = container.clientWidth
+    canvas.height = container.clientHeight
 
     ctx.value = canvas.getContext('2d')
 
