@@ -170,6 +170,7 @@
             <div v-if="activeMode === 'draw'" key="draw" class="bottom-draw-tools">
               <ColorPalette
                 v-model:color="selectedColor"
+                :colors="paletteColors"
                 @color-selected="onColorSelected"
               />
             </div>
@@ -270,6 +271,23 @@ const isStickerPickerOpen = ref(false)
 const activeMode = ref<'draw' | 'sticker'>('draw')
 const cameraInputRef = ref<HTMLInputElement | null>(null)
 const galleryInputRef = ref<HTMLInputElement | null>(null)
+
+// 팔레트 색상
+const paletteColors = ref<string[]>([])
+const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
+
+const fetchPaletteColors = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/guestbook/palette`)
+    if (!response.ok) return
+    const data = await response.json()
+    if (data.colors?.length > 0) {
+      paletteColors.value = data.colors
+    }
+  } catch {
+    // fallback: ColorPalette 내부 기본값 사용
+  }
+}
 
 const closeModal = () => {
   emit('close')
@@ -411,6 +429,7 @@ watch(() => props.visible, async (newVal) => {
     window.addEventListener('popstate', handlePopState)
     await nextTick()
     initCanvas()
+    fetchPaletteColors()
     // 촬영하기로 진입한 경우 카메라 자동 실행
     if (props.initialMode === 'camera') {
       cameraInputRef.value?.click()

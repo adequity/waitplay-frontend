@@ -18,7 +18,7 @@
 
       <!-- 프리셋 색상들 -->
       <button
-        v-for="c in PRESET_COLORS"
+        v-for="c in displayColors"
         :key="c"
         class="color-dot"
         :class="{ selected: color === c }"
@@ -32,17 +32,20 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 interface Props {
   color: string
+  colors?: string[]
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'update:color', value: string): void
   (e: 'color-selected'): void
 }>()
 
-const PRESET_COLORS = [
+const DEFAULT_COLORS = [
   '#FFFFFF', '#000000', '#A6A6A6', '#FF4040', '#FF7B00',
   '#FFD700', '#00E676', '#00BCD4', '#2979FF', '#7C4DFF',
   '#FF4081', '#8D6E63', '#37474F', '#D50000', '#FF6D00',
@@ -50,6 +53,10 @@ const PRESET_COLORS = [
   '#C51162', '#3E2723', '#FFAB91', '#B2FF59', '#84FFFF',
   '#B388FF', '#FF80AB'
 ]
+
+const displayColors = computed(() =>
+  props.colors && props.colors.length > 0 ? props.colors : DEFAULT_COLORS
+)
 
 const selectColor = (c: string) => {
   emit('update:color', c)

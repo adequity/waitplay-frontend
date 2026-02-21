@@ -26,6 +26,20 @@
         삭제 요청
         <span v-if="pendingReportsCount > 0" class="notification-badge">{{ pendingReportsCount }}</span>
       </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'palette' }"
+        @click="activeTab = 'palette'"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="13.5" cy="6.5" r="2.5"/>
+          <circle cx="17.5" cy="10.5" r="2.5"/>
+          <circle cx="8.5" cy="7.5" r="2.5"/>
+          <circle cx="6.5" cy="12.5" r="2.5"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+        </svg>
+        팔레트 관리
+      </button>
     </div>
 
     <!-- 전체 방명록 탭 -->
@@ -288,6 +302,127 @@
       </div>
     </div>
 
+    <!-- 팔레트 관리 탭 -->
+    <div v-if="activeTab === 'palette'" class="palette-section">
+      <div class="palette-header">
+        <div>
+          <h2 class="palette-title">색상 팔레트 설정</h2>
+          <p class="palette-desc">방명록 작성 시 사용자에게 표시되는 색상을 관리합니다.</p>
+        </div>
+        <div class="palette-actions">
+          <button class="btn-outline" @click="resetPalette" :disabled="paletteSaving">
+            기본값 복원
+          </button>
+          <button class="btn-primary" @click="savePalette" :disabled="paletteSaving">
+            {{ paletteSaving ? '저장 중...' : '저장' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="palette-card">
+        <div class="palette-count">현재 팔레트 ({{ paletteColors.length }}색)</div>
+
+        <!-- 색상 그리드 -->
+        <div class="color-grid">
+          <div
+            v-for="(color, index) in paletteColors"
+            :key="index"
+            class="color-item"
+          >
+            <div class="color-swatch-wrapper">
+              <div
+                class="color-swatch"
+                :style="{ backgroundColor: color }"
+                :class="{ 'is-white': color.toUpperCase() === '#FFFFFF' }"
+                @click="openEditColor(index)"
+              ></div>
+              <button class="color-remove" @click="removeColor(index)">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <span class="color-hex">{{ color }}</span>
+          </div>
+        </div>
+
+        <!-- 색상 추가 패널 -->
+        <div class="add-color-panel">
+          <div class="add-color-title">색상 추가</div>
+          <div class="add-color-row">
+            <div class="color-picker-wrapper">
+              <div class="color-picker-preview" :style="{ backgroundColor: newColorHex }"></div>
+              <input
+                type="color"
+                v-model="newColorHex"
+                class="native-picker"
+              />
+            </div>
+            <div class="hex-input-group">
+              <span class="hex-prefix">#</span>
+              <input
+                type="text"
+                class="hex-input"
+                :value="newColorHex.replace('#', '')"
+                @input="onHexInput"
+                maxlength="6"
+                placeholder="FF0000"
+              />
+            </div>
+            <button class="btn-add-color" @click="addColor">추가</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 미리보기 -->
+      <div class="preview-section">
+        <div class="preview-label">에디터 미리보기</div>
+        <div class="preview-strip">
+          <div class="preview-scroll">
+            <div
+              v-for="(color, index) in paletteColors"
+              :key="'preview-' + index"
+              class="preview-dot"
+              :style="{ backgroundColor: color }"
+              :class="{ 'is-white': color.toUpperCase() === '#FFFFFF' }"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 색상 편집 모달 -->
+    <div v-if="showEditColorModal" class="modal-overlay" @click.self="showEditColorModal = false">
+      <div class="reject-modal">
+        <div class="reject-modal-header">
+          <h3>색상 편집</h3>
+          <button class="modal-close" @click="showEditColorModal = false">
+            <IconBase name="x" />
+          </button>
+        </div>
+        <div class="reject-modal-body" style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+          <div class="color-picker-wrapper large">
+            <div class="color-picker-preview large" :style="{ backgroundColor: editColorHex }"></div>
+            <input type="color" v-model="editColorHex" class="native-picker large" />
+          </div>
+          <div class="hex-input-group">
+            <span class="hex-prefix">#</span>
+            <input
+              type="text"
+              class="hex-input"
+              :value="editColorHex.replace('#', '')"
+              @input="onEditHexInput"
+              maxlength="6"
+            />
+          </div>
+        </div>
+        <div class="reject-modal-footer">
+          <button class="btn-cancel" @click="showEditColorModal = false">취소</button>
+          <button class="btn-submit-approve" @click="confirmEditColor">적용</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 신고 상세 모달 -->
     <div v-if="showReportDetailModal" class="modal-overlay" @click.self="closeReportDetailModal">
       <div class="detail-modal report-detail">
@@ -457,7 +592,7 @@ const authStore = useAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'https://waitplay-production-4148.up.railway.app'
 
 // 탭 관리
-const activeTab = ref<'messages' | 'reports'>('messages')
+const activeTab = ref<'messages' | 'reports' | 'palette'>('messages')
 
 const loading = ref(true)
 const messages = ref<any[]>([])
@@ -768,10 +903,126 @@ const getStatusLabel = (status: string) => {
   }
 }
 
+// ========== 팔레트 관리 ==========
+const DEFAULT_PALETTE = [
+  '#FFFFFF', '#000000', '#A6A6A6', '#FF4040', '#FF7B00',
+  '#FFD700', '#00E676', '#00BCD4', '#2979FF', '#7C4DFF',
+  '#FF4081', '#8D6E63', '#37474F', '#D50000', '#FF6D00',
+  '#FFD600', '#00C853', '#00B8D4', '#2962FF', '#6200EA',
+  '#C51162', '#3E2723', '#FFAB91', '#B2FF59', '#84FFFF',
+  '#B388FF', '#FF80AB'
+]
+
+const paletteColors = ref<string[]>([...DEFAULT_PALETTE])
+const paletteLoading = ref(false)
+const paletteSaving = ref(false)
+const newColorHex = ref('#FF0000')
+
+// 색상 편집 모달
+const showEditColorModal = ref(false)
+const editColorIndex = ref(-1)
+const editColorHex = ref('#000000')
+
+const fetchPalette = async () => {
+  try {
+    paletteLoading.value = true
+    const response = await fetch(`${API_URL}/api/masteradmin/guestbook/palette`, {
+      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+    })
+    if (!response.ok) throw new Error('Failed')
+    const data = await response.json()
+    if (data.colors && data.colors.length > 0) {
+      paletteColors.value = data.colors
+    }
+  } catch (error) {
+    console.error('Fetch palette error:', error)
+  } finally {
+    paletteLoading.value = false
+  }
+}
+
+const savePalette = async () => {
+  try {
+    paletteSaving.value = true
+    const response = await fetch(`${API_URL}/api/masteradmin/guestbook/palette`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${authStore.accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ colors: paletteColors.value })
+    })
+    if (!response.ok) throw new Error('Failed')
+    alert('팔레트가 저장되었습니다.')
+  } catch (error) {
+    console.error('Save palette error:', error)
+    alert('팔레트 저장에 실패했습니다.')
+  } finally {
+    paletteSaving.value = false
+  }
+}
+
+const addColor = () => {
+  const hex = newColorHex.value.toUpperCase()
+  if (!/^#[0-9A-F]{6}$/.test(hex)) {
+    alert('올바른 HEX 색상을 입력해주세요.')
+    return
+  }
+  if (paletteColors.value.includes(hex)) {
+    alert('이미 존재하는 색상입니다.')
+    return
+  }
+  paletteColors.value.push(hex)
+}
+
+const removeColor = (index: number) => {
+  if (paletteColors.value.length <= 1) {
+    alert('최소 1개 이상의 색상이 필요합니다.')
+    return
+  }
+  paletteColors.value.splice(index, 1)
+}
+
+const openEditColor = (index: number) => {
+  editColorIndex.value = index
+  editColorHex.value = paletteColors.value[index] ?? '#000000'
+  showEditColorModal.value = true
+}
+
+const confirmEditColor = () => {
+  if (editColorIndex.value >= 0) {
+    paletteColors.value[editColorIndex.value] = editColorHex.value.toUpperCase()
+  }
+  showEditColorModal.value = false
+}
+
+const resetPalette = () => {
+  if (confirm('기본 팔레트로 복원하시겠습니까?')) {
+    paletteColors.value = [...DEFAULT_PALETTE]
+  }
+}
+
+const onHexInput = (e: Event) => {
+  const value = (e.target as HTMLInputElement).value.replace(/[^0-9A-Fa-f]/g, '').slice(0, 6)
+  if (value.length === 6) {
+    newColorHex.value = `#${value.toUpperCase()}`
+  }
+}
+
+const onEditHexInput = (e: Event) => {
+  const value = (e.target as HTMLInputElement).value.replace(/[^0-9A-Fa-f]/g, '').slice(0, 6)
+  if (value.length === 6) {
+    editColorHex.value = `#${value.toUpperCase()}`
+  }
+}
+
 // 탭 변경 시 데이터 로드
 watch(activeTab, (newTab) => {
   if (newTab === 'reports' && reports.value.length === 0) {
     fetchReports()
+  }
+  if (newTab === 'palette' && paletteColors.value.length === DEFAULT_PALETTE.length && JSON.stringify(paletteColors.value) === JSON.stringify(DEFAULT_PALETTE)) {
+    fetchPalette()
   }
 })
 
@@ -1590,6 +1841,133 @@ onMounted(() => {
   color: #fcd34d;
 }
 
+/* 팔레트 관리 */
+.palette-section { }
+.palette-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+.palette-title { font-size: 20px; font-weight: 700; color: #1d1d1f; margin: 0 0 4px 0; }
+.palette-desc { font-size: 14px; color: #86868b; margin: 0; }
+.palette-actions { display: flex; gap: 10px; flex-shrink: 0; }
+
+.btn-outline {
+  padding: 10px 20px; border: 1px solid #e5e5ea; border-radius: 10px;
+  background: white; font-size: 14px; font-weight: 500; color: #6b7280;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-outline:hover:not(:disabled) { background: #f5f5f7; }
+.btn-outline:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+  padding: 10px 20px; border: none; border-radius: 10px;
+  background: linear-gradient(135deg, #d4a853, #b8942e); font-size: 14px;
+  font-weight: 600; color: white; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary:hover:not(:disabled) { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.palette-card {
+  background: white; border-radius: 16px; padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); margin-bottom: 24px;
+}
+.palette-count {
+  font-size: 13px; font-weight: 600; color: #86868b;
+  text-transform: uppercase; margin-bottom: 16px;
+}
+
+.color-grid {
+  display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+}
+.color-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.color-swatch-wrapper {
+  position: relative; width: 48px; height: 48px;
+}
+.color-swatch {
+  width: 48px; height: 48px; border-radius: 12px; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.color-swatch:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+.color-swatch.is-white { border: 1px solid #e5e5ea; }
+
+.color-remove {
+  position: absolute; top: -6px; right: -6px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #ff3b30; border: 2px solid white; color: white;
+  cursor: pointer; display: none; align-items: center; justify-content: center;
+  padding: 0; line-height: 1;
+}
+.color-swatch-wrapper:hover .color-remove { display: flex; }
+.color-hex { font-size: 10px; color: #aeaeb2; font-family: monospace; }
+
+/* 색상 추가 패널 */
+.add-color-panel {
+  padding-top: 20px; border-top: 1px solid #f0f0f0;
+}
+.add-color-title {
+  font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 12px;
+}
+.add-color-row {
+  display: flex; align-items: center; gap: 12px;
+}
+.color-picker-wrapper {
+  position: relative; width: 44px; height: 44px; flex-shrink: 0;
+}
+.color-picker-wrapper.large { width: 80px; height: 80px; }
+.color-picker-preview {
+  width: 44px; height: 44px; border-radius: 10px;
+  border: 2px solid #e5e5ea; cursor: pointer;
+}
+.color-picker-preview.large { width: 80px; height: 80px; border-radius: 16px; }
+.native-picker {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; border: none; padding: 0;
+}
+.native-picker.large { width: 80px; height: 80px; }
+
+.hex-input-group {
+  display: flex; align-items: center; gap: 2px;
+  border: 1px solid #e5e5ea; border-radius: 10px; padding: 0 12px;
+  background: white; height: 44px;
+}
+.hex-prefix { font-size: 14px; color: #aeaeb2; font-weight: 600; }
+.hex-input {
+  border: none; outline: none; font-size: 14px; font-family: monospace;
+  width: 80px; text-transform: uppercase; background: transparent;
+}
+
+.btn-add-color {
+  padding: 10px 20px; border: none; border-radius: 10px;
+  background: #1d1d1f; color: white; font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.btn-add-color:hover { background: #3a3a3c; }
+
+/* 미리보기 */
+.preview-section { margin-top: 0; }
+.preview-label {
+  font-size: 13px; font-weight: 600; color: #86868b;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.preview-strip {
+  background: #2c2c2e; border-radius: 16px; padding: 16px;
+  overflow: hidden;
+}
+.preview-scroll {
+  display: flex; gap: 8px; overflow-x: auto;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.preview-scroll::-webkit-scrollbar { display: none; }
+.preview-dot {
+  width: 28px; height: 28px; min-width: 28px; border-radius: 50%;
+}
+.preview-dot.is-white { border: 1.5px solid rgba(255, 255, 255, 0.4); }
+
 @media (max-width: 768px) {
   .tab-menu {
     width: 100%;
@@ -1614,6 +1992,22 @@ onMounted(() => {
 
   .search-box {
     max-width: 100%;
+  }
+
+  .palette-header {
+    flex-direction: column;
+  }
+
+  .palette-actions {
+    width: 100%;
+  }
+
+  .palette-actions button {
+    flex: 1;
+  }
+
+  .add-color-row {
+    flex-wrap: wrap;
   }
 }
 </style>
