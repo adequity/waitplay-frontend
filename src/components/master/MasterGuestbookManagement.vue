@@ -467,7 +467,7 @@
         </div>
         <div class="reject-modal-body" style="display: flex; flex-direction: column; gap: 16px;">
           <div>
-            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #1d1d1f;">템플릿 이름</label>
+            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #1d1d1f;">템플릿 이름 <span style="color: #ff3b30;">*</span></label>
             <input
               v-model="templateForm.name"
               type="text"
@@ -495,7 +495,8 @@
                 @change="onTemplateFileSelect"
               />
             </div>
-            <p v-if="templateUploading" style="font-size: 12px; color: #0071e3; margin: 4px 0 0;">업로드 중...</p>
+            <p v-if="templateUploading" style="font-size: 12px; color: #0071e3; margin: 4px 0 0;">업로드 및 리사이징 중...</p>
+            <p v-else-if="templateForm.imageUrl" style="font-size: 12px; color: #34c759; margin: 4px 0 0;">이미지 업로드 완료</p>
           </div>
         </div>
         <div class="reject-modal-footer">
