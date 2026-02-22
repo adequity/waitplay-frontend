@@ -192,17 +192,7 @@ const cleanupAudio = () => {
 // 모달이 열릴 때 조회수 증가 + 답글 로드
 watch(() => props.visible, async (newVal) => {
   if (newVal && props.message) {
-    // 조회수 증가 (실패 시 무시)
-    try {
-      await guestbookService.incrementViewCount(props.message.id)
-    } catch {
-      // 조회수 증가 실패는 무시
-    }
-
-    // 답글 로드
-    await loadReplies(props.message.id)
-
-    // BGM 자동 재생
+    // BGM 자동 재생 (유저 인터랙션 컨텍스트가 유효할 때 즉시 실행)
     if (props.message.audioUrl) {
       audioEl.value = new Audio(props.message.audioUrl)
       audioEl.value.addEventListener('ended', () => {
@@ -213,10 +203,14 @@ watch(() => props.visible, async (newVal) => {
       audioEl.value.play().then(() => {
         isAudioPlaying.value = true
         startAudioTimer()
-      }).catch(() => {
-        // 브라우저 autoplay 정책으로 차단될 수 있음 — 무시
-      })
+      }).catch(() => {})
     }
+
+    // 조회수 증가 (실패 시 무시)
+    guestbookService.incrementViewCount(props.message.id).catch(() => {})
+
+    // 답글 로드
+    await loadReplies(props.message.id)
   } else {
     replies.value = []
     cleanupAudio()
