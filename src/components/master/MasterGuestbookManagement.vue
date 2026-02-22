@@ -343,7 +343,7 @@
             <div class="color-swatch-wrapper">
               <div
                 class="color-swatch"
-                :style="{ backgroundColor: color }"
+                :style="{ background: color }"
                 :class="{ 'is-white': color.toUpperCase() === '#FFFFFF' }"
                 @click="openEditColor(index)"
               ></div>
@@ -353,14 +353,19 @@
                 </svg>
               </button>
             </div>
-            <span class="color-hex">{{ color }}</span>
+            <span class="color-hex">{{ color.startsWith('linear-gradient') ? '그라데이션' : color }}</span>
           </div>
         </div>
 
         <!-- 색상 추가 패널 -->
         <div class="add-color-panel">
-          <div class="add-color-title">색상 추가</div>
-          <div class="add-color-row">
+          <div class="add-color-tabs">
+            <button class="add-color-tab" :class="{ active: addColorMode === 'solid' }" @click="addColorMode = 'solid'">단색</button>
+            <button class="add-color-tab" :class="{ active: addColorMode === 'gradient' }" @click="addColorMode = 'gradient'">그라데이션</button>
+          </div>
+
+          <!-- 단색 추가 -->
+          <div v-if="addColorMode === 'solid'" class="add-color-row">
             <div class="color-picker-wrapper">
               <div class="color-picker-preview" :style="{ backgroundColor: newColorHex }"></div>
               <input
@@ -382,6 +387,39 @@
             </div>
             <button class="btn-add-color" @click="addColor">추가</button>
           </div>
+
+          <!-- 그라데이션 추가 -->
+          <div v-if="addColorMode === 'gradient'" class="add-gradient-row">
+            <div class="gradient-pickers">
+              <div class="gradient-color-group">
+                <label>시작색</label>
+                <div class="color-picker-wrapper">
+                  <div class="color-picker-preview" :style="{ backgroundColor: gradStartColor }"></div>
+                  <input type="color" v-model="gradStartColor" class="native-picker" />
+                </div>
+              </div>
+              <span class="gradient-arrow">→</span>
+              <div class="gradient-color-group">
+                <label>끝색</label>
+                <div class="color-picker-wrapper">
+                  <div class="color-picker-preview" :style="{ backgroundColor: gradEndColor }"></div>
+                  <input type="color" v-model="gradEndColor" class="native-picker" />
+                </div>
+              </div>
+            </div>
+            <div class="gradient-direction-row">
+              <label>방향</label>
+              <div class="gradient-direction-btns">
+                <button v-for="dir in gradientDirections" :key="dir.deg" class="grad-dir-btn" :class="{ active: gradDirection === dir.deg }" @click="gradDirection = dir.deg" :title="dir.label">
+                  {{ dir.icon }}
+                </button>
+              </div>
+            </div>
+            <div class="gradient-preview-row">
+              <div class="gradient-preview-swatch" :style="{ background: gradientPreview }"></div>
+              <button class="btn-add-color" @click="addGradient">추가</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -394,7 +432,7 @@
               v-for="(color, index) in paletteColors"
               :key="'preview-' + index"
               class="preview-dot"
-              :style="{ backgroundColor: color }"
+              :style="{ background: color }"
               :class="{ 'is-white': color.toUpperCase() === '#FFFFFF' }"
             ></div>
           </div>
@@ -516,26 +554,58 @@
     <div v-if="showEditColorModal" class="modal-overlay" @click.self="showEditColorModal = false">
       <div class="reject-modal">
         <div class="reject-modal-header">
-          <h3>색상 편집</h3>
+          <h3>{{ editIsGradient ? '그라데이션 편집' : '색상 편집' }}</h3>
           <button class="modal-close" @click="showEditColorModal = false">
             <IconBase name="x" />
           </button>
         </div>
         <div class="reject-modal-body" style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
-          <div class="color-picker-wrapper large">
-            <div class="color-picker-preview large" :style="{ backgroundColor: editColorHex }"></div>
-            <input type="color" v-model="editColorHex" class="native-picker large" />
-          </div>
-          <div class="hex-input-group">
-            <span class="hex-prefix">#</span>
-            <input
-              type="text"
-              class="hex-input"
-              :value="editColorHex.replace('#', '')"
-              @input="onEditHexInput"
-              maxlength="6"
-            />
-          </div>
+          <!-- 단색 편집 -->
+          <template v-if="!editIsGradient">
+            <div class="color-picker-wrapper large">
+              <div class="color-picker-preview large" :style="{ backgroundColor: editColorHex }"></div>
+              <input type="color" v-model="editColorHex" class="native-picker large" />
+            </div>
+            <div class="hex-input-group">
+              <span class="hex-prefix">#</span>
+              <input
+                type="text"
+                class="hex-input"
+                :value="editColorHex.replace('#', '')"
+                @input="onEditHexInput"
+                maxlength="6"
+              />
+            </div>
+          </template>
+          <!-- 그라데이션 편집 -->
+          <template v-else>
+            <div class="gradient-pickers">
+              <div class="gradient-color-group">
+                <label>시작색</label>
+                <div class="color-picker-wrapper">
+                  <div class="color-picker-preview" :style="{ backgroundColor: editGradStart }"></div>
+                  <input type="color" v-model="editGradStart" class="native-picker" />
+                </div>
+              </div>
+              <span class="gradient-arrow">→</span>
+              <div class="gradient-color-group">
+                <label>끝색</label>
+                <div class="color-picker-wrapper">
+                  <div class="color-picker-preview" :style="{ backgroundColor: editGradEnd }"></div>
+                  <input type="color" v-model="editGradEnd" class="native-picker" />
+                </div>
+              </div>
+            </div>
+            <div class="gradient-direction-row">
+              <label>방향</label>
+              <div class="gradient-direction-btns">
+                <button v-for="dir in gradientDirections" :key="dir.deg" class="grad-dir-btn" :class="{ active: editGradDir === dir.deg }" @click="editGradDir = dir.deg">
+                  {{ dir.icon }}
+                </button>
+              </div>
+            </div>
+            <div class="gradient-preview-swatch large" :style="{ background: editGradientPreview }"></div>
+          </template>
         </div>
         <div class="reject-modal-footer">
           <button class="btn-cancel" @click="showEditColorModal = false">취소</button>
@@ -1167,10 +1237,36 @@ const paletteLoading = ref(false)
 const paletteSaving = ref(false)
 const newColorHex = ref('#FF0000')
 
+// 색상 추가 모드 (단색/그라데이션)
+const addColorMode = ref<'solid' | 'gradient'>('solid')
+const gradStartColor = ref('#FF6B6B')
+const gradEndColor = ref('#FFD93D')
+const gradDirection = ref(135)
+const gradientDirections = [
+  { deg: 0, icon: '↑', label: '위' },
+  { deg: 45, icon: '↗', label: '오른쪽 위' },
+  { deg: 90, icon: '→', label: '오른쪽' },
+  { deg: 135, icon: '↘', label: '오른쪽 아래' },
+  { deg: 180, icon: '↓', label: '아래' },
+  { deg: 225, icon: '↙', label: '왼쪽 아래' },
+  { deg: 270, icon: '←', label: '왼쪽' },
+  { deg: 315, icon: '↖', label: '왼쪽 위' },
+]
+const gradientPreview = computed(() =>
+  `linear-gradient(${gradDirection.value}deg, ${gradStartColor.value}, ${gradEndColor.value})`
+)
+
 // 색상 편집 모달
 const showEditColorModal = ref(false)
 const editColorIndex = ref(-1)
 const editColorHex = ref('#000000')
+const editIsGradient = ref(false)
+const editGradStart = ref('#FF6B6B')
+const editGradEnd = ref('#FFD93D')
+const editGradDir = ref(135)
+const editGradientPreview = computed(() =>
+  `linear-gradient(${editGradDir.value}deg, ${editGradStart.value}, ${editGradEnd.value})`
+)
 
 const fetchPalette = async () => {
   try {
@@ -1224,6 +1320,11 @@ const addColor = () => {
   paletteColors.value.push(hex)
 }
 
+const addGradient = () => {
+  const value = `linear-gradient(${gradDirection.value}deg, ${gradStartColor.value}, ${gradEndColor.value})`
+  paletteColors.value.push(value)
+}
+
 const removeColor = (index: number) => {
   if (paletteColors.value.length <= 1) {
     alert('최소 1개 이상의 색상이 필요합니다.')
@@ -1234,13 +1335,31 @@ const removeColor = (index: number) => {
 
 const openEditColor = (index: number) => {
   editColorIndex.value = index
-  editColorHex.value = paletteColors.value[index] ?? '#000000'
+  const color = paletteColors.value[index] ?? '#000000'
+  if (color.startsWith('linear-gradient')) {
+    editIsGradient.value = true
+    // parse: linear-gradient(135deg, #AABBCC, #DDEEFF)
+    const m = color.match(/linear-gradient\((\d+)deg,\s*(#[0-9A-Fa-f]{6,8}),\s*(#[0-9A-Fa-f]{6,8})\)/)
+    if (m) {
+      editGradDir.value = parseInt(m[1]!)
+      editGradStart.value = m[2]!
+      editGradEnd.value = m[3]!
+    }
+  } else {
+    editIsGradient.value = false
+    editColorHex.value = color
+  }
   showEditColorModal.value = true
 }
 
 const confirmEditColor = () => {
   if (editColorIndex.value >= 0) {
-    paletteColors.value[editColorIndex.value] = editColorHex.value.toUpperCase()
+    if (editIsGradient.value) {
+      paletteColors.value[editColorIndex.value] =
+        `linear-gradient(${editGradDir.value}deg, ${editGradStart.value}, ${editGradEnd.value})`
+    } else {
+      paletteColors.value[editColorIndex.value] = editColorHex.value.toUpperCase()
+    }
   }
   showEditColorModal.value = false
 }
@@ -2199,6 +2318,67 @@ onMounted(() => {
   cursor: pointer; transition: all 0.2s; white-space: nowrap;
 }
 .btn-add-color:hover { background: #3a3a3c; }
+
+/* 색상 추가 탭 (단색/그라데이션) */
+.add-color-tabs {
+  display: flex; gap: 4px; margin-bottom: 16px;
+  background: #f5f5f7; padding: 4px; border-radius: 10px; width: fit-content;
+}
+.add-color-tab {
+  padding: 8px 18px; border: none; border-radius: 8px;
+  background: transparent; font-size: 13px; font-weight: 500;
+  color: #86868b; cursor: pointer; transition: all 0.2s;
+}
+.add-color-tab.active {
+  background: white; color: #1d1d1f;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* 그라데이션 추가/편집 */
+.add-gradient-row {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.gradient-pickers {
+  display: flex; align-items: center; gap: 12px;
+}
+.gradient-color-group {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.gradient-color-group label {
+  font-size: 12px; color: #86868b; font-weight: 500;
+}
+.gradient-arrow {
+  font-size: 20px; color: #aeaeb2; margin-top: 16px;
+}
+.gradient-direction-row {
+  display: flex; align-items: center; gap: 12px;
+}
+.gradient-direction-row label {
+  font-size: 13px; color: #86868b; font-weight: 500; white-space: nowrap;
+}
+.gradient-direction-btns {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.grad-dir-btn {
+  width: 34px; height: 34px; border: 1px solid #e5e5ea; border-radius: 8px;
+  background: white; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.grad-dir-btn:hover { background: #f5f5f7; }
+.grad-dir-btn.active {
+  background: #1d1d1f; color: white; border-color: #1d1d1f;
+}
+.gradient-preview-row {
+  display: flex; align-items: center; gap: 12px;
+}
+.gradient-preview-swatch {
+  width: 80px; height: 44px; border-radius: 10px;
+  border: 1px solid #e5e5ea;
+}
+.gradient-preview-swatch.large {
+  width: 120px; height: 80px; border-radius: 16px;
+}
 
 /* 미리보기 */
 .preview-section { margin-top: 0; }

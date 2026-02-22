@@ -328,7 +328,7 @@
                     <div
                       v-else-if="message.message"
                       class="feed-postit"
-                      :style="{ backgroundColor: getCardBgHex(message.color) }"
+                      :style="{ background: getCardBg(message.color) }"
                     >
                       <p class="feed-postit-text">{{ message.message }}</p>
                       <!-- 더블탭 하트 애니메이션 -->
@@ -676,7 +676,7 @@ import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import FloatingDock from '@/components/landing/FloatingDock.vue'
-import { getCardBgHex } from '@/constants/guestbookColors'
+import { getCardBg } from '@/constants/guestbookColors'
 
 // ✅ 무거운 블록 - 비동기 로딩 (스크롤 시 로드)
 const GuestbookBlock = defineAsyncComponent(() =>

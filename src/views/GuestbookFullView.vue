@@ -173,7 +173,7 @@
                 <div
                   v-else-if="message.message"
                   class="feed-postit"
-                  :style="{ backgroundColor: getCardBgHex(message.color) }"
+                  :style="{ background: getCardBg(message.color) }"
                 >
                   <p class="feed-postit-text">{{ message.message }}</p>
                   <transition name="heart-pop">
@@ -311,7 +311,7 @@ import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import type { StoreProfileResponse, FollowerInfo } from '@/services/followService'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
-import { getCardBgHex } from '@/constants/guestbookColors'
+import { getCardBg } from '@/constants/guestbookColors'
 
 const route = useRoute()
 const router = useRouter()

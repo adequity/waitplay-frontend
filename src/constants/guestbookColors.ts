@@ -22,3 +22,18 @@ export function getCardBgHex(color: string): string {
   if (color.startsWith('#')) return color
   return LEGACY_COLOR_MAP[color] || DEFAULT_BG_COLOR
 }
+
+/** 그라데이션 문자열인지 판별 */
+export function isGradient(color: string): boolean {
+  return !!color && color.startsWith('linear-gradient')
+}
+
+/**
+ * CSS background 속성에 사용할 값 반환 (단색 + 그라데이션 모두 지원)
+ */
+export function getCardBg(color: string): string {
+  if (!color) return DEFAULT_BG_COLOR
+  if (color.startsWith('#')) return color
+  if (color.startsWith('linear-gradient')) return color
+  return LEGACY_COLOR_MAP[color] || DEFAULT_BG_COLOR
+}

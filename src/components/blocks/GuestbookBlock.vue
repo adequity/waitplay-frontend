@@ -64,7 +64,7 @@
             `card-size-${getCardSize(index * 2)}`,
             { 'my-post': isMyMessage(message) }
           ]"
-          :style="{ backgroundColor: getCardBgHex(message.color) }"
+          :style="{ background: getCardBg(message.color) }"
           @click="openDetailModal(message)"
         >
           <div class="card-image-wrapper">
@@ -113,7 +113,7 @@
             `card-size-${getCardSize(index * 2 + 1)}`,
             { 'my-post': isMyMessage(message) }
           ]"
-          :style="{ backgroundColor: getCardBgHex(message.color) }"
+          :style="{ background: getCardBg(message.color) }"
           @click="openDetailModal(message)"
         >
           <div class="card-image-wrapper">
@@ -285,7 +285,7 @@ import DrawingModal from './guestbook/DrawingModal.vue'
 import MessageDetailModal from './guestbook/MessageDetailModal.vue'
 import ShareModal from './guestbook/ShareModal.vue'
 import GuestbookSwipeView from './guestbook/GuestbookSwipeView.vue'
-import { getCardBgHex } from '@/constants/guestbookColors'
+import { getCardBg } from '@/constants/guestbookColors'
 
 interface Props {
   data: GuestbookBlockData

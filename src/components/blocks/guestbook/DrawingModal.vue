@@ -5,7 +5,7 @@
 
         <!-- ===== 캔버스 영역 (풀스크린) ===== -->
         <div class="editor-canvas-area">
-          <div class="canvas-wrapper" :class="{ 'graffiti-mode': displayMode === 'graffiti' }" :style="displayMode !== 'graffiti' ? { backgroundColor: selectedCardColor } : {}">
+          <div class="canvas-wrapper" :class="{ 'graffiti-mode': displayMode === 'graffiti' }" :style="displayMode !== 'graffiti' ? { background: getCardBg(selectedCardColor) } : {}">
             <!-- 안내 플레이스홀더 -->
             <div v-if="!canSubmit" class="canvas-placeholder">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
@@ -223,7 +223,7 @@
             </button>
             <!-- 배경색 버튼 (postit 모드만) -->
             <button v-if="displayMode === 'postit'" class="bottom-tool-btn" @click="showBgColorSheet = !showBgColorSheet">
-              <span class="btn-color-dot" :style="{ backgroundColor: selectedCardColor }"></span>
+              <span class="btn-color-dot" :style="{ background: getCardBg(selectedCardColor) }"></span>
               <span>배경색</span>
             </button>
             <!-- 프레임 버튼 -->
@@ -319,14 +319,14 @@
           <div class="bg-color-grid">
             <!-- 컬러 피커 -->
             <div class="bg-grid-picker-btn">
-              <div class="bg-grid-picker-icon" :style="{ backgroundColor: selectedCardColor }">
+              <div class="bg-grid-picker-icon" :style="{ background: getCardBg(selectedCardColor) }">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
                   <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                 </svg>
               </div>
               <input
                 type="color"
-                :value="selectedCardColor"
+                :value="isGradient(selectedCardColor) ? '#ffffff' : selectedCardColor"
                 class="bg-grid-native-input"
                 @input="(e) => { selectedCardColor = (e.target as HTMLInputElement).value }"
               />
@@ -337,7 +337,7 @@
               :key="hex"
               class="bg-grid-dot"
               :class="{ selected: selectedCardColor === hex }"
-              :style="{ backgroundColor: hex }"
+              :style="{ background: getCardBg(hex) }"
               @click="selectedCardColor = hex"
             >
               <svg v-if="selectedCardColor === hex" class="bg-grid-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -527,7 +527,7 @@ import followService from '@/services/followService'
 import bgmService, { type BgmTrack } from '@/services/bgmService'
 import StickerPickerModal from './StickerPickerModal.vue'
 import VerticalBrushSlider from './VerticalBrushSlider.vue'
-import { DEFAULT_BG_COLOR, getCardBgHex } from '@/constants/guestbookColors'
+import { DEFAULT_BG_COLOR, getCardBgHex, getCardBg, isGradient } from '@/constants/guestbookColors'
 
 interface Props {
   visible: boolean
@@ -1045,7 +1045,29 @@ const composeAndResizeImage = async (): Promise<string> => {
   if (!composedCtx) throw new Error('Failed to get canvas context')
 
   if (props.displayMode !== 'graffiti') {
-    composedCtx.fillStyle = getCardBgHex(selectedCardColor.value)
+    const bgColor = selectedCardColor.value
+    if (isGradient(bgColor)) {
+      // parse linear-gradient(Xdeg, #start, #end) for canvas
+      const m = bgColor.match(/linear-gradient\((\d+)deg,\s*(#[0-9A-Fa-f]{6,8}),\s*(#[0-9A-Fa-f]{6,8})\)/)
+      if (m) {
+        const deg = parseInt(m[1]!)
+        const rad = (deg * Math.PI) / 180
+        const cx = width / 2, cy = height / 2
+        const len = Math.max(width, height)
+        const x0 = cx - Math.sin(rad) * len / 2
+        const y0 = cy - Math.cos(rad) * len / 2
+        const x1 = cx + Math.sin(rad) * len / 2
+        const y1 = cy + Math.cos(rad) * len / 2
+        const grad = composedCtx.createLinearGradient(x0, y0, x1, y1)
+        grad.addColorStop(0, m[2]!)
+        grad.addColorStop(1, m[3]!)
+        composedCtx.fillStyle = grad
+      } else {
+        composedCtx.fillStyle = DEFAULT_BG_COLOR
+      }
+    } else {
+      composedCtx.fillStyle = getCardBgHex(bgColor)
+    }
     composedCtx.fillRect(0, 0, width, height)
   }
 
