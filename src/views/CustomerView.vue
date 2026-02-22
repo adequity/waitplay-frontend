@@ -1179,6 +1179,20 @@ const handleFirstInteraction = (event: Event) => {
   removeInteractionListeners()
 }
 
+// BGM 이벤트 리스너 등록 (BGM 데이터 로드 후 호출)
+let bgmListenersRegistered = false
+const registerBgmListeners = () => {
+  const hasBgm = bgmUrl.value || bgmPlaylist.value.length > 0
+  if (bgmListenersRegistered || !hasBgm) return
+  bgmListenersRegistered = true
+  window.addEventListener('scroll', handleFirstInteraction, { passive: true })
+  window.addEventListener('touchstart', handleFirstInteraction, { passive: true })
+  window.addEventListener('touchmove', handleFirstInteraction, { passive: true })
+  window.addEventListener('click', handleFirstInteraction, { passive: true })
+  window.addEventListener('keydown', handleFirstInteraction, { passive: true })
+  window.addEventListener('wheel', handleFirstInteraction, { passive: true })
+}
+
 // 이벤트 리스너 제거 함수
 const removeInteractionListeners = () => {
   window.removeEventListener('scroll', handleFirstInteraction)
@@ -1303,10 +1317,12 @@ onMounted(async () => {
                 bgmPlayMode.value = playlistData.playMode || 'sequential'
                 console.log('BGM Playlist loaded:', bgmPlaylist.value.length, 'tracks')
                 preloadBgm()
+                registerBgmListeners()
               } else if (theme.bgmUrl) {
                 bgmUrl.value = theme.bgmUrl
                 console.log('BGM URL loaded (legacy):', theme.bgmUrl)
                 preloadBgm()
+                registerBgmListeners()
               }
             })
             .catch(() => {
@@ -1314,6 +1330,7 @@ onMounted(async () => {
                 bgmUrl.value = theme.bgmUrl
                 console.log('BGM URL loaded (fallback):', theme.bgmUrl)
                 preloadBgm()
+                registerBgmListeners()
               }
             })
         } else if (theme.bgmUrl) {
@@ -1363,17 +1380,8 @@ onMounted(async () => {
     console.warn('Failed to load landing page data from API:', error)
   }
 
-  // BGM 사용자 인터랙션 이벤트 리스너 등록 (bgmUrl 또는 플레이리스트가 있을 때)
-  // scroll/touchmove/wheel: 버튼 표시용 (isBgmEnabled = true로 설정)
-  // 실제 재생은 유효한 제스처(click/touchstart/keydown)에서만 성공
-  if (bgmUrl.value || bgmPlaylist.value.length > 0) {
-    window.addEventListener('scroll', handleFirstInteraction, { passive: true })
-    window.addEventListener('touchstart', handleFirstInteraction, { passive: true })
-    window.addEventListener('touchmove', handleFirstInteraction, { passive: true })
-    window.addEventListener('click', handleFirstInteraction, { passive: true })
-    window.addEventListener('keydown', handleFirstInteraction, { passive: true })
-    window.addEventListener('wheel', handleFirstInteraction, { passive: true })
-  }
+  // BGM 이벤트 리스너 등록 (동기 로드된 bgmUrl이 있을 때)
+  registerBgmListeners()
 
   // Hash 기반 스크롤 (예: #games → 게임 블록으로 스크롤)
   if (route.hash) {
