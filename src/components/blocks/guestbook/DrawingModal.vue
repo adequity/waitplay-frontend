@@ -221,8 +221,8 @@
               </svg>
               <span>음악</span>
             </button>
-            <!-- 배경색 버튼 -->
-            <button class="bottom-tool-btn" @click="showBgColorSheet = !showBgColorSheet">
+            <!-- 배경색 버튼 (postit 모드만) -->
+            <button v-if="displayMode === 'postit'" class="bottom-tool-btn" @click="showBgColorSheet = !showBgColorSheet">
               <span class="btn-color-dot" :style="{ backgroundColor: selectedCardColor }"></span>
               <span>배경색</span>
             </button>
