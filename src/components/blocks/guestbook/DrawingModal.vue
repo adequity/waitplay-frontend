@@ -210,6 +210,40 @@
 
         <!-- ===== BOTTOM BAR ===== -->
         <div class="editor-bottom-bar">
+          <!-- BGM 선택 버튼 (draw 모드) -->
+          <div v-if="activeMode === 'draw'" class="bottom-audio-area">
+            <button
+              v-if="!selectedBgm"
+              class="audio-attach-btn"
+              @click="openBgmPicker"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/>
+                <circle cx="18" cy="16" r="3"/>
+              </svg>
+              음악
+            </button>
+            <!-- BGM 선택됨 표시 -->
+            <div v-else class="audio-selected-info">
+              <button class="audio-play-btn" @click="toggleBgmPreview">
+                <svg v-if="!isBgmPlaying" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16"/>
+                  <rect x="14" y="4" width="4" height="16"/>
+                </svg>
+              </button>
+              <span class="audio-file-name">{{ selectedBgm.title }}</span>
+              <button class="audio-remove-btn" @click="removeBgm">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
           <!-- 스티커 모드: 스티커 추가/지우기 -->
           <Transition name="tools-crossfade" mode="out-in">
             <div v-if="activeMode === 'sticker'" key="sticker" class="bottom-sticker-tools">
@@ -269,7 +303,6 @@
     class="hidden-file-input"
     @change="onFileSelected"
   />
-
   <!-- 스티커 피커 -->
   <StickerPickerModal
     :visible="isStickerPickerOpen"
@@ -277,6 +310,121 @@
     @close="isStickerPickerOpen = false"
     @add-sticker="onAddSticker"
   />
+
+  <!-- BGM 선택 피커 -->
+  <Teleport to="body">
+    <Transition name="bgm-picker">
+      <div v-if="showBgmPicker" class="bgm-picker-overlay" @click.self="closeBgmPicker">
+        <div class="bgm-picker-sheet">
+          <div class="bgm-picker-header">
+            <h3>배경 음악 선택</h3>
+            <button class="bgm-picker-close" @click="closeBgmPicker">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 카테고리 필터 -->
+          <div v-if="bgmCategories.length > 0" class="bgm-category-filter">
+            <button
+              class="bgm-category-chip"
+              :class="{ active: !bgmCategoryFilter }"
+              @click="bgmCategoryFilter = ''"
+            >전체</button>
+            <button
+              v-for="cat in bgmCategories"
+              :key="cat"
+              class="bgm-category-chip"
+              :class="{ active: bgmCategoryFilter === cat }"
+              @click="bgmCategoryFilter = cat"
+            >{{ cat }}</button>
+          </div>
+
+          <!-- 트랙 목록 -->
+          <div class="bgm-track-list">
+            <div v-if="bgmLoading" class="bgm-loading">
+              <span class="spinner"></span>
+            </div>
+            <div v-else-if="filteredBgmTracks.length === 0" class="bgm-empty">
+              등록된 배경 음악이 없습니다
+            </div>
+            <button
+              v-for="track in filteredBgmTracks"
+              :key="track.id"
+              class="bgm-track-item"
+              :class="{ selected: selectedBgm?.id === track.id, playing: previewingTrackId === track.id }"
+              @click="selectBgmTrack(track)"
+            >
+              <button class="bgm-track-play" @click.stop="previewBgmTrack(track)">
+                <svg v-if="previewingTrackId !== track.id" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16"/>
+                  <rect x="14" y="4" width="4" height="16"/>
+                </svg>
+              </button>
+              <div class="bgm-track-info">
+                <span class="bgm-track-title">{{ track.title }}</span>
+                <span v-if="track.artist" class="bgm-track-artist">{{ track.artist }}</span>
+              </div>
+              <span v-if="track.category" class="bgm-track-category">{{ track.category }}</span>
+              <svg v-if="selectedBgm?.id === track.id" class="bgm-track-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 선택 없이 닫기 -->
+          <div class="bgm-picker-footer">
+            <button class="bgm-none-btn" @click="removeBgm(); closeBgmPicker()">
+              음악 없이 진행
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- 팔로우(단골등록) 모달 -->
+  <Teleport to="body">
+    <Transition name="follow-modal">
+      <div v-if="showFollowModal" class="follow-modal-overlay" @click.self="showFollowModal = false">
+        <div class="follow-modal-card">
+          <div class="follow-modal-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+              <path d="M16 11l2 2 4-4"/>
+            </svg>
+          </div>
+          <h3 class="follow-modal-title">단골 등록이 필요해요</h3>
+          <p class="follow-modal-desc">
+            <strong>{{ followStoreName }}</strong>의 방명록을 작성하려면<br/>
+            먼저 단골 등록이 필요합니다.
+          </p>
+          <div class="follow-modal-actions">
+            <button
+              class="follow-modal-confirm"
+              :disabled="followLoading"
+              @click="followAndRetry"
+            >
+              <span v-if="followLoading" class="spinner small"></span>
+              <template v-else>단골 등록 후 방명록 남기기</template>
+            </button>
+            <button
+              class="follow-modal-cancel"
+              :disabled="followLoading"
+              @click="showFollowModal = false"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -285,6 +433,7 @@ import { useGuestbookCanvas, type DisplayMode } from '@/composables/useGuestbook
 import { useGuestbookStickers } from '@/composables/useGuestbookStickers'
 import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
+import bgmService, { type BgmTrack } from '@/services/bgmService'
 import StickerPickerModal from './StickerPickerModal.vue'
 import VerticalBrushSlider from './VerticalBrushSlider.vue'
 
@@ -307,6 +456,22 @@ const isStickerPickerOpen = ref(false)
 const activeMode = ref<'draw' | 'sticker'>('draw')
 const cameraInputRef = ref<HTMLInputElement | null>(null)
 const galleryInputRef = ref<HTMLInputElement | null>(null)
+
+// BGM 선택 상태
+const showBgmPicker = ref(false)
+const bgmTracks = ref<BgmTrack[]>([])
+const bgmCategories = ref<string[]>([])
+const bgmCategoryFilter = ref('')
+const bgmLoading = ref(false)
+const selectedBgm = ref<BgmTrack | null>(null)
+const isBgmPlaying = ref(false)
+const previewingTrackId = ref<string | null>(null)
+const bgmPreviewAudio = ref<HTMLAudioElement | null>(null)
+
+// 팔로우(단골등록) 모달 상태
+const showFollowModal = ref(false)
+const followStoreName = ref('')
+const followLoading = ref(false)
 
 // 드로우 도구 패널 상태
 const isActivelyDrawing = ref(false)
@@ -543,6 +708,11 @@ watch(() => props.visible, async (newVal) => {
     clearBackgroundImage()
     templateOverlayUrl.value = null
     templateOverlayImage.value = null
+    // BGM 상태 정리
+    stopBgmPreview()
+    selectedBgm.value = null
+    showBgmPicker.value = false
+    showFollowModal.value = false
     if (!closedByPopState && history.state?.modal === 'guestbook') {
       history.back()
     }
@@ -565,7 +735,114 @@ const handleClearStickers = () => {
   clearAllStickers()
 }
 
-// ===== 제출 로직 (기존 그대로 보존) =====
+// ===== BGM 선택 로직 =====
+const filteredBgmTracks = computed(() => {
+  if (!bgmCategoryFilter.value) return bgmTracks.value
+  return bgmTracks.value.filter(t => t.category === bgmCategoryFilter.value)
+})
+
+const openBgmPicker = async () => {
+  showBgmPicker.value = true
+  if (bgmTracks.value.length === 0) {
+    bgmLoading.value = true
+    try {
+      const [tracks, categories] = await Promise.all([
+        bgmService.getActiveTracks(),
+        bgmService.getCategories()
+      ])
+      bgmTracks.value = tracks
+      bgmCategories.value = categories
+    } catch (e) {
+      console.error('Failed to load BGM tracks:', e)
+    } finally {
+      bgmLoading.value = false
+    }
+  }
+}
+
+const closeBgmPicker = () => {
+  showBgmPicker.value = false
+  stopBgmPreview()
+}
+
+const selectBgmTrack = (track: BgmTrack) => {
+  selectedBgm.value = track
+  stopBgmPreview()
+  showBgmPicker.value = false
+}
+
+const removeBgm = () => {
+  selectedBgm.value = null
+  stopBgmPreview()
+}
+
+const previewBgmTrack = (track: BgmTrack) => {
+  if (previewingTrackId.value === track.id) {
+    stopBgmPreview()
+    return
+  }
+  stopBgmPreview()
+  const audio = new Audio(track.fileUrl)
+  audio.play().catch(() => {})
+  audio.addEventListener('ended', () => {
+    previewingTrackId.value = null
+  })
+  bgmPreviewAudio.value = audio
+  previewingTrackId.value = track.id
+}
+
+const stopBgmPreview = () => {
+  if (bgmPreviewAudio.value) {
+    bgmPreviewAudio.value.pause()
+    bgmPreviewAudio.value.currentTime = 0
+    bgmPreviewAudio.value = null
+  }
+  previewingTrackId.value = null
+  isBgmPlaying.value = false
+}
+
+const toggleBgmPreview = () => {
+  if (!selectedBgm.value) return
+  if (isBgmPlaying.value) {
+    bgmPreviewAudio.value?.pause()
+    isBgmPlaying.value = false
+  } else {
+    if (!bgmPreviewAudio.value || bgmPreviewAudio.value.src !== selectedBgm.value.fileUrl) {
+      bgmPreviewAudio.value?.pause()
+      bgmPreviewAudio.value = new Audio(selectedBgm.value.fileUrl)
+      bgmPreviewAudio.value.addEventListener('ended', () => { isBgmPlaying.value = false })
+    }
+    bgmPreviewAudio.value.play().catch(() => {})
+    isBgmPlaying.value = true
+  }
+}
+
+// ===== 팔로우 후 재시도 로직 =====
+const followAndRetry = async () => {
+  followLoading.value = true
+  try {
+    await followService.followAdmin(props.qrCodeId)
+    showFollowModal.value = false
+    // 팔로우 성공 후 방명록 재제출
+    const composedImageData = await composeAndResizeImage()
+    await guestbookService.createMessage({
+      qrCode: props.qrCodeId,
+      imageData: composedImageData,
+      audioUrl: selectedBgm.value?.fileUrl || undefined,
+      color: 'yellow'
+    })
+    emit('close')
+    emit('submitted')
+    alert('단골 등록 및 방명록이 등록되었습니다!')
+  } catch (e) {
+    console.error('Failed to follow and retry:', e)
+    alert('단골 등록에 실패했습니다. 다시 시도해주세요.')
+  } finally {
+    followLoading.value = false
+  }
+}
+
+// ===== 제출 로직 =====
 
 const submitDrawing = async () => {
   if (!canvasRef.value || !canSubmit.value || isSubmitting.value) return
@@ -578,9 +855,11 @@ const submitDrawing = async () => {
     await guestbookService.createMessage({
       qrCode: props.qrCodeId,
       imageData: composedImageData,
+      audioUrl: selectedBgm.value?.fileUrl || undefined,
       color: 'yellow'
     })
 
+    stopBgmPreview()
     emit('close')
     emit('submitted')
     alert('방명록이 등록되었습니다!')
@@ -588,26 +867,8 @@ const submitDrawing = async () => {
     console.error('Failed to submit drawing:', error)
 
     if (error.response?.data?.requireFollow) {
-      const storeName = error.response.data.storeName || '이 매장'
-      const shouldFollow = confirm(`방명록 작성을 위해 ${storeName}을(를) 단골 등록해야 합니다.\n단골 등록 후 방명록을 작성하시겠습니까?`)
-
-      if (shouldFollow) {
-        try {
-          await followService.followAdmin(props.qrCodeId)
-          const composedImageData = await composeAndResizeImage()
-          await guestbookService.createMessage({
-            qrCode: props.qrCodeId,
-            imageData: composedImageData,
-            color: 'yellow'
-          })
-          emit('close')
-          emit('submitted')
-          alert('단골 등록 및 방명록이 등록되었습니다!')
-        } catch (followError) {
-          console.error('Failed to follow and retry:', followError)
-          alert('단골 등록에 실패했습니다. 다시 시도해주세요.')
-        }
-      }
+      followStoreName.value = error.response.data.storeName || '이 매장'
+      showFollowModal.value = true
     } else {
       alert('방명록 등록에 실패했습니다.')
     }
@@ -1135,6 +1396,431 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ===== BGM 선택 영역 (하단 바) ===== */
+.bottom-audio-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.audio-attach-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.audio-attach-btn:active {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(0.97);
+}
+
+.audio-selected-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(78, 205, 196, 0.15);
+  border: 1px solid rgba(78, 205, 196, 0.25);
+  border-radius: 20px;
+  max-width: 200px;
+}
+
+.audio-play-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: rgba(78, 205, 196, 0.3);
+  border: none;
+  color: #4ECDC4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.audio-play-btn:active {
+  transform: scale(0.9);
+}
+
+.audio-file-name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.audio-remove-btn {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.audio-remove-btn:active {
+  background: rgba(255, 68, 68, 0.3);
+  color: #ff6b6b;
+}
+
+/* ===== BGM 피커 모달 ===== */
+.bgm-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.bgm-picker-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 70vh;
+  background: #1a1a1a;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bgm-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.bgm-picker-header h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.bgm-picker-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.bgm-category-filter {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.bgm-category-filter::-webkit-scrollbar { display: none; }
+
+.bgm-category-chip {
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.bgm-category-chip.active {
+  background: rgba(78, 205, 196, 0.2);
+  border-color: rgba(78, 205, 196, 0.4);
+  color: #4ECDC4;
+}
+
+.bgm-track-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bgm-loading,
+.bgm-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+}
+
+.bgm-track-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.bgm-track-item:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+.bgm-track-item.selected {
+  background: rgba(78, 205, 196, 0.1);
+  border-color: rgba(78, 205, 196, 0.2);
+}
+.bgm-track-item.playing {
+  background: rgba(78, 205, 196, 0.08);
+}
+
+.bgm-track-play {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.bgm-track-play:active {
+  transform: scale(0.9);
+}
+.bgm-track-item.playing .bgm-track-play {
+  background: rgba(78, 205, 196, 0.2);
+  color: #4ECDC4;
+}
+
+.bgm-track-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bgm-track-title {
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bgm-track-artist {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bgm-track-category {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+}
+
+.bgm-track-check {
+  flex-shrink: 0;
+}
+
+.bgm-picker-footer {
+  padding: 12px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bgm-none-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.bgm-none-btn:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* BGM 피커 트랜지션 */
+.bgm-picker-enter-active {
+  transition: opacity 0.2s ease;
+}
+.bgm-picker-enter-active .bgm-picker-sheet {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bgm-picker-leave-active {
+  transition: opacity 0.2s ease;
+}
+.bgm-picker-leave-active .bgm-picker-sheet {
+  transition: transform 0.2s ease-in;
+}
+.bgm-picker-enter-from,
+.bgm-picker-leave-to {
+  opacity: 0;
+}
+.bgm-picker-enter-from .bgm-picker-sheet,
+.bgm-picker-leave-to .bgm-picker-sheet {
+  transform: translateY(100%);
+}
+
+/* ===== 팔로우(단골등록) 모달 ===== */
+.follow-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.follow-modal-card {
+  width: 100%;
+  max-width: 340px;
+  background: #1e1e1e;
+  border-radius: 20px;
+  padding: 32px 24px 24px;
+  text-align: center;
+}
+
+.follow-modal-icon {
+  margin-bottom: 16px;
+}
+
+.follow-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 10px;
+}
+
+.follow-modal-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+.follow-modal-desc strong {
+  color: #4ECDC4;
+  font-weight: 600;
+}
+
+.follow-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.follow-modal-confirm {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: #4ECDC4;
+  border: none;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+}
+.follow-modal-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.follow-modal-confirm:active:not(:disabled) {
+  transform: scale(0.98);
+  background: #3dbdb5;
+}
+
+.follow-modal-cancel {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.follow-modal-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.follow-modal-cancel:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* 팔로우 모달 트랜지션 */
+.follow-modal-enter-active {
+  transition: opacity 0.2s ease;
+}
+.follow-modal-enter-active .follow-modal-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.follow-modal-leave-active {
+  transition: opacity 0.15s ease;
+}
+.follow-modal-leave-active .follow-modal-card {
+  transition: transform 0.15s ease-in;
+}
+.follow-modal-enter-from,
+.follow-modal-leave-to {
+  opacity: 0;
+}
+.follow-modal-enter-from .follow-modal-card,
+.follow-modal-leave-to .follow-modal-card {
+  transform: scale(0.9);
+}
+
+/* 스피너 small 변형 */
+.spinner.small {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
 }
 
 /* ===== 템플릿(액자) 오버레이 ===== */

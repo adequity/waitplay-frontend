@@ -25,6 +25,25 @@
             </div>
           </div>
 
+          <!-- 오디오 플레이어 (BGM이 첨부된 경우) -->
+          <div v-if="message.audioUrl" class="detail-audio-player">
+            <button class="detail-audio-btn" @click="toggleAudio">
+              <svg v-if="!isAudioPlaying" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16"/>
+                <rect x="14" y="4" width="4" height="16"/>
+              </svg>
+            </button>
+            <div class="detail-audio-progress" @click="seekAudio">
+              <div class="detail-audio-bar">
+                <div class="detail-audio-fill" :style="{ width: audioProgress + '%' }"></div>
+              </div>
+            </div>
+            <span class="detail-audio-time">{{ audioTimeDisplay }}</span>
+          </div>
+
           <!-- 하단 정보 -->
           <div class="detail-footer">
             <div class="detail-info">
@@ -79,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import guestbookService from '@/services/guestbookService'
 
 interface Props {
@@ -98,6 +117,78 @@ const replies = ref<any[]>([])
 const isLoadingReplies = ref(false)
 const isLiking = ref(false)
 
+// 오디오 플레이어 상태
+const audioEl = ref<HTMLAudioElement | null>(null)
+const isAudioPlaying = ref(false)
+const audioProgress = ref(0)
+const audioTimeDisplay = ref('0:00')
+let audioTimerInterval: ReturnType<typeof setInterval> | null = null
+
+// 오디오 제어 함수
+const toggleAudio = () => {
+  if (!props.message?.audioUrl) return
+
+  if (!audioEl.value) {
+    audioEl.value = new Audio(props.message.audioUrl)
+    audioEl.value.addEventListener('ended', () => {
+      isAudioPlaying.value = false
+      audioProgress.value = 0
+      stopAudioTimer()
+    })
+  }
+
+  if (isAudioPlaying.value) {
+    audioEl.value.pause()
+    isAudioPlaying.value = false
+    stopAudioTimer()
+  } else {
+    audioEl.value.play().catch(() => {})
+    isAudioPlaying.value = true
+    startAudioTimer()
+  }
+}
+
+const seekAudio = (e: MouseEvent) => {
+  if (!audioEl.value || !audioEl.value.duration) return
+  const el = e.currentTarget as HTMLElement
+  const rect = el.getBoundingClientRect()
+  const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  audioEl.value.currentTime = ratio * audioEl.value.duration
+  audioProgress.value = ratio * 100
+}
+
+const startAudioTimer = () => {
+  stopAudioTimer()
+  audioTimerInterval = setInterval(() => {
+    if (audioEl.value && audioEl.value.duration) {
+      audioProgress.value = (audioEl.value.currentTime / audioEl.value.duration) * 100
+      const cur = Math.floor(audioEl.value.currentTime)
+      const min = Math.floor(cur / 60)
+      const sec = cur % 60
+      audioTimeDisplay.value = `${min}:${sec.toString().padStart(2, '0')}`
+    }
+  }, 250)
+}
+
+const stopAudioTimer = () => {
+  if (audioTimerInterval) {
+    clearInterval(audioTimerInterval)
+    audioTimerInterval = null
+  }
+}
+
+const cleanupAudio = () => {
+  if (audioEl.value) {
+    audioEl.value.pause()
+    audioEl.value.currentTime = 0
+    audioEl.value = null
+  }
+  isAudioPlaying.value = false
+  audioProgress.value = 0
+  audioTimeDisplay.value = '0:00'
+  stopAudioTimer()
+}
+
 // 모달이 열릴 때 조회수 증가 + 답글 로드
 watch(() => props.visible, async (newVal) => {
   if (newVal && props.message) {
@@ -112,7 +203,12 @@ watch(() => props.visible, async (newVal) => {
     await loadReplies(props.message.id)
   } else {
     replies.value = []
+    cleanupAudio()
   }
+})
+
+onBeforeUnmount(() => {
+  cleanupAudio()
 })
 
 const loadReplies = async (messageId: string) => {
@@ -322,6 +418,68 @@ const formatDate = (dateString: string): string => {
 .detail-like-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 오디오 플레이어 */
+.detail-audio-player {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.detail-audio-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background: rgba(78, 205, 196, 0.25);
+  border: none;
+  color: #4ECDC4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.detail-audio-btn:active {
+  transform: scale(0.9);
+  background: rgba(78, 205, 196, 0.4);
+}
+
+.detail-audio-progress {
+  flex: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.detail-audio-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.detail-audio-fill {
+  height: 100%;
+  background: #4ECDC4;
+  border-radius: 2px;
+  transition: width 0.2s linear;
+}
+
+.detail-audio-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  min-width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 답글 섹션 */

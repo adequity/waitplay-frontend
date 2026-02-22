@@ -4,6 +4,7 @@ export interface CreateGuestbookMessageRequest {
   qrCode: string  // QR Code 문자열 (예: "5YWF8V2X")
   message?: string
   imageData?: string
+  audioUrl?: string
   color: string
 }
 
@@ -13,6 +14,7 @@ export interface GuestbookMessageResponse {
   userName: string
   message?: string
   imageUrl?: string
+  audioUrl?: string
   rotation: number
   color: string
   createdAt: string
