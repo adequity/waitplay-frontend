@@ -363,7 +363,7 @@ async function shareToTwitter() {
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  padding: 8px 12px;
+  padding: 5px 12px;
   background: transparent;
   border: none;
   border-radius: 16px;
