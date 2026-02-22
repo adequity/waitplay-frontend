@@ -6,6 +6,7 @@
         v-if="isMusicPlaying && currentTrackTitle"
         class="now-playing-chip"
         :class="{ expanded: isChipExpanded, 'dark-theme': isDarkTheme }"
+        :style="{ bottom: chipBottom }"
         @click="isChipExpanded = !isChipExpanded"
       >
         <template v-if="!isChipExpanded">
@@ -42,7 +43,7 @@
     </Transition>
 
     <!-- 글래스모피즘 독 -->
-    <div class="floating-dock" :class="{ 'dark-theme': isDarkTheme }">
+    <div ref="dockRef" class="floating-dock" :class="{ 'dark-theme': isDarkTheme }">
       <!-- 음악 버튼 -->
       <button
         v-if="showMusic"
@@ -178,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import shareService from '@/services/shareService'
 
 const props = defineProps<{
@@ -228,7 +229,20 @@ const emit = defineEmits<{
 const showShareSheet = ref(false)
 const showCopyToast = ref(false)
 const isChipExpanded = ref(false)
+const dockRef = ref<HTMLElement | null>(null)
+const dockHeight = ref(0)
 let musicTouchTimer: number | null = null
+
+onMounted(() => {
+  if (dockRef.value) {
+    dockHeight.value = dockRef.value.offsetHeight
+  }
+})
+
+const chipBottom = computed(() => {
+  const safeArea = 'calc(' + (12 + (dockHeight.value || 52) + 4) + 'px + env(safe-area-inset-bottom, 0px))'
+  return safeArea
+})
 
 // 음악 토글
 function toggleMusic() {
@@ -573,7 +587,7 @@ async function shareToTwitter() {
 /* Now Playing 미니 칩 */
 .now-playing-chip {
   position: fixed;
-  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+  /* bottom은 인라인 스타일로 독 높이 기반 동적 계산 */
   left: 50%;
   transform: translateX(-50%);
   display: flex;
