@@ -67,6 +67,7 @@
             <img
               v-if="templateOverlayUrl"
               :src="templateOverlayUrl"
+              crossorigin="anonymous"
               class="template-overlay"
               @load="onTemplateOverlayLoad"
             />
