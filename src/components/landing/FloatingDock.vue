@@ -573,7 +573,7 @@ async function shareToTwitter() {
 /* Now Playing 미니 칩 */
 .now-playing-chip {
   position: fixed;
-  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
