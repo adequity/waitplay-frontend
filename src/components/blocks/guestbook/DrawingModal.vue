@@ -689,8 +689,7 @@ const {
   canRedo,
   setBackgroundImage,
   clearBackgroundImage,
-  repaintBgColor,
-} = useGuestbookCanvas({ displayMode: displayModeRef, bgColor: selectedCardColor })
+} = useGuestbookCanvas({ displayMode: displayModeRef })
 
 // Sticker composable
 const {
@@ -709,13 +708,6 @@ setOnCanvasTouch(deselectAll)
 
 // 제출 가능 여부
 const canSubmit = computed(() => hasDrawing.value || editingStickers.value.length > 0)
-
-// 배경색 변경 시 캔버스 배경 실시간 갱신
-watch(selectedCardColor, (newColor, oldColor) => {
-  if (props.displayMode !== 'graffiti' && oldColor && newColor !== oldColor) {
-    repaintBgColor(oldColor, newColor)
-  }
-})
 
 // 모드 전환 시 상태 정리
 watch(activeMode, (newMode) => {
@@ -1186,7 +1178,6 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   display: block;
   cursor: crosshair;
   touch-action: none;
-  background: white;
 }
 .graffiti-canvas {
   background: transparent;

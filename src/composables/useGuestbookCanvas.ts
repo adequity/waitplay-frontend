@@ -4,7 +4,6 @@ export type DisplayMode = 'postit' | 'graffiti'
 
 export interface CanvasOptions {
   displayMode: Ref<DisplayMode> | DisplayMode
-  bgColor?: Ref<string>
 }
 
 export function useGuestbookCanvas(options: CanvasOptions) {
@@ -68,21 +67,13 @@ export function useGuestbookCanvas(options: CanvasOptions) {
     return typeof mode === 'string' ? mode : mode.value
   }
 
-  const getBgColor = (): string => {
-    return options.bgColor?.value || '#FFFFFF'
-  }
-
   /** 지우개/펜 모드에 따라 ctx 설정 */
   const applyBrushStyle = () => {
     if (!ctx.value) return
     if (isEraser.value) {
-      if (getDisplayMode() === 'graffiti') {
-        ctx.value.globalCompositeOperation = 'destination-out'
-        ctx.value.strokeStyle = 'rgba(0,0,0,1)'
-      } else {
-        ctx.value.globalCompositeOperation = 'source-over'
-        ctx.value.strokeStyle = getBgColor()
-      }
+      // 모든 모드에서 destination-out 사용 (투명하게 지우기)
+      ctx.value.globalCompositeOperation = 'destination-out'
+      ctx.value.strokeStyle = 'rgba(0,0,0,1)'
     } else {
       ctx.value.globalCompositeOperation = 'source-over'
       ctx.value.strokeStyle = selectedColor.value
@@ -154,11 +145,9 @@ export function useGuestbookCanvas(options: CanvasOptions) {
     if (ctx.value) {
       if (backgroundImage.value) {
         drawBackground()
-      } else if (getDisplayMode() === 'graffiti') {
-        ctx.value.clearRect(0, 0, canvas.width, canvas.height)
       } else {
-        ctx.value.fillStyle = getBgColor()
-        ctx.value.fillRect(0, 0, canvas.width, canvas.height)
+        // 항상 투명 캔버스로 초기화 (배경색은 CSS wrapper가 담당)
+        ctx.value.clearRect(0, 0, canvas.width, canvas.height)
       }
       ctx.value.lineCap = 'round'
       ctx.value.lineJoin = 'round'
@@ -167,32 +156,6 @@ export function useGuestbookCanvas(options: CanvasOptions) {
     // 초기화 시 스택 리셋
     undoStack.length = 0
     redoStack.length = 0
-  }
-
-  /** 배경색 변경 시 캔버스 배경만 다시 칠하기 (기존 드로잉 유지) */
-  const repaintBgColor = (oldColor: string, newColor: string) => {
-    if (!ctx.value || !canvasRef.value || getDisplayMode() === 'graffiti') return
-    if (backgroundImage.value) return // 배경 이미지가 있으면 스킵
-    const canvas = canvasRef.value
-    const imageData = ctx.value.getImageData(0, 0, canvas.width, canvas.height)
-    const data = imageData.data
-
-    // oldColor hex → r,g,b
-    const oR = parseInt(oldColor.slice(1, 3), 16)
-    const oG = parseInt(oldColor.slice(3, 5), 16)
-    const oB = parseInt(oldColor.slice(5, 7), 16)
-    const nR = parseInt(newColor.slice(1, 3), 16)
-    const nG = parseInt(newColor.slice(3, 5), 16)
-    const nB = parseInt(newColor.slice(5, 7), 16)
-
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i] === oR && data[i + 1] === oG && data[i + 2] === oB && data[i + 3] === 255) {
-        data[i] = nR
-        data[i + 1] = nG
-        data[i + 2] = nB
-      }
-    }
-    ctx.value.putImageData(imageData, 0, 0)
   }
 
   const startDrawing = (e: MouseEvent) => {
@@ -274,12 +237,8 @@ export function useGuestbookCanvas(options: CanvasOptions) {
 
     backgroundImage.value = null
 
-    if (getDisplayMode() === 'graffiti') {
-      ctx.value.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
-    } else {
-      ctx.value.fillStyle = getBgColor()
-      ctx.value.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
-    }
+    // 항상 투명으로 클리어 (배경색은 CSS wrapper가 담당)
+    ctx.value.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
 
     hasDrawing.value = false
     undoStack.length = 0
@@ -332,6 +291,5 @@ export function useGuestbookCanvas(options: CanvasOptions) {
     backgroundImage,
     setBackgroundImage,
     clearBackgroundImage,
-    repaintBgColor,
   }
 }
