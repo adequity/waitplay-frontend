@@ -958,6 +958,31 @@
               </div>
             </div>
 
+            <!-- 목록 레이아웃 선택 -->
+            <div class="form-group">
+              <label class="form-label">목록 레이아웃</label>
+              <div class="display-mode-selector">
+                <button
+                  type="button"
+                  :class="['mode-btn', { active: (editForm.listStyle || 'masonry') === 'masonry' }]"
+                  @click="editForm.listStyle = 'masonry'"
+                >
+                  <span class="mode-icon">🧱</span>
+                  <span class="mode-label">격자형</span>
+                  <span class="mode-desc">카드 격자 배치</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['mode-btn', { active: editForm.listStyle === 'swipe' }]"
+                  @click="editForm.listStyle = 'swipe'"
+                >
+                  <span class="mode-icon">👆</span>
+                  <span class="mode-label">스와이프</span>
+                  <span class="mode-desc">카드를 넘겨보는 스타일</span>
+                </button>
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">최대 글자 수</label>
               <input type="number" class="form-input" v-model="editForm.maxMessageLength" placeholder="200">
@@ -2052,6 +2077,9 @@ async function editBlock(block: Block) {
   if (block.type === 'guestbook') {
     if (!editForm.value.displayMode) {
       editForm.value.displayMode = 'postit'
+    }
+    if (!editForm.value.listStyle) {
+      editForm.value.listStyle = 'masonry'
     }
     if (editForm.value.backgroundOverlay === undefined) {
       editForm.value.backgroundOverlay = 0

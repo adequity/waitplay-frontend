@@ -21,9 +21,23 @@
 
     <h2 class="guestbook-title">{{ data.title }}</h2>
 
-    <!-- 방명록 Masonry 레이아웃 -->
+    <!-- 방명록 레이아웃 -->
     <LoadingSpinner v-if="isLoadingMessages" message="방명록을 불러오는 중..." :size="60" />
 
+    <!-- 스와이프 모드 -->
+    <GuestbookSwipeView
+      v-else-if="listStyle === 'swipe'"
+      :messages="messages"
+      :is-authenticated="isAuthenticated"
+      :qr-code-id="qrCodeId"
+      :display-mode="displayMode"
+      :data="data"
+      @open-detail="openDetailModal"
+      @write="isActionSheetOpen = true"
+      @go-to-login="goToLogin"
+    />
+
+    <!-- Masonry 모드 (기본) -->
     <div v-else class="guestbook-masonry">
       <!-- 왼쪽 컬럼 -->
       <div class="masonry-column">
@@ -268,6 +282,7 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import DrawingModal from './guestbook/DrawingModal.vue'
 import MessageDetailModal from './guestbook/MessageDetailModal.vue'
 import ShareModal from './guestbook/ShareModal.vue'
+import GuestbookSwipeView from './guestbook/GuestbookSwipeView.vue'
 
 interface Props {
   data: GuestbookBlockData
@@ -347,6 +362,7 @@ const isMyMessage = (message: any) => {
 
 // 표시 모드
 const displayMode = computed(() => props.data.displayMode || 'postit')
+const listStyle = computed(() => props.data.listStyle || 'masonry')
 
 // 배경 오버레이 계산
 const getBackgroundOverlay = () => {
