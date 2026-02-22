@@ -1,5 +1,46 @@
 <template>
   <div class="floating-dock-wrapper">
+    <!-- Now Playing 미니 칩 -->
+    <Transition name="chip">
+      <div
+        v-if="isMusicPlaying && currentTrackTitle"
+        class="now-playing-chip"
+        :class="{ expanded: isChipExpanded, 'dark-theme': isDarkTheme }"
+        @click="isChipExpanded = !isChipExpanded"
+      >
+        <template v-if="!isChipExpanded">
+          <!-- 축소 상태: 음표 + 곡명 -->
+          <span class="chip-note">♪</span>
+          <span class="chip-title">{{ currentTrackTitle }}</span>
+        </template>
+        <template v-else>
+          <!-- 확장 상태: 컨트롤 + 곡명 + 닫기 -->
+          <button
+            v-if="(trackCount || 0) > 1"
+            class="chip-ctrl"
+            @click.stop="emit('prevTrack')"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button class="chip-ctrl" @click.stop="emit('toggleMusic')">
+            <svg v-if="isMusicPlaying" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button
+            v-if="(trackCount || 0) > 1"
+            class="chip-ctrl"
+            @click.stop="emit('nextTrack')"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 18h2V6h-2zM6 18l8.5-6L6 6z"/></svg>
+          </button>
+          <span class="chip-title">{{ currentTrackTitle }}</span>
+          <button class="chip-close" @click.stop="isChipExpanded = false">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </template>
+      </div>
+    </Transition>
+
     <!-- 글래스모피즘 독 -->
     <div class="floating-dock" :class="{ 'dark-theme': isDarkTheme }">
       <!-- 음악 버튼 -->
@@ -150,6 +191,8 @@ const props = defineProps<{
   showMyPage?: boolean
   isMusicPlaying?: boolean
   themeBackgroundColor?: string
+  currentTrackTitle?: string
+  trackCount?: number
 }>()
 
 // 배경색이 어두운지 판단하는 함수
@@ -178,10 +221,13 @@ const emit = defineEmits<{
   (e: 'toggleMusic'): void
   (e: 'openMyPage'): void
   (e: 'showVolumeControl'): void
+  (e: 'prevTrack'): void
+  (e: 'nextTrack'): void
 }>()
 
 const showShareSheet = ref(false)
 const showCopyToast = ref(false)
+const isChipExpanded = ref(false)
 let musicTouchTimer: number | null = null
 
 // 음악 토글
@@ -522,6 +568,129 @@ async function shareToTwitter() {
 .toast-leave-to {
   opacity: 0;
   transform: translateX(-50%) translateY(10px);
+}
+
+/* Now Playing 미니 칩 */
+.now-playing-chip {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  z-index: 999;
+  cursor: pointer;
+  max-width: 260px;
+  white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.now-playing-chip.expanded {
+  max-width: 320px;
+  padding: 6px 10px;
+}
+
+.chip-note {
+  font-size: 13px;
+  animation: noteBounce 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes noteBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.chip-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.chip-ctrl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 50%;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.15s;
+}
+
+.chip-ctrl:active {
+  background: rgba(0, 0, 0, 0.12);
+  transform: scale(0.92);
+}
+
+.chip-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.35);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.chip-close:active {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* 칩 트랜지션 */
+.chip-enter-active,
+.chip-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chip-enter-from,
+.chip-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px) scale(0.9);
+}
+
+/* 칩 다크 테마 */
+.now-playing-chip.dark-theme {
+  background: rgba(30, 30, 30, 0.7);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.now-playing-chip.dark-theme .chip-title {
+  color: #eee;
+}
+
+.now-playing-chip.dark-theme .chip-ctrl {
+  background: rgba(255, 255, 255, 0.1);
+  color: #eee;
+}
+
+.now-playing-chip.dark-theme .chip-ctrl:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.now-playing-chip.dark-theme .chip-close {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* 다크 테마 (배경색 기반) */

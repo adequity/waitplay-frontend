@@ -44,8 +44,12 @@
       :show-my-page="true"
       :is-music-playing="isBgmPlaying"
       :theme-background-color="pageTheme.backgroundColor"
+      :current-track-title="currentTrackTitle"
+      :track-count="bgmPlaylist.length"
       @toggle-music="toggleBgm"
       @open-my-page="toggleSidebar"
+      @prev-track="playPrevTrack"
+      @next-track="playNextTrack"
     />
 
     <!-- Sidebar Overlay -->
@@ -702,6 +706,12 @@ const bgmUrl = ref<string>('') // 레거시 단일 BGM URL
 const bgmPlaylist = ref<{ id: string; fileUrl: string; title?: string }[]>([]) // 플레이리스트
 const bgmPlayMode = ref<'sequential' | 'shuffle'>('sequential')
 const currentTrackIndex = ref(0)
+const currentTrackTitle = computed(() => {
+  if (bgmPlaylist.value.length > 0) {
+    return bgmPlaylist.value[currentTrackIndex.value]?.title || `Track ${currentTrackIndex.value + 1}`
+  }
+  return ''
+})
 
 // Page theme - Default values (will be loaded from API)
 const pageTheme = ref<PageTheme>({
@@ -1091,6 +1101,15 @@ const preloadBgm = () => {
   // 단일 트랙이면 loop, 플레이리스트면 끝날 때 다음 트랙
   bgmAudio.value.loop = bgmPlaylist.value.length <= 1
   bgmAudio.value.load()
+}
+
+const playPrevTrack = () => {
+  if (bgmPlaylist.value.length <= 1) return
+  currentTrackIndex.value = (currentTrackIndex.value - 1 + bgmPlaylist.value.length) % bgmPlaylist.value.length
+  if (bgmAudio.value) {
+    bgmAudio.value.src = getCurrentTrackUrl()
+    bgmAudio.value.play().catch(() => {})
+  }
 }
 
 const playNextTrack = () => {
