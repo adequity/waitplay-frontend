@@ -37,13 +37,11 @@ export function useSwipeGesture(options: SwipeGestureOptions): SwipeGestureRetur
     const x = offsetX.value
     const y = isDragging.value ? offsetY.value * 0.3 : 0
     const rotate = Math.min(Math.max(x * 0.05, -12), 12)
-    const opacity = isDragging.value
-      ? Math.max(1 - Math.abs(x) / (threshold * 3), 0.2)
-      : 1
+    const opacity = 1
 
     return {
       transform: `translate(${x}px, ${y}px) rotate(${rotate}deg)`,
-      transition: isDragging.value ? 'none' : 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease',
+      transition: isDragging.value ? 'none' : 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
       opacity,
       cursor: isDragging.value ? 'grabbing' : 'grab',
       touchAction: 'none',
