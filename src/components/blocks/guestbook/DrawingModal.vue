@@ -210,68 +210,29 @@
 
         <!-- ===== BOTTOM BAR ===== -->
         <div class="editor-bottom-bar">
-          <!-- BGM 선택 버튼 (draw 모드) -->
-          <div v-if="activeMode === 'draw'" class="bottom-audio-area">
-            <button
-              v-if="!selectedBgm"
-              class="audio-attach-btn"
-              @click="openBgmPicker"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- draw 모드: 음악 / 배경색 / 프레임 버튼 -->
+          <div v-if="activeMode === 'draw'" class="bottom-tool-btns">
+            <!-- 음악 버튼 -->
+            <button class="bottom-tool-btn" :class="{ active: !!selectedBgm }" @click="openBgmPicker">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 18V5l12-2v13"/>
                 <circle cx="6" cy="18" r="3"/>
                 <circle cx="18" cy="16" r="3"/>
               </svg>
-              음악
+              <span>음악</span>
             </button>
-            <!-- BGM 선택됨 표시 -->
-            <div v-else class="audio-selected-info">
-              <button class="audio-play-btn" @click="toggleBgmPreview">
-                <svg v-if="!isBgmPlaying" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5 3 19 12 5 21 5 3"/>
-                </svg>
-                <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="6" y="4" width="4" height="16"/>
-                  <rect x="14" y="4" width="4" height="16"/>
-                </svg>
-              </button>
-              <span class="audio-file-name">{{ selectedBgm.title }}</span>
-              <button class="audio-remove-btn" @click="removeBgm">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-                  <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- 배경색 선택 (draw 모드에서만, 팔레트 색상 + 컬러 피커) -->
-          <div v-if="activeMode === 'draw'" class="bottom-bg-color-area">
-            <!-- 컬러 피커 -->
-            <div class="bg-color-picker-btn">
-              <div class="bg-picker-icon" :style="{ backgroundColor: selectedCardColor }">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
-                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                </svg>
-              </div>
-              <input
-                type="color"
-                :value="selectedCardColor"
-                class="bg-native-color-input"
-                @input="(e) => selectedCardColor = (e.target as HTMLInputElement).value"
-              />
-            </div>
-            <!-- 팔레트 색상 -->
-            <button
-              v-for="hex in verticalDisplayColors"
-              :key="hex"
-              class="bg-color-dot"
-              :class="{ selected: selectedCardColor === hex }"
-              :style="{ backgroundColor: hex }"
-              @click="selectedCardColor = hex"
-            >
-              <svg v-if="selectedCardColor === hex" class="bg-check-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
+            <!-- 배경색 버튼 -->
+            <button class="bottom-tool-btn" @click="showBgColorSheet = !showBgColorSheet">
+              <span class="btn-color-dot" :style="{ backgroundColor: selectedCardColor }"></span>
+              <span>배경색</span>
+            </button>
+            <!-- 프레임 버튼 -->
+            <button class="bottom-tool-btn" :class="{ active: !!templateOverlayUrl }" @click="showFrameSheet = !showFrameSheet">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <rect x="7" y="7" width="10" height="10" rx="1"/>
               </svg>
+              <span>프레임</span>
             </button>
           </div>
 
@@ -341,6 +302,105 @@
     @close="isStickerPickerOpen = false"
     @add-sticker="onAddSticker"
   />
+
+  <!-- 배경색 선택 하단 시트 -->
+  <Teleport to="body">
+    <Transition name="bgm-picker">
+      <div v-if="showBgColorSheet" class="bgm-picker-overlay" @click.self="showBgColorSheet = false">
+        <div class="bgm-picker-sheet bg-color-sheet">
+          <div class="bgm-picker-header">
+            <h3>배경색 선택</h3>
+            <button class="bgm-picker-close" @click="showBgColorSheet = false">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="bg-color-grid">
+            <!-- 컬러 피커 -->
+            <div class="bg-grid-picker-btn">
+              <div class="bg-grid-picker-icon" :style="{ backgroundColor: selectedCardColor }">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+              </div>
+              <input
+                type="color"
+                :value="selectedCardColor"
+                class="bg-grid-native-input"
+                @input="(e) => { selectedCardColor = (e.target as HTMLInputElement).value }"
+              />
+            </div>
+            <!-- 팔레트 색상 -->
+            <button
+              v-for="hex in verticalDisplayColors"
+              :key="hex"
+              class="bg-grid-dot"
+              :class="{ selected: selectedCardColor === hex }"
+              :style="{ backgroundColor: hex }"
+              @click="selectedCardColor = hex"
+            >
+              <svg v-if="selectedCardColor === hex" class="bg-grid-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- 프레임 선택 하단 시트 -->
+  <Teleport to="body">
+    <Transition name="bgm-picker">
+      <div v-if="showFrameSheet" class="bgm-picker-overlay" @click.self="showFrameSheet = false">
+        <div class="bgm-picker-sheet frame-sheet">
+          <div class="bgm-picker-header">
+            <h3>프레임 선택</h3>
+            <button class="bgm-picker-close" @click="showFrameSheet = false">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="frame-grid">
+            <div v-if="isLoadingFrames" class="frame-loading">
+              <span class="spinner"></span>
+            </div>
+            <template v-else>
+              <!-- 없음 -->
+              <button
+                class="frame-card"
+                :class="{ selected: !templateOverlayUrl }"
+                @click="selectFrame(null)"
+              >
+                <div class="frame-preview none-frame">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
+                </div>
+                <span class="frame-name">없음</span>
+              </button>
+              <!-- 프레임 목록 -->
+              <button
+                v-for="tmpl in frameTemplates"
+                :key="tmpl.id"
+                class="frame-card"
+                :class="{ selected: selectedFrameId === tmpl.id }"
+                @click="selectFrame(tmpl)"
+              >
+                <div class="frame-preview">
+                  <img :src="tmpl.thumbnailUrl || tmpl.imageUrl" :alt="tmpl.name" />
+                </div>
+                <span class="frame-name">{{ tmpl.name }}</span>
+              </button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 
   <!-- BGM 선택 피커 -->
   <Teleport to="body">
@@ -502,6 +562,13 @@ const bgmPreviewAudio = ref<HTMLAudioElement | null>(null)
 
 // 배경색 선택 상태
 const selectedCardColor = ref(DEFAULT_BG_COLOR)
+const showBgColorSheet = ref(false)
+
+// 프레임 선택 상태
+const showFrameSheet = ref(false)
+const frameTemplates = ref<any[]>([])
+const isLoadingFrames = ref(false)
+const selectedFrameId = ref<number | null>(null)
 
 // 팔로우(단골등록) 모달 상태
 const showFollowModal = ref(false)
@@ -550,14 +617,44 @@ const fetchPaletteColors = async () => {
 const applySelectedTemplate = () => {
   if (props.selectedTemplate) {
     templateOverlayUrl.value = props.selectedTemplate.imageUrl
+    selectedFrameId.value = props.selectedTemplate.id
   } else {
     templateOverlayUrl.value = null
     templateOverlayImage.value = null
+    selectedFrameId.value = null
   }
 }
 
 const onTemplateOverlayLoad = (e: Event) => {
   templateOverlayImage.value = e.target as HTMLImageElement
+}
+
+// ===== 프레임 선택 로직 =====
+const fetchFrames = async () => {
+  if (frameTemplates.value.length > 0) return
+  isLoadingFrames.value = true
+  try {
+    const response = await fetch(`${API_URL}/api/guestbook/templates`)
+    if (!response.ok) return
+    const data = await response.json()
+    frameTemplates.value = data.templates || []
+  } catch {
+    // 로드 실패해도 진행 가능
+  } finally {
+    isLoadingFrames.value = false
+  }
+}
+
+const selectFrame = (tmpl: any) => {
+  if (tmpl) {
+    templateOverlayUrl.value = tmpl.imageUrl
+    selectedFrameId.value = tmpl.id
+  } else {
+    templateOverlayUrl.value = null
+    templateOverlayImage.value = null
+    selectedFrameId.value = null
+  }
+  showFrameSheet.value = false
 }
 
 const closeModal = () => {
@@ -731,6 +828,7 @@ watch(() => props.visible, async (newVal) => {
     await nextTick()
     initCanvas()
     fetchPaletteColors()
+    fetchFrames()
     applySelectedTemplate()
     // 촬영하기로 진입한 경우 카메라 자동 실행
     if (props.initialMode === 'camera') {
@@ -754,6 +852,9 @@ watch(() => props.visible, async (newVal) => {
     isBgmPlaying.value = false
     selectedBgm.value = null
     showBgmPicker.value = false
+    showBgColorSheet.value = false
+    showFrameSheet.value = false
+    selectedFrameId.value = null
     showFollowModal.value = false
     if (!closedByPopState && history.state?.modal === 'guestbook') {
       history.back()
@@ -1440,166 +1541,6 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   to { transform: rotate(360deg); }
 }
 
-/* ===== BGM 선택 영역 (하단 바) ===== */
-.bottom-audio-area {
-  display: flex;
-  align-items: center;
-}
-
-/* 배경색 선택 */
-.bottom-bg-color-area {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 2px 0;
-}
-.bottom-bg-color-area::-webkit-scrollbar {
-  display: none;
-}
-
-.bg-color-dot {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.15s ease;
-  padding: 0;
-  outline: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bg-color-dot:active {
-  transform: scale(0.85);
-}
-
-.bg-color-dot.selected {
-  border-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
-}
-
-.bg-check-icon {
-  stroke: rgba(0, 0, 0, 0.5);
-}
-
-/* 배경색 컬러 피커 */
-.bg-color-picker-btn {
-  position: relative;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  flex-shrink: 0;
-}
-
-.bg-picker-icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid rgba(255, 255, 255, 0.3);
-  transition: border-color 0.15s;
-}
-.bg-color-picker-btn:hover .bg-picker-icon {
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
-.bg-native-color-input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  border: none;
-  padding: 0;
-}
-
-.audio-attach-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.audio-attach-btn:active {
-  background: rgba(255, 255, 255, 0.18);
-  transform: scale(0.97);
-}
-
-.audio-selected-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: rgba(78, 205, 196, 0.15);
-  border: 1px solid rgba(78, 205, 196, 0.25);
-  border-radius: 20px;
-  max-width: 200px;
-}
-
-.audio-play-btn {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  border-radius: 50%;
-  background: rgba(78, 205, 196, 0.3);
-  border: none;
-  color: #4ECDC4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.audio-play-btn:active {
-  transform: scale(0.9);
-}
-
-.audio-file-name {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-}
-
-.audio-remove-btn {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.audio-remove-btn:active {
-  background: rgba(255, 68, 68, 0.3);
-  color: #ff6b6b;
-}
-
 /* ===== BGM 피커 모달 ===== */
 .bgm-picker-overlay {
   position: fixed;
@@ -1940,6 +1881,185 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   width: 18px;
   height: 18px;
   border-width: 2px;
+}
+
+/* ===== 하단 도구 버튼 (음악/배경색/프레임) ===== */
+.bottom-tool-btns {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bottom-tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.bottom-tool-btn:active {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(0.97);
+}
+.bottom-tool-btn.active {
+  background: rgba(78, 205, 196, 0.15);
+  border-color: rgba(78, 205, 196, 0.3);
+  color: #4ECDC4;
+}
+
+.btn-color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+/* ===== 배경색 하단 시트 그리드 ===== */
+.bg-color-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px 20px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.bg-grid-picker-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.bg-grid-picker-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: border-color 0.15s;
+}
+.bg-grid-picker-btn:hover .bg-grid-picker-icon {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.bg-grid-native-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.bg-grid-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+  padding: 0;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bg-grid-dot:active {
+  transform: scale(0.9);
+}
+.bg-grid-dot.selected {
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.bg-grid-check {
+  stroke: rgba(0, 0, 0, 0.5);
+}
+
+/* ===== 프레임 하단 시트 ===== */
+.frame-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 16px 20px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  max-height: 50vh;
+  -webkit-overflow-scrolling: touch;
+}
+
+.frame-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.frame-card:active {
+  transform: scale(0.95);
+}
+.frame-card.selected {
+  border-color: #4ECDC4;
+  background: rgba(78, 205, 196, 0.1);
+}
+
+.frame-preview {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.frame-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.none-frame {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.frame-name {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.frame-loading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
 }
 
 /* ===== 템플릿(액자) 오버레이 ===== */
