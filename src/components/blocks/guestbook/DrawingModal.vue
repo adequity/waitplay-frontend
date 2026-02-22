@@ -5,7 +5,7 @@
 
         <!-- ===== 캔버스 영역 (풀스크린) ===== -->
         <div class="editor-canvas-area">
-          <div class="canvas-wrapper" :class="{ 'graffiti-mode': displayMode === 'graffiti' }">
+          <div class="canvas-wrapper" :class="{ 'graffiti-mode': displayMode === 'graffiti' }" :style="displayMode !== 'graffiti' ? { backgroundColor: selectedCardColor } : {}">
             <!-- 안내 플레이스홀더 -->
             <div v-if="!canSubmit" class="canvas-placeholder">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
@@ -689,7 +689,8 @@ const {
   canRedo,
   setBackgroundImage,
   clearBackgroundImage,
-} = useGuestbookCanvas({ displayMode: displayModeRef })
+  repaintBgColor,
+} = useGuestbookCanvas({ displayMode: displayModeRef, bgColor: selectedCardColor })
 
 // Sticker composable
 const {
@@ -708,6 +709,13 @@ setOnCanvasTouch(deselectAll)
 
 // 제출 가능 여부
 const canSubmit = computed(() => hasDrawing.value || editingStickers.value.length > 0)
+
+// 배경색 변경 시 캔버스 배경 실시간 갱신
+watch(selectedCardColor, (newColor, oldColor) => {
+  if (props.displayMode !== 'graffiti' && oldColor && newColor !== oldColor) {
+    repaintBgColor(oldColor, newColor)
+  }
+})
 
 // 모드 전환 시 상태 정리
 watch(activeMode, (newMode) => {
