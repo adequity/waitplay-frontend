@@ -709,7 +709,13 @@ watch(() => props.visible, async (newVal) => {
     templateOverlayUrl.value = null
     templateOverlayImage.value = null
     // BGM 상태 정리
-    stopBgmPreview()
+    if (bgmPreviewAudio.value) {
+      bgmPreviewAudio.value.pause()
+      bgmPreviewAudio.value.currentTime = 0
+      bgmPreviewAudio.value = null
+    }
+    previewingTrackId.value = null
+    isBgmPlaying.value = false
     selectedBgm.value = null
     showBgmPicker.value = false
     showFollowModal.value = false
