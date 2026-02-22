@@ -244,6 +244,37 @@
             </div>
           </div>
 
+          <!-- 배경색 선택 (draw 모드에서만, 팔레트 색상 + 컬러 피커) -->
+          <div v-if="activeMode === 'draw'" class="bottom-bg-color-area">
+            <!-- 컬러 피커 -->
+            <div class="bg-color-picker-btn">
+              <div class="bg-picker-icon" :style="{ backgroundColor: selectedCardColor }">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+              </div>
+              <input
+                type="color"
+                :value="selectedCardColor"
+                class="bg-native-color-input"
+                @input="(e) => selectedCardColor = (e.target as HTMLInputElement).value"
+              />
+            </div>
+            <!-- 팔레트 색상 -->
+            <button
+              v-for="hex in verticalDisplayColors"
+              :key="hex"
+              class="bg-color-dot"
+              :class="{ selected: selectedCardColor === hex }"
+              :style="{ backgroundColor: hex }"
+              @click="selectedCardColor = hex"
+            >
+              <svg v-if="selectedCardColor === hex" class="bg-check-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+          </div>
+
           <!-- 스티커 모드: 스티커 추가/지우기 -->
           <Transition name="tools-crossfade" mode="out-in">
             <div v-if="activeMode === 'sticker'" key="sticker" class="bottom-sticker-tools">
@@ -436,6 +467,7 @@ import followService from '@/services/followService'
 import bgmService, { type BgmTrack } from '@/services/bgmService'
 import StickerPickerModal from './StickerPickerModal.vue'
 import VerticalBrushSlider from './VerticalBrushSlider.vue'
+import { DEFAULT_BG_COLOR, getCardBgHex } from '@/constants/guestbookColors'
 
 interface Props {
   visible: boolean
@@ -467,6 +499,9 @@ const selectedBgm = ref<BgmTrack | null>(null)
 const isBgmPlaying = ref(false)
 const previewingTrackId = ref<string | null>(null)
 const bgmPreviewAudio = ref<HTMLAudioElement | null>(null)
+
+// 배경색 선택 상태
+const selectedCardColor = ref(DEFAULT_BG_COLOR)
 
 // 팔로우(단골등록) 모달 상태
 const showFollowModal = ref(false)
@@ -689,6 +724,7 @@ watch(() => props.visible, async (newVal) => {
     activeMode.value = 'draw'
     drawToolsOpened.value = false
     isActivelyDrawing.value = false
+    selectedCardColor.value = DEFAULT_BG_COLOR
     document.body.style.overflow = 'hidden'
     history.pushState({ modal: 'guestbook' }, '')
     window.addEventListener('popstate', handlePopState)
@@ -835,7 +871,7 @@ const followAndRetry = async () => {
       qrCode: props.qrCodeId,
       imageData: composedImageData,
       audioUrl: selectedBgm.value?.fileUrl || undefined,
-      color: 'yellow'
+      color: selectedCardColor.value
     })
     emit('close')
     emit('submitted')
@@ -862,7 +898,7 @@ const submitDrawing = async () => {
       qrCode: props.qrCodeId,
       imageData: composedImageData,
       audioUrl: selectedBgm.value?.fileUrl || undefined,
-      color: 'yellow'
+      color: selectedCardColor.value
     })
 
     stopBgmPreview()
@@ -908,7 +944,7 @@ const composeAndResizeImage = async (): Promise<string> => {
   if (!composedCtx) throw new Error('Failed to get canvas context')
 
   if (props.displayMode !== 'graffiti') {
-    composedCtx.fillStyle = '#ffffff'
+    composedCtx.fillStyle = getCardBgHex(selectedCardColor.value)
     composedCtx.fillRect(0, 0, width, height)
   }
 
@@ -1406,9 +1442,86 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 
 /* ===== BGM 선택 영역 (하단 바) ===== */
 .bottom-audio-area {
+  display: flex;
+  align-items: center;
+}
+
+/* 배경색 선택 */
+.bottom-bg-color-area {
   flex: 1;
   display: flex;
   align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+.bottom-bg-color-area::-webkit-scrollbar {
+  display: none;
+}
+
+.bg-color-dot {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease;
+  padding: 0;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-color-dot:active {
+  transform: scale(0.85);
+}
+
+.bg-color-dot.selected {
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.bg-check-icon {
+  stroke: rgba(0, 0, 0, 0.5);
+}
+
+/* 배경색 컬러 피커 */
+.bg-color-picker-btn {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  flex-shrink: 0;
+}
+
+.bg-picker-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  transition: border-color 0.15s;
+}
+.bg-color-picker-btn:hover .bg-picker-icon {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.bg-native-color-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
 }
 
 .audio-attach-btn {

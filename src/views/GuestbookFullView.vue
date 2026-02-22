@@ -173,7 +173,7 @@
                 <div
                   v-else-if="message.message"
                   class="feed-postit"
-                  :style="{ backgroundColor: getPostitColor(message.color) }"
+                  :style="{ backgroundColor: getCardBgHex(message.color) }"
                 >
                   <p class="feed-postit-text">{{ message.message }}</p>
                   <transition name="heart-pop">
@@ -311,6 +311,7 @@ import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import type { StoreProfileResponse, FollowerInfo } from '@/services/followService'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
+import { getCardBgHex } from '@/constants/guestbookColors'
 
 const route = useRoute()
 const router = useRouter()
@@ -479,17 +480,6 @@ const handleDoubleTap = async (message: any) => {
   }
 
   lastTapTime.value[message.id] = now
-}
-
-// 포스트잇 색상
-const getPostitColor = (color: string): string => {
-  const colors: Record<string, string> = {
-    yellow: '#fff9c4',
-    pink: '#fce7f3',
-    blue: '#dbeafe',
-    green: '#d1fae5'
-  }
-  return colors[color] || '#fff9c4'
 }
 
 // 상대 시간 포맷

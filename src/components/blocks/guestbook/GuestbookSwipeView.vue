@@ -43,7 +43,7 @@
             'card-postit': displayMode === 'postit',
             'card-graffiti': displayMode === 'graffiti'
           }"
-          :style="i === 0 ? frontCardStyle : getBackCardStyle(i)"
+          :style="{ ...(i === 0 ? frontCardStyle : getBackCardStyle(i)), ...(displayMode === 'postit' ? { backgroundColor: getCardBgHex(card.color) } : {}) }"
           v-bind="i === 0 ? pointerHandlers : {}"
         >
           <!-- Postit 모드 -->
@@ -103,6 +103,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useSwipeGesture } from '@/composables/useSwipeGesture'
+import { getCardBgHex } from '@/constants/guestbookColors'
 import type { GuestbookBlockData } from '@/types/blocks'
 
 interface Props {
@@ -242,10 +243,6 @@ const formatDate = (dateStr: string) => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.card-postit .card-image-area {
-  background: #ffffff;
-}
-
 .card-image-area {
   flex: 1;
   overflow: hidden;
@@ -257,7 +254,6 @@ const formatDate = (dateStr: string) => {
   height: 100%;
   object-fit: contain;
   pointer-events: none;
-  background: #ffffff;
 }
 
 .card-text {

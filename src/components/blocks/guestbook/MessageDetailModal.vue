@@ -13,7 +13,7 @@
           <!-- 메시지 내용 -->
           <div
             class="detail-post-it"
-            :class="`detail-post-it--${message.color}`"
+            :class="`detail-post-it--${message.color || 'white'}`"
           >
             <div class="detail-image-container">
               <img
@@ -346,6 +346,7 @@ const formatDate = (dateString: string): string => {
 }
 
 /* 포스트잇 색상 */
+.detail-post-it--white { background: #ffffff; }
 .detail-post-it--yellow { background: #fff9c4; }
 .detail-post-it--pink { background: #fce4ec; }
 .detail-post-it--blue { background: #e3f2fd; }
