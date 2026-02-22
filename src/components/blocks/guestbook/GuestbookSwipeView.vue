@@ -237,8 +237,13 @@ const formatDate = (dateStr: string) => {
 
 /* Postit Card */
 .card-postit {
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-postit .card-image-area {
+  background: #ffffff;
 }
 
 .card-image-area {
@@ -250,8 +255,9 @@ const formatDate = (dateStr: string) => {
 .card-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   pointer-events: none;
+  background: #ffffff;
 }
 
 .card-text {
