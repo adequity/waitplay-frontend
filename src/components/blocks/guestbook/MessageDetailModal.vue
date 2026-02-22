@@ -201,6 +201,22 @@ watch(() => props.visible, async (newVal) => {
 
     // 답글 로드
     await loadReplies(props.message.id)
+
+    // BGM 자동 재생
+    if (props.message.audioUrl) {
+      audioEl.value = new Audio(props.message.audioUrl)
+      audioEl.value.addEventListener('ended', () => {
+        isAudioPlaying.value = false
+        audioProgress.value = 0
+        stopAudioTimer()
+      })
+      audioEl.value.play().then(() => {
+        isAudioPlaying.value = true
+        startAudioTimer()
+      }).catch(() => {
+        // 브라우저 autoplay 정책으로 차단될 수 있음 — 무시
+      })
+    }
   } else {
     replies.value = []
     cleanupAudio()
