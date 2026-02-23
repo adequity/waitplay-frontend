@@ -39,7 +39,7 @@ export function useGuestbookStickers(containerRef: () => HTMLElement | null | un
       content,
       x: 50,
       y: 50,
-      scale: type === 'emoji' ? 1.0 : 0.6,
+      scale: type === 'photo' ? 1.0 : type === 'emoji' ? 1.0 : 0.6,
       rotation: 0
     }
     editingStickers.value.push(newSticker)

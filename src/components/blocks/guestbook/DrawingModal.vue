@@ -82,7 +82,12 @@
                 @touchstart.stop.prevent="selectStickerTouch(index, $event)"
               >
                 <img
-                  v-if="sticker.type === 'logo' || sticker.type === 'asset'"
+                  v-if="sticker.type === 'photo'"
+                  :src="sticker.content"
+                  class="editing-sticker-photo"
+                />
+                <img
+                  v-else-if="sticker.type === 'logo' || sticker.type === 'asset'"
                   :src="sticker.content"
                   class="editing-sticker-img"
                 />
@@ -763,7 +768,16 @@ const onFileSelected = async (e: Event) => {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
-  await setBackgroundImage(file)
+
+  // 파일 → dataURL → 스티커로 추가 (이동/크기/회전 가능)
+  const reader = new FileReader()
+  reader.onload = () => {
+    const dataUrl = reader.result as string
+    addSticker('photo', dataUrl)
+    activeMode.value = 'sticker'
+    hasDrawing.value = true
+  }
+  reader.readAsDataURL(file)
   input.value = ''
 }
 
@@ -1076,7 +1090,19 @@ const composeAndResizeImage = async (): Promise<string> => {
     composedCtx.rotate((sticker.rotation * Math.PI) / 180)
     composedCtx.scale(sticker.scale * scaleRatio, sticker.scale * scaleRatio)
 
-    if (sticker.type === 'logo' || sticker.type === 'asset') {
+    if (sticker.type === 'photo') {
+      try {
+        const img = await loadImage(sticker.content)
+        const maxW = 150
+        const maxH = 200
+        const ratio = Math.min(maxW / img.width, maxH / img.height, 1)
+        const drawW = img.width * ratio
+        const drawH = img.height * ratio
+        composedCtx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH)
+      } catch (e) {
+        console.error('Failed to load photo sticker:', e)
+      }
+    } else if (sticker.type === 'logo' || sticker.type === 'asset') {
       try {
         const img = await loadImage(sticker.content)
         const imgSize = 60
@@ -1457,6 +1483,15 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 
 .editing-sticker.selected {
   box-shadow: 0 0 0 2px #4ECDC4, 0 0 16px rgba(78, 205, 196, 0.5);
+  border-radius: 4px;
+}
+
+.editing-sticker-photo {
+  width: 150px;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+  pointer-events: none;
   border-radius: 4px;
 }
 
