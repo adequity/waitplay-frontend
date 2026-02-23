@@ -3,7 +3,43 @@
     <Transition name="editor-slide">
       <div v-if="visible" class="drawing-editor">
 
-        <!-- ===== 캔버스 영역 (풀스크린) ===== -->
+        <!-- ===== 상단바: 닫기 + undo + 전체지우기 + spacer + 전송 ===== -->
+        <div class="editor-top-bar">
+          <button class="top-btn" @click="closeModal">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+          <button class="top-btn" :disabled="!canUndo" @click="undo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="1 4 1 10 7 10"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+          </button>
+          <button class="top-btn" @click="handleClear">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/>
+            </svg>
+          </button>
+          <div class="top-spacer"></div>
+          <button
+            class="done-btn"
+            :disabled="!canSubmit || isSubmitting"
+            @click="submitDrawing"
+          >
+            <template v-if="isSubmitting">
+              <span class="spinner"></span>
+            </template>
+            <template v-else>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </template>
+          </button>
+        </div>
+
+        <!-- ===== 캔버스 영역 ===== -->
         <div class="editor-canvas-area">
           <div class="canvas-wrapper" :class="{ 'graffiti-mode': displayMode === 'graffiti' }" :style="displayMode !== 'graffiti' ? { background: getCardBg(selectedCardColor) } : {}">
             <!-- 안내 플레이스홀더 -->
@@ -74,145 +110,118 @@
           </div>
         </div>
 
-        <!-- ===== 왼쪽 상단: X 닫기 ===== -->
-        <button class="floating-close-btn" @click="closeModal">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-
-        <!-- ===== 오른쪽 도구 컨테이너 ===== -->
-        <div class="right-side-container">
-          <!-- 드로우 도구 패널 (색상 팔레트 + 브러시 슬라이더) -->
-          <Transition name="draw-panel">
-            <div v-if="showDrawPanel" class="draw-tools-panel">
-              <!-- 세로 색상 팔레트 -->
-              <div class="vertical-palette">
-                <div class="vertical-palette-scroll">
-                  <!-- 컬러 피커 -->
-                  <div class="v-color-picker-btn">
-                    <div class="v-picker-icon" :style="{ backgroundColor: selectedColor }">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                      </svg>
-                    </div>
-                    <input
-                      type="color"
-                      :value="selectedColor"
-                      class="v-native-color-input"
-                      @input="onVerticalCustomColor"
-                    />
-                  </div>
-                  <!-- 프리셋 색상들 -->
-                  <button
-                    v-for="c in verticalDisplayColors"
-                    :key="c"
-                    class="v-color-dot"
-                    :class="{ selected: selectedColor === c }"
-                    :style="{ backgroundColor: c }"
-                    @click="onVerticalColorSelect(c)"
-                  >
-                    <span v-if="c === '#FFFFFF'" class="v-white-border"></span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- 브러시 슬라이더 -->
-              <VerticalBrushSlider
-                v-model:size="brushSize"
-                :min="minBrushSize"
-                :max="maxBrushSize"
-                :color="isEraser ? '#888888' : selectedColor"
-              />
-            </div>
-          </Transition>
-
-          <!-- 도구 버튼 열 -->
-          <div class="right-tools">
-            <!-- 그리기 모드 -->
+        <!-- ===== 도구바: 도구 버튼 + 색상팔레트(가로) + 브러시(가로) ===== -->
+        <div class="editor-tool-bar">
+          <div class="tool-row">
+            <!-- 그리기 -->
             <button
               class="tool-btn"
               :class="{ active: activeMode === 'draw' && !isEraser }"
               @click="activateDrawMode"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 19l7-7 3 3-7 7-3-3z"/>
                 <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
                 <path d="M2 2l7.586 7.586"/>
               </svg>
             </button>
-
             <!-- 지우개 -->
             <button
               class="tool-btn"
               :class="{ active: activeMode === 'draw' && isEraser }"
               @click="activateEraser"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8l10-10c.8-.8 2-.8 2.8 0l5.2 5.2c.8.8.8 2 0 2.8L13 19"/>
               </svg>
             </button>
-
             <!-- 스티커 -->
             <button
               class="tool-btn"
               :class="{ active: activeMode === 'sticker' }"
               @click="activateStickerMode"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
                 <line x1="9" y1="9" x2="9.01" y2="9"/>
                 <line x1="15" y1="9" x2="15.01" y2="9"/>
               </svg>
             </button>
-
-            <!-- 카메라 촬영 -->
+            <!-- 카메라 -->
             <button class="tool-btn" @click="openCamera">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
                 <circle cx="12" cy="13" r="4"/>
               </svg>
             </button>
-
             <!-- 갤러리 -->
             <button class="tool-btn" @click="openGallery">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                 <circle cx="8.5" cy="8.5" r="1.5"/>
                 <polyline points="21 15 16 10 5 21"/>
               </svg>
             </button>
-
-            <!-- Undo -->
-            <button
-              class="tool-btn"
-              :disabled="!canUndo"
-              @click="undo"
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="1 4 1 10 7 10"/>
-                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-              </svg>
-            </button>
-
-            <!-- 전체 지우기 -->
-            <button
-              class="tool-btn"
-              @click="handleClear"
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/>
-              </svg>
-            </button>
           </div>
+
+          <!-- 드로잉 패널: 색상 팔레트(가로) + 브러시 슬라이더(가로) -->
+          <Transition name="draw-panel">
+            <div v-if="showDrawPanel" class="draw-panel-horizontal">
+              <div class="h-palette-scroll">
+                <!-- 컬러 피커 -->
+                <div class="h-color-picker-btn">
+                  <div class="h-picker-icon" :style="{ backgroundColor: selectedColor }">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                  </div>
+                  <input
+                    type="color"
+                    :value="selectedColor"
+                    class="h-native-color-input"
+                    @input="onVerticalCustomColor"
+                  />
+                </div>
+                <!-- 프리셋 색상들 -->
+                <button
+                  v-for="c in verticalDisplayColors"
+                  :key="c"
+                  class="h-color-dot"
+                  :class="{ selected: selectedColor === c }"
+                  :style="{ backgroundColor: c }"
+                  @click="onVerticalColorSelect(c)"
+                >
+                  <span v-if="c === '#FFFFFF'" class="h-white-border"></span>
+                </button>
+              </div>
+              <!-- 가로 브러시 슬라이더 -->
+              <div class="h-brush-slider-wrap">
+                <div
+                  class="h-brush-preview"
+                  :style="{
+                    width: `${6 + ((brushSize - minBrushSize) / (maxBrushSize - minBrushSize)) * 20}px`,
+                    height: `${6 + ((brushSize - minBrushSize) / (maxBrushSize - minBrushSize)) * 20}px`,
+                    backgroundColor: isEraser ? '#888888' : selectedColor
+                  }"
+                ></div>
+                <input
+                  type="range"
+                  class="h-brush-slider"
+                  :min="minBrushSize"
+                  :max="maxBrushSize"
+                  :value="brushSize"
+                  @input="brushSize = Number(($event.target as HTMLInputElement).value)"
+                />
+              </div>
+            </div>
+          </Transition>
         </div>
 
-        <!-- ===== BOTTOM BAR ===== -->
+        <!-- ===== 하단바: 음악/배경색/프레임 ===== -->
         <div class="editor-bottom-bar">
           <!-- draw 모드: 음악 / 배경색 / 프레임 버튼 -->
           <div v-if="activeMode === 'draw'" class="bottom-tool-btns">
-            <!-- 음악 버튼 -->
             <button class="bottom-tool-btn" :class="{ active: !!selectedBgm }" @click="openBgmPicker">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 18V5l12-2v13"/>
@@ -221,12 +230,10 @@
               </svg>
               <span>음악</span>
             </button>
-            <!-- 배경색 버튼 (postit 모드만) -->
             <button v-if="displayMode === 'postit'" class="bottom-tool-btn" @click="showBgColorSheet = !showBgColorSheet">
               <span class="btn-color-dot" :style="{ background: getCardBg(selectedCardColor) }"></span>
               <span>배경색</span>
             </button>
-            <!-- 프레임 버튼 -->
             <button class="bottom-tool-btn" :class="{ active: !!templateOverlayUrl }" @click="showFrameSheet = !showFrameSheet">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -257,23 +264,6 @@
               </button>
             </div>
           </Transition>
-
-          <!-- 완료 버튼 -->
-          <button
-            class="done-btn"
-            :disabled="!canSubmit || isSubmitting"
-            @click="submitDrawing"
-          >
-            <template v-if="isSubmitting">
-              <span class="spinner"></span>
-            </template>
-            <template v-else>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </template>
-          </button>
         </div>
       </div>
     </Transition>
@@ -526,7 +516,7 @@ import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import bgmService, { type BgmTrack } from '@/services/bgmService'
 import StickerPickerModal from './StickerPickerModal.vue'
-import VerticalBrushSlider from './VerticalBrushSlider.vue'
+// VerticalBrushSlider replaced by inline horizontal slider
 import { DEFAULT_BG_COLOR, getCardBgHex, getCardBg, isGradient } from '@/constants/guestbookColors'
 
 interface Props {
@@ -1163,7 +1153,43 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   transform: translateY(100%);
 }
 
-/* ===== 캔버스 영역 (풀스크린) ===== */
+/* ===== 상단바 ===== */
+.editor-top-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  padding-top: max(8px, env(safe-area-inset-top));
+}
+
+.top-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.top-btn:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.2);
+}
+.top-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.top-spacer {
+  flex: 1;
+}
+
+/* ===== 캔버스 영역 ===== */
 .editor-canvas-area {
   flex: 1;
   display: flex;
@@ -1171,7 +1197,7 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding: 60px 16px 8px;
+  padding: 4px 16px;
 }
 
 .canvas-wrapper {
@@ -1220,166 +1246,26 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   z-index: 1;
 }
 
-/* ===== 왼쪽 상단 X 닫기 ===== */
-.floating-close-btn {
-  position: absolute;
-  top: max(12px, env(safe-area-inset-top));
-  left: 12px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(38, 38, 38, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: none;
-  color: white;
+/* ===== 도구바 (가로 레이아웃) ===== */
+.editor-tool-bar {
+  flex-shrink: 0;
+  padding: 6px 12px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 30;
-  transition: all 0.15s;
-}
-.floating-close-btn:active {
-  transform: scale(0.9);
-  background: rgba(38, 38, 38, 0.9);
-}
-
-/* ===== 오른쪽 도구 컨테이너 ===== */
-.right-side-container {
-  position: absolute;
-  top: max(12px, env(safe-area-inset-top));
-  right: 12px;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  z-index: 30;
-}
-
-/* 드로우 도구 패널 (색상 팔레트 + 브러시 슬라이더) */
-.draw-tools-panel {
-  display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   gap: 8px;
 }
 
-/* 세로 색상 팔레트 */
-.vertical-palette {
-  background: rgba(38, 38, 38, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 8px 6px;
-  max-height: 320px;
-  overflow: hidden;
-}
-
-.vertical-palette-scroll {
+.tool-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  max-height: 304px;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.vertical-palette-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.v-color-picker-btn {
-  position: relative;
-  width: 28px;
-  height: 28px;
-  min-height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.v-picker-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  transition: border-color 0.15s;
-}
-.v-color-picker-btn:hover .v-picker-icon {
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
-.v-native-color-input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  border: none;
-  padding: 0;
-}
-
-.v-color-dot {
-  width: 24px;
-  height: 24px;
-  min-height: 24px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.15s ease;
-  padding: 0;
-  outline: none;
-  flex-shrink: 0;
-}
-.v-color-dot:active {
-  transform: scale(0.85);
-}
-
-.v-color-dot.selected {
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.95), 0 0 0 3.5px rgba(255, 255, 255, 0.9);
-}
-
-.v-white-border {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
-  pointer-events: none;
-}
-
-/* 패널 슬라이드 트랜지션 */
-.draw-panel-enter-active {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.draw-panel-leave-active {
-  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
-}
-.draw-panel-enter-from,
-.draw-panel-leave-to {
-  opacity: 0;
-  transform: translateX(16px);
-}
-
-/* 오른쪽 세로 도구 버튼 (인스타 스타일) */
-.right-tools {
-  display: flex;
-  flex-direction: column;
   gap: 8px;
 }
 
 .tool-btn {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: rgba(38, 38, 38, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   color: rgba(255, 255, 255, 0.7);
   display: flex;
@@ -1399,6 +1285,155 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* 패널 슬라이드 트랜지션 (아래에서 위로) */
+.draw-panel-enter-active {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.draw-panel-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+.draw-panel-enter-from,
+.draw-panel-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* 가로 드로잉 패널 (색상 + 브러시) */
+.draw-panel-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(38, 38, 38, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+}
+
+/* 가로 색상 팔레트 */
+.h-palette-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-width: 0;
+}
+.h-palette-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.h-color-picker-btn {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.h-picker-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: border-color 0.15s;
+}
+.h-color-picker-btn:hover .h-picker-icon {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.h-native-color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.h-color-dot {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease;
+  padding: 0;
+  outline: none;
+  flex-shrink: 0;
+}
+.h-color-dot:active {
+  transform: scale(0.85);
+}
+.h-color-dot.selected {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.95), 0 0 0 3.5px rgba(255, 255, 255, 0.9);
+}
+
+.h-white-border {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+/* 가로 브러시 슬라이더 */
+.h-brush-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.h-brush-preview {
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: width 0.1s, height 0.1s;
+}
+
+.h-brush-slider {
+  width: 80px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.h-brush-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.h-brush-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
 }
 
 /* ===== 스티커 레이어 ===== */
@@ -1468,7 +1503,7 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   padding-bottom: max(10px, env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 12px;
 }
 
@@ -1512,11 +1547,11 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   transform: scale(0.98);
 }
 
-/* 완료(전송) 버튼 - 인스타 스타일 원형 화살표 */
+/* 완료(전송) 버튼 - 상단바 원형 화살표 */
 .done-btn {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   border-radius: 50%;
   background: #4ECDC4;
   color: white;
