@@ -80,7 +80,6 @@
       <button
         v-if="isAuthenticated"
         class="swipe-write-btn"
-        :class="{ dark: isDarkBg }"
         @click="$emit('write')"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -93,7 +92,6 @@
       <button
         v-else
         class="swipe-write-btn"
-        :class="{ dark: isDarkBg }"
         @click="$emit('go-to-login')"
       >
         <span>로그인하고 작성하기</span>
@@ -105,7 +103,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useSwipeGesture } from '@/composables/useSwipeGesture'
-import { getCardBg, getCardBgHex } from '@/constants/guestbookColors'
+import { getCardBg } from '@/constants/guestbookColors'
 import type { GuestbookBlockData } from '@/types/blocks'
 
 interface Props {
@@ -167,20 +165,6 @@ const getBackCardStyle = (stackIndex: number) => {
     pointerEvents: 'none' as const,
   }
 }
-
-/** 현재 앞면 카드 배경이 어두운지 판별 */
-const isDarkBg = computed(() => {
-  const card = visibleCards.value[0]
-  if (!card?.color) return false
-  const hex = getCardBgHex(card.color)
-  if (!hex.startsWith('#')) return false
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  // relative luminance (sRGB)
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-  return luminance < 0.55
-})
 
 const pointerHandlers = {
   onPointerdown: swipe.onPointerDown,
@@ -443,35 +427,25 @@ const formatDate = (dateStr: string) => {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 20px;
-  background: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.65);
+  padding: 12px 28px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: none;
-  border-radius: 20px;
-  font-size: 13px;
+  border-radius: 22px;
+  font-size: 15px;
   font-weight: 600;
+  color: #ffffff;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .swipe-write-btn:active {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.98);
 }
 
 .swipe-write-btn svg {
-  opacity: 0.7;
-}
-
-.swipe-write-btn.dark {
-  background: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.swipe-write-btn.dark:active {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.swipe-write-btn.dark svg {
   opacity: 0.9;
 }
 </style>
