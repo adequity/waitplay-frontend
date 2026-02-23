@@ -1185,8 +1185,8 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  padding-top: max(8px, env(safe-area-inset-top));
+  padding: 4px 12px;
+  padding-top: max(4px, env(safe-area-inset-top));
 }
 
 .top-btn {
@@ -1223,7 +1223,7 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding: 4px 16px;
+  padding: 2px 16px;
 }
 
 .canvas-wrapper {
@@ -1275,10 +1275,10 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 /* ===== 도구바 (가로 레이아웃) ===== */
 .editor-tool-bar {
   flex-shrink: 0;
-  padding: 6px 12px;
+  padding: 4px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .tool-row {
@@ -1534,8 +1534,8 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 /* ===== BOTTOM BAR ===== */
 .editor-bottom-bar {
   flex-shrink: 0;
-  padding: 10px 16px;
-  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  padding: 6px 16px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
   justify-content: center;
