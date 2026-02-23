@@ -2273,8 +2273,10 @@ onUnmounted(() => {
 
 .feed-image-wrapper {
   width: 100%;
+  aspect-ratio: 9 / 13;
   background: #fafafa;
   position: relative;
+  overflow: hidden;
 }
 
 /* 더블탭 하트 애니메이션 */
@@ -2330,8 +2332,8 @@ onUnmounted(() => {
 
 .feed-image {
   width: 100%;
-  max-height: 500px;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
@@ -2679,14 +2681,15 @@ onUnmounted(() => {
 }
 
 .post-image-container {
-  width: 100%;
-  margin: 0 -1.5rem;
   width: calc(100% + 3rem);
+  margin: 0 -1.5rem;
+  aspect-ratio: 9 / 13;
+  overflow: hidden;
 }
 
 .post-image {
   width: 100%;
-  max-height: 400px;
+  height: 100%;
   object-fit: cover;
   display: block;
 }

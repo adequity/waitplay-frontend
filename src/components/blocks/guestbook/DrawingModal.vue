@@ -1177,7 +1177,8 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 .canvas-wrapper {
   position: relative;
   width: 100%;
-  height: 100%;
+  max-height: 100%;
+  aspect-ratio: 9 / 13;
   border-radius: 16px;
   overflow: hidden;
   background: #ffffff;

@@ -51,13 +51,9 @@
             <div v-if="card.imageUrl" class="card-image-area">
               <img :src="card.imageUrl" :alt="`${card.userName}의 방명록`" class="card-img" />
             </div>
-            <div v-if="card.message" class="card-text">{{ card.message }}</div>
-            <div class="card-footer">
+            <div v-else-if="card.message" class="card-text-only">
+              <p class="card-text">{{ card.message }}</p>
               <span class="card-author">{{ card.userName }}</span>
-              <div class="card-meta">
-                <span v-if="card.audioUrl" class="card-audio-badge" title="배경음악 있음">🎵</span>
-                <span class="card-date">{{ formatDate(card.createdAt) }}</span>
-              </div>
             </div>
           </template>
 
@@ -176,13 +172,6 @@ const resetIndex = () => {
   currentIndex.value = 0
   swipe.reset()
 }
-
-const formatDate = (dateStr: string) => {
-  const d = new Date(dateStr)
-  const month = d.getMonth() + 1
-  const day = d.getDate()
-  return `${month}.${day}`
-}
 </script>
 
 <style scoped>
@@ -214,7 +203,7 @@ const formatDate = (dateStr: string) => {
 .card-stack {
   position: relative;
   width: 280px;
-  height: 360px;
+  aspect-ratio: 9 / 13;
 }
 
 .stack-card {
@@ -252,48 +241,36 @@ const formatDate = (dateStr: string) => {
 .card-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   pointer-events: none;
 }
 
+/* 텍스트만 있는 카드 */
+.card-text-only {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
 .card-text {
-  padding: 14px 16px 8px;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
   color: #374151;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
-}
-
-.card-footer {
-  padding: 8px 16px 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin: 0 0 12px;
 }
 
 .card-author {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.5);
-}
-
-.card-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.card-audio-badge {
-  font-size: 12px;
-  line-height: 1;
-}
-
-.card-date {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.35);
+  color: rgba(0, 0, 0, 0.4);
 }
 
 /* Graffiti Card */

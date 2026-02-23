@@ -878,14 +878,16 @@ onMounted(async () => {
 
 .feed-image-wrapper {
   width: 100%;
+  aspect-ratio: 9 / 13;
   background: #fafafa;
   position: relative;
+  overflow: hidden;
 }
 
 .feed-image {
   width: 100%;
-  max-height: 500px;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
