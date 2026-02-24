@@ -67,7 +67,7 @@
             ></canvas>
 
             <!-- 스티커 레이어 -->
-            <div class="canvas-stickers-layer" v-if="editingStickers.length > 0" :style="{ pointerEvents: activeMode === 'draw' ? 'none' : undefined }">
+            <div class="canvas-stickers-layer" v-if="editingStickers.length > 0">
               <div
                 v-for="(sticker, index) in editingStickers"
                 :key="index"
@@ -76,7 +76,8 @@
                 :style="{
                   left: `${sticker.x}%`,
                   top: `${sticker.y}%`,
-                  transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`
+                  transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
+                  pointerEvents: activeMode === 'draw' ? 'none' : 'auto'
                 }"
                 @mousedown.stop="selectSticker(index, $event)"
                 @touchstart.stop.prevent="selectStickerTouch(index, $event)"
