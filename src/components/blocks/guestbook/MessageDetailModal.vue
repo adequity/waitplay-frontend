@@ -47,7 +47,18 @@
           <!-- 하단 정보 -->
           <div class="detail-footer">
             <div class="detail-info">
-              <span class="detail-author">{{ message.userName }}</span>
+              <div class="detail-author-row">
+                <img
+                  v-if="message.userProfileImage"
+                  :src="message.userProfileImage"
+                  :alt="message.userName"
+                  class="detail-profile-img"
+                />
+                <div v-else class="detail-profile-placeholder">
+                  {{ message.userName?.charAt(0) || '?' }}
+                </div>
+                <span class="detail-author">{{ message.userName }}</span>
+              </div>
               <span class="detail-date">{{ formatDate(message.createdAt) }}</span>
             </div>
             <div class="detail-actions">
@@ -286,12 +297,14 @@ const formatDate = (dateString: string): string => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 2rem;
   animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -334,7 +347,7 @@ const formatDate = (dateString: string): string => {
 
 .detail-post-it {
   background: #fff9c4;
-  border-radius: 4px;
+  border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   overflow: hidden;
   animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -358,7 +371,6 @@ const formatDate = (dateString: string): string => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
 }
 
 .detail-image {
@@ -367,7 +379,6 @@ const formatDate = (dateString: string): string => {
   width: auto;
   height: auto;
   object-fit: contain;
-  border-radius: 2px;
 }
 
 .detail-footer {
@@ -383,6 +394,33 @@ const formatDate = (dateString: string): string => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.detail-author-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-profile-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.detail-profile-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .detail-author {
