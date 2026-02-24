@@ -3,26 +3,16 @@
     displayStyle === 'portfolio' ? 'portfolio-style' : '',
     displayStyle === 'showcase' ? 'showcase-style' : ''
   ]">
-    <!-- ========== CAROUSEL 스타일 (기존) ========== -->
+    <!-- ========== CAROUSEL 스타일 (가로 스냅 캐러셀) ========== -->
     <template v-if="displayStyle === 'carousel'">
-      <!-- Game Tabs Navigation -->
-      <div class="game-tabs">
-        <button
+      <div class="games-slider" ref="gamesSliderRef">
+        <div class="slider-spacer"></div>
+        <div
           v-for="(game, index) in allowedGames"
           :key="game.type"
-          class="game-tab"
-          :class="{ active: currentGameIndex === index }"
-          @click="scrollToGame(index)"
-        >
-          {{ game.name }}
-        </button>
-      </div>
-
-      <div class="games-slider" @scroll="onSliderScroll" ref="gamesSliderRef">
-        <div
-          v-for="game in allowedGames"
-          :key="game.type"
           class="game-slide"
+          :class="{ active: currentGameIndex === index }"
+          :data-index="index"
           @click="goToGame(game.type)"
           @touchstart="handleTouchStart"
           @touchend="(e) => handleTouchEnd(e, game.type)"
@@ -57,6 +47,17 @@
             </div>
           </div>
         </div>
+        <div class="slider-spacer"></div>
+      </div>
+      <!-- Page Indicator Dots -->
+      <div class="carousel-dots">
+        <span
+          v-for="(game, index) in allowedGames"
+          :key="game.type"
+          class="carousel-dot"
+          :class="{ active: currentGameIndex === index }"
+          @click="scrollToGame(index)"
+        ></span>
       </div>
     </template>
 
@@ -186,7 +187,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, h, type FunctionalComponent, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, h, type FunctionalComponent, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import type { GamesCarouselBlockData } from '@/types/blocks'
 import gameSettingsService, { type AvailableGameDto } from '@/services/gameSettingsService'
@@ -520,6 +521,13 @@ watch(() => props.qrCodeId, async (newQrCodeId, oldQrCodeId) => {
   }
 }, { immediate: false })
 
+// allowedGames 변경 시 캐러셀 observer 재설정
+watch(() => allowedGames.value.length, () => {
+  if (displayStyle.value === 'carousel') {
+    nextTick(() => setupCarouselObserver())
+  }
+})
+
 onMounted(async () => {
   // 미리보기 모드에서는 fallback 게임 목록 사용
   if (props.isPreview) {
@@ -551,10 +559,16 @@ onMounted(async () => {
     // Fallback: 즉시 로드
     loadAllLeaderboards()
   }
+
+  // 캐러셀 스타일: IntersectionObserver 설정
+  if (displayStyle.value === 'carousel') {
+    nextTick(() => setupCarouselObserver())
+  }
 })
 
 onUnmounted(() => {
   observer?.disconnect()
+  cleanupCarouselObserver()
 })
 
 const allowedGames = computed(() => {
@@ -589,22 +603,48 @@ const allowedGames = computed(() => {
   ) as (GameData & { iconUrl?: string; backgroundImageUrl?: string | null; buttonText?: string | null })[]
 })
 
-function scrollToGame(index: number) {
+// 캐러셀 IntersectionObserver로 active 카드 감지
+let carouselObserver: IntersectionObserver | null = null
+
+function setupCarouselObserver() {
   if (!gamesSliderRef.value) return
-  const slideWidth = gamesSliderRef.value.offsetWidth
-  const scrollPosition = index * (slideWidth * 0.85 + 12)
-  gamesSliderRef.value.scrollTo({
-    left: scrollPosition,
-    behavior: 'smooth'
-  })
+  cleanupCarouselObserver()
+
+  carouselObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+          const idx = (entry.target as HTMLElement).dataset.index
+          if (idx !== undefined) {
+            currentGameIndex.value = parseInt(idx)
+          }
+        }
+      }
+    },
+    {
+      root: gamesSliderRef.value,
+      threshold: 0.6,
+      rootMargin: '0px -30% 0px -30%'
+    }
+  )
+
+  const slides = gamesSliderRef.value.querySelectorAll('.game-slide')
+  slides.forEach(slide => carouselObserver!.observe(slide))
 }
 
-function onSliderScroll() {
+function cleanupCarouselObserver() {
+  if (carouselObserver) {
+    carouselObserver.disconnect()
+    carouselObserver = null
+  }
+}
+
+function scrollToGame(index: number) {
   if (!gamesSliderRef.value) return
-  const slideWidth = gamesSliderRef.value.offsetWidth
-  const scrollLeft = gamesSliderRef.value.scrollLeft
-  const newIndex = Math.round(scrollLeft / (slideWidth * 0.85 + 12))
-  currentGameIndex.value = newIndex
+  const slides = gamesSliderRef.value.querySelectorAll('.game-slide')
+  if (slides[index]) {
+    slides[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }
 }
 
 // Portfolio 스타일용 스크롤 핸들러
@@ -694,73 +734,48 @@ function goToGame(type: string) {
 <style scoped>
 .games-carousel-block {
   /* margin은 부모 컨테이너(CustomerView)에서 block.marginTop/marginBottom으로 설정 */
-  margin-left: 30px;
-  margin-right: 30px;
+  margin-left: 0;
+  margin-right: 0;
   overflow: hidden;
-}
-
-.game-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 0 1.5rem;
-}
-
-.game-tab {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
-  background: none;
-  border: none;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.game-tab.active {
-  color: #ffffff;
-}
-
-.game-tab:hover {
-  color: rgba(255, 255, 255, 0.8);
 }
 
 .games-slider {
   display: flex;
-  overflow-x: scroll;
-  overflow-y: hidden;
+  gap: 16px;
+  overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  gap: 12px;
-  padding: 0;
-  margin: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x;
+  padding: 20px 0;
 }
 
 .games-slider::-webkit-scrollbar {
   display: none;
-  height: 0;
+}
+
+/* 첫/마지막 카드 센터 정렬용 spacer */
+.slider-spacer {
+  flex-shrink: 0;
+  width: calc(50vw - 148px); /* (280/2 + gap/2) */
 }
 
 .game-slide {
-  flex: 0 0 100%;
-  min-width: 100%;
+  flex-shrink: 0;
+  width: 280px;
   scroll-snap-align: center;
-  scroll-snap-stop: always;
-  cursor: grab;
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  transform: scale(0.85);
+  opacity: 0.6;
+  transition: transform 0.4s ease-out, opacity 0.4s ease-out;
 }
 
-.game-slide:active {
-  cursor: grabbing;
+.game-slide.active {
+  transform: scale(1);
+  opacity: 1;
 }
 
 .game-slide-content {
@@ -769,17 +784,39 @@ function goToGame(type: string) {
   border-radius: 20px;
   padding: 32px 24px;
   text-align: center;
-  transition: all 0.2s ease;
-  aspect-ratio: 6 / 9;
+  aspect-ratio: 9 / 13;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  transition: box-shadow 0.4s ease-out;
 }
 
-.game-slide:active .game-slide-content {
-  transform: scale(0.98);
-  background: rgba(255, 255, 255, 0.08);
+.game-slide.active .game-slide-content {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+}
+
+/* Carousel Dots */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.carousel-dot.active {
+  background: #ffffff;
+  width: 24px;
+  border-radius: 4px;
 }
 
 .game-icon-large {
