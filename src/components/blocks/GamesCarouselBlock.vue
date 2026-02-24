@@ -607,7 +607,11 @@ let carouselListenersAttached = false
 function setupCarouselListeners() {
   if (carouselListenersAttached) return
   const slider = gamesSliderRef.value
-  if (!slider) return
+  if (!slider) {
+    // DOM 아직 없으면 다음 틱에 재시도
+    nextTick(() => setupCarouselListeners())
+    return
+  }
   carouselListenersAttached = true
   slider.addEventListener('pointerdown', pauseAutoScroll)
   slider.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 500))
@@ -675,19 +679,25 @@ function startAutoScroll() {
   lastTimestamp = null
 
   function step(timestamp: number) {
-    if (!gamesSliderRef.value) { autoScrollRaf = null; return }
+    const slider = gamesSliderRef.value
+    // DOM 아직 없으면 다음 프레임에 재시도 (종료하지 않음)
+    if (!slider) {
+      autoScrollRaf = requestAnimationFrame(step)
+      return
+    }
     if (lastTimestamp === null) { lastTimestamp = timestamp }
 
     if (!autoScrollPaused) {
       const delta = (timestamp - lastTimestamp) / 1000
-      const slider = gamesSliderRef.value
       const maxScroll = slider.scrollWidth - slider.clientWidth
 
-      slider.scrollLeft += AUTO_SCROLL_SPEED * delta
+      if (maxScroll > 0) {
+        slider.scrollLeft += AUTO_SCROLL_SPEED * delta
 
-      // 끝에 도달하면 처음으로 되돌아가기
-      if (slider.scrollLeft >= maxScroll - 1) {
-        slider.scrollLeft = 0
+        // 끝에 도달하면 처음으로 되돌아가기
+        if (slider.scrollLeft >= maxScroll - 1) {
+          slider.scrollLeft = 0
+        }
       }
     }
 

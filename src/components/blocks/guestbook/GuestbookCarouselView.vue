@@ -166,18 +166,24 @@ function startAutoScroll() {
   lastTimestamp = null
 
   function step(timestamp: number) {
-    if (!trackRef.value) { autoScrollRaf = null; return }
+    const track = trackRef.value
+    // DOM 아직 없으면 다음 프레임에 재시도
+    if (!track) {
+      autoScrollRaf = requestAnimationFrame(step)
+      return
+    }
     if (lastTimestamp === null) { lastTimestamp = timestamp }
 
     if (!autoScrollPaused) {
       const delta = (timestamp - lastTimestamp) / 1000
-      const track = trackRef.value
       const maxScroll = track.scrollWidth - track.clientWidth
 
-      track.scrollLeft += AUTO_SCROLL_SPEED * delta
+      if (maxScroll > 0) {
+        track.scrollLeft += AUTO_SCROLL_SPEED * delta
 
-      if (track.scrollLeft >= maxScroll - 1) {
-        track.scrollLeft = 0
+        if (track.scrollLeft >= maxScroll - 1) {
+          track.scrollLeft = 0
+        }
       }
     }
 
@@ -210,7 +216,10 @@ let listenersAttached = false
 function setupAutoScrollListeners() {
   if (listenersAttached) return
   const track = trackRef.value
-  if (!track) return
+  if (!track) {
+    nextTick(() => setupAutoScrollListeners())
+    return
+  }
   listenersAttached = true
   track.addEventListener('pointerdown', pauseAutoScroll)
   track.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 500))
