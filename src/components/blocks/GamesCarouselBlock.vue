@@ -553,15 +553,32 @@ onMounted(async () => {
     loadAllLeaderboards()
   }
 
-  // 캐러셀 스타일: IntersectionObserver 설정
+  // 캐러셀 스타일: IntersectionObserver + 자동 스크롤 설정
   if (displayStyle.value === 'carousel') {
-    nextTick(() => setupCarouselObserver())
+    nextTick(() => {
+      setupCarouselObserver()
+      startAutoScroll()
+
+      // 터치/마우스 이벤트로 자동 스크롤 일시정지/재개
+      const slider = gamesSliderRef.value
+      if (slider) {
+        slider.addEventListener('pointerdown', pauseAutoScroll)
+        slider.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 2000))
+        slider.addEventListener('pointerleave', () => setTimeout(resumeAutoScroll, 2000))
+        // 수동 스크롤 시 일시정지
+        slider.addEventListener('wheel', () => {
+          pauseAutoScroll()
+          setTimeout(resumeAutoScroll, 3000)
+        }, { passive: true })
+      }
+    })
   }
 })
 
 onUnmounted(() => {
   observer?.disconnect()
   cleanupCarouselObserver()
+  stopAutoScroll()
 })
 
 const allowedGames = computed(() => {
@@ -639,12 +656,66 @@ function cleanupCarouselObserver() {
   }
 }
 
+// 자동 스크롤 (일정 속도로 우측으로 천천히 이동)
+let autoScrollRaf: number | null = null
+let autoScrollPaused = false
+let lastTimestamp: number | null = null
+const AUTO_SCROLL_SPEED = 30 // px/sec
+
+function startAutoScroll() {
+  if (autoScrollRaf !== null) return
+  lastTimestamp = null
+
+  function step(timestamp: number) {
+    if (!gamesSliderRef.value) { autoScrollRaf = null; return }
+    if (lastTimestamp === null) { lastTimestamp = timestamp }
+
+    if (!autoScrollPaused) {
+      const delta = (timestamp - lastTimestamp) / 1000
+      const slider = gamesSliderRef.value
+      const maxScroll = slider.scrollWidth - slider.clientWidth
+
+      slider.scrollLeft += AUTO_SCROLL_SPEED * delta
+
+      // 끝에 도달하면 처음으로 되돌아가기
+      if (slider.scrollLeft >= maxScroll - 1) {
+        slider.scrollLeft = 0
+      }
+    }
+
+    lastTimestamp = timestamp
+    autoScrollRaf = requestAnimationFrame(step)
+  }
+
+  autoScrollRaf = requestAnimationFrame(step)
+}
+
+function stopAutoScroll() {
+  if (autoScrollRaf !== null) {
+    cancelAnimationFrame(autoScrollRaf)
+    autoScrollRaf = null
+  }
+  lastTimestamp = null
+}
+
+function pauseAutoScroll() {
+  autoScrollPaused = true
+}
+
+function resumeAutoScroll() {
+  autoScrollPaused = false
+  lastTimestamp = null // 타임스탬프 리셋하여 점프 방지
+}
+
 function scrollToGame(index: number) {
   if (!gamesSliderRef.value) return
+  pauseAutoScroll()
   const slides = gamesSliderRef.value.querySelectorAll('.game-slide')
   if (slides[index]) {
     slides[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
   }
+  // 스크롤 완료 후 자동 스크롤 재개
+  setTimeout(() => resumeAutoScroll(), 1500)
 }
 
 // Portfolio 스타일용 스크롤 핸들러
