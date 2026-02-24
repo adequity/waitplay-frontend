@@ -445,7 +445,7 @@
       <div class="palette-header">
         <div>
           <h2 class="palette-title">방명록 액자 템플릿</h2>
-          <p class="palette-desc">방명록 에디터에 표시될 액자/프레임 PNG 템플릿을 관리합니다. 투명 영역이 그리기 영역입니다.</p>
+          <p class="palette-desc">방명록 에디터에 표시될 액자/프레임 PNG 템플릿을 관리합니다. 투명 영역이 그리기 영역입니다. (비율: 9:13)</p>
         </div>
         <button class="btn-add-color" @click="openTemplateModal()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -2424,7 +2424,7 @@ onMounted(() => {
 }
 
 .template-preview {
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 9 / 13;
   background: repeating-conic-gradient(#e5e5ea 0% 25%, white 0% 50%) 50% / 16px 16px;
   display: flex;
   align-items: center;
@@ -2552,7 +2552,7 @@ onMounted(() => {
   overflow: hidden;
   cursor: pointer;
   transition: border-color 0.2s;
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 9 / 13;
   max-height: 300px;
   background: repeating-conic-gradient(#f5f5f7 0% 25%, white 0% 50%) 50% / 16px 16px;
 }
