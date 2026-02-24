@@ -1166,6 +1166,12 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   user-select: none;
 }
 
+/* 남는 여백을 하단바 아래로 밀어냄 */
+.drawing-editor::after {
+  content: '';
+  flex: 1;
+}
+
 /* ===== 슬라이드 업 트랜지션 ===== */
 .editor-slide-enter-active {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1217,9 +1223,10 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 
 /* ===== 캔버스 영역 ===== */
 .editor-canvas-area {
-  flex: 1;
+  flex-shrink: 1;
+  flex-grow: 0;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: center;
   position: relative;
   overflow: hidden;
