@@ -67,7 +67,7 @@
             ></canvas>
 
             <!-- 스티커 레이어 -->
-            <div class="canvas-stickers-layer" v-if="editingStickers.length > 0">
+            <div class="canvas-stickers-layer" v-if="editingStickers.length > 0" :style="{ pointerEvents: activeMode === 'draw' ? 'none' : undefined }">
               <div
                 v-for="(sticker, index) in editingStickers"
                 :key="index"
