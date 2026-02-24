@@ -980,6 +980,15 @@
                   <span class="mode-label">스와이프</span>
                   <span class="mode-desc">카드를 넘겨보는 스타일</span>
                 </button>
+                <button
+                  type="button"
+                  :class="['mode-btn', { active: editForm.listStyle === 'carousel' }]"
+                  @click="editForm.listStyle = 'carousel'"
+                >
+                  <span class="mode-icon">🎠</span>
+                  <span class="mode-label">캐러셀</span>
+                  <span class="mode-desc">가로로 넘겨보는 스타일</span>
+                </button>
               </div>
             </div>
 

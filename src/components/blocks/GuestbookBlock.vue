@@ -37,6 +37,19 @@
       @go-to-login="goToLogin"
     />
 
+    <!-- 캐러셀 모드 -->
+    <GuestbookCarouselView
+      v-else-if="listStyle === 'carousel'"
+      :messages="messages"
+      :is-authenticated="isAuthenticated"
+      :qr-code-id="qrCodeId"
+      :display-mode="displayMode"
+      :data="data"
+      @open-detail="openDetailModal"
+      @write="isActionSheetOpen = true"
+      @go-to-login="goToLogin"
+    />
+
     <!-- Masonry 모드 (기본) -->
     <div v-else class="guestbook-masonry">
       <!-- 왼쪽 컬럼 -->
@@ -285,6 +298,7 @@ import DrawingModal from './guestbook/DrawingModal.vue'
 import MessageDetailModal from './guestbook/MessageDetailModal.vue'
 import ShareModal from './guestbook/ShareModal.vue'
 import GuestbookSwipeView from './guestbook/GuestbookSwipeView.vue'
+import GuestbookCarouselView from './guestbook/GuestbookCarouselView.vue'
 import { getCardBg } from '@/constants/guestbookColors'
 
 interface Props {

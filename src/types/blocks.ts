@@ -156,7 +156,7 @@ export interface GuestbookBlockData {
   backgroundImageUrl?: string // 방명록 영역 배경 이미지 URL
   backgroundOverlay?: number // 배경 밝기 조절 (-50 ~ 50, 음수: 어둡게, 양수: 밝게)
   displayMode?: 'postit' | 'graffiti' // 표시 모드: 포스트잇(기본) 또는 낙서
-  listStyle?: 'masonry' | 'swipe' // 목록 스타일: 메이슨리(기본) 또는 스와이프
+  listStyle?: 'masonry' | 'swipe' | 'carousel' // 목록 스타일: 메이슨리(기본), 스와이프, 캐러셀
   postitColor?: string // 포스트잇 배경색 (hex color, 기본값: 랜덤)
 }
 
