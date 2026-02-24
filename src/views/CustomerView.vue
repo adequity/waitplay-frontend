@@ -32,12 +32,20 @@
         <span class="footer-dot">·</span>
         <router-link to="/terms-of-service" class="footer-link" :style="{ color: pageTheme.textColor }">이용약관</router-link>
         <span class="footer-dot">·</span>
-        <button class="footer-link footer-btn" :style="{ color: pageTheme.textColor }" @click="showReportModal = true">신고하기</button>
+        <button class="footer-link footer-btn" :style="{ color: pageTheme.textColor }" @click="handleReportClick">신고하기</button>
       </div>
       <p class="footer-text" :style="{ color: pageTheme.textColor, opacity: 0.4 }">
         Powered by WaitPlay
       </p>
     </div>
+
+    <!-- 신고용 로그인 모달 -->
+    <AuthModal
+      :is-open="showReportAuthModal"
+      :qr-code-id="qrCodeId"
+      @success="handleReportAuthSuccess"
+      @close="showReportAuthModal = false"
+    />
 
     <!-- 신고 모달 -->
     <ReportModal
@@ -691,6 +699,7 @@ import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import FloatingDock from '@/components/landing/FloatingDock.vue'
 import ReportModal from '@/components/ReportModal.vue'
+import AuthModal from '@/components/AuthModal.vue'
 import { getCardBg } from '@/constants/guestbookColors'
 
 // ✅ 무거운 블록 - 비동기 로딩 (스크롤 시 로드)
@@ -739,6 +748,20 @@ const pageTheme = ref<PageTheme>({
 const qrCodeId = ref<string>('')
 const qrCode = ref<string>('')
 const showReportModal = ref(false)
+const showReportAuthModal = ref(false)
+
+function handleReportClick() {
+  if (authStore.isAuthenticated) {
+    showReportModal.value = true
+  } else {
+    showReportAuthModal.value = true
+  }
+}
+
+function handleReportAuthSuccess() {
+  showReportAuthModal.value = false
+  showReportModal.value = true
+}
 
 // Landing page info for sharing
 const landingTitle = ref<string>('')
