@@ -668,52 +668,35 @@ function cleanupCarouselObserver() {
   }
 }
 
-// 자동 스크롤 (일정 속도로 우측으로 천천히 이동)
-let autoScrollRaf: number | null = null
+// 자동 스크롤 (N초마다 다음 카드로 이동 - scroll-snap과 호환)
+let autoScrollTimer: ReturnType<typeof setInterval> | null = null
 let autoScrollPaused = false
-let lastTimestamp: number | null = null
-const AUTO_SCROLL_SPEED = 30 // px/sec
+const AUTO_SCROLL_INTERVAL = 3000 // 3초마다 다음 카드
 
 function startAutoScroll() {
-  if (autoScrollRaf !== null) return
-  lastTimestamp = null
+  if (autoScrollTimer !== null) return
 
-  function step(timestamp: number) {
+  autoScrollTimer = setInterval(() => {
+    if (autoScrollPaused) return
     const slider = gamesSliderRef.value
-    // DOM 아직 없으면 다음 프레임에 재시도 (종료하지 않음)
-    if (!slider) {
-      autoScrollRaf = requestAnimationFrame(step)
-      return
+    if (!slider) return
+
+    const totalGames = allowedGames.value.length
+    if (totalGames <= 1) return
+
+    const nextIndex = (currentGameIndex.value + 1) % totalGames
+    const slides = slider.querySelectorAll('.game-slide')
+    if (slides[nextIndex]) {
+      slides[nextIndex].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
     }
-    if (lastTimestamp === null) { lastTimestamp = timestamp }
-
-    if (!autoScrollPaused) {
-      const delta = (timestamp - lastTimestamp) / 1000
-      const maxScroll = slider.scrollWidth - slider.clientWidth
-
-      if (maxScroll > 0) {
-        slider.scrollLeft += AUTO_SCROLL_SPEED * delta
-
-        // 끝에 도달하면 처음으로 되돌아가기
-        if (slider.scrollLeft >= maxScroll - 1) {
-          slider.scrollLeft = 0
-        }
-      }
-    }
-
-    lastTimestamp = timestamp
-    autoScrollRaf = requestAnimationFrame(step)
-  }
-
-  autoScrollRaf = requestAnimationFrame(step)
+  }, AUTO_SCROLL_INTERVAL)
 }
 
 function stopAutoScroll() {
-  if (autoScrollRaf !== null) {
-    cancelAnimationFrame(autoScrollRaf)
-    autoScrollRaf = null
+  if (autoScrollTimer !== null) {
+    clearInterval(autoScrollTimer)
+    autoScrollTimer = null
   }
-  lastTimestamp = null
 }
 
 function pauseAutoScroll() {
@@ -722,7 +705,6 @@ function pauseAutoScroll() {
 
 function resumeAutoScroll() {
   autoScrollPaused = false
-  lastTimestamp = null // 타임스탬프 리셋하여 점프 방지
 }
 
 function scrollToGame(index: number) {

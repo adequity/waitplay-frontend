@@ -155,51 +155,35 @@ function cleanupObserver() {
   }
 }
 
-// 자동 스크롤
-let autoScrollRaf: number | null = null
+// 자동 스크롤 (N초마다 다음 카드로 이동 - scroll-snap과 호환)
+let autoScrollTimer: ReturnType<typeof setInterval> | null = null
 let autoScrollPaused = false
-let lastTimestamp: number | null = null
-const AUTO_SCROLL_SPEED = 30 // px/sec
+const AUTO_SCROLL_INTERVAL = 3000 // 3초마다 다음 카드
 
 function startAutoScroll() {
-  if (autoScrollRaf !== null) return
-  lastTimestamp = null
+  if (autoScrollTimer !== null) return
 
-  function step(timestamp: number) {
+  autoScrollTimer = setInterval(() => {
+    if (autoScrollPaused) return
     const track = trackRef.value
-    // DOM 아직 없으면 다음 프레임에 재시도
-    if (!track) {
-      autoScrollRaf = requestAnimationFrame(step)
-      return
+    if (!track) return
+
+    const totalMessages = props.messages.length
+    if (totalMessages <= 1) return
+
+    const nextIndex = (activeIndex.value + 1) % totalMessages
+    const cards = track.querySelectorAll('.carousel-card')
+    if (cards[nextIndex]) {
+      cards[nextIndex].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
     }
-    if (lastTimestamp === null) { lastTimestamp = timestamp }
-
-    if (!autoScrollPaused) {
-      const delta = (timestamp - lastTimestamp) / 1000
-      const maxScroll = track.scrollWidth - track.clientWidth
-
-      if (maxScroll > 0) {
-        track.scrollLeft += AUTO_SCROLL_SPEED * delta
-
-        if (track.scrollLeft >= maxScroll - 1) {
-          track.scrollLeft = 0
-        }
-      }
-    }
-
-    lastTimestamp = timestamp
-    autoScrollRaf = requestAnimationFrame(step)
-  }
-
-  autoScrollRaf = requestAnimationFrame(step)
+  }, AUTO_SCROLL_INTERVAL)
 }
 
 function stopAutoScroll() {
-  if (autoScrollRaf !== null) {
-    cancelAnimationFrame(autoScrollRaf)
-    autoScrollRaf = null
+  if (autoScrollTimer !== null) {
+    clearInterval(autoScrollTimer)
+    autoScrollTimer = null
   }
-  lastTimestamp = null
 }
 
 function pauseAutoScroll() {
@@ -208,7 +192,6 @@ function pauseAutoScroll() {
 
 function resumeAutoScroll() {
   autoScrollPaused = false
-  lastTimestamp = null
 }
 
 let listenersAttached = false
