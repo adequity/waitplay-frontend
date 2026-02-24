@@ -563,12 +563,12 @@ onMounted(async () => {
       const slider = gamesSliderRef.value
       if (slider) {
         slider.addEventListener('pointerdown', pauseAutoScroll)
-        slider.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 2000))
-        slider.addEventListener('pointerleave', () => setTimeout(resumeAutoScroll, 2000))
+        slider.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 500))
+        slider.addEventListener('pointerleave', () => setTimeout(resumeAutoScroll, 500))
         // 수동 스크롤 시 일시정지
         slider.addEventListener('wheel', () => {
           pauseAutoScroll()
-          setTimeout(resumeAutoScroll, 3000)
+          setTimeout(resumeAutoScroll, 500)
         }, { passive: true })
       }
     })
@@ -715,7 +715,7 @@ function scrollToGame(index: number) {
     slides[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
   }
   // 스크롤 완료 후 자동 스크롤 재개
-  setTimeout(() => resumeAutoScroll(), 1500)
+  setTimeout(() => resumeAutoScroll(), 500)
 }
 
 // Portfolio 스타일용 스크롤 핸들러
