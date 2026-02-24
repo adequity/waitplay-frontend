@@ -205,22 +205,28 @@ function resumeAutoScroll() {
   lastTimestamp = null
 }
 
+let listenersAttached = false
+
+function setupAutoScrollListeners() {
+  if (listenersAttached) return
+  const track = trackRef.value
+  if (!track) return
+  listenersAttached = true
+  track.addEventListener('pointerdown', pauseAutoScroll)
+  track.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 500))
+  track.addEventListener('pointerleave', () => setTimeout(resumeAutoScroll, 500))
+  track.addEventListener('wheel', () => {
+    pauseAutoScroll()
+    setTimeout(resumeAutoScroll, 500)
+  }, { passive: true })
+}
+
 onMounted(() => {
   nextTick(() => {
     setupObserver()
     if (props.messages.length > 0) {
       startAutoScroll()
-
-      const track = trackRef.value
-      if (track) {
-        track.addEventListener('pointerdown', pauseAutoScroll)
-        track.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 500))
-        track.addEventListener('pointerleave', () => setTimeout(resumeAutoScroll, 500))
-        track.addEventListener('wheel', () => {
-          pauseAutoScroll()
-          setTimeout(resumeAutoScroll, 500)
-        }, { passive: true })
-      }
+      setupAutoScrollListeners()
     }
   })
 })
@@ -233,7 +239,10 @@ onBeforeUnmount(() => {
 watch(() => props.messages.length, () => {
   nextTick(() => {
     setupObserver()
-    if (props.messages.length > 0) startAutoScroll()
+    if (props.messages.length > 0) {
+      startAutoScroll()
+      setupAutoScrollListeners()
+    }
   })
 })
 </script>
