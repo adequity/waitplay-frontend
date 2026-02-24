@@ -1219,7 +1219,7 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 .editor-canvas-area {
   flex: 1;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: center;
   position: relative;
   overflow: hidden;
