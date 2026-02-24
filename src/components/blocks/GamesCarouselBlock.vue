@@ -687,7 +687,9 @@ function startAutoScroll() {
     const nextIndex = (currentGameIndex.value + 1) % totalGames
     const slides = slider.querySelectorAll('.game-slide')
     if (slides[nextIndex]) {
-      slides[nextIndex].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+      const slide = slides[nextIndex] as HTMLElement
+      const scrollLeft = slide.offsetLeft - (slider.offsetWidth - slide.offsetWidth) / 2
+      slider.scrollTo({ left: scrollLeft, behavior: 'smooth' })
     }
   }, AUTO_SCROLL_INTERVAL)
 }
@@ -712,7 +714,10 @@ function scrollToGame(index: number) {
   pauseAutoScroll()
   const slides = gamesSliderRef.value.querySelectorAll('.game-slide')
   if (slides[index]) {
-    slides[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    const slide = slides[index] as HTMLElement
+    const slider = gamesSliderRef.value
+    const scrollLeft = slide.offsetLeft - (slider.offsetWidth - slide.offsetWidth) / 2
+    slider.scrollTo({ left: scrollLeft, behavior: 'smooth' })
   }
   // 스크롤 완료 후 자동 스크롤 재개
   setTimeout(() => resumeAutoScroll(), 500)

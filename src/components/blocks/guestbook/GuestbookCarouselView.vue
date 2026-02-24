@@ -174,7 +174,9 @@ function startAutoScroll() {
     const nextIndex = (activeIndex.value + 1) % totalMessages
     const cards = track.querySelectorAll('.carousel-card')
     if (cards[nextIndex]) {
-      cards[nextIndex].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+      const card = cards[nextIndex] as HTMLElement
+      const scrollLeft = card.offsetLeft - (track.offsetWidth - card.offsetWidth) / 2
+      track.scrollTo({ left: scrollLeft, behavior: 'smooth' })
     }
   }, AUTO_SCROLL_INTERVAL)
 }
