@@ -521,13 +521,6 @@ watch(() => props.qrCodeId, async (newQrCodeId, oldQrCodeId) => {
   }
 }, { immediate: false })
 
-// allowedGames 변경 시 캐러셀 observer 재설정
-watch(() => allowedGames.value.length, () => {
-  if (displayStyle.value === 'carousel') {
-    nextTick(() => setupCarouselObserver())
-  }
-})
-
 onMounted(async () => {
   // 미리보기 모드에서는 fallback 게임 목록 사용
   if (props.isPreview) {
@@ -601,6 +594,13 @@ const allowedGames = computed(() => {
   return orderedGames.filter(game =>
     props.data.enabledGames.includes(game!.type)
   ) as (GameData & { iconUrl?: string; backgroundImageUrl?: string | null; buttonText?: string | null })[]
+})
+
+// allowedGames 변경 시 캐러셀 observer 재설정
+watch(() => allowedGames.value.length, () => {
+  if (displayStyle.value === 'carousel') {
+    nextTick(() => setupCarouselObserver())
+  }
 })
 
 // 캐러셀 IntersectionObserver로 active 카드 감지
