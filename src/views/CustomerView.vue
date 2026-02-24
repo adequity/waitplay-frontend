@@ -27,10 +27,24 @@
 
     <!-- Footer -->
     <div class="footer">
+      <div class="footer-links" :style="{ color: pageTheme.textColor }">
+        <router-link to="/privacy-policy" class="footer-link" :style="{ color: pageTheme.textColor }">개인정보처리방침</router-link>
+        <span class="footer-dot">·</span>
+        <router-link to="/terms-of-service" class="footer-link" :style="{ color: pageTheme.textColor }">이용약관</router-link>
+        <span class="footer-dot">·</span>
+        <button class="footer-link footer-btn" :style="{ color: pageTheme.textColor }" @click="showReportModal = true">신고하기</button>
+      </div>
       <p class="footer-text" :style="{ color: pageTheme.textColor, opacity: 0.4 }">
         Powered by WaitPlay
       </p>
     </div>
+
+    <!-- 신고 모달 -->
+    <ReportModal
+      :is-open="showReportModal"
+      :qr-code-id="qrCodeId"
+      @close="showReportModal = false"
+    />
 
     <!-- Floating Dock (글래스모피즘 독) -->
     <FloatingDock
@@ -676,6 +690,7 @@ import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import FloatingDock from '@/components/landing/FloatingDock.vue'
+import ReportModal from '@/components/ReportModal.vue'
 import { getCardBg } from '@/constants/guestbookColors'
 
 // ✅ 무거운 블록 - 비동기 로딩 (스크롤 시 로드)
@@ -723,6 +738,7 @@ const pageTheme = ref<PageTheme>({
 // QR Code ID & Code
 const qrCodeId = ref<string>('')
 const qrCode = ref<string>('')
+const showReportModal = ref(false)
 
 // Landing page info for sharing
 const landingTitle = ref<string>('')
@@ -1440,9 +1456,42 @@ onUnmounted(() => {
 
 /* Footer */
 .footer {
-  padding: 2rem 1.5rem;
+  padding: 2rem 1.5rem 2.5rem;
   text-align: center;
   background: transparent;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+  opacity: 0.35;
+}
+
+.footer-link {
+  font-size: 11px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.footer-link:hover {
+  opacity: 0.7;
+}
+
+.footer-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.footer-dot {
+  font-size: 11px;
+  opacity: 0.5;
 }
 
 .footer-text {
