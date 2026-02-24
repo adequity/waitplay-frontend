@@ -1191,7 +1191,7 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
+  padding: 4px 12px 6px;
   padding-top: max(4px, env(safe-area-inset-top));
 }
 
@@ -1230,7 +1230,7 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding: 2px 16px;
+  padding: 6px 16px;
 }
 
 .canvas-wrapper {
@@ -1282,9 +1282,10 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
 /* ===== 도구바 (가로 레이아웃) ===== */
 .editor-tool-bar {
   flex-shrink: 0;
-  padding: 4px 12px;
+  padding: 6px 12px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 6px;
 }
 
@@ -1547,6 +1548,7 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
   align-items: center;
   justify-content: center;
   gap: 12px;
+  align-self: center;
 }
 
 .bottom-sticker-tools {
