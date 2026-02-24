@@ -155,16 +155,86 @@ function cleanupObserver() {
   }
 }
 
+// 자동 스크롤
+let autoScrollRaf: number | null = null
+let autoScrollPaused = false
+let lastTimestamp: number | null = null
+const AUTO_SCROLL_SPEED = 30 // px/sec
+
+function startAutoScroll() {
+  if (autoScrollRaf !== null) return
+  lastTimestamp = null
+
+  function step(timestamp: number) {
+    if (!trackRef.value) { autoScrollRaf = null; return }
+    if (lastTimestamp === null) { lastTimestamp = timestamp }
+
+    if (!autoScrollPaused) {
+      const delta = (timestamp - lastTimestamp) / 1000
+      const track = trackRef.value
+      const maxScroll = track.scrollWidth - track.clientWidth
+
+      track.scrollLeft += AUTO_SCROLL_SPEED * delta
+
+      if (track.scrollLeft >= maxScroll - 1) {
+        track.scrollLeft = 0
+      }
+    }
+
+    lastTimestamp = timestamp
+    autoScrollRaf = requestAnimationFrame(step)
+  }
+
+  autoScrollRaf = requestAnimationFrame(step)
+}
+
+function stopAutoScroll() {
+  if (autoScrollRaf !== null) {
+    cancelAnimationFrame(autoScrollRaf)
+    autoScrollRaf = null
+  }
+  lastTimestamp = null
+}
+
+function pauseAutoScroll() {
+  autoScrollPaused = true
+}
+
+function resumeAutoScroll() {
+  autoScrollPaused = false
+  lastTimestamp = null
+}
+
 onMounted(() => {
-  nextTick(() => setupObserver())
+  nextTick(() => {
+    setupObserver()
+    if (props.messages.length > 0) {
+      startAutoScroll()
+
+      const track = trackRef.value
+      if (track) {
+        track.addEventListener('pointerdown', pauseAutoScroll)
+        track.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 500))
+        track.addEventListener('pointerleave', () => setTimeout(resumeAutoScroll, 500))
+        track.addEventListener('wheel', () => {
+          pauseAutoScroll()
+          setTimeout(resumeAutoScroll, 500)
+        }, { passive: true })
+      }
+    }
+  })
 })
 
 onBeforeUnmount(() => {
   cleanupObserver()
+  stopAutoScroll()
 })
 
 watch(() => props.messages.length, () => {
-  nextTick(() => setupObserver())
+  nextTick(() => {
+    setupObserver()
+    if (props.messages.length > 0) startAutoScroll()
+  })
 })
 </script>
 
