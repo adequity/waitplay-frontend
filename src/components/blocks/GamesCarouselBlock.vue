@@ -558,19 +558,7 @@ onMounted(async () => {
     nextTick(() => {
       setupCarouselObserver()
       startAutoScroll()
-
-      // 터치/마우스 이벤트로 자동 스크롤 일시정지/재개
-      const slider = gamesSliderRef.value
-      if (slider) {
-        slider.addEventListener('pointerdown', pauseAutoScroll)
-        slider.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 500))
-        slider.addEventListener('pointerleave', () => setTimeout(resumeAutoScroll, 500))
-        // 수동 스크롤 시 일시정지
-        slider.addEventListener('wheel', () => {
-          pauseAutoScroll()
-          setTimeout(resumeAutoScroll, 500)
-        }, { passive: true })
-      }
+      setupCarouselListeners()
     })
   }
 })
@@ -613,10 +601,30 @@ const allowedGames = computed(() => {
   ) as (GameData & { iconUrl?: string; backgroundImageUrl?: string | null; buttonText?: string | null })[]
 })
 
-// allowedGames 변경 시 캐러셀 observer 재설정
+// allowedGames 변경 시 캐러셀 observer + 자동 스크롤 재설정
+let carouselListenersAttached = false
+
+function setupCarouselListeners() {
+  if (carouselListenersAttached) return
+  const slider = gamesSliderRef.value
+  if (!slider) return
+  carouselListenersAttached = true
+  slider.addEventListener('pointerdown', pauseAutoScroll)
+  slider.addEventListener('pointerup', () => setTimeout(resumeAutoScroll, 500))
+  slider.addEventListener('pointerleave', () => setTimeout(resumeAutoScroll, 500))
+  slider.addEventListener('wheel', () => {
+    pauseAutoScroll()
+    setTimeout(resumeAutoScroll, 500)
+  }, { passive: true })
+}
+
 watch(() => allowedGames.value.length, () => {
   if (displayStyle.value === 'carousel') {
-    nextTick(() => setupCarouselObserver())
+    nextTick(() => {
+      setupCarouselObserver()
+      startAutoScroll()
+      setupCarouselListeners()
+    })
   }
 })
 
