@@ -11,12 +11,18 @@ const apiClient: AxiosInstance = axios.create({
   }
 })
 
+// Auth endpoints that should NOT include Authorization header
+const noAuthPaths = ['/auth/standard-login', '/auth/login', '/auth/signup', '/auth/refresh']
+
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const authStore = useAuthStore()
-    if (authStore.accessToken) {
-      config.headers.Authorization = `Bearer ${authStore.accessToken}`
+    const isNoAuth = noAuthPaths.some(path => config.url?.includes(path))
+    if (!isNoAuth) {
+      const authStore = useAuthStore()
+      if (authStore.accessToken) {
+        config.headers.Authorization = `Bearer ${authStore.accessToken}`
+      }
     }
     return config
   },
@@ -36,7 +42,10 @@ apiClient.interceptors.response.use(
 
     // Skip refresh logic for auth endpoints to prevent infinite loops
     const isAuthEndpoint = originalRequest?.url?.includes('/auth/refresh') ||
-                           originalRequest?.url?.includes('/auth/me')
+                           originalRequest?.url?.includes('/auth/me') ||
+                           originalRequest?.url?.includes('/auth/standard-login') ||
+                           originalRequest?.url?.includes('/auth/login') ||
+                           originalRequest?.url?.includes('/auth/signup')
 
     // If 401 on auth endpoint, logout and only redirect if on protected page
     if (error.response?.status === 401 && isAuthEndpoint) {
