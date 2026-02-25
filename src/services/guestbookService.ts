@@ -153,6 +153,22 @@ export interface StoreGuestbookResponse {
   messages: StoreGuestbookMessage[]
 }
 
+export interface UserPublicProfile {
+  id: string
+  nickname: string
+  profileImage?: string
+  createdAt: string
+  totalMessages: number
+}
+
+export interface UserMessagesResponse {
+  messages: MyGuestbookMessageResponse[]
+  totalCount: number
+  page: number
+  pageSize: number
+  hasMore: boolean
+}
+
 export interface FeedGuestbookMessage {
   id: string
   userId: string
@@ -438,6 +454,22 @@ class GuestbookService {
    * Get my reported messages (Admin only)
    * @param status - 필터링할 상태 (pending, approved, rejected)
    */
+  /**
+   * Get a user's public profile
+   */
+  async getUserProfile(userId: string): Promise<UserPublicProfile> {
+    const response = await apiClient.get<UserPublicProfile>(`/api/guestbook/user/${userId}/profile`)
+    return response.data
+  }
+
+  /**
+   * Get all guestbook messages created by a specific user
+   */
+  async getUserMessages(userId: string, page: number = 1, pageSize: number = 20): Promise<UserMessagesResponse> {
+    const response = await apiClient.get<UserMessagesResponse>(`/api/guestbook/user/${userId}/messages?page=${page}&pageSize=${pageSize}`)
+    return response.data
+  }
+
   async getMyReports(status?: string): Promise<{ total: number; reports: any[] }> {
     const params = status ? `?status=${status}` : ''
     const response = await apiClient.get<{ total: number; reports: any[] }>(`/api/guestbook/my-reports${params}`)

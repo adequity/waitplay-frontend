@@ -67,6 +67,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/GuestbookFullView.vue')
   },
   {
+    path: '/user/:userId',
+    name: 'user-feed',
+    component: () => import('../views/UserFeedView.vue')
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('../views/LoginView.vue')

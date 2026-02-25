@@ -47,7 +47,7 @@
           <!-- 하단 정보 -->
           <div class="detail-footer">
             <div class="detail-info">
-              <div class="detail-author-row">
+              <div class="detail-author-row" @click="goToUserFeed" role="button" tabindex="0">
                 <img
                   v-if="message.userProfileImage"
                   :src="message.userProfileImage"
@@ -110,6 +110,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import guestbookService from '@/services/guestbookService'
 
 interface Props {
@@ -117,6 +118,7 @@ interface Props {
   message: any | null
 }
 
+const router = useRouter()
 const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'close'): void
@@ -272,6 +274,13 @@ const onShare = () => {
   }
 }
 
+const goToUserFeed = () => {
+  if (props.message?.userId) {
+    emit('close')
+    router.push({ name: 'user-feed', params: { userId: props.message.userId } })
+  }
+}
+
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   const now = new Date()
@@ -400,6 +409,14 @@ const formatDate = (dateString: string): string => {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 8px 4px 4px;
+  margin: -4px -8px -4px -4px;
+  transition: background 0.2s;
+}
+.detail-author-row:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .detail-profile-img {
