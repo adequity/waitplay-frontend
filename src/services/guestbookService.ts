@@ -153,12 +153,21 @@ export interface StoreGuestbookResponse {
   messages: StoreGuestbookMessage[]
 }
 
+export interface UserFollowedStoreInfo {
+  adminId: string
+  storeName: string
+  storeProfileImage?: string
+  qrCode: string
+  followerCount: number
+}
+
 export interface UserPublicProfile {
   id: string
   nickname: string
   profileImage?: string
-  createdAt: string
   totalMessages: number
+  followerCount: number
+  followedStores: UserFollowedStoreInfo[]
 }
 
 export interface UserMessagesResponse {

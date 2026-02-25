@@ -55,8 +55,12 @@
               <span class="stat-label">게시물</span>
             </div>
             <div class="stat-item">
-              <span class="stat-value">{{ formatJoinDate(profile.createdAt) }}</span>
-              <span class="stat-label">가입</span>
+              <span class="stat-value">{{ profile.followerCount }}</span>
+              <span class="stat-label">팔로워</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ profile.followedStores.length }}</span>
+              <span class="stat-label">팔로잉</span>
             </div>
           </div>
         </div>
@@ -66,9 +70,9 @@
           <h2 class="store-name">{{ profile.nickname }}</h2>
         </div>
 
-        <!-- 탭 메뉴 (게시물 탭만) -->
+        <!-- 탭 메뉴 -->
         <div class="profile-tabs">
-          <button class="tab-btn active">
+          <button class="tab-btn" :class="{ active: activeTab === 'posts' }" @click="activeTab = 'posts'">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/>
               <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/>
@@ -76,12 +80,64 @@
               <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/>
             </svg>
           </button>
+          <button class="tab-btn" :class="{ active: activeTab === 'stores' }" @click="activeTab = 'stores'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
 
       <!-- 탭 컨텐츠 -->
       <div class="tab-content">
-        <div class="feed-tab">
+        <!-- 팔로잉 매장 탭 -->
+        <div v-if="activeTab === 'stores'" class="stores-tab">
+          <div v-if="profile.followedStores.length === 0" class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+            <p class="empty-title">팔로우한 매장이 없어요</p>
+            <p class="empty-subtitle">팔로우한 매장이 여기에 표시됩니다</p>
+          </div>
+
+          <div v-else class="stores-list">
+            <div
+              v-for="store in profile.followedStores"
+              :key="store.adminId"
+              class="store-item"
+              @click="goToStore(store.qrCode)"
+            >
+              <div class="store-item-avatar">
+                <div class="avatar-gradient-ring-small">
+                  <div class="avatar-inner-small">
+                    <img
+                      v-if="store.storeProfileImage"
+                      :src="store.storeProfileImage"
+                      :alt="store.storeName"
+                      class="avatar-img-small"
+                    />
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2"/>
+                      <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="store-item-info">
+                <p class="store-item-name">{{ store.storeName }}</p>
+                <p class="store-item-followers">팔로워 {{ store.followerCount }}명</p>
+              </div>
+              <svg class="store-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8e8e8e" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- 게시물 탭 -->
+        <div v-else class="feed-tab">
           <div v-if="isLoadingMessages" class="loading-state">
             <div class="spinner"></div>
             <span>방명록을 불러오는 중...</span>
@@ -206,7 +262,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import guestbookService from '@/services/guestbookService'
-import type { UserPublicProfile, MyGuestbookMessageResponse } from '@/services/guestbookService'
+import type { UserPublicProfile, MyGuestbookMessageResponse, UserFollowedStoreInfo } from '@/services/guestbookService'
 import { getCardBg } from '@/constants/guestbookColors'
 import MessageDetailModal from '@/components/blocks/guestbook/MessageDetailModal.vue'
 
@@ -224,6 +280,7 @@ const error = ref<string | null>(null)
 const currentPage = ref(1)
 const hasMore = ref(false)
 
+const activeTab = ref<'posts' | 'stores'>('posts')
 const showDetail = ref(false)
 const selectedMessage = ref<any>(null)
 const likingMessageId = ref<string | null>(null)
@@ -310,17 +367,18 @@ function onLikeToggled(payload: { id: string; isLiked: boolean; likeCount: numbe
 
 function onShare() {}
 
+function goToStore(qrCode: string) {
+  if (qrCode) {
+    router.push({ name: 'guestbook', query: { qr: qrCode } })
+  }
+}
+
 function goBack() {
   if (window.history.length > 1) {
     router.back()
   } else {
     router.push('/')
   }
-}
-
-function formatJoinDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short' })
 }
 
 const formatRelativeDate = (dateString: string): string => {
@@ -758,5 +816,61 @@ const formatRelativeDate = (dateString: string): string => {
   border-top-color: #262626;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+/* 매장 리스트 */
+.stores-tab {
+  background: white;
+}
+
+.stores-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.store-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.store-item:hover {
+  background: #fafafa;
+}
+
+.store-item:not(:last-child) {
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.store-item-avatar {
+  flex-shrink: 0;
+}
+
+.store-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.store-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.store-item-followers {
+  font-size: 12px;
+  color: #8e8e8e;
+  margin: 2px 0 0;
+}
+
+.store-item-arrow {
+  flex-shrink: 0;
 }
 </style>
