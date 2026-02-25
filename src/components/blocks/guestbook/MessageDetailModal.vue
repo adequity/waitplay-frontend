@@ -275,9 +275,10 @@ const onShare = () => {
 }
 
 const goToUserFeed = () => {
-  if (props.message?.userId) {
+  const code = props.message?.userProfileCode || props.message?.userId
+  if (code) {
     emit('close')
-    router.push({ name: 'user-feed', params: { userId: props.message.userId } })
+    router.push({ name: 'user-feed', params: { code } })
   }
 }
 

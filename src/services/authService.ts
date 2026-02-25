@@ -41,6 +41,7 @@ export interface UserProfile {
   id: string
   nickname: string
   profileImage?: string
+  profileCode?: string
   kakaoId?: string
   naverId?: string
   company?: string

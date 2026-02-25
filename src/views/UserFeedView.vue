@@ -286,7 +286,7 @@ const showDetail = ref(false)
 const selectedMessage = ref<any>(null)
 const likingMessageId = ref<string | null>(null)
 
-const userId = route.params.userId as string
+const userCode = route.params.code as string
 
 onMounted(async () => {
   await loadProfile()
@@ -299,7 +299,7 @@ async function loadProfile() {
   isLoadingProfile.value = true
   error.value = null
   try {
-    profile.value = await guestbookService.getUserProfile(userId)
+    profile.value = await guestbookService.getUserProfile(userCode)
   } catch {
     error.value = '사용자를 찾을 수 없습니다'
   } finally {
@@ -310,7 +310,7 @@ async function loadProfile() {
 async function loadMessages() {
   isLoadingMessages.value = true
   try {
-    const res = await guestbookService.getUserMessages(userId, currentPage.value)
+    const res = await guestbookService.getUserMessages(userCode, currentPage.value)
     messages.value.push(...res.messages)
     hasMore.value = res.hasMore
   } catch {
@@ -328,9 +328,10 @@ async function loadMore() {
 function openDetail(msg: MyGuestbookMessageResponse) {
   selectedMessage.value = {
     ...msg,
-    userId: userId,
+    userId: profile.value?.id || '',
     userName: profile.value?.nickname || '',
-    userProfileImage: profile.value?.profileImage
+    userProfileImage: profile.value?.profileImage,
+    userProfileCode: profile.value?.profileCode
   }
   showDetail.value = true
 }

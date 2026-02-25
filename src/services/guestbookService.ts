@@ -12,6 +12,7 @@ export interface GuestbookMessageResponse {
   id: string
   userId: string
   userName: string
+  userProfileCode?: string
   message?: string
   imageUrl?: string
   audioUrl?: string
@@ -165,6 +166,7 @@ export interface UserPublicProfile {
   id: string
   nickname: string
   profileImage?: string
+  profileCode?: string
   totalMessages: number
   followerCount: number
   followedStores: UserFollowedStoreInfo[]
@@ -183,6 +185,7 @@ export interface FeedGuestbookMessage {
   userId: string
   userName: string
   userProfileImage?: string
+  userProfileCode?: string
   message?: string
   imageUrl?: string
   rotation: number
