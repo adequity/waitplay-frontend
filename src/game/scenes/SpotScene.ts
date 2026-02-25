@@ -8,6 +8,7 @@
 import * as Phaser from 'phaser';
 import { gameManager } from '../GameManager';
 import { getSpotDifferenceByQrCode, type SpotDifferenceGame, type DifferencePoint } from '../../services/spotDifferenceService';
+import { DPR } from '../config';
 
 interface FoundDifference {
   point: DifferencePoint;
@@ -192,19 +193,22 @@ export class SpotScene extends Phaser.Scene {
       fontSize: '48px',
       color: '#ef4444',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
 
     this.add.text(W / 2, H / 2 + 20, '등록된 틀린그림찾기가 없습니다', {
       fontSize: '20px',
       color: '#1f2937',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
 
     this.add.text(W / 2, H / 2 + 55, '관리자에게 문의해주세요', {
       fontSize: '15px',
       color: '#6b7280',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
   }
 
@@ -282,7 +286,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.05) + 'px',
       color: '#1f2937',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(title);
 
@@ -295,7 +300,8 @@ export class SpotScene extends Phaser.Scene {
     const subtitle = this.add.text(W * 0.5, subtitleY, '틀린 그림 찾기', {
       fontSize: Math.floor(H * 0.024) + 'px',
       color: '#6b7280',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(subtitle);
 
@@ -332,7 +338,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.016) + 'px',
       color: '#94a3b8',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(this.children.list[this.children.list.length - 1] as Phaser.GameObjects.Text);
 
@@ -340,7 +347,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.028) + 'px',
       color: '#1f2937',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(diffText);
 
@@ -349,7 +357,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.016) + 'px',
       color: '#94a3b8',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(this.children.list[this.children.list.length - 1] as Phaser.GameObjects.Text);
 
@@ -358,7 +367,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.028) + 'px',
       color: '#1f2937',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(timeValText);
 
@@ -367,7 +377,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.016) + 'px',
       color: '#94a3b8',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(this.children.list[this.children.list.length - 1] as Phaser.GameObjects.Text);
 
@@ -375,7 +386,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.028) + 'px',
       color: '#1f2937',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(hintValText);
 
@@ -418,7 +430,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.036) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      resolution: DPR
     }).setOrigin(0.5);
     btnContainer.add(startButtonText);
 
@@ -464,7 +477,8 @@ export class SpotScene extends Phaser.Scene {
     const hintText = this.add.text(W * 0.5, H * 0.95, '최고 기록에 도전하세요!', {
       fontSize: Math.floor(H * 0.02) + 'px',
       color: '#9ca3af',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(hintText);
 
@@ -531,7 +545,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.016) + 'px',
       color: '#94a3b8',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     panelContainer.add(foundLabel);
 
@@ -539,7 +554,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.032) + 'px',
       color: '#6366f1', // indigo-500
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     panelContainer.add(this.foundText);
 
@@ -550,7 +566,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.016) + 'px',
       color: '#94a3b8',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     panelContainer.add(timeLabel);
 
@@ -559,7 +576,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.032) + 'px',
       color: this.timeLimit > 0 ? '#ef4444' : '#8b5cf6',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     panelContainer.add(this.timeText);
 
@@ -570,7 +588,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.016) + 'px',
       color: '#94a3b8',
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     panelContainer.add(hintLabel);
 
@@ -588,7 +607,8 @@ export class SpotScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.028) + 'px',
       color: '#f59e0b', // amber-500
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     panelContainer.add(this.hintsText);
 
@@ -746,7 +766,8 @@ export class SpotScene extends Phaser.Scene {
       const successText = this.add.text(modX, modY - 30, '✓', {
         fontSize: '24px',
         color: '#10b981',
-        fontStyle: 'bold'
+        fontStyle: 'bold',
+        resolution: DPR
       }).setOrigin(0.5);
 
       this.tweens.add({
@@ -777,7 +798,8 @@ export class SpotScene extends Phaser.Scene {
     const miss = this.add.text(x, y, '✗', {
       fontSize: '24px',
       color: '#ef4444',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      resolution: DPR
     }).setOrigin(0.5);
 
     this.tweens.add({

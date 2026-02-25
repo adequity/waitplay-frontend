@@ -9,6 +9,7 @@ import * as Phaser from 'phaser';
 import { submitGameScore } from '../../services/gameScoreService';
 import { gameManager } from '../GameManager';
 import { getMatchGameAssets, type GameAsset } from '../../services/gameAssetService';
+import { DPR } from '../config';
 
 interface Card {
   container: Phaser.GameObjects.Container;
@@ -310,7 +311,8 @@ export class MatchScene extends Phaser.Scene {
       fontSize: Math.floor(movesCardSize * 0.45) + 'px',
       color: '#f97316', // orange-500
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.movesCard.add(this.movesText);
 
@@ -318,7 +320,8 @@ export class MatchScene extends Phaser.Scene {
     const movesLabel = this.add.text(0, movesCardSize * 0.28, 'moves', {
       fontSize: Math.floor(movesCardSize * 0.18) + 'px',
       color: '#9ca3af', // gray-400
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.movesCard.add(movesLabel);
 
@@ -348,7 +351,8 @@ export class MatchScene extends Phaser.Scene {
       fontSize: Math.floor(timeCircleSize * 0.28) + 'px',
       color: '#10b981', // emerald-500
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     timeContainer.add(this.timeText);
 
@@ -374,7 +378,8 @@ export class MatchScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.022) + 'px',
       color: '#ec4899', // pink-500
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
 
     // ==================== 콤보 텍스트 ====================
@@ -382,7 +387,8 @@ export class MatchScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.04) + 'px',
       color: '#f43f5e', // rose-500
       fontStyle: 'bold',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5).setAlpha(0);
   }
 
@@ -459,7 +465,8 @@ export class MatchScene extends Phaser.Scene {
 
     floatingIcons.forEach((icon, i) => {
       const floatIcon = this.add.text(icon.x, icon.y, icon.emoji, {
-        fontSize: Math.floor(H * icon.size) + 'px'
+        fontSize: Math.floor(H * icon.size) + 'px',
+        resolution: DPR
       }).setOrigin(0.5);
       this.titleElements.push(floatIcon);
 
@@ -490,7 +497,8 @@ export class MatchScene extends Phaser.Scene {
       this.titleElements.push(leftCard);
 
       const leftCardIcon = this.add.text(W * 0.5 - logoRadius * 0.7, logoY + 8, '🍰', {
-        fontSize: Math.floor(H * 0.035) + 'px'
+        fontSize: Math.floor(H * 0.035) + 'px',
+        resolution: DPR
       }).setOrigin(0.5).setAlpha(0.5).setAngle(-12);
       this.titleElements.push(leftCardIcon);
 
@@ -501,7 +509,8 @@ export class MatchScene extends Phaser.Scene {
       this.titleElements.push(rightCard);
 
       const rightCardIcon = this.add.text(W * 0.5 + logoRadius * 0.7, logoY + 8, '🍩', {
-        fontSize: Math.floor(H * 0.035) + 'px'
+        fontSize: Math.floor(H * 0.035) + 'px',
+        resolution: DPR
       }).setOrigin(0.5).setAlpha(0.5).setAngle(12);
       this.titleElements.push(rightCardIcon);
 
@@ -528,7 +537,8 @@ export class MatchScene extends Phaser.Scene {
 
       // 반짝임 효과
       const sparkle = this.add.text(W * 0.5 + logoRadius * 0.6, logoY - logoRadius * 0.5, '✨', {
-        fontSize: Math.floor(H * 0.03) + 'px'
+        fontSize: Math.floor(H * 0.03) + 'px',
+        resolution: DPR
       }).setOrigin(0.5);
       this.titleElements.push(sparkle);
 
@@ -573,7 +583,8 @@ export class MatchScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.05) + 'px',
       color: '#1f2937',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(title);
 
@@ -587,7 +598,8 @@ export class MatchScene extends Phaser.Scene {
     const subtitle = this.add.text(W * 0.5, subtitleY, '같은 그림 찾기', {
       fontSize: Math.floor(H * 0.024) + 'px',
       color: '#6b7280',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(subtitle);
 
@@ -639,7 +651,8 @@ export class MatchScene extends Phaser.Scene {
       fontSize: Math.floor(H * 0.036) + 'px',
       color: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      resolution: DPR
     }).setOrigin(0.5);
     btnContainer.add(startButtonText);
 
@@ -683,7 +696,8 @@ export class MatchScene extends Phaser.Scene {
     const hintText = this.add.text(W * 0.5, H * 0.82, '최고 기록에 도전하세요!', {
       fontSize: Math.floor(H * 0.02) + 'px',
       color: '#9ca3af',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      resolution: DPR
     }).setOrigin(0.5);
     this.titleElements.push(hintText);
 
@@ -802,13 +816,15 @@ export class MatchScene extends Phaser.Scene {
 
     // 뒷면 장식 - 로즈 패턴 (로고가 없을 때만 표시)
     const starPattern = this.add.text(0, -height * 0.15, '💖', {
-      fontSize: Math.floor(height * 0.18) + 'px'
+      fontSize: Math.floor(height * 0.18) + 'px',
+      resolution: DPR
     }).setOrigin(0.5);
     starPattern.setVisible(!this.hasLogo);
 
     // 뒷면 아이콘 (로고가 없을 때만 표시)
     const backIcon = this.add.text(0, height * 0.1, '🎀', {
-      fontSize: Math.floor(height * 0.3) + 'px'
+      fontSize: Math.floor(height * 0.3) + 'px',
+      resolution: DPR
     }).setOrigin(0.5);
     backIcon.setVisible(!this.hasLogo);
 
@@ -876,13 +892,15 @@ export class MatchScene extends Phaser.Scene {
       const emojiIndex = index % themeEmojis.length;
       const fallbackEmoji = themeEmojis[emojiIndex] || '🖼️';
       frontText = this.add.text(0, 0, fallbackEmoji, {
-        fontSize: Math.floor(height * 0.55) + 'px'
+        fontSize: Math.floor(height * 0.55) + 'px',
+        resolution: DPR
       }).setOrigin(0.5).setVisible(false);
       container.add([...backElements, front, frontText, hitArea]);
     } else {
       // 이모지 카드 - 크게 표시
       frontText = this.add.text(0, 0, value, {
-        fontSize: Math.floor(height * 0.55) + 'px'
+        fontSize: Math.floor(height * 0.55) + 'px',
+        resolution: DPR
       }).setOrigin(0.5).setVisible(false);
       container.add([...backElements, front, frontText, hitArea]);
     }
@@ -1253,7 +1271,8 @@ export class MatchScene extends Phaser.Scene {
 
     for (let i = 0; i < 6; i++) {
       const particle = this.add.text(x, y, particles[i % particles.length] || '⭐', {
-        fontSize: Math.floor(this.scale.height * 0.025) + 'px'
+        fontSize: Math.floor(this.scale.height * 0.025) + 'px',
+        resolution: DPR
       }).setOrigin(0.5);
 
       const angle = (i / 6) * Math.PI * 2;

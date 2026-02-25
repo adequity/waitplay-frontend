@@ -12,6 +12,9 @@
 const SCALE_RESIZE = 5;  // Phaser.Scale.RESIZE - 화면 크기에 맞게 게임 영역 조정
 const CENTER_BOTH = 1;  // Phaser.Scale.CENTER_BOTH
 
+// 고해상도(Retina) 디스플레이에서 선명한 텍스트/그래픽을 위한 DPR 값
+export const DPR = Math.min(window.devicePixelRatio || 1, 3);
+
 export const GAME_CONFIG = {
   width: 390,   // 기본 너비 (RESIZE 모드에서는 참고값)
   height: 844,  // 기본 높이 (RESIZE 모드에서는 참고값)
@@ -33,7 +36,8 @@ export const GAME_CONFIG = {
   },
   render: {
     antialias: true,
-    pixelArt: false
+    pixelArt: false,
+    roundPixels: true
   }
 };
 

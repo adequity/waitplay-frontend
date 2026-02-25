@@ -4,7 +4,7 @@
  */
 
 import * as Phaser from 'phaser';
-import { COLORS } from '../config';
+import { COLORS, DPR } from '../config';
 import { submitGameScore } from '../../services/gameScoreService';
 import { gameManager } from '../GameManager';
 
@@ -43,13 +43,15 @@ export class PinballScene extends Phaser.Scene {
     // 점수 텍스트
     this.scoreText = this.add.text(W * 0.02, H * 0.027, '점수: 0', {
       fontSize: Math.floor(H * 0.04) + 'px',
-      color: COLORS.white
+      color: COLORS.white,
+      resolution: DPR
     });
 
     // 생명 텍스트
     this.livesText = this.add.text(W * 0.85, H * 0.027, '❤️ ' + this.lives, {
       fontSize: Math.floor(H * 0.04) + 'px',
-      color: COLORS.white
+      color: COLORS.white,
+      resolution: DPR
     });
 
     // 벽돌 생성
@@ -96,7 +98,8 @@ export class PinballScene extends Phaser.Scene {
     const startText = this.add.text(W * 0.5, H * 0.5, '클릭하여 시작', {
       fontSize: Math.floor(H * 0.053) + 'px',
       color: COLORS.primary,
-      align: 'center'
+      align: 'center',
+      resolution: DPR
     }).setOrigin(0.5);
 
     this.time.delayedCall(100, () => {
@@ -301,14 +304,16 @@ export class PinballScene extends Phaser.Scene {
     const resultText = this.add.text(W * 0.5, H * 0.417, message + '\n최종 점수: ' + this.score, {
       fontSize: Math.floor(H * 0.08) + 'px',
       color: won ? COLORS.success : COLORS.danger,
-      align: 'center'
+      align: 'center',
+      resolution: DPR
     }).setOrigin(0.5);
 
     // 이름 입력 받기
     const nameText = this.add.text(W * 0.5, H * 0.583, '이름을 입력하세요:', {
       fontSize: Math.floor(H * 0.04) + 'px',
       color: COLORS.white,
-      align: 'center'
+      align: 'center',
+      resolution: DPR
     }).setOrigin(0.5);
 
     // HTML 입력 창 생성
@@ -379,7 +384,8 @@ export class PinballScene extends Phaser.Scene {
         const restartText = this.add.text(W * 0.5, H * 0.75, '클릭하여 다시 시작', {
           fontSize: Math.floor(H * 0.04) + 'px',
           color: COLORS.primary,
-          align: 'center'
+          align: 'center',
+          resolution: DPR
         }).setOrigin(0.5).setInteractive();
 
         restartText.on('pointerdown', () => {

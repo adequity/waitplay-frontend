@@ -380,8 +380,6 @@ h2 {
 /* fullscreen-container는 위에서 정의됨 */
 
 .fullscreen-container canvas {
-  width: 100% !important;
-  height: 100% !important;
   display: block;
 }
 
