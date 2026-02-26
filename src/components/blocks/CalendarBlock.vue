@@ -6,11 +6,11 @@
     <template v-if="data.style === 'full' || data.style === 'compact'">
       <div class="calendar-nav">
         <button class="nav-btn" @click="prevMonth">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <span class="nav-label" :style="{ color: titleColorValue }">{{ currentYear }}년 {{ currentMonth }}월</span>
         <button class="nav-btn" @click="nextMonth">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
 
@@ -19,52 +19,59 @@
           <span v-for="day in weekdays" :key="day" class="weekday" :class="{ 'weekday-sun': day === '일', 'weekday-sat': day === '토' }">{{ day }}</span>
         </div>
         <div class="calendar-days">
-          <div
-            v-for="(cell, idx) in calendarCells"
-            :key="idx"
-            class="day-cell"
-            :class="{
-              'other-month': !cell.isCurrentMonth,
-              'today': cell.isToday,
-              'has-holiday': cell.holiday && !cell.isPast,
-              'has-schedule': cell.schedules.length > 0 && !cell.isPast,
-              'is-closed': cell.isClosed && !cell.isPast,
-              'is-sunday': cell.dayOfWeek === 0,
-              'is-saturday': cell.dayOfWeek === 6,
-              'is-past': cell.isPast
-            }"
-            @click="cell.isCurrentMonth && selectDate(cell)"
-          >
-            <span class="day-number">{{ cell.day }}</span>
-            <template v-if="!cell.isPast">
-              <div v-if="cell.holiday" class="day-marker holiday-marker" :style="{ backgroundColor: data.closedDayColor || '#ef4444' }"></div>
-              <div v-for="(sched, si) in cell.schedules.slice(0, 2)" :key="si" class="day-marker schedule-marker" :style="{ backgroundColor: sched.color || data.highlightColor || '#3b82f6' }"></div>
-            </template>
-          </div>
+          <template v-for="(cell, idx) in calendarCells" :key="idx">
+            <!-- 주 구분선: 매 7개마다 (첫 줄 제외) -->
+            <div v-if="idx > 0 && idx % 7 === 0" class="week-separator"></div>
+            <div
+              class="day-cell"
+              :class="{
+                'other-month': !cell.isCurrentMonth,
+                'today': cell.isToday,
+                'selected': selectedDate && selectedDate.day === cell.day && selectedDate.month === cell.month && cell.isCurrentMonth,
+                'has-holiday': cell.holiday && !cell.isPast,
+                'has-schedule': cell.schedules.length > 0 && !cell.isPast,
+                'is-closed': cell.isClosed && !cell.isPast,
+                'is-sunday': cell.dayOfWeek === 0,
+                'is-saturday': cell.dayOfWeek === 6,
+                'is-past': cell.isPast
+              }"
+              @click="cell.isCurrentMonth && selectDate(cell)"
+            >
+              <span class="day-number">{{ cell.day }}</span>
+              <div v-if="!cell.isPast" class="day-indicators">
+                <span v-if="cell.holiday" class="indicator-dot indicator-holiday" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></span>
+                <span v-for="(sched, si) in cell.schedules.slice(0, 2)" :key="si" class="indicator-dot indicator-schedule" :style="{ backgroundColor: sched.color || data.highlightColor || '#007AFF' }"></span>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 
-      <!-- 선택된 날짜 상세 -->
-      <div v-if="selectedDate" class="selected-date-detail">
-        <div class="detail-header">
-          <span class="detail-date">{{ selectedDate.month }}월 {{ selectedDate.day }}일</span>
-          <button class="detail-close" @click="selectedDate = null">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <!-- 선택된 날짜 이벤트 목록 -->
+      <div v-if="selectedDate" class="event-list">
+        <div class="event-list-header">
+          <span class="event-list-date">{{ selectedDate.month }}월 {{ selectedDate.day }}일</span>
+          <button class="event-list-close" @click="selectedDate = null">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
         </div>
-        <div v-if="selectedDate.holiday" class="detail-item holiday-item">
-          <span class="detail-dot" :style="{ backgroundColor: data.closedDayColor || '#ef4444' }"></span>
-          <span class="detail-text">{{ selectedDate.holiday }}</span>
-          <span class="detail-badge badge-holiday">공휴일</span>
+        <div v-if="selectedDate.holiday" class="event-item">
+          <div class="event-color-bar" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></div>
+          <div class="event-info">
+            <span class="event-title">{{ selectedDate.holiday }}</span>
+            <span class="event-label">공휴일</span>
+          </div>
         </div>
-        <div v-for="sched in selectedDate.schedules" :key="sched.id" class="detail-item">
-          <span class="detail-dot" :style="{ backgroundColor: sched.color || data.highlightColor || '#3b82f6' }"></span>
-          <span class="detail-text">{{ sched.title }}</span>
-          <span v-if="sched.scheduleType === 'closed'" class="detail-badge badge-closed">휴무</span>
-          <span v-else-if="sched.scheduleType === 'event'" class="detail-badge badge-event">이벤트</span>
-          <span v-else-if="sched.scheduleType === 'hours_change'" class="detail-badge badge-hours">시간변경</span>
+        <div v-for="sched in selectedDate.schedules" :key="sched.id" class="event-item">
+          <div class="event-color-bar" :style="{ backgroundColor: sched.color || data.highlightColor || '#007AFF' }"></div>
+          <div class="event-info">
+            <span class="event-title">{{ sched.title }}</span>
+            <span v-if="sched.scheduleType === 'closed'" class="event-label label-closed">휴무</span>
+            <span v-else-if="sched.scheduleType === 'event'" class="event-label label-event">이벤트</span>
+            <span v-else-if="sched.scheduleType === 'hours_change'" class="event-label label-hours">시간변경</span>
+          </div>
         </div>
-        <div v-if="!selectedDate.holiday && selectedDate.schedules.length === 0" class="detail-empty">
+        <div v-if="!selectedDate.holiday && selectedDate.schedules.length === 0" class="event-empty">
           일정이 없습니다
         </div>
       </div>
@@ -72,74 +79,77 @@
 
     <!-- Week View (이번주 캘린더) -->
     <template v-if="data.style === 'week'">
-      <div class="week-grid">
+      <div class="calendar-grid">
         <div class="calendar-weekdays">
           <span v-for="day in weekdays" :key="day" class="weekday" :class="{ 'weekday-sun': day === '일', 'weekday-sat': day === '토' }">{{ day }}</span>
         </div>
-        <div class="week-rows">
-          <div
-            v-for="(cell, idx) in weekCells"
-            :key="idx"
-            class="day-cell week-day-cell"
-            :class="{
-              'today': cell.isToday,
-              'has-holiday': cell.holiday,
-              'has-schedule': cell.schedules.length > 0,
-              'is-closed': cell.isClosed,
-              'is-sunday': cell.dayOfWeek === 0,
-              'is-saturday': cell.dayOfWeek === 6,
-              'other-month': !cell.isSameMonth
-            }"
-            @click="selectDate(cell)"
-          >
-            <span class="day-number">{{ cell.day }}</span>
-            <div v-if="cell.holiday" class="day-marker holiday-marker" :style="{ backgroundColor: data.closedDayColor || '#ef4444' }"></div>
-            <div v-for="(sched, si) in cell.schedules.slice(0, 2)" :key="si" class="day-marker schedule-marker" :style="{ backgroundColor: sched.color || data.highlightColor || '#3b82f6' }"></div>
-          </div>
+        <div class="calendar-days week-rows">
+          <template v-for="(cell, idx) in weekCells" :key="idx">
+            <div v-if="idx === 7" class="week-separator"></div>
+            <div
+              class="day-cell"
+              :class="{
+                'today': cell.isToday,
+                'selected': selectedDate && selectedDate.day === cell.day && selectedDate.month === cell.month,
+                'has-holiday': cell.holiday,
+                'has-schedule': cell.schedules.length > 0,
+                'is-closed': cell.isClosed,
+                'is-sunday': cell.dayOfWeek === 0,
+                'is-saturday': cell.dayOfWeek === 6,
+                'other-month': !cell.isSameMonth
+              }"
+              @click="selectDate(cell)"
+            >
+              <span class="day-number">{{ cell.day }}</span>
+              <div class="day-indicators">
+                <span v-if="cell.holiday" class="indicator-dot indicator-holiday" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></span>
+                <span v-for="(sched, si) in cell.schedules.slice(0, 2)" :key="si" class="indicator-dot indicator-schedule" :style="{ backgroundColor: sched.color || data.highlightColor || '#007AFF' }"></span>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 
       <!-- 이번주/다음주 일정 목록 -->
-      <div class="week-events">
-        <div v-if="weekEvents.length === 0" class="list-empty">
+      <div class="event-list">
+        <div v-if="weekEvents.length === 0" class="event-empty">
           예정된 일정이 없습니다
         </div>
-        <div v-for="event in weekEvents" :key="event.id" class="list-item">
-          <div class="list-date">
-            <span class="list-day">{{ event.day }}</span>
-            <span class="list-weekday">{{ event.weekday }}</span>
+        <div v-for="event in weekEvents" :key="event.id" class="event-item">
+          <div class="event-color-bar" :style="{ backgroundColor: getEventColor(event) }"></div>
+          <div class="event-info">
+            <span class="event-title">{{ event.title }}</span>
+            <span class="event-meta">{{ event.day }}일 ({{ event.weekday }})</span>
           </div>
-          <div class="list-content">
-            <div class="list-title">{{ event.title }}</div>
-            <div v-if="event.description" class="list-desc">{{ event.description }}</div>
-          </div>
-          <span class="list-badge" :class="`badge-${event.type}`">
-            {{ event.typeLabel }}
-          </span>
+          <span class="event-badge" :class="`badge-${event.type}`">{{ event.typeLabel }}</span>
         </div>
       </div>
 
       <!-- 선택된 날짜 상세 (week) -->
-      <div v-if="selectedDate" class="selected-date-detail">
-        <div class="detail-header">
-          <span class="detail-date">{{ selectedDate.month }}월 {{ selectedDate.day }}일</span>
-          <button class="detail-close" @click="selectedDate = null">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <div v-if="selectedDate" class="event-list selected-detail">
+        <div class="event-list-header">
+          <span class="event-list-date">{{ selectedDate.month }}월 {{ selectedDate.day }}일</span>
+          <button class="event-list-close" @click="selectedDate = null">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
         </div>
-        <div v-if="selectedDate.holiday" class="detail-item holiday-item">
-          <span class="detail-dot" :style="{ backgroundColor: data.closedDayColor || '#ef4444' }"></span>
-          <span class="detail-text">{{ selectedDate.holiday }}</span>
-          <span class="detail-badge badge-holiday">공휴일</span>
+        <div v-if="selectedDate.holiday" class="event-item">
+          <div class="event-color-bar" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></div>
+          <div class="event-info">
+            <span class="event-title">{{ selectedDate.holiday }}</span>
+            <span class="event-label">공휴일</span>
+          </div>
         </div>
-        <div v-for="sched in selectedDate.schedules" :key="sched.id" class="detail-item">
-          <span class="detail-dot" :style="{ backgroundColor: sched.color || data.highlightColor || '#3b82f6' }"></span>
-          <span class="detail-text">{{ sched.title }}</span>
-          <span v-if="sched.scheduleType === 'closed'" class="detail-badge badge-closed">휴무</span>
-          <span v-else-if="sched.scheduleType === 'event'" class="detail-badge badge-event">이벤트</span>
-          <span v-else-if="sched.scheduleType === 'hours_change'" class="detail-badge badge-hours">시간변경</span>
+        <div v-for="sched in selectedDate.schedules" :key="sched.id" class="event-item">
+          <div class="event-color-bar" :style="{ backgroundColor: sched.color || data.highlightColor || '#007AFF' }"></div>
+          <div class="event-info">
+            <span class="event-title">{{ sched.title }}</span>
+            <span v-if="sched.scheduleType === 'closed'" class="event-label label-closed">휴무</span>
+            <span v-else-if="sched.scheduleType === 'event'" class="event-label label-event">이벤트</span>
+            <span v-else-if="sched.scheduleType === 'hours_change'" class="event-label label-hours">시간변경</span>
+          </div>
         </div>
-        <div v-if="!selectedDate.holiday && selectedDate.schedules.length === 0" class="detail-empty">
+        <div v-if="!selectedDate.holiday && selectedDate.schedules.length === 0" class="event-empty">
           일정이 없습니다
         </div>
       </div>
@@ -149,30 +159,26 @@
     <template v-if="data.style === 'list'">
       <div class="calendar-nav">
         <button class="nav-btn" @click="prevMonth">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <span class="nav-label" :style="{ color: titleColorValue }">{{ currentYear }}년 {{ currentMonth }}월</span>
         <button class="nav-btn" @click="nextMonth">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
 
-      <div class="schedule-list">
-        <div v-if="filteredEvents.length === 0" class="list-empty">
+      <div class="event-list">
+        <div v-if="filteredEvents.length === 0" class="event-empty">
           {{ data.futureOnly ? '예정된 일정이 없습니다' : '이번 달 일정이 없습니다' }}
         </div>
-        <div v-for="event in filteredEvents" :key="event.id" class="list-item">
-          <div class="list-date">
-            <span class="list-day">{{ event.day }}</span>
-            <span class="list-weekday">{{ event.weekday }}</span>
+        <div v-for="event in filteredEvents" :key="event.id" class="event-item">
+          <div class="event-color-bar" :style="{ backgroundColor: getEventColor(event) }"></div>
+          <div class="event-info">
+            <span class="event-title">{{ event.title }}</span>
+            <span class="event-meta">{{ event.day }}일 ({{ event.weekday }})</span>
+            <span v-if="event.description" class="event-desc">{{ event.description }}</span>
           </div>
-          <div class="list-content">
-            <div class="list-title">{{ event.title }}</div>
-            <div v-if="event.description" class="list-desc">{{ event.description }}</div>
-          </div>
-          <span class="list-badge" :class="`badge-${event.type}`">
-            {{ event.typeLabel }}
-          </span>
+          <span class="event-badge" :class="`badge-${event.type}`">{{ event.typeLabel }}</span>
         </div>
       </div>
     </template>
@@ -280,6 +286,11 @@ function getHolidayForDate(dateStr: string): string | null {
 function getSchedulesForDate(dateStr: string): ScheduleItem[] {
   const allS = [...schedules.value, ...nextMonthSchedules.value]
   return allS.filter(s => dateStr >= s.startDate && dateStr <= s.endDate)
+}
+
+function getEventColor(event: ListEvent): string {
+  if (event.type === 'holiday') return props.data.closedDayColor || '#FF3B30'
+  return props.data.highlightColor || '#007AFF'
 }
 
 const calendarCells = computed<CalendarCell[]>(() => {
@@ -600,14 +611,18 @@ watch([currentYear, currentMonth], () => {
 
 <style scoped>
 .calendar-block {
-  padding: 1rem;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .calendar-title {
   font-size: 20px;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin: 0 0 16px 0;
   text-align: center;
+  letter-spacing: -0.3px;
 }
 
 /* Navigation */
@@ -615,65 +630,68 @@ watch([currentYear, currentMonth], () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
   margin-bottom: 16px;
 }
 
 .nav-btn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: none;
-  background: rgba(255,255,255,0.1);
-  border-radius: 8px;
-  font-size: 14px;
+  background: transparent;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
-  transition: background 0.2s;
+  color: #8E8E93;
+  transition: background 0.15s;
 }
 
 .nav-btn:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(142, 142, 147, 0.12);
+}
+
+.nav-btn:active {
+  background: rgba(142, 142, 147, 0.2);
 }
 
 .nav-label {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
-  min-width: 120px;
+  min-width: 130px;
   text-align: center;
+  letter-spacing: -0.2px;
 }
 
 /* Calendar Grid */
 .calendar-grid {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
 }
 
 .weekday {
-  padding: 8px 0;
   text-align: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #6b7280;
+  color: #8E8E93;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .weekday-sun {
-  color: #ef4444;
+  color: #FF3B30;
 }
 
 .weekday-sat {
-  color: #3b82f6;
+  color: #007AFF;
 }
 
 .calendar-days {
@@ -681,298 +699,290 @@ watch([currentYear, currentMonth], () => {
   grid-template-columns: repeat(7, 1fr);
 }
 
+/* Week separator line */
+.week-separator {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: rgba(60, 60, 67, 0.08);
+  margin: 2px 0;
+}
+
 .day-cell {
   position: relative;
-  min-height: 44px;
-  padding: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  padding: 6px 0;
   cursor: pointer;
-  border-bottom: 1px solid #f3f4f6;
-  border-right: 1px solid #f3f4f6;
-  transition: background 0.15s;
+  transition: opacity 0.15s;
+  gap: 3px;
 }
 
-.day-cell:hover {
-  background: #f9fafb;
+.day-cell:active {
+  opacity: 0.6;
 }
 
 .day-cell.other-month {
-  opacity: 0.3;
+  opacity: 0.25;
 }
 
 .day-cell.is-past {
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
-.day-cell.today .day-number {
-  background: #4f46e5;
-  color: #fff;
-  border-radius: 50%;
-  width: 26px;
-  height: 26px;
+/* Date number */
+.day-number {
+  font-size: 16px;
+  font-weight: 400;
+  color: #1C1C1E;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  line-height: 1;
+  letter-spacing: -0.2px;
+}
+
+/* Today: black circle with white text */
+.day-cell.today .day-number {
+  background: #1C1C1E;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* Selected: iOS blue ring */
+.day-cell.selected .day-number {
+  background: #007AFF;
+  color: #FFFFFF;
+  font-weight: 600;
 }
 
 .day-cell.is-sunday .day-number {
-  color: #ef4444;
+  color: #FF3B30;
 }
 
 .day-cell.is-saturday .day-number {
-  color: #3b82f6;
+  color: #007AFF;
+}
+
+.day-cell.today.is-sunday .day-number,
+.day-cell.today.is-saturday .day-number,
+.day-cell.selected.is-sunday .day-number,
+.day-cell.selected.is-saturday .day-number {
+  color: #FFFFFF;
 }
 
 .day-cell.has-holiday .day-number,
 .day-cell.is-closed .day-number {
-  color: #ef4444;
-  font-weight: 700;
+  color: #FF3B30;
+  font-weight: 600;
 }
 
-.day-number {
-  font-size: 13px;
-  font-weight: 500;
-  color: #374151;
-  line-height: 1;
+.day-cell.today.has-holiday .day-number,
+.day-cell.selected.has-holiday .day-number {
+  color: #FFFFFF;
 }
 
-.day-marker {
-  width: 6px;
-  height: 6px;
+/* Indicator dots */
+.day-indicators {
+  display: flex;
+  gap: 3px;
+  height: 5px;
+  align-items: center;
+  justify-content: center;
+}
+
+.indicator-dot {
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
-/* Selected Date Detail */
-.selected-date-detail {
+/* Event list (selected date detail / list view) */
+.event-list {
+  margin-top: 16px;
+}
+
+.event-list.selected-detail {
   margin-top: 12px;
-  background: #f9fafb;
-  border-radius: 12px;
-  padding: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(60, 60, 67, 0.08);
 }
 
-.detail-header {
+.event-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  padding: 0 4px;
 }
 
-.detail-date {
+.event-list-date {
   font-weight: 600;
   font-size: 15px;
-  color: #1f2937;
+  color: #1C1C1E;
+  letter-spacing: -0.2px;
 }
 
-.detail-close {
+.event-list-close {
   border: none;
   background: none;
-  color: #9ca3af;
+  color: #8E8E93;
   cursor: pointer;
   padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: background 0.15s;
 }
 
-.detail-close:hover {
-  color: #6b7280;
+.event-list-close:hover {
+  background: rgba(142, 142, 147, 0.12);
 }
 
-.detail-item {
+/* Event items with iOS color bar */
+.event-item {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid #e5e7eb;
+  align-items: stretch;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid rgba(60, 60, 67, 0.06);
+  min-height: 44px;
 }
 
-.detail-item:last-child {
+.event-item:last-child {
   border-bottom: none;
 }
 
-.detail-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.event-color-bar {
+  width: 4px;
+  border-radius: 2px;
   flex-shrink: 0;
+  align-self: stretch;
 }
 
-.detail-text {
-  flex: 1;
-  font-size: 14px;
-  color: #374151;
-}
-
-.detail-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.badge-holiday {
-  background: #fef2f2;
-  color: #ef4444;
-}
-
-.badge-closed {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.badge-event {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.badge-hours {
-  background: #fff7ed;
-  color: #ea580c;
-}
-
-.detail-empty {
-  text-align: center;
-  padding: 12px;
-  color: #9ca3af;
-  font-size: 14px;
-}
-
-/* Week View */
-.week-grid {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-
-.week-rows {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-}
-
-.week-day-cell {
-  min-height: 48px;
-}
-
-.week-events {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* List View */
-.schedule-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.list-empty {
-  text-align: center;
-  padding: 32px 16px;
-  color: #9ca3af;
-  font-size: 14px;
-}
-
-.list-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-.list-date {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 44px;
-}
-
-.list-day {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1f2937;
-  line-height: 1;
-}
-
-.list-weekday {
-  font-size: 11px;
-  color: #9ca3af;
-  margin-top: 2px;
-}
-
-.list-content {
+.event-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
 }
 
-.list-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
+.event-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1C1C1E;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
 }
 
-.list-desc {
+.event-label {
   font-size: 12px;
-  color: #6b7280;
-  margin-top: 2px;
+  color: #8E8E93;
+  letter-spacing: -0.1px;
+}
+
+.event-label.label-closed {
+  color: #FF3B30;
+}
+
+.event-label.label-event {
+  color: #007AFF;
+}
+
+.event-label.label-hours {
+  color: #FF9500;
+}
+
+.event-meta {
+  font-size: 12px;
+  color: #8E8E93;
+  letter-spacing: -0.1px;
+}
+
+.event-desc {
+  font-size: 12px;
+  color: #8E8E93;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.list-badge {
+.event-badge {
   font-size: 11px;
   padding: 3px 8px;
-  border-radius: 10px;
-  font-weight: 600;
+  border-radius: 12px;
+  font-weight: 500;
   flex-shrink: 0;
+  align-self: center;
+  letter-spacing: -0.1px;
 }
 
-.list-badge.badge-holiday {
-  background: #fef2f2;
-  color: #ef4444;
+.event-badge.badge-holiday {
+  background: rgba(255, 59, 48, 0.1);
+  color: #FF3B30;
 }
 
-.list-badge.badge-closed {
-  background: #fef2f2;
-  color: #dc2626;
+.event-badge.badge-closed {
+  background: rgba(255, 59, 48, 0.1);
+  color: #FF3B30;
 }
 
-.list-badge.badge-event {
-  background: #eff6ff;
-  color: #2563eb;
+.event-badge.badge-event {
+  background: rgba(0, 122, 255, 0.1);
+  color: #007AFF;
 }
 
-.list-badge.badge-notice {
-  background: #f0fdf4;
-  color: #16a34a;
+.event-badge.badge-notice {
+  background: rgba(52, 199, 89, 0.1);
+  color: #34C759;
 }
 
-.list-badge.badge-hours_change {
-  background: #fff7ed;
-  color: #ea580c;
+.event-badge.badge-hours_change {
+  background: rgba(255, 149, 0, 0.1);
+  color: #FF9500;
+}
+
+.event-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: #8E8E93;
+  font-size: 14px;
+  letter-spacing: -0.1px;
+}
+
+/* Week View */
+.week-rows {
+  grid-template-columns: repeat(7, 1fr);
 }
 
 /* Compact style */
 .calendar-block--compact .day-cell {
-  min-height: 36px;
+  padding: 4px 0;
 }
 
 .calendar-block--compact .day-number {
-  font-size: 12px;
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
 }
 
 .calendar-block--compact .calendar-title {
-  font-size: 16px;
+  font-size: 17px;
+}
+
+.calendar-block--compact .indicator-dot {
+  width: 4px;
+  height: 4px;
 }
 
 /* Week style */
@@ -981,19 +991,29 @@ watch([currentYear, currentMonth], () => {
   margin-bottom: 12px;
 }
 
+/* Responsive */
 @media (max-width: 640px) {
+  .calendar-block {
+    padding: 12px;
+  }
+
   .day-cell {
-    min-height: 38px;
-    padding: 2px;
+    padding: 4px 0;
   }
 
   .day-number {
-    font-size: 12px;
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
   }
 
-  .day-marker {
+  .indicator-dot {
     width: 4px;
     height: 4px;
+  }
+
+  .event-title {
+    font-size: 14px;
   }
 }
 </style>
