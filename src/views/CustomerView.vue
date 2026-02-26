@@ -22,6 +22,7 @@
         :qrCodeId="qrCode"
         :textColor="pageTheme.textColor"
         :fallbackBackgroundColor="block.type === 'guestbook' ? pageTheme.backgroundColor : undefined"
+        :themeBackgroundColor="block.type === 'calendar' ? pageTheme.backgroundColor : undefined"
       />
     </div>
 

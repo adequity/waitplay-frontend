@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-block" :class="`calendar-block--${data.style}`">
+  <div class="calendar-block" :class="[`calendar-block--${data.style}`, { 'calendar-dark': isDarkTheme }]">
     <!-- iOS 대형 타이틀 -->
     <header v-if="data.title" class="calendar-header">
       <h1 :style="{ color: titleColorValue }">{{ data.title }}</h1>
@@ -230,10 +230,24 @@ interface Props {
   data: CalendarBlockData
   qrCodeId?: string
   textColor?: string
+  themeBackgroundColor?: string
   isPreview?: boolean
 }
 
 const props = defineProps<Props>()
+
+// 배경색 밝기 판단 → 다크모드 자동 전환
+function isDarkColor(color: string): boolean {
+  if (!color) return false
+  let hex = color.replace('#', '')
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return (r * 299 + g * 587 + b * 114) / 1000 < 128
+}
+
+const isDarkTheme = computed(() => isDarkColor(props.themeBackgroundColor || ''))
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.waitplay.co.kr'
 
@@ -921,6 +935,97 @@ watch([currentYear, currentMonth], () => {
 /* --- Week 스타일 --- */
 .calendar-block--week {
   --header-size: clamp(18px, 6cqi, 24px);
+}
+
+/* --- 다크 테마 (어두운 배경 자동 감지) --- */
+.calendar-dark {
+  color: #FFFFFF;
+}
+
+.calendar-dark .calendar-header h1 {
+  color: #FFFFFF;
+}
+
+.calendar-dark .nav-btn {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.calendar-dark .nav-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-dark .nav-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.calendar-dark .weekdays {
+  border-bottom-color: #38383A;
+}
+
+.calendar-dark .weekdays span {
+  color: #98989D;
+}
+
+.calendar-dark .week-row {
+  border-bottom-color: #38383A;
+}
+
+.calendar-dark .day-cell.sunday .date-text {
+  color: #98989D;
+}
+
+.calendar-dark .day-cell.text-red .date-text {
+  color: #FF453A;
+}
+
+/* 다크: 선택된 날짜 → 흰 원 + 검정 글 (반전) */
+.calendar-dark .day-cell.selected .date-text {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+/* 다크: 오늘 → 빨간 원 유지 */
+.calendar-dark .day-cell.today .date-text {
+  background-color: #FF453A;
+  color: #FFFFFF;
+}
+
+/* 다크: 선택 + 오늘 동시 → 흰 원 우선 */
+.calendar-dark .day-cell.selected.today .date-text {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+.calendar-dark .event-list-container {
+  border-top-color: #38383A;
+}
+
+.calendar-dark .event-list-date {
+  color: #FFFFFF;
+}
+
+.calendar-dark .event-list-close {
+  color: #98989D;
+}
+
+.calendar-dark .event-list-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-dark .event-item {
+  border-bottom-color: #38383A;
+}
+
+.calendar-dark .event-title {
+  color: #FFFFFF;
+}
+
+.calendar-dark .event-location {
+  color: #98989D;
+}
+
+.calendar-dark .event-item-empty {
+  color: #98989D;
 }
 
 /* cqi 미지원 브라우저 폴백 (vw 기반) */
