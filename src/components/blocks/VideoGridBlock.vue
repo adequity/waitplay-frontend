@@ -122,6 +122,7 @@ function openVideo(url: string) {
   font-weight: 700;
   color: #ffffff;
   margin: 0 0 12px 0;
+  text-align: center;
 }
 
 /* 캐러셀 레이아웃: 가로 스크롤 */

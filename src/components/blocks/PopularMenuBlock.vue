@@ -262,8 +262,9 @@ const handleItemClick = (item: MenuItem) => {
 
 .menu-card-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   margin-bottom: 16px;
 }
 

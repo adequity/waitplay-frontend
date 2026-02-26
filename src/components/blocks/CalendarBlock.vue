@@ -666,6 +666,7 @@ watch([currentYear, currentMonth], () => {
 /* --- iOS 대형 헤더 --- */
 .calendar-header {
   padding: var(--cell-pt) var(--side-pad);
+  text-align: center;
 }
 
 .calendar-header h1 {
