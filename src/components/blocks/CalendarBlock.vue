@@ -616,21 +616,46 @@ watch([currentYear, currentMonth], () => {
 </script>
 
 <style scoped>
-/* iOS 시스템 폰트 */
+/*
+  반응형 CSS 변수 시스템
+  컨테이너 너비 기준으로 모든 크기가 비례 조절됨
+  clamp(최소, 선호, 최대) 패턴 사용
+*/
 .calendar-block {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  max-width: 400px;
+  max-width: 100%;
   margin: 0 auto;
   color: #000000;
+
+  /* 코어 크기 변수 - clamp로 반응형 */
+  --cell-height: clamp(40px, 13.5cqi, 54px);
+  --cell-pt: clamp(5px, 2cqi, 8px);
+  --date-size: clamp(14px, 5cqi, 20px);
+  --date-circle: clamp(24px, 8cqi, 32px);
+  --dot-size: clamp(3px, 1cqi, 4px);
+  --pill-w: clamp(8px, 3.5cqi, 14px);
+  --pill-h: clamp(3px, 1cqi, 4px);
+  --indicator-mt: clamp(1px, 0.5cqi, 2px);
+  --header-size: clamp(22px, 8.5cqi, 34px);
+  --nav-size: clamp(14px, 4.3cqi, 17px);
+  --weekday-size: clamp(9px, 2.8cqi, 11px);
+  --side-pad: clamp(12px, 5cqi, 20px);
+  --event-pad-y: clamp(10px, 4cqi, 16px);
+  --event-title-size: clamp(13px, 3.8cqi, 15px);
+  --event-sub-size: clamp(11px, 3.3cqi, 13px);
+  --bar-height: clamp(28px, 9.5cqi, 38px);
+  --bar-mr: clamp(8px, 3cqi, 12px);
+
+  container-type: inline-size;
 }
 
 /* --- iOS 대형 헤더 --- */
 .calendar-header {
-  padding: 16px 20px;
+  padding: var(--cell-pt) var(--side-pad);
 }
 
 .calendar-header h1 {
-  font-size: 34px;
+  font-size: var(--header-size);
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.5px;
@@ -641,13 +666,13 @@ watch([currentYear, currentMonth], () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  margin-bottom: 12px;
+  gap: clamp(12px, 5cqi, 20px);
+  margin-bottom: clamp(8px, 3cqi, 12px);
 }
 
 .nav-btn {
-  width: 34px;
-  height: 34px;
+  width: clamp(28px, 8.5cqi, 34px);
+  height: clamp(28px, 8.5cqi, 34px);
   border: none;
   background: transparent;
   border-radius: 50%;
@@ -668,9 +693,8 @@ watch([currentYear, currentMonth], () => {
 }
 
 .nav-label {
-  font-size: 17px;
+  font-size: var(--nav-size);
   font-weight: 600;
-  min-width: 130px;
   text-align: center;
   letter-spacing: -0.2px;
 }
@@ -684,13 +708,13 @@ watch([currentYear, currentMonth], () => {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: clamp(4px, 2cqi, 8px);
   border-bottom: 1px solid #E5E5EA;
-  padding-bottom: 8px;
+  padding-bottom: clamp(4px, 2cqi, 8px);
 }
 
 .weekdays span {
-  font-size: 11px;
+  font-size: var(--weekday-size);
   font-weight: 600;
   color: #8E8E93;
   text-transform: uppercase;
@@ -709,12 +733,12 @@ watch([currentYear, currentMonth], () => {
 
 /* --- 날짜 셀 --- */
 .day-cell {
-  height: 54px;
+  height: var(--cell-height);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-top: 8px;
+  padding-top: var(--cell-pt);
   position: relative;
   cursor: pointer;
 }
@@ -729,17 +753,17 @@ watch([currentYear, currentMonth], () => {
 
 /* --- 날짜 텍스트 --- */
 .date-text {
-  font-size: 20px;
+  font-size: var(--date-size);
   font-weight: 500;
-  width: 32px;
-  height: 32px;
+  width: var(--date-circle);
+  height: var(--date-circle);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
 }
 
-/* 일요일, 빈 셀: 회색 */
+/* 일요일: 회색 */
 .day-cell.sunday .date-text {
   color: #8E8E93;
 }
@@ -754,7 +778,7 @@ watch([currentYear, currentMonth], () => {
   opacity: 0.3;
 }
 
-/* 공휴일 등 빨간색 */
+/* 공휴일 빨간색 */
 .day-cell.text-red .date-text {
   color: #FF3B30;
 }
@@ -773,7 +797,7 @@ watch([currentYear, currentMonth], () => {
   font-weight: 600;
 }
 
-/* 선택 + 오늘 동시: 선택이 우선 */
+/* 선택 + 오늘 동시: 선택 우선 */
 .day-cell.selected.today .date-text {
   background-color: #000000;
   color: #ffffff;
@@ -781,41 +805,41 @@ watch([currentYear, currentMonth], () => {
 
 /* --- 인디케이터 (dot, pill) --- */
 .indicator {
-  margin-top: 2px;
+  margin-top: var(--indicator-mt);
 }
 
 .indicator.dot {
-  width: 4px;
-  height: 4px;
+  width: var(--dot-size);
+  height: var(--dot-size);
   border-radius: 50%;
 }
 
 .indicator.pill {
-  width: 14px;
-  height: 4px;
+  width: var(--pill-w);
+  height: var(--pill-h);
   border-radius: 2px;
 }
 
 /* --- 하단 이벤트 리스트 --- */
 .event-list-container {
-  margin-top: 16px;
+  margin-top: var(--event-pad-y);
   border-top: 1px solid #F2F2F7;
 }
 
 .event-list-container.selected-detail {
-  margin-top: 12px;
+  margin-top: clamp(8px, 3cqi, 12px);
 }
 
 .event-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px 0;
+  padding: clamp(8px, 3cqi, 12px) var(--side-pad) 0;
 }
 
 .event-list-date {
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--event-title-size);
   color: #000000;
 }
 
@@ -838,7 +862,7 @@ watch([currentYear, currentMonth], () => {
 .event-item {
   display: flex;
   align-items: flex-start;
-  padding: 16px 20px;
+  padding: var(--event-pad-y) var(--side-pad);
   border-bottom: 1px solid #F2F2F7;
 }
 
@@ -848,9 +872,9 @@ watch([currentYear, currentMonth], () => {
 
 .event-color-bar {
   width: 4px;
-  height: 38px;
+  height: var(--bar-height);
   border-radius: 2px;
-  margin-right: 12px;
+  margin-right: var(--bar-mr);
   flex-shrink: 0;
 }
 
@@ -860,7 +884,7 @@ watch([currentYear, currentMonth], () => {
 }
 
 .event-title {
-  font-size: 15px;
+  font-size: var(--event-title-size);
   font-weight: 600;
   margin: 0 0 4px 0;
   white-space: nowrap;
@@ -870,80 +894,70 @@ watch([currentYear, currentMonth], () => {
 }
 
 .event-location {
-  font-size: 13px;
+  font-size: var(--event-sub-size);
   color: #8E8E93;
   margin: 0;
 }
 
 .event-item-empty {
   text-align: center;
-  padding: 24px 20px;
+  padding: clamp(16px, 6cqi, 24px) var(--side-pad);
   color: #8E8E93;
-  font-size: 14px;
+  font-size: var(--event-sub-size);
 }
 
-/* --- Compact 스타일 --- */
-.calendar-block--compact .calendar-header h1 {
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.calendar-block--compact .day-cell {
-  height: 44px;
-  padding-top: 6px;
-}
-
-.calendar-block--compact .date-text {
-  font-size: 16px;
-  width: 28px;
-  height: 28px;
-}
-
-.calendar-block--compact .indicator.dot {
-  width: 3px;
-  height: 3px;
-}
-
-.calendar-block--compact .indicator.pill {
-  width: 10px;
-  height: 3px;
+/* --- Compact 스타일: 변수 오버라이드 --- */
+.calendar-block--compact {
+  --cell-height: clamp(34px, 11cqi, 44px);
+  --cell-pt: clamp(4px, 1.5cqi, 6px);
+  --date-size: clamp(12px, 4cqi, 16px);
+  --date-circle: clamp(20px, 7cqi, 28px);
+  --dot-size: clamp(2px, 0.8cqi, 3px);
+  --pill-w: clamp(6px, 2.5cqi, 10px);
+  --pill-h: clamp(2px, 0.8cqi, 3px);
+  --header-size: clamp(17px, 5.5cqi, 22px);
 }
 
 /* --- Week 스타일 --- */
-.calendar-block--week .calendar-header h1 {
-  font-size: 24px;
-  font-weight: 700;
+.calendar-block--week {
+  --header-size: clamp(18px, 6cqi, 24px);
 }
 
-/* --- 반응형 --- */
-@media (max-width: 640px) {
-  .day-cell {
-    height: 48px;
-    padding-top: 6px;
+/* cqi 미지원 브라우저 폴백 (vw 기반) */
+@supports not (width: 1cqi) {
+  .calendar-block {
+    --cell-height: clamp(40px, 13.5vw, 54px);
+    --cell-pt: clamp(5px, 2vw, 8px);
+    --date-size: clamp(14px, 5vw, 20px);
+    --date-circle: clamp(24px, 8vw, 32px);
+    --dot-size: clamp(3px, 1vw, 4px);
+    --pill-w: clamp(8px, 3.5vw, 14px);
+    --pill-h: clamp(3px, 1vw, 4px);
+    --indicator-mt: clamp(1px, 0.5vw, 2px);
+    --header-size: clamp(22px, 8.5vw, 34px);
+    --nav-size: clamp(14px, 4.3vw, 17px);
+    --weekday-size: clamp(9px, 2.8vw, 11px);
+    --side-pad: clamp(12px, 5vw, 20px);
+    --event-pad-y: clamp(10px, 4vw, 16px);
+    --event-title-size: clamp(13px, 3.8vw, 15px);
+    --event-sub-size: clamp(11px, 3.3vw, 13px);
+    --bar-height: clamp(28px, 9.5vw, 38px);
+    --bar-mr: clamp(8px, 3vw, 12px);
   }
 
-  .date-text {
-    font-size: 17px;
-    width: 28px;
-    height: 28px;
+  .calendar-block--compact {
+    --cell-height: clamp(34px, 11vw, 44px);
+    --cell-pt: clamp(4px, 1.5vw, 6px);
+    --date-size: clamp(12px, 4vw, 16px);
+    --date-circle: clamp(20px, 7vw, 28px);
+    --dot-size: clamp(2px, 0.8vw, 3px);
+    --pill-w: clamp(6px, 2.5vw, 10px);
+    --pill-h: clamp(2px, 0.8vw, 3px);
+    --header-size: clamp(17px, 5.5vw, 22px);
   }
 
-  .indicator.dot {
-    width: 3px;
-    height: 3px;
-  }
-
-  .indicator.pill {
-    width: 12px;
-    height: 3px;
-  }
-
-  .event-item {
-    padding: 12px 16px;
-  }
-
-  .event-color-bar {
-    height: 32px;
+  .calendar-block--week {
+    --header-size: clamp(18px, 6vw, 24px);
   }
 }
 </style>
