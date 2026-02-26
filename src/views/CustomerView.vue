@@ -63,13 +63,14 @@
       :landing-description="landingDescription"
       :landing-image="landingImage"
       :show-music="isBgmEnabled && (!!bgmUrl || bgmPlaylist.length > 0)"
-      :show-my-page="true"
+      :show-my-page="isAuthenticated"
       :is-music-playing="isBgmPlaying"
       :theme-background-color="pageTheme.backgroundColor"
       :current-track-title="currentTrackTitle"
       :track-count="bgmPlaylist.length"
       @toggle-music="toggleBgm"
       @open-my-page="toggleSidebar"
+      @go-to-my-feed="goToMyFeed"
       @prev-track="playPrevTrack"
       @next-track="playNextTrack"
     />
@@ -936,6 +937,13 @@ const handleLogout = () => {
   authStore.logout()
   isSidebarOpen.value = false
   router.push('/login')
+}
+
+const goToMyFeed = () => {
+  const code = authStore.user?.profileCode || authStore.user?.id
+  if (code) {
+    router.push({ name: 'user-feed', params: { code } })
+  }
 }
 
 const goToLogin = () => {

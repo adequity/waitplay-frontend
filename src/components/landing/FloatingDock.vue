@@ -89,8 +89,20 @@
         <span class="dock-label">공유</span>
       </button>
 
-      <!-- 마이페이지 버튼 -->
-      <button v-if="showMyPage" class="dock-item" @click="openMyPage">
+      <!-- 매장 버튼 (사이드바) -->
+      <button class="dock-item" @click="openMyPage">
+        <div class="dock-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 7l8-4 8 4v1H4V7z" stroke-linejoin="round"/>
+            <rect x="4" y="8" width="16" height="12" rx="1"/>
+            <rect x="9" y="13" width="6" height="7"/>
+          </svg>
+        </div>
+        <span class="dock-label">매장</span>
+      </button>
+
+      <!-- 마이페이지 버튼 (본인 피드) -->
+      <button v-if="showMyPage" class="dock-item" @click="goToMyFeed">
         <div class="dock-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -221,6 +233,7 @@ const isDarkTheme = computed(() => isDarkColor(props.themeBackgroundColor || '')
 const emit = defineEmits<{
   (e: 'toggleMusic'): void
   (e: 'openMyPage'): void
+  (e: 'goToMyFeed'): void
   (e: 'showVolumeControl'): void
   (e: 'prevTrack'): void
   (e: 'nextTrack'): void
@@ -280,9 +293,14 @@ function closeShareSheet() {
   showShareSheet.value = false
 }
 
-// 마이페이지 열기
+// 매장 사이드바 열기
 function openMyPage() {
   emit('openMyPage')
+}
+
+// 본인 피드 페이지로 이동
+function goToMyFeed() {
+  emit('goToMyFeed')
 }
 
 // 카카오톡 공유
