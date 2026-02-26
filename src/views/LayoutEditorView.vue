@@ -3329,6 +3329,8 @@ function removeMenuItem(index: number) {
   border-right: 1px solid #e5e5ea;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .panel-header {
