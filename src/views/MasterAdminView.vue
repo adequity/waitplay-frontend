@@ -84,6 +84,7 @@
         <MasterGamesManagement v-if="activeTab === 'games'" />
         <MasterAssetsManagement v-if="activeTab === 'assets'" />
         <MasterBgmManagement v-if="activeTab === 'bgm'" />
+        <MasterCalendarManagement v-if="activeTab === 'calendar'" />
         <MasterSettingsManagement v-if="activeTab === 'settings'" />
       </div>
     </main>
@@ -105,6 +106,7 @@ import MasterInquiriesManagement from '@/components/master/MasterInquiriesManage
 import MasterGamesManagement from '@/components/master/MasterGamesManagement.vue'
 import MasterAssetsManagement from '@/components/master/MasterAssetsManagement.vue'
 import MasterBgmManagement from '@/components/master/MasterBgmManagement.vue'
+import MasterCalendarManagement from '@/components/master/MasterCalendarManagement.vue'
 import MasterSettingsManagement from '@/components/master/MasterSettingsManagement.vue'
 
 const router = useRouter()
@@ -137,6 +139,7 @@ const tabs = [
   { id: 'games', label: '게임 관리', iconName: 'gamepad' },
   { id: 'assets', label: '에셋 관리', iconName: 'image' },
   { id: 'bgm', label: 'BGM 관리', iconName: 'music' },
+  { id: 'calendar', label: '캘린더 관리', iconName: 'calendar' },
   { id: 'settings', label: '설정', iconName: 'settings' }
 ]
 

@@ -87,6 +87,7 @@
         <GuestbookManageTab v-if="activeTab === 'guestbook'" />
         <CustomersTab v-if="activeTab === 'customers'" />
         <CustomerSupportTab v-if="activeTab === 'cs'" />
+        <CalendarManageTab v-if="activeTab === 'calendar'" />
         <SettingsTab v-if="activeTab === 'settings'" />
       </div>
     </main>
@@ -105,6 +106,7 @@ import BenefitsTab from '@/components/BenefitsTab.vue'
 import CustomersTab from '@/components/CustomersTab.vue'
 import CustomerSupportTab from '@/components/CustomerSupportTab.vue'
 import GuestbookManageTab from '@/components/GuestbookManageTab.vue'
+import CalendarManageTab from '@/components/CalendarManageTab.vue'
 import SettingsTab from '@/components/SettingsTab.vue'
 
 const router = useRouter()
@@ -139,6 +141,7 @@ const tabs = [
   { id: 'guestbook', label: '방명록 관리', iconName: 'book' },
   { id: 'customers', label: '고객 분석', iconName: 'users' },
   { id: 'cs', label: 'CS 게시판', iconName: 'message' },
+  { id: 'calendar', label: '캘린더 관리', iconName: 'calendar' },
   { id: 'settings', label: '설정', iconName: 'settings' }
 ]
 

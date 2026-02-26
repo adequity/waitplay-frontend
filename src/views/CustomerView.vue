@@ -715,6 +715,9 @@ const GamesCarouselBlock = defineAsyncComponent(() =>
 const PopularMenuBlock = defineAsyncComponent(() =>
   import('@/components/blocks/PopularMenuBlock.vue')
 )
+const CalendarBlock = defineAsyncComponent(() =>
+  import('@/components/blocks/CalendarBlock.vue')
+)
 
 const route = useRoute()
 const router = useRouter()
@@ -820,7 +823,8 @@ function getBlockComponent(type: string): Component | string {
     image: ImageBlock,
     countdown: CountdownBlock,
     guestbook: GuestbookBlock,
-    marquee: MarqueeBlock
+    marquee: MarqueeBlock,
+    calendar: CalendarBlock
   }
   return components[type] || 'div'
 }

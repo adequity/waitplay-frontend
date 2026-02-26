@@ -12,6 +12,7 @@ export type BlockType =
   | 'countdown'
   | 'guestbook'
   | 'marquee'
+  | 'calendar'
 
 // Header Block
 export interface BannerSlide {
@@ -175,6 +176,16 @@ export interface MarqueeBlockData {
   paddingBottom?: number // 아래 여백 (px, 기본값: 10)
 }
 
+// Calendar Block (캘린더/일정)
+export interface CalendarBlockData {
+  title: string
+  showPublicHolidays: boolean // 공휴일 표시 여부
+  showStoreSchedules: boolean // 매장 일정 표시 여부
+  style: 'full' | 'compact' | 'list' // 캘린더 표시 스타일
+  highlightColor?: string // 일정 하이라이트 색상
+  closedDayColor?: string // 휴무일 표시 색상
+}
+
 // Base Block Interface
 export interface BaseBlock {
   id: string
@@ -237,6 +248,11 @@ export interface MarqueeBlock extends BaseBlock {
   data: MarqueeBlockData
 }
 
+export interface CalendarBlock extends BaseBlock {
+  type: 'calendar'
+  data: CalendarBlockData
+}
+
 // Union type for all blocks
 export type Block =
   | HeaderBlock
@@ -249,6 +265,7 @@ export type Block =
   | CountdownBlock
   | GuestbookBlock
   | MarqueeBlock
+  | CalendarBlock
 
 // Landing Page Theme
 export interface PageTheme {

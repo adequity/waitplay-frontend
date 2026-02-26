@@ -1461,6 +1461,79 @@
             </div>
           </template>
 
+          <!-- Calendar Edit -->
+          <template v-if="editingBlock.type === 'calendar'">
+            <div class="form-group">
+              <label class="form-label">제목</label>
+              <input type="text" class="form-input" v-model="editForm.title" placeholder="영업 캘린더">
+            </div>
+            <div class="form-group">
+              <label class="form-label">표시 스타일</label>
+              <div class="countdown-style-selector">
+                <button
+                  type="button"
+                  :class="['countdown-style-btn', { active: editForm.style === 'full' }]"
+                  @click="editForm.style = 'full'"
+                >
+                  <div class="countdown-style-preview card-preview">
+                    <div class="preview-box" style="font-size: 10px;">📅</div>
+                  </div>
+                  <span>전체</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['countdown-style-btn', { active: editForm.style === 'compact' }]"
+                  @click="editForm.style = 'compact'"
+                >
+                  <div class="countdown-style-preview minimal-preview">
+                    <div class="preview-line"></div>
+                  </div>
+                  <span>컴팩트</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['countdown-style-btn', { active: editForm.style === 'list' }]"
+                  @click="editForm.style = 'list'"
+                >
+                  <div class="countdown-style-preview banner-preview">
+                    <div class="preview-banner" style="font-size: 8px;">목록</div>
+                  </div>
+                  <span>목록</span>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">표시 옵션</label>
+              <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <input type="checkbox" v-model="editForm.showPublicHolidays">
+                <span>공휴일 표시</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" v-model="editForm.showStoreSchedules">
+                <span>매장 일정 표시</span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="form-label">일정 색상</label>
+              <div style="display: flex; gap: 12px;">
+                <div style="flex: 1;">
+                  <label class="form-label" style="font-size: 12px; color: #6b7280;">이벤트/일정</label>
+                  <input type="color" class="form-input" v-model="editForm.highlightColor" style="height: 36px; padding: 2px;">
+                </div>
+                <div style="flex: 1;">
+                  <label class="form-label" style="font-size: 12px; color: #6b7280;">휴무일</label>
+                  <input type="color" class="form-input" v-model="editForm.closedDayColor" style="height: 36px; padding: 2px;">
+                </div>
+              </div>
+            </div>
+            <div class="form-group" style="padding: 12px; background: #f0f9ff; border-radius: 8px;">
+              <p style="font-size: 12px; color: #3b82f6; margin: 0;">
+                💡 매장 일정은 관리자 페이지 &gt; 캘린더 관리에서 추가할 수 있습니다.
+                공휴일은 마스터관리자가 관리합니다.
+              </p>
+            </div>
+          </template>
+
           <!-- 공통: 블록 여백 설정 (header 제외) -->
           <template v-if="editingBlock && editingBlock.type !== 'header'">
             <div class="form-divider"></div>
@@ -1531,6 +1604,7 @@ import ImageBlock from '@/components/blocks/ImageBlock.vue'
 import CountdownBlock from '@/components/blocks/CountdownBlock.vue'
 import GuestbookBlock from '@/components/blocks/GuestbookBlock.vue'
 import MarqueeBlock from '@/components/blocks/MarqueeBlock.vue'
+import CalendarBlock from '@/components/blocks/CalendarBlock.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -1697,7 +1771,8 @@ const availableBlockTypes = [
   { type: 'popular_menu', icon: 'M', name: '메뉴', description: '인기 메뉴' },
   { type: 'image', icon: 'I', name: '이미지', description: '이미지 추가' },
   { type: 'countdown', icon: 'C', name: '카운트다운', description: '이벤트 타이머' },
-  { type: 'guestbook', icon: 'N', name: '방명록', description: '손글씨 방명록' }
+  { type: 'guestbook', icon: 'N', name: '방명록', description: '손글씨 방명록' },
+  { type: 'calendar', icon: '📅', name: '캘린더', description: '휴무일/일정 캘린더' }
 ]
 
 // Load layout from API on mount
@@ -1843,7 +1918,8 @@ function getBlockComponent(type: string): Component | string {
     image: ImageBlock,
     countdown: CountdownBlock,
     guestbook: GuestbookBlock,
-    marquee: MarqueeBlock
+    marquee: MarqueeBlock,
+    calendar: CalendarBlock
   }
   return components[type] || 'div'
 }
@@ -1859,7 +1935,8 @@ function getBlockIcon(type: string): string {
     image: 'I',
     countdown: '⏱',
     guestbook: '✍',
-    marquee: '📢'
+    marquee: '📢',
+    calendar: '📅'
   }
   return icons[type] || '□'
 }
@@ -1875,7 +1952,8 @@ function getBlockTitle(type: string): string {
     image: '이미지',
     countdown: '카운트다운',
     guestbook: '방명록',
-    marquee: '마퀴(전광판)'
+    marquee: '마퀴(전광판)',
+    calendar: '캘린더'
   }
   return titles[type] || '블록'
 }
@@ -1923,6 +2001,8 @@ function getBlockPreview(block: Block): string {
       return `${(block.data as any).items?.length || 0}개 메뉴`
     case 'marquee':
       return (block.data as any).text || '공지사항 없음'
+    case 'calendar':
+      return (block.data as any).title || '캘린더'
     default:
       return ''
   }
@@ -2019,6 +2099,15 @@ function getDefaultBlockData(type: BlockType): any {
         textColor: '#374151',
         backgroundColor: pageTheme.value.backgroundColor // 랜딩 페이지 배경색 연동
       }
+    case 'calendar':
+      return {
+        title: '영업 캘린더',
+        showPublicHolidays: true,
+        showStoreSchedules: true,
+        style: 'full',
+        highlightColor: '#3b82f6',
+        closedDayColor: '#ef4444'
+      }
     case 'marquee':
       return {
         text: '🎉 오늘의 특가! 아메리카노 50% 할인',
@@ -2097,6 +2186,15 @@ async function editBlock(block: Block) {
     if (!editForm.value.backgroundColor) {
       editForm.value.backgroundColor = pageTheme.value.backgroundColor
     }
+  }
+
+  // Ensure default values for calendar blocks
+  if (block.type === 'calendar') {
+    if (!editForm.value.style) editForm.value.style = 'full'
+    if (editForm.value.showPublicHolidays === undefined) editForm.value.showPublicHolidays = true
+    if (editForm.value.showStoreSchedules === undefined) editForm.value.showStoreSchedules = true
+    if (!editForm.value.highlightColor) editForm.value.highlightColor = '#3b82f6'
+    if (!editForm.value.closedDayColor) editForm.value.closedDayColor = '#ef4444'
   }
 
   // Ensure default values for popular_menu blocks
