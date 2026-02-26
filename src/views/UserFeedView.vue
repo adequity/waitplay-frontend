@@ -671,10 +671,16 @@ async function handlePhotoUpload(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
 
+  // 10MB 제한
+  if (file.size > 10 * 1024 * 1024) {
+    alert('프로필 이미지는 10MB 이하만 가능합니다.')
+    return
+  }
+
   try {
     const formData = new FormData()
     formData.append('file', file)
-    const res = await apiClient.post('/api/FileUpload/image', formData, {
+    const res = await apiClient.post('/api/FileUpload/profile', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     if (res.data.fileUrl) {
