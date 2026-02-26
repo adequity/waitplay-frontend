@@ -42,6 +42,7 @@ export interface UserProfile {
   nickname: string
   profileImage?: string
   profileCode?: string
+  bio?: string
   kakaoId?: string
   naverId?: string
   company?: string
@@ -49,6 +50,12 @@ export interface UserProfile {
   createdAt: string
   qrCodeId?: string
   qrCode?: string
+}
+
+export interface UpdateProfileRequest {
+  nickname?: string
+  profileImage?: string
+  bio?: string
 }
 
 class AuthService {
@@ -98,6 +105,28 @@ class AuthService {
   async socialSignup(request: SocialSignupRequest): Promise<TokenResponse> {
     const response = await apiClient.post<TokenResponse>('/api/auth/signup/social', request)
     return response.data
+  }
+
+  /**
+   * 프로필 수정
+   */
+  async updateProfile(request: UpdateProfileRequest): Promise<{ success: boolean; nickname: string; profileImage: string | null; bio: string | null }> {
+    const response = await apiClient.patch('/api/auth/profile', request)
+    return response.data
+  }
+
+  /**
+   * 비밀번호 변경
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await apiClient.post('/api/auth/change-password', { currentPassword, newPassword })
+  }
+
+  /**
+   * 계정 삭제
+   */
+  async deleteAccount(password?: string): Promise<void> {
+    await apiClient.delete('/api/auth/account', { data: password ? { password } : {} })
   }
 }
 

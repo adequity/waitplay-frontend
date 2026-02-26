@@ -72,6 +72,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/UserFeedView.vue')
   },
   {
+    path: '/settings',
+    name: 'settings',
+    component: () => import('../views/SettingsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     // Legacy UUID URL redirect
     path: '/user/:userId',
     redirect: to => ({ name: 'user-feed', params: { code: to.params.userId } })

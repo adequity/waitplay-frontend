@@ -46,12 +46,11 @@
     <div ref="dockRef" class="floating-dock" :class="{ 'dark-theme': isDarkTheme }">
       <!-- 음악 버튼 -->
       <button
-        v-if="showMusic"
         class="dock-item"
-        :class="{ active: isMusicPlaying }"
-        @click.stop="toggleMusic"
-        @touchstart.prevent="onMusicTouchStart"
-        @touchend.prevent="onMusicTouchEnd"
+        :class="{ active: isMusicPlaying, disabled: !showMusic }"
+        @click.stop="showMusic && toggleMusic()"
+        @touchstart.prevent="showMusic && onMusicTouchStart()"
+        @touchend.prevent="showMusic && onMusicTouchEnd()"
       >
         <div class="dock-icon">
           <svg v-if="isMusicPlaying" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -102,7 +101,7 @@
       </button>
 
       <!-- 마이페이지 버튼 (본인 피드) -->
-      <button v-if="showMyPage" class="dock-item" @click="goToMyFeed">
+      <button class="dock-item" @click="goToMyFeed">
         <div class="dock-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -410,6 +409,11 @@ async function shareToTwitter() {
 
 .dock-item:active {
   transform: scale(0.95);
+}
+
+.dock-item.disabled {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .dock-item.active .dock-icon {

@@ -37,6 +37,8 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('refreshToken', data.refreshToken)
       localStorage.setItem('userRole', data.userRole)
 
+      await fetchUser()
+
       return data
     } catch (error) {
       console.error('Login failed:', error)

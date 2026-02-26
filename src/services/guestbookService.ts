@@ -167,6 +167,7 @@ export interface UserPublicProfile {
   nickname: string
   profileImage?: string
   profileCode?: string
+  bio?: string
   totalMessages: number
   followerCount: number
   followedStores: UserFollowedStoreInfo[]
@@ -479,6 +480,14 @@ class GuestbookService {
    */
   async getUserMessages(userId: string, page: number = 1, pageSize: number = 20): Promise<UserMessagesResponse> {
     const response = await apiClient.get<UserMessagesResponse>(`/api/guestbook/user/${userId}/messages?page=${page}&pageSize=${pageSize}`)
+    return response.data
+  }
+
+  /**
+   * Get a single guestbook message by ID
+   */
+  async getGuestbookMessage(messageId: string): Promise<any> {
+    const response = await apiClient.get(`/api/guestbook/message/${messageId}`)
     return response.data
   }
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-manage">
+  <div class="tab-content">
     <div class="page-header">
       <div>
         <h1>캘린더 관리</h1>
@@ -326,7 +326,11 @@ async function loadSchedules() {
     const response = await fetch(`${API_URL}/api/calendar/schedules${params}`, {
       headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
     })
-    if (!response.ok) throw new Error('Failed')
+    if (!response.ok) {
+      const errBody = await response.json().catch(() => ({}))
+      console.error('API 에러 상세:', response.status, errBody)
+      throw new Error(errBody.detail || errBody.message || 'Failed')
+    }
     schedules.value = await response.json()
   } catch (error) {
     console.error('일정 로드 실패:', error)
@@ -423,8 +427,14 @@ watch([currentYear, currentMonth], () => {
 </script>
 
 <style scoped>
-.calendar-manage {
-  padding: 0;
+.tab-content {
+  padding: 50px 60px;
+  background-color: #f5f5f7;
+  min-height: 100vh;
+  color: #1d1d1f;
+  font-family: 'Noto Sans KR', sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .page-header {
@@ -610,9 +620,9 @@ watch([currentYear, currentMonth], () => {
 }
 
 .schedule-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .schedule-card {
@@ -933,7 +943,13 @@ watch([currentYear, currentMonth], () => {
   background: #4338ca;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .tab-content { padding: 30px 20px; }
+
+  .schedule-list {
+    grid-template-columns: 1fr;
+  }
+
   .type-selector {
     grid-template-columns: repeat(2, 1fr);
   }

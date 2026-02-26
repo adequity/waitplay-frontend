@@ -940,7 +940,14 @@ const handleLogout = () => {
   router.push('/login')
 }
 
-const goToMyFeed = () => {
+const goToMyFeed = async () => {
+  if (!authStore.isAuthenticated) {
+    goToLogin()
+    return
+  }
+  if (!authStore.user) {
+    await authStore.fetchUser()
+  }
   const code = authStore.user?.profileCode || authStore.user?.id
   if (code) {
     router.push({ name: 'user-feed', params: { code } })

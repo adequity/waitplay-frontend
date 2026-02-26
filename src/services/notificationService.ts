@@ -5,8 +5,12 @@ export interface NotificationItem {
   type: 'like' | 'new_guestbook' | 'reply'
   fromUserId: string | null
   fromUserName: string | null
+  fromUserProfileImage: string | null
+  fromUserProfileCode: string | null
   guestbookMessageId: string | null
+  guestbookMessageText: string | null
   guestbookImageUrl: string | null
+  guestbookColor: string | null
   qrCodeId: string | null
   qrCode: string | null
   storeName: string | null
