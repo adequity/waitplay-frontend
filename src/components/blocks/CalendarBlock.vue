@@ -1,6 +1,9 @@
 <template>
   <div class="calendar-block" :class="`calendar-block--${data.style}`">
-    <h3 v-if="data.title" class="calendar-title" :style="{ color: titleColorValue }">{{ data.title }}</h3>
+    <!-- iOS 대형 타이틀 -->
+    <header v-if="data.title" class="calendar-header">
+      <h1 :style="{ color: titleColorValue }">{{ data.title }}</h1>
+    </header>
 
     <!-- Full / Compact Calendar View -->
     <template v-if="data.style === 'full' || data.style === 'compact'">
@@ -15,63 +18,70 @@
       </div>
 
       <div class="calendar-grid">
-        <div class="calendar-weekdays">
-          <span v-for="day in weekdays" :key="day" class="weekday" :class="{ 'weekday-sun': day === '일', 'weekday-sat': day === '토' }">{{ day }}</span>
+        <div class="weekdays">
+          <span v-for="day in weekdays" :key="day">{{ day }}</span>
         </div>
-        <div class="calendar-days">
-          <template v-for="(cell, idx) in calendarCells" :key="idx">
-            <!-- 주 구분선: 매 7개마다 (첫 줄 제외) -->
-            <div v-if="idx > 0 && idx % 7 === 0" class="week-separator"></div>
+
+        <div class="weeks">
+          <div
+            v-for="(week, wi) in calendarWeeks"
+            :key="wi"
+            class="week-row"
+          >
             <div
+              v-for="(cell, di) in week"
+              :key="di"
               class="day-cell"
               :class="{
-                'other-month': !cell.isCurrentMonth,
-                'today': cell.isToday,
-                'selected': selectedDate && selectedDate.day === cell.day && selectedDate.month === cell.month && cell.isCurrentMonth,
-                'has-holiday': cell.holiday && !cell.isPast,
-                'has-schedule': cell.schedules.length > 0 && !cell.isPast,
-                'is-closed': cell.isClosed && !cell.isPast,
-                'is-sunday': cell.dayOfWeek === 0,
-                'is-saturday': cell.dayOfWeek === 6,
-                'is-past': cell.isPast
+                'empty': !cell,
+                'other-month': cell && !cell.isCurrentMonth,
+                'today': cell && cell.isToday,
+                'selected': cell && selectedDate && selectedDate.day === cell.day && selectedDate.month === cell.month && cell.isCurrentMonth,
+                'sunday': cell && cell.dayOfWeek === 0,
+                'text-red': cell && cell.holiday && !cell.isPast,
+                'is-past': cell && cell.isPast
               }"
-              @click="cell.isCurrentMonth && selectDate(cell)"
+              @click="cell && cell.isCurrentMonth && selectDate(cell)"
             >
-              <span class="day-number">{{ cell.day }}</span>
-              <div v-if="!cell.isPast" class="day-indicators">
-                <span v-if="cell.holiday" class="indicator-dot indicator-holiday" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></span>
-                <span v-for="(sched, si) in cell.schedules.slice(0, 2)" :key="si" class="indicator-dot indicator-schedule" :style="{ backgroundColor: sched.color || data.highlightColor || '#007AFF' }"></span>
-              </div>
+              <template v-if="cell">
+                <span class="date-text">{{ cell.day }}</span>
+                <template v-if="!cell.isPast">
+                  <!-- pill: 다일 일정 (2일 이상) / dot: 단일 일정 -->
+                  <div v-if="cell.holiday" class="indicator pill" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></div>
+                  <template v-else>
+                    <div
+                      v-for="(sched, si) in cell.schedules.slice(0, 1)"
+                      :key="si"
+                      class="indicator"
+                      :class="isMultiDaySchedule(sched) ? 'pill' : 'dot'"
+                      :style="{ backgroundColor: sched.color || data.highlightColor || '#32ADE6' }"
+                    ></div>
+                  </template>
+                </template>
+              </template>
             </div>
-          </template>
+          </div>
         </div>
       </div>
 
       <!-- 선택된 날짜 이벤트 목록 -->
-      <div v-if="selectedDate" class="event-list">
-        <div class="event-list-header">
-          <span class="event-list-date">{{ selectedDate.month }}월 {{ selectedDate.day }}일</span>
-          <button class="event-list-close" @click="selectedDate = null">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-        </div>
+      <div v-if="selectedDate" class="event-list-container">
         <div v-if="selectedDate.holiday" class="event-item">
           <div class="event-color-bar" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></div>
-          <div class="event-info">
-            <span class="event-title">{{ selectedDate.holiday }}</span>
-            <span class="event-label">공휴일</span>
+          <div class="event-details">
+            <h3 class="event-title">{{ selectedDate.holiday }}</h3>
+            <p class="event-location">공휴일</p>
           </div>
         </div>
         <div v-for="sched in selectedDate.schedules" :key="sched.id" class="event-item">
-          <div class="event-color-bar" :style="{ backgroundColor: sched.color || data.highlightColor || '#007AFF' }"></div>
-          <div class="event-info">
-            <span class="event-title">{{ sched.title }}</span>
-            <span v-if="sched.scheduleType === 'closed'" class="event-label label-closed">휴무</span>
-            <span v-else-if="sched.scheduleType === 'event'" class="event-label label-event">이벤트</span>
-            <span v-else-if="sched.scheduleType === 'hours_change'" class="event-label label-hours">시간변경</span>
+          <div class="event-color-bar" :style="{ backgroundColor: sched.color || data.highlightColor || '#32ADE6' }"></div>
+          <div class="event-details">
+            <h3 class="event-title">{{ sched.title }}</h3>
+            <p v-if="sched.description" class="event-location">{{ sched.description }}</p>
+            <p v-else class="event-location">{{ getScheduleTypeLabel(sched.scheduleType) }}</p>
           </div>
         </div>
-        <div v-if="!selectedDate.holiday && selectedDate.schedules.length === 0" class="event-empty">
+        <div v-if="!selectedDate.holiday && selectedDate.schedules.length === 0" class="event-item-empty">
           일정이 없습니다
         </div>
       </div>
@@ -80,53 +90,83 @@
     <!-- Week View (이번주 캘린더) -->
     <template v-if="data.style === 'week'">
       <div class="calendar-grid">
-        <div class="calendar-weekdays">
-          <span v-for="day in weekdays" :key="day" class="weekday" :class="{ 'weekday-sun': day === '일', 'weekday-sat': day === '토' }">{{ day }}</span>
+        <div class="weekdays">
+          <span v-for="day in weekdays" :key="day">{{ day }}</span>
         </div>
-        <div class="calendar-days week-rows">
-          <template v-for="(cell, idx) in weekCells" :key="idx">
-            <div v-if="idx === 7" class="week-separator"></div>
+        <div class="weeks">
+          <div class="week-row">
             <div
+              v-for="(cell, idx) in weekCells.slice(0, 7)"
+              :key="idx"
               class="day-cell"
               :class="{
                 'today': cell.isToday,
                 'selected': selectedDate && selectedDate.day === cell.day && selectedDate.month === cell.month,
-                'has-holiday': cell.holiday,
-                'has-schedule': cell.schedules.length > 0,
-                'is-closed': cell.isClosed,
-                'is-sunday': cell.dayOfWeek === 0,
-                'is-saturday': cell.dayOfWeek === 6,
+                'sunday': cell.dayOfWeek === 0,
+                'text-red': cell.holiday,
                 'other-month': !cell.isSameMonth
               }"
               @click="selectDate(cell)"
             >
-              <span class="day-number">{{ cell.day }}</span>
-              <div class="day-indicators">
-                <span v-if="cell.holiday" class="indicator-dot indicator-holiday" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></span>
-                <span v-for="(sched, si) in cell.schedules.slice(0, 2)" :key="si" class="indicator-dot indicator-schedule" :style="{ backgroundColor: sched.color || data.highlightColor || '#007AFF' }"></span>
-              </div>
+              <span class="date-text">{{ cell.day }}</span>
+              <div v-if="cell.holiday" class="indicator pill" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></div>
+              <template v-else>
+                <div
+                  v-for="(sched, si) in cell.schedules.slice(0, 1)"
+                  :key="si"
+                  class="indicator"
+                  :class="isMultiDaySchedule(sched) ? 'pill' : 'dot'"
+                  :style="{ backgroundColor: sched.color || data.highlightColor || '#32ADE6' }"
+                ></div>
+              </template>
             </div>
-          </template>
+          </div>
+          <div class="week-row">
+            <div
+              v-for="(cell, idx) in weekCells.slice(7, 14)"
+              :key="idx"
+              class="day-cell"
+              :class="{
+                'today': cell.isToday,
+                'selected': selectedDate && selectedDate.day === cell.day && selectedDate.month === cell.month,
+                'sunday': cell.dayOfWeek === 0,
+                'text-red': cell.holiday,
+                'other-month': !cell.isSameMonth
+              }"
+              @click="selectDate(cell)"
+            >
+              <span class="date-text">{{ cell.day }}</span>
+              <div v-if="cell.holiday" class="indicator pill" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></div>
+              <template v-else>
+                <div
+                  v-for="(sched, si) in cell.schedules.slice(0, 1)"
+                  :key="si"
+                  class="indicator"
+                  :class="isMultiDaySchedule(sched) ? 'pill' : 'dot'"
+                  :style="{ backgroundColor: sched.color || data.highlightColor || '#32ADE6' }"
+                ></div>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- 이번주/다음주 일정 목록 -->
-      <div class="event-list">
-        <div v-if="weekEvents.length === 0" class="event-empty">
+      <div class="event-list-container">
+        <div v-if="weekEvents.length === 0" class="event-item-empty">
           예정된 일정이 없습니다
         </div>
         <div v-for="event in weekEvents" :key="event.id" class="event-item">
           <div class="event-color-bar" :style="{ backgroundColor: getEventColor(event) }"></div>
-          <div class="event-info">
-            <span class="event-title">{{ event.title }}</span>
-            <span class="event-meta">{{ event.day }}일 ({{ event.weekday }})</span>
+          <div class="event-details">
+            <h3 class="event-title">{{ event.title }}</h3>
+            <p class="event-location">{{ event.day }}일 ({{ event.weekday }}) · {{ event.typeLabel }}</p>
           </div>
-          <span class="event-badge" :class="`badge-${event.type}`">{{ event.typeLabel }}</span>
         </div>
       </div>
 
       <!-- 선택된 날짜 상세 (week) -->
-      <div v-if="selectedDate" class="event-list selected-detail">
+      <div v-if="selectedDate" class="event-list-container selected-detail">
         <div class="event-list-header">
           <span class="event-list-date">{{ selectedDate.month }}월 {{ selectedDate.day }}일</span>
           <button class="event-list-close" @click="selectedDate = null">
@@ -135,21 +175,20 @@
         </div>
         <div v-if="selectedDate.holiday" class="event-item">
           <div class="event-color-bar" :style="{ backgroundColor: data.closedDayColor || '#FF3B30' }"></div>
-          <div class="event-info">
-            <span class="event-title">{{ selectedDate.holiday }}</span>
-            <span class="event-label">공휴일</span>
+          <div class="event-details">
+            <h3 class="event-title">{{ selectedDate.holiday }}</h3>
+            <p class="event-location">공휴일</p>
           </div>
         </div>
         <div v-for="sched in selectedDate.schedules" :key="sched.id" class="event-item">
-          <div class="event-color-bar" :style="{ backgroundColor: sched.color || data.highlightColor || '#007AFF' }"></div>
-          <div class="event-info">
-            <span class="event-title">{{ sched.title }}</span>
-            <span v-if="sched.scheduleType === 'closed'" class="event-label label-closed">휴무</span>
-            <span v-else-if="sched.scheduleType === 'event'" class="event-label label-event">이벤트</span>
-            <span v-else-if="sched.scheduleType === 'hours_change'" class="event-label label-hours">시간변경</span>
+          <div class="event-color-bar" :style="{ backgroundColor: sched.color || data.highlightColor || '#32ADE6' }"></div>
+          <div class="event-details">
+            <h3 class="event-title">{{ sched.title }}</h3>
+            <p v-if="sched.description" class="event-location">{{ sched.description }}</p>
+            <p v-else class="event-location">{{ getScheduleTypeLabel(sched.scheduleType) }}</p>
           </div>
         </div>
-        <div v-if="!selectedDate.holiday && selectedDate.schedules.length === 0" class="event-empty">
+        <div v-if="!selectedDate.holiday && selectedDate.schedules.length === 0" class="event-item-empty">
           일정이 없습니다
         </div>
       </div>
@@ -167,18 +206,16 @@
         </button>
       </div>
 
-      <div class="event-list">
-        <div v-if="filteredEvents.length === 0" class="event-empty">
+      <div class="event-list-container">
+        <div v-if="filteredEvents.length === 0" class="event-item-empty">
           {{ data.futureOnly ? '예정된 일정이 없습니다' : '이번 달 일정이 없습니다' }}
         </div>
         <div v-for="event in filteredEvents" :key="event.id" class="event-item">
           <div class="event-color-bar" :style="{ backgroundColor: getEventColor(event) }"></div>
-          <div class="event-info">
-            <span class="event-title">{{ event.title }}</span>
-            <span class="event-meta">{{ event.day }}일 ({{ event.weekday }})</span>
-            <span v-if="event.description" class="event-desc">{{ event.description }}</span>
+          <div class="event-details">
+            <h3 class="event-title">{{ event.title }}</h3>
+            <p class="event-location">{{ event.day }}일 ({{ event.weekday }}) · {{ event.typeLabel }}</p>
           </div>
-          <span class="event-badge" :class="`badge-${event.type}`">{{ event.typeLabel }}</span>
         </div>
       </div>
     </template>
@@ -264,6 +301,13 @@ const nextMonthSchedules = ref<ScheduleItem[]>([])
 const weekdays = ['일', '월', '화', '수', '목', '금', '토']
 const weekdayNames = ['일', '월', '화', '수', '목', '금', '토']
 
+const typeLabels: Record<string, string> = {
+  closed: '휴무',
+  event: '이벤트',
+  notice: '공지',
+  hours_change: '시간변경'
+}
+
 const titleColorValue = computed(() => {
   return props.data.titleColor || props.textColor || undefined
 })
@@ -290,41 +334,33 @@ function getSchedulesForDate(dateStr: string): ScheduleItem[] {
 
 function getEventColor(event: ListEvent): string {
   if (event.type === 'holiday') return props.data.closedDayColor || '#FF3B30'
-  return props.data.highlightColor || '#007AFF'
+  return props.data.highlightColor || '#32ADE6'
 }
 
-const calendarCells = computed<CalendarCell[]>(() => {
+function getScheduleTypeLabel(type: string): string {
+  return typeLabels[type] || type
+}
+
+function isMultiDaySchedule(sched: ScheduleItem): boolean {
+  return sched.startDate !== sched.endDate
+}
+
+// calendarCells를 주 단위 2D 배열로 변환
+const calendarWeeks = computed<(CalendarCell | null)[][]>(() => {
   const y = currentYear.value
   const m = currentMonth.value
   const firstDay = new Date(y, m - 1, 1).getDay()
   const daysInMonth = new Date(y, m, 0).getDate()
-  const prevMonthDays = new Date(y, m - 1, 0).getDate()
-
-  const cells: CalendarCell[] = []
   const isFutureOnly = props.data.futureOnly
 
-  // Previous month days
-  for (let i = firstDay - 1; i >= 0; i--) {
-    const day = prevMonthDays - i
-    const pm = m - 1 || 12
-    const py = m === 1 ? y - 1 : y
-    const dateStr = makeDateStr(py, pm, day)
-    cells.push({
-      day,
-      month: pm,
-      year: py,
-      isCurrentMonth: false,
-      isToday: false,
-      isPast: false,
-      dayOfWeek: (firstDay - i - 1 + 7) % 7,
-      holiday: null,
-      isClosed: false,
-      schedules: [],
-      dateStr
-    })
+  const allCells: (CalendarCell | null)[] = []
+
+  // 첫 주 빈 셀
+  for (let i = 0; i < firstDay; i++) {
+    allCells.push(null)
   }
 
-  // Current month days
+  // 현재 월 날짜
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = makeDateStr(y, m, d)
     const dayOfWeek = new Date(y, m - 1, d).getDay()
@@ -334,7 +370,7 @@ const calendarCells = computed<CalendarCell[]>(() => {
     const daySchedules = isPast ? [] : schedules.value.filter(s => dateStr >= s.startDate && dateStr <= s.endDate)
     const isClosed = daySchedules.some(s => s.scheduleType === 'closed')
 
-    cells.push({
+    allCells.push({
       day: d,
       month: m,
       year: y,
@@ -349,35 +385,24 @@ const calendarCells = computed<CalendarCell[]>(() => {
     })
   }
 
-  // Next month days
-  const remaining = 42 - cells.length
-  for (let d = 1; d <= remaining; d++) {
-    const nm = m + 1 > 12 ? 1 : m + 1
-    const ny = m === 12 ? y + 1 : y
-    const dateStr = makeDateStr(ny, nm, d)
-    cells.push({
-      day: d,
-      month: nm,
-      year: ny,
-      isCurrentMonth: false,
-      isToday: false,
-      isPast: false,
-      dayOfWeek: (firstDay + daysInMonth + d - 1) % 7,
-      holiday: null,
-      isClosed: false,
-      schedules: [],
-      dateStr
-    })
+  // 마지막 주 빈 셀
+  while (allCells.length % 7 !== 0) {
+    allCells.push(null)
   }
 
-  return cells
+  // 주 단위로 나누기
+  const weeks: (CalendarCell | null)[][] = []
+  for (let i = 0; i < allCells.length; i += 7) {
+    weeks.push(allCells.slice(i, i + 7))
+  }
+
+  return weeks
 })
 
 // Week mode: 이번주 + 다음주 14일 셀
 const weekCells = computed<CalendarCell[]>(() => {
   const today = new Date()
-  const todayDay = today.getDay() // 0=일 ~ 6=토
-  // 이번주 일요일로 이동
+  const todayDay = today.getDay()
   const startOfWeek = new Date(today)
   startOfWeek.setDate(today.getDate() - todayDay)
 
@@ -419,12 +444,6 @@ const weekCells = computed<CalendarCell[]>(() => {
 // Week mode: 이번주/다음주 일정 목록
 const weekEvents = computed<ListEvent[]>(() => {
   const events: ListEvent[] = []
-  const typeLabels: Record<string, string> = {
-    closed: '휴무',
-    event: '이벤트',
-    notice: '공지',
-    hours_change: '시간변경'
-  }
 
   for (const cell of weekCells.value) {
     if (cell.holiday && props.data.showPublicHolidays) {
@@ -440,20 +459,17 @@ const weekEvents = computed<ListEvent[]>(() => {
     }
     if (props.data.showStoreSchedules) {
       for (const s of cell.schedules) {
-        // 중복 방지: startDate 기준으로만 추가
-        if (s.startDate === cell.dateStr || (cell.dateStr >= s.startDate && cell.dateStr <= s.endDate && !events.some(e => e.id === `ws-${s.id}`))) {
-          if (!events.some(e => e.id === `ws-${s.id}`)) {
-            events.push({
-              id: `ws-${s.id}`,
-              day: new Date(s.startDate).getDate(),
-              weekday: weekdayNames[new Date(s.startDate).getDay()],
-              title: s.title,
-              description: s.description,
-              type: s.scheduleType,
-              typeLabel: typeLabels[s.scheduleType] || s.scheduleType,
-              dateStr: s.startDate
-            })
-          }
+        if (!events.some(e => e.id === `ws-${s.id}`)) {
+          events.push({
+            id: `ws-${s.id}`,
+            day: new Date(s.startDate).getDate(),
+            weekday: weekdayNames[new Date(s.startDate).getDay()],
+            title: s.title,
+            description: s.description,
+            type: s.scheduleType,
+            typeLabel: typeLabels[s.scheduleType] || s.scheduleType,
+            dateStr: s.startDate
+          })
         }
       }
     }
@@ -484,12 +500,6 @@ const allEvents = computed<ListEvent[]>(() => {
   if (props.data.showStoreSchedules) {
     for (const s of schedules.value) {
       const d = new Date(s.startDate)
-      const typeLabels: Record<string, string> = {
-        closed: '휴무',
-        event: '이벤트',
-        notice: '공지',
-        hours_change: '시간변경'
-      }
       events.push({
         id: `s-${s.id}`,
         day: d.getDate(),
@@ -506,7 +516,6 @@ const allEvents = computed<ListEvent[]>(() => {
   return events.sort((a, b) => a.dateStr.localeCompare(b.dateStr))
 })
 
-// futureOnly 필터 적용된 이벤트 목록 (list 모드용)
 const filteredEvents = computed(() => {
   if (!props.data.futureOnly) return allEvents.value
   return allEvents.value.filter(e => e.dateStr >= todayStr.value)
@@ -559,7 +568,6 @@ async function loadCalendarData() {
     console.error('[CalendarBlock] Failed to load calendar data:', e)
   }
 
-  // week 모드일 때 다음달 데이터도 로드 (2주가 월을 걸칠 수 있음)
   if (props.data.style === 'week') {
     await loadNextMonthData()
   }
@@ -572,13 +580,11 @@ async function loadNextMonthData() {
   const thisMonth = today.getMonth() + 1
   const thisYear = today.getFullYear()
 
-  // 다음달과 이번달이 다를 때만
   const nextM = thisMonth === 12 ? 1 : thisMonth + 1
   const nextY = thisMonth === 12 ? thisYear + 1 : thisYear
 
-  // 이번주+다음주가 다음달에 걸치는지 확인
   const endOfWeek = new Date(today)
-  endOfWeek.setDate(today.getDate() - today.getDay() + 13) // 다음주 토요일
+  endOfWeek.setDate(today.getDate() - today.getDay() + 13)
   if (endOfWeek.getMonth() + 1 !== thisMonth) {
     try {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(props.qrCodeId!)
@@ -610,28 +616,33 @@ watch([currentYear, currentMonth], () => {
 </script>
 
 <style scoped>
+/* iOS 시스템 폰트 */
 .calendar-block {
-  padding: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  max-width: 400px;
+  margin: 0 auto;
+  color: #000000;
 }
 
-.calendar-title {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-  text-align: center;
-  letter-spacing: -0.3px;
+/* --- iOS 대형 헤더 --- */
+.calendar-header {
+  padding: 16px 20px;
 }
 
-/* Navigation */
+.calendar-header h1 {
+  font-size: 34px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+/* --- 네비게이션 --- */
 .calendar-nav {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .nav-btn {
@@ -664,167 +675,148 @@ watch([currentYear, currentMonth], () => {
   letter-spacing: -0.2px;
 }
 
-/* Calendar Grid */
+/* --- 캘린더 그리드 --- */
 .calendar-grid {
-  background: transparent;
-  border-radius: 0;
-  overflow: visible;
+  width: 100%;
 }
 
-.calendar-weekdays {
+.weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #E5E5EA;
   padding-bottom: 8px;
 }
 
-.weekday {
-  text-align: center;
+.weekdays span {
   font-size: 11px;
   font-weight: 600;
   color: #8E8E93;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.weekday-sun {
-  color: #FF3B30;
-}
-
-.weekday-sat {
-  color: #007AFF;
-}
-
-.calendar-days {
+/* --- 주차 행 --- */
+.week-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid #E5E5EA;
 }
 
-/* Week separator line */
-.week-separator {
-  grid-column: 1 / -1;
-  height: 1px;
-  background: rgba(60, 60, 67, 0.08);
-  margin: 2px 0;
+.week-row:last-child {
+  border-bottom: none;
 }
 
+/* --- 날짜 셀 --- */
 .day-cell {
-  position: relative;
+  height: 54px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 6px 0;
+  justify-content: flex-start;
+  padding-top: 8px;
+  position: relative;
   cursor: pointer;
-  transition: opacity 0.15s;
-  gap: 3px;
 }
 
-.day-cell:active {
+.day-cell:active:not(.empty) {
   opacity: 0.6;
 }
 
-.day-cell.other-month {
-  opacity: 0.25;
+.day-cell.empty {
+  cursor: default;
 }
 
-.day-cell.is-past {
-  opacity: 0.3;
-}
-
-/* Date number */
-.day-number {
-  font-size: 16px;
-  font-weight: 400;
-  color: #1C1C1E;
+/* --- 날짜 텍스트 --- */
+.date-text {
+  font-size: 20px;
+  font-weight: 500;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  line-height: 1;
-  letter-spacing: -0.2px;
 }
 
-/* Today: black circle with white text */
-.day-cell.today .day-number {
-  background: #1C1C1E;
-  color: #FFFFFF;
-  font-weight: 600;
+/* 일요일, 빈 셀: 회색 */
+.day-cell.sunday .date-text {
+  color: #8E8E93;
 }
 
-/* Selected: iOS blue ring */
-.day-cell.selected .day-number {
-  background: #007AFF;
-  color: #FFFFFF;
-  font-weight: 600;
+/* 이전/다음 달 */
+.day-cell.other-month {
+  opacity: 0.3;
 }
 
-.day-cell.is-sunday .day-number {
+/* 과거 날짜 (futureOnly) */
+.day-cell.is-past {
+  opacity: 0.3;
+}
+
+/* 공휴일 등 빨간색 */
+.day-cell.text-red .date-text {
   color: #FF3B30;
 }
 
-.day-cell.is-saturday .day-number {
-  color: #007AFF;
-}
-
-.day-cell.today.is-sunday .day-number,
-.day-cell.today.is-saturday .day-number,
-.day-cell.selected.is-sunday .day-number,
-.day-cell.selected.is-saturday .day-number {
-  color: #FFFFFF;
-}
-
-.day-cell.has-holiday .day-number,
-.day-cell.is-closed .day-number {
-  color: #FF3B30;
+/* 선택된 날짜: 검은 원 */
+.day-cell.selected .date-text {
+  background-color: #000000;
+  color: #ffffff;
   font-weight: 600;
 }
 
-.day-cell.today.has-holiday .day-number,
-.day-cell.selected.has-holiday .day-number {
-  color: #FFFFFF;
+/* 오늘: 빨간 원 (iOS 캘린더 기본) */
+.day-cell.today .date-text {
+  background-color: #FF3B30;
+  color: #ffffff;
+  font-weight: 600;
 }
 
-/* Indicator dots */
-.day-indicators {
-  display: flex;
-  gap: 3px;
-  height: 5px;
-  align-items: center;
-  justify-content: center;
+/* 선택 + 오늘 동시: 선택이 우선 */
+.day-cell.selected.today .date-text {
+  background-color: #000000;
+  color: #ffffff;
 }
 
-.indicator-dot {
-  width: 5px;
-  height: 5px;
+/* --- 인디케이터 (dot, pill) --- */
+.indicator {
+  margin-top: 2px;
+}
+
+.indicator.dot {
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  flex-shrink: 0;
 }
 
-/* Event list (selected date detail / list view) */
-.event-list {
+.indicator.pill {
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+/* --- 하단 이벤트 리스트 --- */
+.event-list-container {
   margin-top: 16px;
+  border-top: 1px solid #F2F2F7;
 }
 
-.event-list.selected-detail {
+.event-list-container.selected-detail {
   margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(60, 60, 67, 0.08);
 }
 
 .event-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding: 0 4px;
+  padding: 12px 20px 0;
 }
 
 .event-list-date {
   font-weight: 600;
   font-size: 15px;
-  color: #1C1C1E;
-  letter-spacing: -0.2px;
+  color: #000000;
 }
 
 .event-list-close {
@@ -837,21 +829,17 @@ watch([currentYear, currentMonth], () => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: background 0.15s;
 }
 
 .event-list-close:hover {
   background: rgba(142, 142, 147, 0.12);
 }
 
-/* Event items with iOS color bar */
 .event-item {
   display: flex;
-  align-items: stretch;
-  gap: 10px;
-  padding: 10px 4px;
-  border-bottom: 1px solid rgba(60, 60, 67, 0.06);
-  min-height: 44px;
+  align-items: flex-start;
+  padding: 16px 20px;
+  border-bottom: 1px solid #F2F2F7;
 }
 
 .event-item:last-child {
@@ -860,160 +848,102 @@ watch([currentYear, currentMonth], () => {
 
 .event-color-bar {
   width: 4px;
+  height: 38px;
   border-radius: 2px;
+  margin-right: 12px;
   flex-shrink: 0;
-  align-self: stretch;
 }
 
-.event-info {
+.event-details {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
 }
 
 .event-title {
   font-size: 15px;
-  font-weight: 500;
-  color: #1C1C1E;
-  line-height: 1.3;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  letter-spacing: -0.2px;
+  color: #000000;
 }
 
-.event-label {
-  font-size: 12px;
+.event-location {
+  font-size: 13px;
   color: #8E8E93;
-  letter-spacing: -0.1px;
+  margin: 0;
 }
 
-.event-label.label-closed {
-  color: #FF3B30;
-}
-
-.event-label.label-event {
-  color: #007AFF;
-}
-
-.event-label.label-hours {
-  color: #FF9500;
-}
-
-.event-meta {
-  font-size: 12px;
-  color: #8E8E93;
-  letter-spacing: -0.1px;
-}
-
-.event-desc {
-  font-size: 12px;
-  color: #8E8E93;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.event-badge {
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-weight: 500;
-  flex-shrink: 0;
-  align-self: center;
-  letter-spacing: -0.1px;
-}
-
-.event-badge.badge-holiday {
-  background: rgba(255, 59, 48, 0.1);
-  color: #FF3B30;
-}
-
-.event-badge.badge-closed {
-  background: rgba(255, 59, 48, 0.1);
-  color: #FF3B30;
-}
-
-.event-badge.badge-event {
-  background: rgba(0, 122, 255, 0.1);
-  color: #007AFF;
-}
-
-.event-badge.badge-notice {
-  background: rgba(52, 199, 89, 0.1);
-  color: #34C759;
-}
-
-.event-badge.badge-hours_change {
-  background: rgba(255, 149, 0, 0.1);
-  color: #FF9500;
-}
-
-.event-empty {
+.event-item-empty {
   text-align: center;
-  padding: 24px 16px;
+  padding: 24px 20px;
   color: #8E8E93;
   font-size: 14px;
-  letter-spacing: -0.1px;
 }
 
-/* Week View */
-.week-rows {
-  grid-template-columns: repeat(7, 1fr);
+/* --- Compact 스타일 --- */
+.calendar-block--compact .calendar-header h1 {
+  font-size: 22px;
+  font-weight: 700;
 }
 
-/* Compact style */
 .calendar-block--compact .day-cell {
-  padding: 4px 0;
+  height: 44px;
+  padding-top: 6px;
 }
 
-.calendar-block--compact .day-number {
-  font-size: 14px;
+.calendar-block--compact .date-text {
+  font-size: 16px;
   width: 28px;
   height: 28px;
 }
 
-.calendar-block--compact .calendar-title {
-  font-size: 17px;
+.calendar-block--compact .indicator.dot {
+  width: 3px;
+  height: 3px;
 }
 
-.calendar-block--compact .indicator-dot {
-  width: 4px;
-  height: 4px;
+.calendar-block--compact .indicator.pill {
+  width: 10px;
+  height: 3px;
 }
 
-/* Week style */
-.calendar-block--week .calendar-title {
-  font-size: 18px;
-  margin-bottom: 12px;
+/* --- Week 스타일 --- */
+.calendar-block--week .calendar-header h1 {
+  font-size: 24px;
+  font-weight: 700;
 }
 
-/* Responsive */
+/* --- 반응형 --- */
 @media (max-width: 640px) {
-  .calendar-block {
-    padding: 12px;
-  }
-
   .day-cell {
-    padding: 4px 0;
+    height: 48px;
+    padding-top: 6px;
   }
 
-  .day-number {
-    font-size: 14px;
+  .date-text {
+    font-size: 17px;
     width: 28px;
     height: 28px;
   }
 
-  .indicator-dot {
-    width: 4px;
-    height: 4px;
+  .indicator.dot {
+    width: 3px;
+    height: 3px;
   }
 
-  .event-title {
-    font-size: 14px;
+  .indicator.pill {
+    width: 12px;
+    height: 3px;
+  }
+
+  .event-item {
+    padding: 12px 16px;
+  }
+
+  .event-color-bar {
+    height: 32px;
   }
 }
 </style>
