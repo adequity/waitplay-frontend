@@ -1476,7 +1476,7 @@
                   @click="editForm.style = 'full'"
                 >
                   <div class="countdown-style-preview card-preview">
-                    <div class="preview-box" style="font-size: 10px;">📅</div>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M16 2v4M8 2v4"/></svg>
                   </div>
                   <span>전체</span>
                 </button>
@@ -1486,7 +1486,7 @@
                   @click="editForm.style = 'compact'"
                 >
                   <div class="countdown-style-preview minimal-preview">
-                    <div class="preview-line"></div>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M16 2v4M8 2v4"/><circle cx="8" cy="15" r="1" fill="#6b7280"/></svg>
                   </div>
                   <span>컴팩트</span>
                 </button>
@@ -1496,9 +1496,19 @@
                   @click="editForm.style = 'list'"
                 >
                   <div class="countdown-style-preview banner-preview">
-                    <div class="preview-banner" style="font-size: 8px;">목록</div>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.5"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1" fill="#6b7280"/><circle cx="4" cy="12" r="1" fill="#6b7280"/><circle cx="4" cy="18" r="1" fill="#6b7280"/></svg>
                   </div>
                   <span>목록</span>
+                </button>
+                <button
+                  type="button"
+                  :class="['countdown-style-btn', { active: editForm.style === 'week' }]"
+                  @click="editForm.style = 'week'"
+                >
+                  <div class="countdown-style-preview card-preview">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.5"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 12h18"/><path d="M7 6v12M11 6v12M15 6v12M19 6v12"/></svg>
+                  </div>
+                  <span>이번주</span>
                 </button>
               </div>
             </div>
@@ -1508,19 +1518,27 @@
                 <input type="checkbox" v-model="editForm.showPublicHolidays">
                 <span>공휴일 표시</span>
               </label>
-              <label style="display: flex; align-items: center; gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <input type="checkbox" v-model="editForm.showStoreSchedules">
                 <span>매장 일정 표시</span>
               </label>
+              <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" v-model="editForm.futureOnly">
+                <span>앞으로의 일정만 표시</span>
+              </label>
             </div>
             <div class="form-group">
-              <label class="form-label">일정 색상</label>
-              <div style="display: flex; gap: 12px;">
-                <div style="flex: 1;">
+              <label class="form-label">색상</label>
+              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 80px;">
+                  <label class="form-label" style="font-size: 12px; color: #6b7280;">제목/네비</label>
+                  <input type="color" class="form-input" v-model="editForm.titleColor" style="height: 36px; padding: 2px;">
+                </div>
+                <div style="flex: 1; min-width: 80px;">
                   <label class="form-label" style="font-size: 12px; color: #6b7280;">이벤트/일정</label>
                   <input type="color" class="form-input" v-model="editForm.highlightColor" style="height: 36px; padding: 2px;">
                 </div>
-                <div style="flex: 1;">
+                <div style="flex: 1; min-width: 80px;">
                   <label class="form-label" style="font-size: 12px; color: #6b7280;">휴무일</label>
                   <input type="color" class="form-input" v-model="editForm.closedDayColor" style="height: 36px; padding: 2px;">
                 </div>
@@ -1528,7 +1546,7 @@
             </div>
             <div class="form-group" style="padding: 12px; background: #f0f9ff; border-radius: 8px;">
               <p style="font-size: 12px; color: #3b82f6; margin: 0;">
-                💡 매장 일정은 관리자 페이지 &gt; 캘린더 관리에서 추가할 수 있습니다.
+                매장 일정은 관리자 페이지 &gt; 캘린더 관리에서 추가할 수 있습니다.
                 공휴일은 마스터관리자가 관리합니다.
               </p>
             </div>
@@ -1772,7 +1790,7 @@ const availableBlockTypes = [
   { type: 'image', icon: 'I', name: '이미지', description: '이미지 추가' },
   { type: 'countdown', icon: 'C', name: '카운트다운', description: '이벤트 타이머' },
   { type: 'guestbook', icon: 'N', name: '방명록', description: '손글씨 방명록' },
-  { type: 'calendar', icon: '📅', name: '캘린더', description: '휴무일/일정 캘린더' }
+  { type: 'calendar', icon: 'D', name: '캘린더', description: '휴무일/일정 캘린더' }
 ]
 
 // Load layout from API on mount
@@ -1933,10 +1951,10 @@ function getBlockIcon(type: string): string {
     games_carousel: 'G',
     popular_menu: 'M',
     image: 'I',
-    countdown: '⏱',
-    guestbook: '✍',
-    marquee: '📢',
-    calendar: '📅'
+    countdown: 'T',
+    guestbook: 'N',
+    marquee: 'Q',
+    calendar: 'D'
   }
   return icons[type] || '□'
 }
@@ -2106,7 +2124,9 @@ function getDefaultBlockData(type: BlockType): any {
         showStoreSchedules: true,
         style: 'full',
         highlightColor: '#3b82f6',
-        closedDayColor: '#ef4444'
+        closedDayColor: '#ef4444',
+        titleColor: '',
+        futureOnly: false
       }
     case 'marquee':
       return {
@@ -2195,6 +2215,7 @@ async function editBlock(block: Block) {
     if (editForm.value.showStoreSchedules === undefined) editForm.value.showStoreSchedules = true
     if (!editForm.value.highlightColor) editForm.value.highlightColor = '#3b82f6'
     if (!editForm.value.closedDayColor) editForm.value.closedDayColor = '#ef4444'
+    if (editForm.value.futureOnly === undefined) editForm.value.futureOnly = false
   }
 
   // Ensure default values for popular_menu blocks

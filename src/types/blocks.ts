@@ -181,9 +181,11 @@ export interface CalendarBlockData {
   title: string
   showPublicHolidays: boolean // 공휴일 표시 여부
   showStoreSchedules: boolean // 매장 일정 표시 여부
-  style: 'full' | 'compact' | 'list' // 캘린더 표시 스타일
+  style: 'full' | 'compact' | 'list' | 'week' // 캘린더 표시 스타일
   highlightColor?: string // 일정 하이라이트 색상
   closedDayColor?: string // 휴무일 표시 색상
+  titleColor?: string // 제목/네비게이션 텍스트 색상
+  futureOnly?: boolean // 앞으로의 일정만 표시
 }
 
 // Base Block Interface
