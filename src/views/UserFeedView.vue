@@ -88,30 +88,35 @@
           </template>
         </div>
 
-        <!-- 탭 메뉴 -->
+        <!-- 탭 메뉴 (매장 페이지와 동일 스타일) -->
         <div class="profile-tabs">
           <button class="tab-btn" :class="{ active: activeTab === 'posts' }" @click="activeTab = 'posts'">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/>
-              <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/>
-              <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/>
-              <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/>
-            </svg>
+            <span class="tab-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 4H4C3.44772 4 3 4.44772 3 5V19C3 19.5523 3.44772 20 4 20H18C18.5523 20 19 19.5523 19 19V12M17.5 2.5L12 8L11 12L15 11L20.5 5.5C21.0523 4.94772 21.0523 4.05228 20.5 3.5L19.5 2.5C18.9477 1.94772 18.0523 1.94772 17.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="tab-label">방명록</span>
           </button>
           <button class="tab-btn" :class="{ active: activeTab === 'stores' }" @click="activeTab = 'stores'">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <span class="tab-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 21H21M3 7V21M21 7V21M6 21V17C6 15.8954 6.89543 15 8 15H10C11.1046 15 12 15.8954 12 17V21M14 11H17M14 15H17M7 11H10M3 7L12 3L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="tab-label">단골매장</span>
           </button>
           <!-- 알림 탭 (본인 프로필에서만) -->
           <button v-if="isMyProfile" class="tab-btn" :class="{ active: activeTab === 'notifications' }" @click="switchToNotifications">
-            <div class="tab-icon-wrapper">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2"/>
-              </svg>
-              <span v-if="unreadCount > 0" class="tab-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-            </div>
+            <span class="tab-icon">
+              <div class="tab-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span v-if="unreadCount > 0" class="tab-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+              </div>
+            </span>
+            <span class="tab-label">알림</span>
           </button>
         </div>
       </div>
@@ -866,8 +871,8 @@ const formatRelativeDate = (dateString: string): string => {
 .profile-header {
   display: flex;
   align-items: center;
-  padding: 1.5rem 1rem 1rem;
-  gap: 2rem;
+  padding: 1.25rem 1rem 1rem;
+  gap: 1.5rem;
 }
 
 .profile-avatar {
@@ -917,51 +922,78 @@ const formatRelativeDate = (dateString: string): string => {
 }
 
 .stat-value {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #262626;
 }
 
 .stat-label {
-  font-size: 13px;
+  font-size: 0.75rem;
   color: #8e8e8e;
 }
 
-/* 프로필 정보 */
+/* 프로필 정보 (매장 페이지와 동일) */
 .profile-info {
-  padding: 0 1rem 0.75rem;
+  padding: 0 1rem 0;
 }
 
 .store-name {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   color: #262626;
   margin: 0;
 }
 
-/* 탭 메뉴 */
+/* 탭 메뉴 (매장 페이지와 동일) */
 .profile-tabs {
   display: flex;
-  border-top: 1px solid #efefef;
+  border-bottom: 1px solid #efefef;
 }
 
 .tab-btn {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 0.75rem;
+  gap: 0.375rem;
+  padding: 0.75rem 0;
   background: none;
   border: none;
-  border-bottom: 1px solid transparent;
+  border-bottom: 2px solid transparent;
   cursor: pointer;
-  color: #8e8e8e;
   transition: all 0.2s;
+  margin-bottom: -1px;
+}
+
+.tab-btn:hover .tab-icon {
+  color: #262626;
 }
 
 .tab-btn.active {
-  color: #262626;
   border-bottom-color: #262626;
+}
+
+.tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8e8e8e;
+  transition: color 0.2s;
+}
+
+.tab-btn.active .tab-icon {
+  color: #262626;
+}
+
+.tab-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #8e8e8e;
+  letter-spacing: 0.05em;
+}
+
+.tab-btn.active .tab-label {
+  color: #262626;
 }
 
 .tab-icon-wrapper {
@@ -1412,34 +1444,34 @@ const formatRelativeDate = (dateString: string): string => {
   flex-shrink: 0;
 }
 
-/* Bio */
+/* Bio (매장 description과 동일) */
 .profile-bio {
-  font-size: 14px;
-  color: #262626;
-  margin: 4px 0 0;
-  line-height: 1.5;
+  font-size: 0.8125rem;
+  color: #8e8e8e;
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-/* 액션 버튼 영역 */
+/* 액션 버튼 영역 (매장 팔로우 버튼과 동일 스타일) */
 .profile-actions {
   display: flex;
-  gap: 6px;
-  padding: 0 1rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
 }
 
 .profile-action-btn {
   flex: 1;
-  padding: 7px 0;
-  background: #efefef;
-  border: none;
+  padding: 0.625rem 1rem;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #262626;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
+  background: #efefef;
+  color: #262626;
+  border: none;
 }
 
 .profile-action-btn:hover {
@@ -1453,14 +1485,16 @@ const formatRelativeDate = (dateString: string): string => {
 
 .profile-action-btn.primary:hover {
   background: #363636;
+  transform: translateY(-1px);
 }
 
 .profile-action-btn.icon-btn {
   flex: 0;
-  width: 40px;
+  width: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0.625rem;
 }
 
 /* 모달 오버레이 */
