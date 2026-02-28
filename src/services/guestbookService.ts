@@ -22,6 +22,8 @@ export interface GuestbookMessageResponse {
   createdAt: string
   likeCount: number
   isLikedByMe: boolean
+  replyCount?: number
+  replies?: ReplyResponse[]
 }
 
 export interface MyGuestbookMessageResponse {
@@ -174,6 +176,9 @@ export interface UserPublicProfile {
   todayVisitors: number
   totalVisitors: number
   profileGuestbookCount: number
+  userFollowerCount: number
+  userFollowingCount: number
+  isFollowedByMe: boolean
   followedStores: UserFollowedStoreInfo[]
 }
 

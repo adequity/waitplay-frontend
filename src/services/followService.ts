@@ -94,6 +94,23 @@ const followService = {
   async getStoreFollowers(qrCode: string, page: number = 1, limit: number = 20): Promise<StoreFollowersResponse> {
     const response = await api.get(`/api/follow/store-followers/${qrCode}?page=${page}&limit=${limit}`)
     return response.data
+  },
+
+  // ===== 유저 간 팔로우 =====
+
+  async followUser(profileCode: string): Promise<{ isFollowing: boolean; userFollowerCount: number }> {
+    const response = await api.post(`/api/follow/user/${profileCode}`)
+    return response.data
+  },
+
+  async unfollowUser(profileCode: string): Promise<{ isFollowing: boolean; userFollowerCount: number }> {
+    const response = await api.delete(`/api/follow/user/${profileCode}`)
+    return response.data
+  },
+
+  async getUserFollowStatus(profileCode: string): Promise<{ isFollowing: boolean; followerCount: number; followingCount: number }> {
+    const response = await api.get(`/api/follow/user/${profileCode}/status`)
+    return response.data
   }
 }
 

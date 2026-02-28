@@ -47,7 +47,7 @@
           <p v-if="profile.bio" class="profile-bio">{{ profile.bio }}</p>
         </div>
 
-        <!-- 방문자 카운터 -->
+        <!-- 카운터 영역 -->
         <div class="visitor-counter">
           <div class="counter-item">
             <span class="counter-label">TODAY</span>
@@ -57,6 +57,16 @@
           <div class="counter-item">
             <span class="counter-label">TOTAL</span>
             <span class="counter-value">{{ formatNumber(profile.totalVisitors) }}</span>
+          </div>
+          <div class="counter-divider"></div>
+          <div class="counter-item">
+            <span class="counter-label">팔로워</span>
+            <span class="counter-value">{{ formatNumber(profile.userFollowerCount || 0) }}</span>
+          </div>
+          <div class="counter-divider"></div>
+          <div class="counter-item">
+            <span class="counter-label">팔로잉</span>
+            <span class="counter-value">{{ formatNumber(profile.userFollowingCount || 0) }}</span>
           </div>
         </div>
 
@@ -73,8 +83,28 @@
             </button>
           </template>
           <template v-else>
+            <button class="profile-action-btn" :class="{ primary: !profile.isFollowedByMe, following: profile.isFollowedByMe }" @click="toggleUserFollow">
+              {{ profile.isFollowedByMe ? '팔로잉' : '팔로우' }}
+            </button>
             <button class="profile-action-btn" @click="shareProfile">프로필 공유</button>
           </template>
+        </div>
+
+        <!-- 단골 매장 -->
+        <div v-if="profile.followedStores && profile.followedStores.length > 0" class="followed-stores-section">
+          <h3 class="section-subtitle">단골 매장</h3>
+          <div class="followed-stores-scroll">
+            <div v-for="store in profile.followedStores" :key="store.adminId" class="followed-store-item" @click="goToStore(store.qrCode)">
+              <div class="store-logo-circle">
+                <img v-if="store.storeProfileImage" :src="store.storeProfileImage" :alt="store.storeName" class="store-logo-img"/>
+                <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+              </div>
+              <span class="store-name-label">{{ store.storeName }}</span>
+            </div>
+          </div>
         </div>
 
         <!-- 탭 메뉴 (4탭) -->
@@ -140,13 +170,27 @@
           <div v-if="isLoadingProfileGuestbook" class="loading-state">
             <div class="spinner"></div>
           </div>
-          <div v-else-if="profileGuestbookMessages.length === 0" class="empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
-              <path d="M11 4H4C3.44772 4 3 4.44772 3 5V19C3 19.5523 3.44772 20 4 20H18C18.5523 20 19 19.5523 19 19V12"/>
-              <path d="M17.5 2.5L12 8L11 12L15 11L20.5 5.5"/>
-            </svg>
+          <div v-else-if="profileGuestbookMessages.length === 0" class="empty-state enhanced">
+            <div class="empty-illustration">
+              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                <rect x="12" y="8" width="40" height="48" rx="4" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1.5"/>
+                <line x1="20" y1="22" x2="44" y2="22" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round"/>
+                <line x1="20" y1="30" x2="44" y2="30" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round"/>
+                <line x1="20" y1="38" x2="36" y2="38" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="48" cy="12" r="8" fill="#818CF8" opacity="0.2"/>
+                <path d="M45 12h6M48 9v6" stroke="#6366F1" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
             <p class="empty-title">아직 방명록이 없어요</p>
-            <p class="empty-subtitle">{{ isMyProfile ? '친구들이 남긴 방명록이 여기에 표시됩니다' : '첫 번째 방명록을 남겨보세요!' }}</p>
+            <p class="empty-subtitle">{{ isMyProfile ? '친구에게 프로필을 공유해서 방명록을 받아보세요!' : '첫 번째 방명록을 남겨보세요!' }}</p>
+            <button v-if="isMyProfile" class="empty-cta-btn" @click="shareProfile">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+              프로필 공유하기
+            </button>
+            <button v-else-if="isAuthenticated" class="empty-cta-btn primary" @click="openDrawingModal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a1 1 0 00-1 1v14a1 1 0 001 1h14a1 1 0 001-1v-7"/><path d="M17.5 2.5a2.121 2.121 0 013 3L12 14l-4 1 1-4 8.5-8.5z"/></svg>
+              방명록 남기기
+            </button>
           </div>
           <div v-else class="feed-list">
             <div v-for="msg in profileGuestbookMessages" :key="msg.id" class="feed-post">
@@ -184,6 +228,27 @@
                   <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                 </button>
                 <span v-if="msg.likeCount > 0" class="like-count">{{ msg.likeCount }}</span>
+                <button class="feed-action-btn reply-btn" @click="toggleReplyInput(msg.id)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                </button>
+                <span v-if="(msg.replyCount || 0) > 0" class="like-count">{{ msg.replyCount }}</span>
+              </div>
+              <!-- 답글 목록 -->
+              <div v-if="msg.replies && msg.replies.length > 0" class="replies-list">
+                <div v-for="reply in msg.replies" :key="reply.id" class="reply-item">
+                  <div class="reply-author" @click="goToUserProfile(reply.userId)">
+                    <img v-if="reply.userProfileImage" :src="reply.userProfileImage" class="reply-avatar-img"/>
+                    <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-3.866 0-7 3.134-7 7h14c0-3.866-3.134-7-7-7z"/></svg>
+                    <span class="reply-author-name">{{ reply.userName }}</span>
+                  </div>
+                  <p class="reply-content">{{ reply.content }}</p>
+                  <span class="reply-time">{{ formatRelativeDate(reply.createdAt) }}</span>
+                </div>
+              </div>
+              <!-- 답글 입력 -->
+              <div v-if="replyingTo === msg.id && isMyProfile" class="reply-input-area">
+                <input v-model="replyContent" class="reply-input" placeholder="답글 달기..." maxlength="500" @keyup.enter="submitReply(msg.id)"/>
+                <button class="reply-submit-btn" :disabled="!replyContent.trim()" @click="submitReply(msg.id)">전송</button>
               </div>
             </div>
           </div>
@@ -206,13 +271,17 @@
           <!-- 매장별 앨범 뷰 -->
           <div v-if="storeViewMode === 'album'">
             <div v-if="isLoadingAlbums" class="loading-state"><div class="spinner"></div></div>
-            <div v-else-if="storeAlbums.length === 0" class="empty-state">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9,22 9,12 15,12 15,22"/>
-              </svg>
+            <div v-else-if="storeAlbums.length === 0" class="empty-state enhanced">
+              <div class="empty-illustration">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                  <path d="M12 24l20-14 20 14v28a4 4 0 01-4 4H16a4 4 0 01-4-4V24z" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1.5"/>
+                  <rect x="24" y="38" width="16" height="18" rx="2" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+                  <circle cx="32" cy="20" r="6" fill="#818CF8" opacity="0.2"/>
+                  <path d="M32 17v6M29 20h6" stroke="#6366F1" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
               <p class="empty-title">매장 기록이 없어요</p>
-              <p class="empty-subtitle">매장에서 방명록을 남기면 여기에 표시됩니다</p>
+              <p class="empty-subtitle">{{ isMyProfile ? 'QR 코드를 스캔해서 매장에 방명록을 남겨보세요!' : '아직 방문한 매장이 없습니다' }}</p>
             </div>
             <div v-else class="album-grid">
               <div v-for="album in storeAlbums" :key="album.qrCode" class="album-card" @click="goToStore(album.qrCode)">
@@ -239,8 +308,9 @@
           <!-- 전체 피드 뷰 (기존 방명록 피드) -->
           <div v-else>
             <div v-if="isLoadingMessages" class="loading-state"><div class="spinner"></div></div>
-            <div v-else-if="messages.length === 0" class="empty-state">
+            <div v-else-if="messages.length === 0" class="empty-state enhanced">
               <p class="empty-title">작성한 방명록이 없어요</p>
+              <p class="empty-subtitle">{{ isMyProfile ? '매장에서 방명록을 남기면 여기에 표시됩니다' : '아직 작성한 방명록이 없습니다' }}</p>
             </div>
             <div v-else class="feed-list">
               <div v-for="msg in messages" :key="msg.id" class="feed-post">
@@ -369,6 +439,7 @@
                   <span v-else-if="noti.type === 'new_guestbook'">님이 방명록을 남겼습니다.</span>
                   <span v-else-if="noti.type === 'reply'">님이 답글을 달았습니다.</span>
                   <span v-else-if="noti.type === 'profile_guestbook'">님이 프로필 방명록을 남겼습니다.</span>
+                  <span v-else-if="noti.type === 'user_follow'">님이 회원님을 팔로우했습니다.</span>
                   <span class="noti-time">{{ formatRelativeDate(noti.createdAt) }}</span>
                 </p>
                 <p v-if="noti.storeName" class="noti-store">{{ noti.storeName }}</p>
@@ -458,6 +529,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import authService from '@/services/authService'
 import guestbookService from '@/services/guestbookService'
+import followService from '@/services/followService'
 import notificationService from '@/services/notificationService'
 import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse, ActivityHeatmapResponse } from '@/services/guestbookService'
 import type { NotificationItem } from '@/services/notificationService'
@@ -519,6 +591,10 @@ const showEditProfile = ref(false)
 const isSavingProfile = ref(false)
 const editForm = ref({ nickname: '', profileImage: '' as string | undefined, bio: '' })
 const photoInput = ref<HTMLInputElement | null>(null)
+
+// Reply
+const replyingTo = ref<string | null>(null)
+const replyContent = ref('')
 
 // Toast
 const showShareToast = ref(false)
@@ -821,6 +897,50 @@ function showToast(msg: string) { shareToastMessage.value = msg; showShareToast.
 function goToSettings() { router.push({ name: 'settings' }) }
 function goToStore(qrCode: string) { if (qrCode) router.push({ name: 'guestbook', query: { qr: qrCode } }) }
 function goBack() { if (window.history.length > 1) router.back(); else router.push('/') }
+
+// ===== User Follow =====
+async function toggleUserFollow() {
+  if (!isAuthenticated.value) { promptLogin(); return }
+  if (!profile.value) return
+  try {
+    const code = profile.value.profileCode || userCode
+    if (profile.value.isFollowedByMe) {
+      const res = await followService.unfollowUser(code)
+      profile.value.isFollowedByMe = false
+      profile.value.userFollowerCount = res.userFollowerCount
+    } else {
+      const res = await followService.followUser(code)
+      profile.value.isFollowedByMe = true
+      profile.value.userFollowerCount = res.userFollowerCount
+    }
+  } catch { /* ignore */ }
+}
+
+// ===== Reply =====
+function toggleReplyInput(messageId: string) {
+  if (replyingTo.value === messageId) {
+    replyingTo.value = null
+    replyContent.value = ''
+  } else {
+    replyingTo.value = messageId
+    replyContent.value = ''
+  }
+}
+
+async function submitReply(messageId: string) {
+  if (!replyContent.value.trim()) return
+  try {
+    const reply = await guestbookService.addReply(messageId, replyContent.value)
+    const msg = profileGuestbookMessages.value.find(m => m.id === messageId)
+    if (msg) {
+      if (!msg.replies) msg.replies = []
+      msg.replies.push(reply)
+      msg.replyCount = (msg.replyCount || 0) + 1
+    }
+    replyContent.value = ''
+    replyingTo.value = null
+  } catch { alert('답글 작성에 실패했습니다.') }
+}
 function formatNumber(n: number) { return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : n.toString() }
 const formatRelativeDate = (dateString: string): string => {
   const date = new Date(dateString)
@@ -1026,4 +1146,44 @@ const formatRelativeDate = (dateString: string): string => {
 .toast-enter-active { animation: toastIn 0.3s ease; }
 .toast-leave-active { animation: toastIn 0.3s ease reverse; }
 @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* ===== Followed Stores Section ===== */
+.followed-stores-section { padding: 0 1rem 0.75rem; }
+.section-subtitle { font-size: 14px; font-weight: 700; color: #262626; margin: 0 0 0.5rem; }
+.followed-stores-scroll { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: none; -ms-overflow-style: none; }
+.followed-stores-scroll::-webkit-scrollbar { display: none; }
+.followed-store-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex-shrink: 0; min-width: 64px; }
+.store-logo-circle { width: 56px; height: 56px; border-radius: 50%; background: #f5f5f5; border: 2px solid #efefef; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: border-color 0.2s; }
+.followed-store-item:hover .store-logo-circle { border-color: #dbdbdb; }
+.store-logo-img { width: 100%; height: 100%; object-fit: cover; }
+.store-name-label { font-size: 11px; color: #8e8e8e; text-align: center; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===== Follow Button (Following State) ===== */
+.profile-action-btn.following { background: #efefef; color: #262626; border: 1px solid #dbdbdb; }
+.profile-action-btn.following:hover { background: #fce4e4; color: #ed4956; border-color: #ed4956; }
+
+/* ===== Enhanced Empty States ===== */
+.empty-state.enhanced { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1.5rem; }
+.empty-illustration { margin-bottom: 1rem; }
+.empty-cta-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.625rem 1.25rem; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; background: #efefef; color: #262626; border: none; margin-top: 0.75rem; }
+.empty-cta-btn:hover { background: #dbdbdb; }
+.empty-cta-btn.primary { background: #262626; color: white; }
+.empty-cta-btn.primary:hover { background: #363636; }
+
+/* ===== Reply UI ===== */
+.reply-btn { margin-left: 4px; }
+.replies-list { padding: 0.5rem 1rem 0; border-top: 1px solid #f5f5f5; }
+.reply-item { padding: 0.5rem 0; }
+.reply-item:not(:last-child) { border-bottom: 1px solid #fafafa; }
+.reply-author { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; cursor: pointer; }
+.reply-avatar-img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+.reply-author-name { font-size: 13px; font-weight: 600; color: #262626; }
+.reply-content { font-size: 13px; color: #262626; line-height: 1.4; margin: 0 0 2px; padding-left: 26px; }
+.reply-time { font-size: 11px; color: #8e8e8e; padding-left: 26px; }
+.reply-input-area { display: flex; align-items: center; gap: 8px; padding: 0.5rem 1rem; border-top: 1px solid #efefef; }
+.reply-input { flex: 1; padding: 8px 12px; border: 1px solid #dbdbdb; border-radius: 20px; font-size: 13px; outline: none; transition: border-color 0.2s; }
+.reply-input:focus { border-color: #262626; }
+.reply-submit-btn { padding: 6px 14px; border-radius: 20px; background: #262626; color: white; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
+.reply-submit-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.reply-submit-btn:not(:disabled):hover { opacity: 0.85; }
 </style>
