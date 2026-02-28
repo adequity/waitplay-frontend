@@ -528,6 +528,7 @@ import { DEFAULT_BG_COLOR, getCardBgHex, getCardBg, isGradient } from '@/constan
 interface Props {
   visible: boolean
   qrCodeId: string
+  profileCode?: string  // For profile guestbook (when set, uses profile API instead of store API)
   displayMode: DisplayMode
   initialMode?: 'camera' | 'draw'
   selectedTemplate?: any
@@ -1000,17 +1001,30 @@ const submitDrawing = async () => {
   try {
     const composedImageData = await composeAndResizeImage()
 
-    await guestbookService.createMessage({
-      qrCode: props.qrCodeId,
-      imageData: composedImageData,
-      audioUrl: selectedBgm.value?.fileUrl || undefined,
-      color: selectedCardColor.value
-    })
-
-    stopBgmPreview()
-    emit('close')
-    emit('submitted')
-    alert('방명록이 등록되었습니다!')
+    if (props.profileCode) {
+      // Profile guestbook mode
+      await guestbookService.createProfileGuestbook(props.profileCode, {
+        imageData: composedImageData,
+        audioUrl: selectedBgm.value?.fileUrl || undefined,
+        color: selectedCardColor.value
+      })
+      stopBgmPreview()
+      emit('close')
+      emit('submitted')
+      alert('방명록이 등록되었습니다!')
+    } else {
+      // Store guestbook mode
+      await guestbookService.createMessage({
+        qrCode: props.qrCodeId,
+        imageData: composedImageData,
+        audioUrl: selectedBgm.value?.fileUrl || undefined,
+        color: selectedCardColor.value
+      })
+      stopBgmPreview()
+      emit('close')
+      emit('submitted')
+      alert('방명록이 등록되었습니다!')
+    }
   } catch (error: any) {
     console.error('Failed to submit drawing:', error)
 

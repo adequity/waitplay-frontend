@@ -12,6 +12,7 @@ export interface GuestbookMessageResponse {
   id: string
   userId: string
   userName: string
+  userProfileImage?: string
   userProfileCode?: string
   message?: string
   imageUrl?: string
@@ -170,7 +171,47 @@ export interface UserPublicProfile {
   bio?: string
   totalMessages: number
   followerCount: number
+  todayVisitors: number
+  totalVisitors: number
+  profileGuestbookCount: number
   followedStores: UserFollowedStoreInfo[]
+}
+
+export interface CreateProfileGuestbookRequest {
+  message?: string
+  imageData?: string
+  audioUrl?: string
+  color: string
+}
+
+export interface StoreAlbumResponse {
+  adminId: string
+  storeName: string
+  storeProfileImage?: string
+  qrCode: string
+  visitCount: number
+  latestImageUrl?: string
+  latestMessage?: string
+  latestColor?: string
+  lastVisitedAt: string
+}
+
+export interface DailyActivity {
+  date: string
+  count: number
+}
+
+export interface MonthlyStats {
+  messagesWritten: number
+  newStoresVisited: number
+  likesReceived: number
+}
+
+export interface ActivityHeatmapResponse {
+  dailyActivities: DailyActivity[]
+  yearTotalStores: number
+  yearTotalMessages: number
+  currentMonth: MonthlyStats
 }
 
 export interface UserMessagesResponse {
@@ -494,6 +535,34 @@ class GuestbookService {
   async getMyReports(status?: string): Promise<{ total: number; reports: any[] }> {
     const params = status ? `?status=${status}` : ''
     const response = await apiClient.get<{ total: number; reports: any[] }>(`/api/guestbook/my-reports${params}`)
+    return response.data
+  }
+
+  // ===== Profile Guestbook =====
+
+  async createProfileGuestbook(profileCode: string, data: CreateProfileGuestbookRequest): Promise<GuestbookMessageResponse> {
+    const response = await apiClient.post<GuestbookMessageResponse>(`/api/guestbook/profile/${profileCode}`, data)
+    return response.data
+  }
+
+  async getProfileGuestbook(profileCode: string, page: number = 1, pageSize: number = 20): Promise<{ messages: GuestbookMessageResponse[]; totalCount: number; hasMore: boolean }> {
+    const response = await apiClient.get(`/api/guestbook/profile/${profileCode}/messages?page=${page}&pageSize=${pageSize}`)
+    return response.data
+  }
+
+  async deleteProfileGuestbook(messageId: string): Promise<void> {
+    await apiClient.delete(`/api/guestbook/profile/message/${messageId}`)
+  }
+
+  // ===== Store Albums & Activity =====
+
+  async getStoreAlbums(userCode: string): Promise<{ albums: StoreAlbumResponse[] }> {
+    const response = await apiClient.get(`/api/guestbook/user/${userCode}/store-albums`)
+    return response.data
+  }
+
+  async getActivityHeatmap(userCode: string): Promise<ActivityHeatmapResponse> {
+    const response = await apiClient.get<ActivityHeatmapResponse>(`/api/guestbook/user/${userCode}/activity`)
     return response.data
   }
 }
