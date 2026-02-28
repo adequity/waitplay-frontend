@@ -1,6 +1,8 @@
-import type { RoomData, RoomFurniture, FurnitureType } from './RoomConfig'
+import type { RoomData, RoomFurniture, FurnitureType, FurnitureSpec } from './RoomConfig'
 import { FURNITURE_SPECS, WALL_THEMES, FLOOR_THEMES, ISO_CONFIG, DEFAULT_ROOM } from './RoomConfig'
-import { gridToIso, getDepthValue, hexToNumber, drawIsoDiamond, drawIsoBox } from './IsometricUtils'
+import { gridToIso, getDepthValue, hexToNumber, drawIsoDiamond } from './IsometricUtils'
+
+const SPRITE_BASE = '/assets/miniroom/'
 
 export class MiniRoomScene extends Phaser.Scene {
   private roomData: RoomData = DEFAULT_ROOM
@@ -14,6 +16,16 @@ export class MiniRoomScene extends Phaser.Scene {
   init(data?: { roomData?: RoomData }) {
     if (data?.roomData) {
       this.roomData = data.roomData
+    }
+  }
+
+  preload() {
+    const loaded = new Set<string>()
+    for (const item of this.roomData.furniture) {
+      const spec = FURNITURE_SPECS[item.type as FurnitureType]
+      if (!spec || loaded.has(spec.sprite)) continue
+      loaded.add(spec.sprite)
+      this.load.image(spec.sprite, SPRITE_BASE + spec.sprite)
     }
   }
 
@@ -130,8 +142,6 @@ export class MiniRoomScene extends Phaser.Scene {
   }
 
   private drawFurnitureAndCharacter() {
-    const { tileWidth, tileHeight } = ISO_CONFIG
-
     interface Renderable {
       depth: number
       render: () => void
@@ -161,54 +171,24 @@ export class MiniRoomScene extends Phaser.Scene {
     }
   }
 
-  private drawFurniturePiece(
-    item: RoomFurniture,
-    spec: (typeof FURNITURE_SPECS)[FurnitureType]
-  ) {
-    const { tileWidth, tileHeight } = ISO_CONFIG
+  private drawFurniturePiece(item: RoomFurniture, spec: FurnitureSpec) {
     const iso = gridToIso(item.gridX, item.gridY)
-    const color = hexToNumber(item.color)
     const depth = getDepthValue(item.gridX, item.gridY)
+    const x = this.originX + iso.x
+    const y = this.originY + iso.y
 
-    const widthPx = spec.widthTiles * tileWidth * 0.5
-    const depthPx = spec.heightTiles * tileHeight * 0.5
-    const heightPx = spec.elevationTiles * tileHeight
+    // Shadow
+    const shadow = this.add.graphics()
+    shadow.fillStyle(0x000000, 0.1)
+    shadow.fillEllipse(x, y + 4, spec.widthTiles * 32, spec.heightTiles * 16)
+    shadow.setDepth(depth - 0.1)
 
-    const g = this.add.graphics()
-
-    if (item.type === 'rug') {
-      drawIsoDiamond(
-        g,
-        this.originX + iso.x,
-        this.originY + iso.y,
-        widthPx * 2,
-        depthPx * 2,
-        color,
-        hexToNumber(item.color),
-        0.6
-      )
-    } else {
-      drawIsoBox(
-        g,
-        this.originX + iso.x,
-        this.originY + iso.y,
-        widthPx,
-        depthPx,
-        heightPx,
-        color,
-        1
-      )
-    }
-
-    const label = this.add.text(
-      this.originX + iso.x,
-      this.originY + iso.y - heightPx - 12,
-      spec.label,
-      { fontFamily: 'sans-serif', fontSize: '10px', color: '#888888', align: 'center' }
-    )
-    label.setOrigin(0.5, 1)
-    label.setDepth(depth + 0.1)
-    g.setDepth(depth)
+    // Sprite image
+    const scale = (spec.widthTiles * ISO_CONFIG.tileWidth) / spec.spriteWidth
+    const img = this.add.image(x, y + spec.spriteOffsetY, spec.sprite)
+    img.setScale(scale)
+    img.setOrigin(0.5, 1)
+    img.setDepth(depth)
   }
 
   private drawCharacter(gridX: number, gridY: number) {
