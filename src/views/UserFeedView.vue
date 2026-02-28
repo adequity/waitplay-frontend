@@ -107,8 +107,17 @@
           </div>
         </div>
 
-        <!-- 탭 메뉴 (4탭) -->
+        <!-- 탭 메뉴 (5탭) -->
         <div class="profile-tabs">
+          <button class="tab-btn" :class="{ active: activeTab === 'room' }" @click="activeTab = 'room'">
+            <span class="tab-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="tab-label">나의방</span>
+          </button>
           <button class="tab-btn" :class="{ active: activeTab === 'guestbook' }" @click="activeTab = 'guestbook'">
             <span class="tab-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -149,6 +158,27 @@
 
       <!-- ===== 탭 컨텐츠 ===== -->
       <div class="tab-content">
+
+        <!-- ===== 탭0: 나의방 ===== -->
+        <div v-if="activeTab === 'room'" class="room-tab">
+          <div v-if="isLoadingRoom" class="loading-state">
+            <div class="spinner"></div>
+          </div>
+          <div v-else class="room-preview-card" @click="openRoomFullscreen">
+            <div class="room-preview-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.5">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+              </svg>
+            </div>
+            <h3 class="room-preview-title">{{ isMyProfile ? '나의 방' : `${profile?.nickname || ''}의 방` }}</h3>
+            <p class="room-preview-subtitle">탭하여 방 구경하기</p>
+            <button class="room-enter-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg>
+              방 보기
+            </button>
+          </div>
+        </div>
 
         <!-- ===== 탭1: 방명록 (프로필 방명록) ===== -->
         <div v-if="activeTab === 'guestbook'" class="guestbook-tab">
@@ -516,6 +546,17 @@
       </div>
     </div>
 
+    <!-- 미니룸 풀스크린 오버레이 -->
+    <Teleport to="body">
+      <div v-if="showRoomFullscreen" id="miniroom-fullscreen-overlay" class="miniroom-fullscreen">
+        <div id="miniroom-container" class="miniroom-canvas-container"></div>
+        <button class="miniroom-close-btn" @click="closeRoomFullscreen">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <div class="miniroom-owner-label">{{ profile?.nickname || '' }}의 방</div>
+      </div>
+    </Teleport>
+
     <!-- 공유 토스트 -->
     <Transition name="toast">
       <div v-if="showShareToast" class="share-toast">{{ shareToastMessage }}</div>
@@ -524,13 +565,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import authService from '@/services/authService'
 import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import notificationService from '@/services/notificationService'
+import { getRoomConfiguration, type RoomConfiguration } from '@/services/roomService'
 import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse, ActivityHeatmapResponse } from '@/services/guestbookService'
 import type { NotificationItem } from '@/services/notificationService'
 import { getCardBg } from '@/constants/guestbookColors'
@@ -547,10 +589,16 @@ const profile = ref<UserPublicProfile | null>(null)
 const isLoadingProfile = ref(true)
 const error = ref<string | null>(null)
 
-const activeTab = ref<'guestbook' | 'stores' | 'activity' | 'notifications'>('guestbook')
+const activeTab = ref<'room' | 'guestbook' | 'stores' | 'activity' | 'notifications'>('room')
 const showDetail = ref(false)
 const selectedMessage = ref<any>(null)
 const likingMessageId = ref<string | null>(null)
+
+// MiniRoom
+const roomConfig = ref<RoomConfiguration | null>(null)
+const isLoadingRoom = ref(false)
+const roomLoaded = ref(false)
+const showRoomFullscreen = ref(false)
 
 // Profile guestbook
 const profileGuestbookMessages = ref<GuestbookMessageResponse[]>([])
@@ -608,14 +656,19 @@ const isMyProfile = computed(() => {
 onMounted(async () => {
   await loadProfile()
   if (profile.value) {
-    await loadProfileGuestbook()
+    loadRoomConfig()
   }
   if (isMyProfile.value && isAuthenticated.value) {
     loadUnreadCount()
   }
 })
 
+onUnmounted(() => {
+  closeRoomFullscreen()
+})
+
 watch(activeTab, (tab) => {
+  if (tab === 'guestbook' && profileGuestbookMessages.value.length === 0) loadProfileGuestbook()
   if (tab === 'stores' && !albumsLoaded.value) {
     loadStoreAlbums()
     if (messages.value.length === 0) loadMessages()
@@ -636,6 +689,74 @@ async function loadProfile() {
   } finally {
     isLoadingProfile.value = false
   }
+}
+
+// ===== MiniRoom =====
+async function loadRoomConfig() {
+  if (roomLoaded.value) return
+  isLoadingRoom.value = true
+  try {
+    roomConfig.value = await getRoomConfiguration(userCode)
+    roomLoaded.value = true
+  } catch { /* silent */ } finally {
+    isLoadingRoom.value = false
+  }
+}
+
+async function openRoomFullscreen() {
+  showRoomFullscreen.value = true
+  await nextTick()
+
+  try {
+    const el = document.getElementById('miniroom-fullscreen-overlay')
+    if (el?.requestFullscreen) {
+      await el.requestFullscreen()
+    }
+    if (screen.orientation && 'lock' in screen.orientation) {
+      try { await (screen.orientation as any).lock('landscape') } catch { /* not supported */ }
+    }
+  } catch { /* fullscreen not supported */ }
+
+  try {
+    const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
+    const roomData = roomConfig.value ? {
+      wallTheme: roomConfig.value.wallTheme,
+      floorTheme: roomConfig.value.floorTheme,
+      furniture: roomConfig.value.furniture.map(f => ({
+        itemId: f.itemId,
+        type: f.type as any,
+        gridX: f.gridX,
+        gridY: f.gridY,
+        rotation: f.rotation,
+        scale: f.scale,
+        color: f.color || '#667eea',
+      })),
+      character: {
+        color: roomConfig.value.character.color,
+        shape: (roomConfig.value.character.shape as 'circle' | 'square') || 'circle',
+        accessory: roomConfig.value.character.accessory,
+      },
+    } : undefined
+    await miniRoomManager.init('miniroom-container', roomData as any)
+  } catch { /* silent */ }
+}
+
+async function closeRoomFullscreen() {
+  if (!showRoomFullscreen.value) return
+
+  try {
+    const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
+    miniRoomManager.destroy()
+  } catch { /* silent */ }
+
+  if (document.fullscreenElement) {
+    try { await document.exitFullscreen() } catch { /* silent */ }
+  }
+  if (screen.orientation && 'unlock' in screen.orientation) {
+    try { (screen.orientation as any).unlock() } catch { /* not supported */ }
+  }
+
+  showRoomFullscreen.value = false
 }
 
 async function loadProfileGuestbook() {
@@ -1186,4 +1307,22 @@ const formatRelativeDate = (dateString: string): string => {
 .reply-submit-btn { padding: 6px 14px; border-radius: 20px; background: #262626; color: white; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
 .reply-submit-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .reply-submit-btn:not(:disabled):hover { opacity: 0.85; }
+
+/* ===== MiniRoom Tab ===== */
+.room-tab { padding: 1rem; }
+.room-preview-card { display: flex; flex-direction: column; align-items: center; padding: 2.5rem 1.5rem; background: white; border-radius: 16px; cursor: pointer; transition: all 0.2s ease; border: 1px solid #efefef; }
+.room-preview-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.room-preview-card:active { transform: scale(0.98); }
+.room-preview-icon { margin-bottom: 1rem; }
+.room-preview-title { font-size: 1.125rem; font-weight: 700; color: #262626; margin: 0 0 0.25rem; }
+.room-preview-subtitle { font-size: 0.8125rem; color: #8e8e8e; margin: 0 0 1.25rem; }
+.room-enter-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.625rem 1.5rem; background: #262626; color: white; border: none; border-radius: 10px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.room-enter-btn:hover { background: #363636; }
+
+/* ===== MiniRoom Fullscreen Overlay ===== */
+.miniroom-fullscreen { position: fixed; inset: 0; z-index: 9999; background: #F0EDE8; display: flex; align-items: center; justify-content: center; }
+.miniroom-canvas-container { width: 100%; height: 100%; }
+.miniroom-close-btn { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; z-index: 10; }
+.miniroom-close-btn:hover { background: rgba(0,0,0,0.6); }
+.miniroom-owner-label { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 10; white-space: nowrap; }
 </style>
