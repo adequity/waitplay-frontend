@@ -172,56 +172,60 @@ export class MiniRoomScene extends Phaser.Scene {
   }
 
   private drawFurniturePiece(item: RoomFurniture, spec: FurnitureSpec) {
+    const { tileHeight } = ISO_CONFIG
     const iso = gridToIso(item.gridX, item.gridY)
     const depth = getDepthValue(item.gridX, item.gridY)
+    // iso position is top vertex of the diamond; center is +tileHeight/2
     const x = this.originX + iso.x
-    const y = this.originY + iso.y
+    const floorY = this.originY + iso.y + tileHeight / 2
 
     // Shadow
     const shadow = this.add.graphics()
     shadow.fillStyle(0x000000, 0.1)
-    shadow.fillEllipse(x, y + 4, spec.widthTiles * 32, spec.heightTiles * 16)
+    shadow.fillEllipse(x, floorY, spec.widthTiles * 28, spec.heightTiles * 14)
     shadow.setDepth(depth - 0.1)
 
-    // Sprite image
-    const scale = (spec.widthTiles * ISO_CONFIG.tileWidth) / spec.spriteWidth
-    const img = this.add.image(x, y + spec.spriteOffsetY, spec.sprite)
-    img.setScale(scale)
+    // Sprite image - origin at bottom-center, sitting on the floor
+    const img = this.add.image(x, floorY, spec.sprite)
+    img.setScale(spec.displayScale)
     img.setOrigin(0.5, 1)
     img.setDepth(depth)
   }
 
   private drawCharacter(gridX: number, gridY: number) {
+    const { tileHeight } = ISO_CONFIG
     const iso = gridToIso(gridX, gridY)
     const char = this.roomData.character
     const color = hexToNumber(char.color)
     const depth = getDepthValue(gridX, gridY)
 
+    const cx = this.originX + iso.x
+    const floorY = this.originY + iso.y + tileHeight / 2
     const g = this.add.graphics()
 
     // Shadow
     g.fillStyle(0x000000, 0.15)
-    g.fillEllipse(this.originX + iso.x, this.originY + iso.y + 2, 24, 12)
+    g.fillEllipse(cx, floorY + 2, 24, 12)
 
     if (char.shape === 'circle') {
       // Head
       g.fillStyle(color, 1)
-      g.fillCircle(this.originX + iso.x, this.originY + iso.y - 20, 12)
+      g.fillCircle(cx, floorY - 22, 12)
       // Body
       g.fillStyle(color, 0.85)
-      g.fillRoundedRect(this.originX + iso.x - 8, this.originY + iso.y - 10, 16, 12, 4)
+      g.fillRoundedRect(cx - 8, floorY - 12, 16, 12, 4)
     } else {
       g.fillStyle(color, 1)
-      g.fillRoundedRect(this.originX + iso.x - 10, this.originY + iso.y - 28, 20, 28, 6)
+      g.fillRoundedRect(cx - 10, floorY - 30, 20, 28, 6)
     }
 
     // Eyes
     g.fillStyle(0xFFFFFF, 1)
-    g.fillCircle(this.originX + iso.x - 4, this.originY + iso.y - 22, 2.5)
-    g.fillCircle(this.originX + iso.x + 4, this.originY + iso.y - 22, 2.5)
+    g.fillCircle(cx - 4, floorY - 24, 2.5)
+    g.fillCircle(cx + 4, floorY - 24, 2.5)
     g.fillStyle(0x333333, 1)
-    g.fillCircle(this.originX + iso.x - 3.5, this.originY + iso.y - 21.5, 1.5)
-    g.fillCircle(this.originX + iso.x + 4.5, this.originY + iso.y - 21.5, 1.5)
+    g.fillCircle(cx - 3.5, floorY - 23.5, 1.5)
+    g.fillCircle(cx + 4.5, floorY - 23.5, 1.5)
 
     g.setDepth(depth + 0.5)
   }

@@ -29,18 +29,16 @@ export interface FurnitureSpec {
   elevationTiles: number
   label: string
   sprite: string
-  spriteWidth: number
-  spriteHeight: number
-  spriteOffsetY: number
+  displayScale: number
 }
 
 export const FURNITURE_SPECS: Record<FurnitureType, FurnitureSpec> = {
-  sofa:      { widthTiles: 2, heightTiles: 1, elevationTiles: 0.6, label: '소파', sprite: 'loungeSofa_SE.png', spriteWidth: 141, spriteHeight: 141, spriteOffsetY: -50 },
-  table:     { widthTiles: 1.5, heightTiles: 1, elevationTiles: 0.5, label: '테이블', sprite: 'tableCoffee_SE.png', spriteWidth: 110, spriteHeight: 102, spriteOffsetY: -30 },
-  lamp:      { widthTiles: 0.5, heightTiles: 0.5, elevationTiles: 1.2, label: '조명', sprite: 'lampRoundFloor_SE.png', spriteWidth: 24, spriteHeight: 105, spriteOffsetY: -70 },
-  plant:     { widthTiles: 0.7, heightTiles: 0.7, elevationTiles: 0.8, label: '식물', sprite: 'pottedPlant_SE.png', spriteWidth: 28, spriteHeight: 85, spriteOffsetY: -50 },
-  bookshelf: { widthTiles: 1.5, heightTiles: 0.5, elevationTiles: 1.5, label: '책장', sprite: 'bookcaseOpen_SE.png', spriteWidth: 67, spriteHeight: 140, spriteOffsetY: -80 },
-  rug:       { widthTiles: 2, heightTiles: 2, elevationTiles: 0, label: '러그', sprite: 'rugRound_SE.png', spriteWidth: 134, spriteHeight: 97, spriteOffsetY: -20 },
+  sofa:      { widthTiles: 2, heightTiles: 1, elevationTiles: 0.6, label: '소파', sprite: 'loungeSofa_SE.png', displayScale: 0.85 },
+  table:     { widthTiles: 1.5, heightTiles: 1, elevationTiles: 0.5, label: '테이블', sprite: 'tableCoffee_SE.png', displayScale: 0.7 },
+  lamp:      { widthTiles: 0.5, heightTiles: 0.5, elevationTiles: 1.2, label: '조명', sprite: 'lampRoundFloor_SE.png', displayScale: 0.7 },
+  plant:     { widthTiles: 0.7, heightTiles: 0.7, elevationTiles: 0.8, label: '식물', sprite: 'pottedPlant_SE.png', displayScale: 0.8 },
+  bookshelf: { widthTiles: 1.5, heightTiles: 0.5, elevationTiles: 1.5, label: '책장', sprite: 'bookcaseOpen_SE.png', displayScale: 0.75 },
+  rug:       { widthTiles: 2, heightTiles: 2, elevationTiles: 0, label: '러그', sprite: 'rugRound_SE.png', displayScale: 0.7 },
 }
 
 export const WALL_THEMES: Record<string, { wallColor: number; wallStroke: number }> = {
