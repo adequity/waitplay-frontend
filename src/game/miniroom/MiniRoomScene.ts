@@ -80,6 +80,9 @@ export class MiniRoomScene extends Phaser.Scene {
       this.drawFurnitureAndCharacter(W, H)
     }
 
+    // --- Camera zoom & pan ---
+    this.setupCameraControls(W, H)
+
     // --- Events ---
     window.dispatchEvent(new CustomEvent('miniroom-ready'))
 
@@ -94,6 +97,103 @@ export class MiniRoomScene extends Phaser.Scene {
     this.events.on('shutdown', () => {
       window.removeEventListener('miniroom-update', updateHandler)
     })
+  }
+
+  private setupCameraControls(W: number, H: number) {
+    const cam = this.cameras.main
+    const MIN_ZOOM = 1
+    const MAX_ZOOM = 3
+    let isDragging = false
+    let lastPointerX = 0
+    let lastPointerY = 0
+    let pinchDistance = 0
+
+    // Mouse wheel zoom (desktop)
+    this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gx: number[], _gy: number, _gz: number, _gw: number, dy: number) => {
+      const newZoom = Phaser.Math.Clamp(cam.zoom - dy * 0.001, MIN_ZOOM, MAX_ZOOM)
+      cam.setZoom(newZoom)
+      if (newZoom <= MIN_ZOOM) {
+        cam.centerOn(W / 2, H / 2)
+      } else {
+        this.clampCamera(W, H)
+      }
+    })
+
+    // Drag to pan
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.input.pointer1.isDown && this.input.pointer2.isDown) return // pinch
+      isDragging = true
+      lastPointerX = pointer.x
+      lastPointerY = pointer.y
+    })
+
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      // Pinch zoom (mobile: two fingers)
+      if (this.input.pointer1.isDown && this.input.pointer2.isDown) {
+        isDragging = false
+        const p1 = this.input.pointer1
+        const p2 = this.input.pointer2
+        const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y)
+        if (pinchDistance > 0) {
+          const zoomDelta = (dist - pinchDistance) * 0.005
+          const newZoom = Phaser.Math.Clamp(cam.zoom + zoomDelta, MIN_ZOOM, MAX_ZOOM)
+          cam.setZoom(newZoom)
+          if (newZoom <= MIN_ZOOM) {
+            cam.centerOn(W / 2, H / 2)
+          } else {
+            this.clampCamera(W, H)
+          }
+        }
+        pinchDistance = dist
+        return
+      }
+
+      // Single finger drag (pan) — only when zoomed in
+      if (isDragging && cam.zoom > MIN_ZOOM) {
+        const dx = (lastPointerX - pointer.x) / cam.zoom
+        const dy = (lastPointerY - pointer.y) / cam.zoom
+        cam.scrollX += dx
+        cam.scrollY += dy
+        this.clampCamera(W, H)
+        lastPointerX = pointer.x
+        lastPointerY = pointer.y
+      }
+    })
+
+    this.input.on('pointerup', () => {
+      isDragging = false
+      pinchDistance = 0
+    })
+
+    // Double-tap to reset zoom
+    let lastTapTime = 0
+    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+      const now = Date.now()
+      if (now - lastTapTime < 300) {
+        // Double-tap: toggle between 1x and 2x
+        if (cam.zoom > MIN_ZOOM + 0.1) {
+          cam.setZoom(MIN_ZOOM)
+          cam.centerOn(W / 2, H / 2)
+        } else {
+          cam.setZoom(2)
+          // Zoom toward tap position
+          cam.centerOn(
+            cam.scrollX + pointer.x / cam.zoom,
+            cam.scrollY + pointer.y / cam.zoom,
+          )
+          this.clampCamera(W, H)
+        }
+      }
+      lastTapTime = now
+    })
+  }
+
+  private clampCamera(W: number, H: number) {
+    const cam = this.cameras.main
+    const halfViewW = W / (2 * cam.zoom)
+    const halfViewH = H / (2 * cam.zoom)
+    cam.scrollX = Phaser.Math.Clamp(cam.scrollX, W / 2 - halfViewW, W / 2 + halfViewW - W / cam.zoom)
+    cam.scrollY = Phaser.Math.Clamp(cam.scrollY, H / 2 - halfViewH, H / 2 + halfViewH - H / cam.zoom)
   }
 
   private drawFallbackBackground(W: number, H: number) {
