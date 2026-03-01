@@ -107,10 +107,17 @@ export class MiniRoomScene extends Phaser.Scene {
     let lastPointerX = 0
     let lastPointerY = 0
     let pinchDistance = 0
+    let lastTapTime = 0
 
     // Mouse wheel zoom (desktop)
-    this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gx: number[], _gy: number, _gz: number, _gw: number, dy: number) => {
-      const newZoom = Phaser.Math.Clamp(cam.zoom - dy * 0.001, MIN_ZOOM, MAX_ZOOM)
+    // Phaser POINTER_WHEEL: (pointer, currentlyOver[], deltaX, deltaY, deltaZ)
+    this.input.on('wheel', (
+      _pointer: Phaser.Input.Pointer,
+      _over: Phaser.GameObjects.GameObject[],
+      _deltaX: number,
+      deltaY: number,
+    ) => {
+      const newZoom = Phaser.Math.Clamp(cam.zoom - deltaY * 0.002, MIN_ZOOM, MAX_ZOOM)
       cam.setZoom(newZoom)
       if (newZoom <= MIN_ZOOM) {
         cam.centerOn(W / 2, H / 2)
@@ -121,7 +128,7 @@ export class MiniRoomScene extends Phaser.Scene {
 
     // Drag to pan
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (this.input.pointer1.isDown && this.input.pointer2.isDown) return // pinch
+      if (this.input.pointer1.isDown && this.input.pointer2.isDown) return
       isDragging = true
       lastPointerX = pointer.x
       lastPointerY = pointer.y
@@ -160,40 +167,45 @@ export class MiniRoomScene extends Phaser.Scene {
       }
     })
 
-    this.input.on('pointerup', () => {
-      isDragging = false
-      pinchDistance = 0
-    })
-
-    // Double-tap to reset zoom
-    let lastTapTime = 0
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+      // Double-tap detection
       const now = Date.now()
-      if (now - lastTapTime < 300) {
-        // Double-tap: toggle between 1x and 2x
+      if (now - lastTapTime < 300 && !isDragging) {
         if (cam.zoom > MIN_ZOOM + 0.1) {
+          // Zoom out to 1x
           cam.setZoom(MIN_ZOOM)
           cam.centerOn(W / 2, H / 2)
         } else {
+          // Zoom in to 2x toward tap position
+          const worldPoint = cam.getWorldPoint(pointer.x, pointer.y)
           cam.setZoom(2)
-          // Zoom toward tap position
-          cam.centerOn(
-            cam.scrollX + pointer.x / cam.zoom,
-            cam.scrollY + pointer.y / cam.zoom,
-          )
+          cam.centerOn(worldPoint.x, worldPoint.y)
           this.clampCamera(W, H)
         }
       }
       lastTapTime = now
+
+      isDragging = false
+      pinchDistance = 0
     })
   }
 
   private clampCamera(W: number, H: number) {
     const cam = this.cameras.main
-    const halfViewW = W / (2 * cam.zoom)
-    const halfViewH = H / (2 * cam.zoom)
-    cam.scrollX = Phaser.Math.Clamp(cam.scrollX, W / 2 - halfViewW, W / 2 + halfViewW - W / cam.zoom)
-    cam.scrollY = Phaser.Math.Clamp(cam.scrollY, H / 2 - halfViewH, H / 2 + halfViewH - H / cam.zoom)
+    // Visible area in world coords
+    const viewW = W / cam.zoom
+    const viewH = H / cam.zoom
+    // Clamp so camera doesn't go past the scene bounds (0,0)-(W,H)
+    const minX = viewW / 2
+    const maxX = W - viewW / 2
+    const minY = viewH / 2
+    const maxY = H - viewH / 2
+    // centerOn uses center coordinates, scrollX/Y is top-left
+    const cx = cam.scrollX + viewW / 2
+    const cy = cam.scrollY + viewH / 2
+    const clampedX = Phaser.Math.Clamp(cx, minX, maxX)
+    const clampedY = Phaser.Math.Clamp(cy, minY, maxY)
+    cam.centerOn(clampedX, clampedY)
   }
 
   private drawFallbackBackground(W: number, H: number) {
