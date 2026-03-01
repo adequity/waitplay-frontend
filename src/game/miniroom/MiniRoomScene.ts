@@ -136,6 +136,10 @@ export class MiniRoomScene extends Phaser.Scene {
   private drawFloor() {
     const { gridCols, gridRows, floorSpriteScale } = ISO_CONFIG
 
+    // Kenney diamond top vertex is at pixel (103.5, 0) in 208x152 image
+    const originXRatio = 103.5 / 208  // 0.4976
+    const originYRatio = 0
+
     for (let col = 0; col < gridCols; col++) {
       for (let row = 0; row < gridRows; row++) {
         const iso = gridToIso(col, row)
@@ -145,7 +149,7 @@ export class MiniRoomScene extends Phaser.Scene {
           'floorTile'
         )
         tile.setScale(floorSpriteScale)
-        tile.setOrigin(0.5, 0)
+        tile.setOrigin(originXRatio, originYRatio)
         tile.setDepth(-5)
 
         // Subtle checkerboard tint

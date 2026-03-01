@@ -53,13 +53,16 @@ export const FLOOR_THEMES: Record<string, { floorColor: number; floorStroke: num
   tile:    { floorColor: 0xA8C8D8, floorStroke: 0x98B8C8 },
 }
 
+// Kenney floorFull_SE.png: 208x152, diamond vertices: top(104,0) left(0,73) right(207,73) bottom(104,146)
+// Diamond face: 207px wide, 146px tall (top-half 73px, bottom-half 73px, +5px 3D extrusion)
+const FLOOR_SCALE = 0.385
 export const ISO_CONFIG = {
-  tileWidth: 80,
-  tileHeight: 56,
+  tileWidth: 207 * FLOOR_SCALE,   // ~79.7
+  tileHeight: 146 * FLOOR_SCALE,  // ~56.2
   gridCols: 6,
   gridRows: 6,
   wallHeight: 200,
-  floorSpriteScale: 80 / 208,
+  floorSpriteScale: FLOOR_SCALE * (207 / 208),  // adjust for image padding
 }
 
 export const DEFAULT_ROOM: RoomData = {
