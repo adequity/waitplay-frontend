@@ -61,16 +61,11 @@ export const ISO_CONFIG = {
   wallHeight: 300,
 }
 
+// Default furniture is baked into room_default.png background image
+// Only user-added items go in the furniture array (Phase 2)
 export const DEFAULT_ROOM: RoomData = {
   wallTheme: 'default',
   floorTheme: 'default',
-  furniture: [
-    { itemId: 'sofa-1', type: 'sofa', gridX: 1, gridY: 3, rotation: 0, scale: 1, color: '#667eea' },
-    { itemId: 'table-1', type: 'table', gridX: 3, gridY: 2, rotation: 0, scale: 1, color: '#764ba2' },
-    { itemId: 'lamp-1', type: 'lamp', gridX: 0, gridY: 0, rotation: 0, scale: 1, color: '#fbbf24' },
-    { itemId: 'plant-1', type: 'plant', gridX: 5, gridY: 1, rotation: 0, scale: 1, color: '#10b981' },
-    { itemId: 'bookshelf-1', type: 'bookshelf', gridX: 2, gridY: 0, rotation: 0, scale: 1, color: '#8b5cf6' },
-    { itemId: 'rug-1', type: 'rug', gridX: 3, gridY: 3, rotation: 0, scale: 1, color: '#f472b6' },
-  ],
+  furniture: [],
   character: { color: '#667eea', shape: 'circle' },
 }
