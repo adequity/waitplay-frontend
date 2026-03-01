@@ -32,6 +32,7 @@ export class MiniRoomManager {
       },
       input: {
         touch: { capture: true },
+        activePointers: 3,
       },
       render: {
         antialias: true,

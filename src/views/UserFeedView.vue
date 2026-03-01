@@ -717,16 +717,6 @@ async function openRoomFullscreen() {
   isRoomLoading.value = true
   await nextTick()
 
-  try {
-    const el = document.getElementById('miniroom-fullscreen-overlay')
-    if (el?.requestFullscreen) {
-      await el.requestFullscreen()
-    }
-    if (screen.orientation && 'lock' in screen.orientation) {
-      try { await (screen.orientation as any).lock('landscape') } catch { /* not supported */ }
-    }
-  } catch { /* fullscreen not supported */ }
-
   // Listen for scene ready event to hide loading
   const onReady = () => { isRoomLoading.value = false }
   window.addEventListener('miniroom-ready', onReady, { once: true })
@@ -762,15 +752,19 @@ async function openRoomFullscreen() {
 }
 
 async function requestLandscape() {
+  const el = document.getElementById('miniroom-fullscreen-overlay')
+  // Step 1: Enter fullscreen (requires direct user gesture — this is called from button click)
   try {
-    const el = document.getElementById('miniroom-fullscreen-overlay')
-    if (el && !document.fullscreenElement && el.requestFullscreen) {
+    if (el && !document.fullscreenElement) {
       await el.requestFullscreen()
     }
+  } catch { /* fullscreen not supported */ }
+  // Step 2: Lock to landscape (requires fullscreen on Android)
+  try {
     if (screen.orientation && 'lock' in screen.orientation) {
       await (screen.orientation as any).lock('landscape')
     }
-  } catch { /* not supported — user must rotate manually */ }
+  } catch { /* orientation lock not supported — user must rotate manually */ }
 }
 
 async function closeRoomFullscreen() {
@@ -1352,8 +1346,9 @@ const formatRelativeDate = (dateString: string): string => {
 .room-enter-btn:hover { background: #363636; }
 
 /* ===== MiniRoom Fullscreen Overlay ===== */
-.miniroom-fullscreen { position: fixed; inset: 0; z-index: 9999; background: #F0EDE8; display: flex; align-items: center; justify-content: center; }
-.miniroom-canvas-container { width: 100%; height: 100%; }
+.miniroom-fullscreen { position: fixed; inset: 0; z-index: 9999; background: #F0EDE8; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.miniroom-canvas-container { width: 100%; height: 100%; touch-action: none; -webkit-touch-callout: none; }
+.miniroom-canvas-container canvas { touch-action: none; }
 .miniroom-close-btn { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; z-index: 10; }
 .miniroom-close-btn:hover { background: rgba(0,0,0,0.6); }
 .miniroom-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #F0EDE8; z-index: 5; color: #8B7E74; font-size: 14px; }
