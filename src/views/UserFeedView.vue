@@ -558,6 +558,10 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
         <div class="miniroom-owner-label">{{ profile?.nickname || '' }}의 방</div>
+        <div class="miniroom-rotate-hint">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2h4v4"/><path d="M21 2l-7 7"/><rect x="3" y="11" width="10" height="10" rx="2"/></svg>
+          <span>가로로 돌리면 더 자세히 볼 수 있어요</span>
+        </div>
       </div>
     </Teleport>
 
@@ -1344,4 +1348,7 @@ const formatRelativeDate = (dateString: string): string => {
 .miniroom-loading-spinner { width: 32px; height: 32px; border: 3px solid #D8CFC4; border-top-color: #8B7E74; border-radius: 50%; animation: miniroom-spin 0.8s linear infinite; }
 @keyframes miniroom-spin { to { transform: rotate(360deg); } }
 .miniroom-owner-label { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 10; white-space: nowrap; }
+.miniroom-rotate-hint { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.5); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 10; white-space: nowrap; animation: miniroom-hint-fade 4s ease-in-out forwards; }
+@keyframes miniroom-hint-fade { 0% { opacity: 0; } 10% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; pointer-events: none; } }
+@media (orientation: landscape) { .miniroom-rotate-hint { display: none; } }
 </style>
