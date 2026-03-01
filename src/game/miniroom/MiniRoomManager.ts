@@ -43,6 +43,14 @@ export class MiniRoomManager {
 
     this.game = new this.Phaser.Game(config)
 
+    // Phaser canvas must have touch-action: none directly set
+    // (CSS scoped styles can't reach dynamically created canvas)
+    const container = document.getElementById(containerId)
+    const canvas = container?.querySelector('canvas')
+    if (canvas) {
+      canvas.style.touchAction = 'none'
+    }
+
     if (roomData) {
       this.game.events.once('ready', () => {
         const scene = this.game?.scene.getScene('MiniRoomScene')

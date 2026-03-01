@@ -1348,7 +1348,7 @@ const formatRelativeDate = (dateString: string): string => {
 /* ===== MiniRoom Fullscreen Overlay ===== */
 .miniroom-fullscreen { position: fixed; inset: 0; z-index: 9999; background: #F0EDE8; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .miniroom-canvas-container { width: 100%; height: 100%; touch-action: none; -webkit-touch-callout: none; }
-.miniroom-canvas-container canvas { touch-action: none; }
+.miniroom-canvas-container :deep(canvas) { touch-action: none; }
 .miniroom-close-btn { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; z-index: 10; }
 .miniroom-close-btn:hover { background: rgba(0,0,0,0.6); }
 .miniroom-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #F0EDE8; z-index: 5; color: #8B7E74; font-size: 14px; }
