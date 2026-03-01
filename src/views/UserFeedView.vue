@@ -550,6 +550,10 @@
     <Teleport to="body">
       <div v-if="showRoomFullscreen" id="miniroom-fullscreen-overlay" class="miniroom-fullscreen">
         <div id="miniroom-container" class="miniroom-canvas-container"></div>
+        <div v-if="isRoomLoading" class="miniroom-loading">
+          <div class="miniroom-loading-spinner"></div>
+          <span>방을 꾸미는 중...</span>
+        </div>
         <button class="miniroom-close-btn" @click="closeRoomFullscreen">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
@@ -599,6 +603,7 @@ const roomConfig = ref<RoomConfiguration | null>(null)
 const isLoadingRoom = ref(false)
 const roomLoaded = ref(false)
 const showRoomFullscreen = ref(false)
+const isRoomLoading = ref(false)
 
 // Profile guestbook
 const profileGuestbookMessages = ref<GuestbookMessageResponse[]>([])
@@ -705,6 +710,7 @@ async function loadRoomConfig() {
 
 async function openRoomFullscreen() {
   showRoomFullscreen.value = true
+  isRoomLoading.value = true
   await nextTick()
 
   try {
@@ -716,6 +722,12 @@ async function openRoomFullscreen() {
       try { await (screen.orientation as any).lock('landscape') } catch { /* not supported */ }
     }
   } catch { /* fullscreen not supported */ }
+
+  // Listen for scene ready event to hide loading
+  const onReady = () => { isRoomLoading.value = false }
+  window.addEventListener('miniroom-ready', onReady, { once: true })
+  // Fallback: hide loading after 8s max
+  const loadingTimeout = setTimeout(() => { isRoomLoading.value = false }, 8000)
 
   try {
     const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
@@ -738,7 +750,11 @@ async function openRoomFullscreen() {
       },
     } : undefined
     await miniRoomManager.init('miniroom-container', roomData as any)
-  } catch { /* silent */ }
+  } catch {
+    isRoomLoading.value = false
+    window.removeEventListener('miniroom-ready', onReady)
+    clearTimeout(loadingTimeout)
+  }
 }
 
 async function closeRoomFullscreen() {
@@ -1324,5 +1340,8 @@ const formatRelativeDate = (dateString: string): string => {
 .miniroom-canvas-container { width: 100%; height: 100%; }
 .miniroom-close-btn { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; z-index: 10; }
 .miniroom-close-btn:hover { background: rgba(0,0,0,0.6); }
+.miniroom-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #F0EDE8; z-index: 5; color: #8B7E74; font-size: 14px; }
+.miniroom-loading-spinner { width: 32px; height: 32px; border: 3px solid #D8CFC4; border-top-color: #8B7E74; border-radius: 50%; animation: miniroom-spin 0.8s linear infinite; }
+@keyframes miniroom-spin { to { transform: rotate(360deg); } }
 .miniroom-owner-label { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 10; white-space: nowrap; }
 </style>
