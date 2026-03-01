@@ -1,6 +1,6 @@
-import type { RoomData, RoomFurniture, FurnitureType, FurnitureSpec } from './RoomConfig'
-import { FURNITURE_SPECS, ISO_CONFIG, DEFAULT_ROOM } from './RoomConfig'
-import { gridToIso, getDepthValue, hexToNumber } from './IsometricUtils'
+import type { RoomData, FurnitureType } from './RoomConfig'
+import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
+import { hexToNumber } from './IsometricUtils'
 
 const SPRITE_BASE = '/assets/miniroom/custom/'
 
@@ -63,10 +63,8 @@ export class MiniRoomScene extends Phaser.Scene {
       roomBg.setDepth(-100)
 
       // Store image bounds for character placement
-      const imgW = tex.width * scale
       const imgH = tex.height * scale
       const imgTop = (H - imgH) / 2
-      const imgLeft = (W - imgW) / 2
 
       // --- Layer 1 & 2: Additional furniture + character ---
       // Place character relative to the room image, not the screen
@@ -103,10 +101,16 @@ export class MiniRoomScene extends Phaser.Scene {
     const cam = this.cameras.main
     const MIN_ZOOM = 1
     const MAX_ZOOM = 3
-    let isDragging = false
+    const TAP_MOVE_THRESHOLD = 10 // px — less than this = tap, not drag
+
+    let isDown = false
+    let hasMoved = false
+    let startX = 0
+    let startY = 0
     let lastPointerX = 0
     let lastPointerY = 0
     let pinchDistance = 0
+    let wasPinching = false
     let lastTapTime = 0
 
     // Mouse wheel zoom (desktop)
@@ -126,10 +130,12 @@ export class MiniRoomScene extends Phaser.Scene {
       }
     })
 
-    // Drag to pan
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (this.input.pointer1.isDown && this.input.pointer2.isDown) return
-      isDragging = true
+      isDown = true
+      hasMoved = false
+      startX = pointer.x
+      startY = pointer.y
       lastPointerX = pointer.x
       lastPointerY = pointer.y
     })
@@ -137,7 +143,8 @@ export class MiniRoomScene extends Phaser.Scene {
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       // Pinch zoom (mobile: two fingers)
       if (this.input.pointer1.isDown && this.input.pointer2.isDown) {
-        isDragging = false
+        wasPinching = true
+        isDown = false
         const p1 = this.input.pointer1
         const p2 = this.input.pointer2
         const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y)
@@ -155,37 +162,60 @@ export class MiniRoomScene extends Phaser.Scene {
         return
       }
 
+      if (!isDown) return
+
+      // Check if moved enough to be a drag
+      const movedDist = Phaser.Math.Distance.Between(startX, startY, pointer.x, pointer.y)
+      if (movedDist > TAP_MOVE_THRESHOLD) {
+        hasMoved = true
+      }
+
       // Single finger drag (pan) — only when zoomed in
-      if (isDragging && cam.zoom > MIN_ZOOM) {
+      if (hasMoved && cam.zoom > MIN_ZOOM) {
         const dx = (lastPointerX - pointer.x) / cam.zoom
         const dy = (lastPointerY - pointer.y) / cam.zoom
         cam.scrollX += dx
         cam.scrollY += dy
         this.clampCamera(W, H)
-        lastPointerX = pointer.x
-        lastPointerY = pointer.y
       }
+      lastPointerX = pointer.x
+      lastPointerY = pointer.y
     })
 
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      // Double-tap detection
-      const now = Date.now()
-      if (now - lastTapTime < 300 && !isDragging) {
-        if (cam.zoom > MIN_ZOOM + 0.1) {
-          // Zoom out to 1x
-          cam.setZoom(MIN_ZOOM)
-          cam.centerOn(W / 2, H / 2)
+      // Skip tap detection if we were pinching
+      if (wasPinching) {
+        // Only fully reset when all fingers are up
+        if (!this.input.pointer1.isDown && !this.input.pointer2.isDown) {
+          wasPinching = false
+          pinchDistance = 0
+        }
+        isDown = false
+        return
+      }
+
+      // Tap detection (pointer didn't move significantly)
+      if (isDown && !hasMoved) {
+        const now = Date.now()
+        if (now - lastTapTime < 300) {
+          // Double-tap: toggle zoom
+          if (cam.zoom > MIN_ZOOM + 0.1) {
+            cam.setZoom(MIN_ZOOM)
+            cam.centerOn(W / 2, H / 2)
+          } else {
+            const worldPoint = cam.getWorldPoint(pointer.x, pointer.y)
+            cam.setZoom(2)
+            cam.centerOn(worldPoint.x, worldPoint.y)
+            this.clampCamera(W, H)
+          }
+          lastTapTime = 0 // prevent triple-tap
         } else {
-          // Zoom in to 2x toward tap position
-          const worldPoint = cam.getWorldPoint(pointer.x, pointer.y)
-          cam.setZoom(2)
-          cam.centerOn(worldPoint.x, worldPoint.y)
-          this.clampCamera(W, H)
+          lastTapTime = now
         }
       }
-      lastTapTime = now
 
-      isDragging = false
+      isDown = false
+      hasMoved = false
       pinchDistance = 0
     })
   }
