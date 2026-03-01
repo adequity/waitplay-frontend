@@ -1,13 +1,11 @@
 import type { RoomData, RoomFurniture, FurnitureType, FurnitureSpec } from './RoomConfig'
-import { FURNITURE_SPECS, WALL_THEMES, FLOOR_THEMES, ISO_CONFIG, DEFAULT_ROOM } from './RoomConfig'
-import { gridToIso, getDepthValue, hexToNumber, drawIsoDiamond } from './IsometricUtils'
+import { FURNITURE_SPECS, ISO_CONFIG, DEFAULT_ROOM } from './RoomConfig'
+import { gridToIso, getDepthValue, hexToNumber } from './IsometricUtils'
 
 const SPRITE_BASE = '/assets/miniroom/custom/'
 
 export class MiniRoomScene extends Phaser.Scene {
   private roomData: RoomData = DEFAULT_ROOM
-  private originX = 0
-  private originY = 0
 
   constructor() {
     super({ key: 'MiniRoomScene' })
@@ -20,12 +18,14 @@ export class MiniRoomScene extends Phaser.Scene {
   }
 
   preload() {
-    // Floor tile
-    if (!this.textures.exists('custom_floor')) {
-      this.load.image('custom_floor', SPRITE_BASE + 'floor_tile.png')
+    // Layer 0: Unified room background (walls + floor + default furniture)
+    const roomTheme = this.roomData.wallTheme || 'default'
+    const roomKey = `room_${roomTheme}`
+    if (!this.textures.exists(roomKey)) {
+      this.load.image(roomKey, SPRITE_BASE + `room_${roomTheme}.png`)
     }
 
-    // Furniture sprites
+    // Layer 1: Additional furniture sprites (user-placed items)
     for (const item of this.roomData.furniture) {
       const spec = FURNITURE_SPECS[item.type as FurnitureType]
       if (!spec) continue
@@ -47,40 +47,29 @@ export class MiniRoomScene extends Phaser.Scene {
   }
 
   create() {
-    const { gridCols, gridRows, tileWidth, tileHeight, wallHeight } = ISO_CONFIG
-
-    // World-space origin at (0, 0), everything relative to this
-    this.originX = 0
-    this.originY = 0
-
-    // Calculate world bounds
-    const topLeft = gridToIso(0, 0)
-    const topRight = gridToIso(gridCols, 0)
-    const bottomLeft = gridToIso(0, gridRows)
-    const bottomRight = gridToIso(gridCols, gridRows)
-
-    const worldLeft = bottomLeft.x - 20
-    const worldRight = topRight.x + 20
-    const worldTop = topLeft.y - wallHeight - 20
-    const worldBottom = bottomRight.y + tileHeight / 2 + 20
-    const worldWidth = worldRight - worldLeft
-    const worldHeight = worldBottom - worldTop
-
-    // Camera zoom to fit
     const W = this.scale.width
     const H = this.scale.height
-    const zoom = Math.min(W / worldWidth, H / worldHeight) * 0.92
-    const centerX = (worldLeft + worldRight) / 2
-    const centerY = (worldTop + worldBottom) / 2
 
-    this.cameras.main.setZoom(zoom)
-    this.cameras.main.centerOn(centerX, centerY)
+    // --- Layer 0: Room background image ---
+    const roomKey = `room_${this.roomData.wallTheme || 'default'}`
+    if (this.textures.exists(roomKey)) {
+      const roomBg = this.add.image(W / 2, H / 2, roomKey)
+      // Scale to fill screen while maintaining aspect ratio
+      const tex = this.textures.get(roomKey).getSourceImage()
+      const scaleX = W / tex.width
+      const scaleY = H / tex.height
+      const scale = Math.max(scaleX, scaleY)
+      roomBg.setScale(scale)
+      roomBg.setDepth(-100)
+    } else {
+      // Fallback: solid gradient background
+      this.drawFallbackBackground(W, H)
+    }
 
-    this.drawBackground(centerX, centerY, worldWidth, worldHeight)
-    this.drawWall()
-    this.drawFloor()
-    this.drawFurnitureAndCharacter()
+    // --- Layer 1 & 2: Additional furniture + character ---
+    this.drawFurnitureAndCharacter(W, H)
 
+    // --- Events ---
     window.dispatchEvent(new CustomEvent('miniroom-ready'))
 
     const updateHandler = (e: Event) => {
@@ -96,95 +85,49 @@ export class MiniRoomScene extends Phaser.Scene {
     })
   }
 
-  private drawBackground(cx: number, cy: number, ww: number, wh: number) {
+  private drawFallbackBackground(W: number, H: number) {
     const bg = this.add.graphics()
-    const size = Math.max(ww, wh) * 3
     const topColor = 0xF0EDE8
     const bottomColor = 0xE0D8D0
-    const steps = 30
-    for (let i = 0; i < steps; i++) {
-      const t = i / steps
+    for (let y = 0; y < H; y += 4) {
+      const t = y / H
       const r = ((topColor >> 16) & 0xff) * (1 - t) + ((bottomColor >> 16) & 0xff) * t
       const g = ((topColor >> 8) & 0xff) * (1 - t) + ((bottomColor >> 8) & 0xff) * t
       const b = (topColor & 0xff) * (1 - t) + (bottomColor & 0xff) * t
       bg.fillStyle((Math.floor(r) << 16) | (Math.floor(g) << 8) | Math.floor(b), 1)
-      const stripH = size / steps
-      bg.fillRect(cx - size / 2, cy - size / 2 + i * stripH, size, stripH + 1)
+      bg.fillRect(0, y, W, 4)
     }
     bg.setDepth(-100)
   }
 
-  private drawWall() {
-    const theme = (WALL_THEMES[this.roomData.wallTheme] ?? WALL_THEMES['default'])!
-    const { gridCols, gridRows, wallHeight } = ISO_CONFIG
+  private drawFurnitureAndCharacter(screenW: number, screenH: number) {
+    // If no additional furniture, only draw character
+    if (this.roomData.furniture.length === 0) {
+      this.drawCharacter(screenW / 2, screenH * 0.65)
+      return
+    }
 
-    const wall = this.add.graphics()
-    const ox = this.originX
-    const oy = this.originY
+    // Map grid positions to screen positions
+    // The room image occupies the full screen, so we map grid coords
+    // to screen space based on ISO_CONFIG
+    const { gridCols, gridRows, tileWidth, tileHeight } = ISO_CONFIG
 
+    // Calculate the isometric grid bounds in abstract space
     const topLeft = gridToIso(0, 0)
     const topRight = gridToIso(gridCols, 0)
     const bottomLeft = gridToIso(0, gridRows)
+    const bottomRight = gridToIso(gridCols, gridRows)
 
-    // Back wall
-    wall.fillStyle(theme.wallColor, 1)
-    wall.beginPath()
-    wall.moveTo(ox + topLeft.x, oy + topLeft.y)
-    wall.lineTo(ox + topRight.x, oy + topRight.y)
-    wall.lineTo(ox + topRight.x, oy + topRight.y - wallHeight)
-    wall.lineTo(ox + topLeft.x, oy + topLeft.y - wallHeight)
-    wall.closePath()
-    wall.fillPath()
+    const isoWidth = topRight.x - bottomLeft.x
+    const isoTop = topLeft.y
+    const isoBottom = bottomRight.y + tileHeight / 2
 
-    // Left wall
-    const leftWallColor = (theme.wallColor & 0xFEFEFE) >> 1
-    wall.fillStyle(leftWallColor | (theme.wallColor & 0x010101), 0.9)
-    wall.beginPath()
-    wall.moveTo(ox + topLeft.x, oy + topLeft.y)
-    wall.lineTo(ox + bottomLeft.x, oy + bottomLeft.y)
-    wall.lineTo(ox + bottomLeft.x, oy + bottomLeft.y - wallHeight)
-    wall.lineTo(ox + topLeft.x, oy + topLeft.y - wallHeight)
-    wall.closePath()
-    wall.fillPath()
+    // Map to screen: the floor area should roughly occupy the center-bottom of screen
+    const floorScreenWidth = screenW * 0.75
+    const scale = floorScreenWidth / isoWidth
+    const originX = screenW / 2
+    const originY = screenH * 0.35  // floor starts around 35% from top
 
-    // Edge lines
-    wall.lineStyle(3, theme.wallStroke, 0.6)
-    wall.lineBetween(
-      ox + topLeft.x, oy + topLeft.y - wallHeight,
-      ox + topRight.x, oy + topRight.y - wallHeight
-    )
-    wall.lineBetween(
-      ox + topLeft.x, oy + topLeft.y - wallHeight,
-      ox + bottomLeft.x, oy + bottomLeft.y - wallHeight
-    )
-
-    wall.setDepth(-10)
-  }
-
-  private drawFloor() {
-    const theme = (FLOOR_THEMES[this.roomData.floorTheme] ?? FLOOR_THEMES['default'])!
-    const { tileWidth, tileHeight, gridCols, gridRows } = ISO_CONFIG
-
-    // Use custom floor tile sprite
-    for (let col = 0; col < gridCols; col++) {
-      for (let row = 0; row < gridRows; row++) {
-        const iso = gridToIso(col, row)
-        const cx = this.originX + iso.x
-        const cy = this.originY + iso.y + tileHeight / 2  // center of diamond
-
-        const tile = this.add.image(cx, cy, 'custom_floor')
-        // floor_tile.png is 130x66, diamond is 128x64 centered with 1px padding
-        tile.setOrigin(0.5, 0.5)
-        tile.setDepth(-5)
-
-        if ((col + row) % 2 === 1) {
-          tile.setTint(0xF2EEEA)
-        }
-      }
-    }
-  }
-
-  private drawFurnitureAndCharacter() {
     interface Renderable {
       depth: number
       render: () => void
@@ -197,15 +140,40 @@ export class MiniRoomScene extends Phaser.Scene {
       if (!spec) continue
       renderables.push({
         depth: getDepthValue(item.gridX, item.gridY),
-        render: () => this.drawFurniturePiece(item, spec),
+        render: () => {
+          const iso = gridToIso(item.gridX, item.gridY)
+          const x = originX + iso.x * scale
+          const floorY = originY + (iso.y + tileHeight / 2) * scale
+          const depth = getDepthValue(item.gridX, item.gridY)
+
+          // Shadow
+          const shadow = this.add.graphics()
+          shadow.fillStyle(0x000000, 0.08)
+          shadow.fillEllipse(x, floorY, spec.widthTiles * 35 * scale, spec.heightTiles * 18 * scale)
+          shadow.setDepth(depth - 0.1)
+
+          // Sprite
+          if (this.textures.exists(spec.sprite)) {
+            const img = this.add.image(x, floorY, spec.sprite)
+            img.setScale(spec.displayScale * scale)
+            img.setOrigin(0.5, 1)
+            img.setDepth(depth)
+          }
+        },
       })
     }
 
+    // Character
     const charGridX = 2.5
     const charGridY = 2.5
     renderables.push({
       depth: getDepthValue(charGridX, charGridY),
-      render: () => this.drawCharacter(charGridX, charGridY),
+      render: () => {
+        const iso = gridToIso(charGridX, charGridY)
+        const cx = originX + iso.x * scale
+        const floorY = originY + (iso.y + tileHeight / 2) * scale
+        this.drawCharacter(cx, floorY)
+      },
     })
 
     renderables.sort((a, b) => a.depth - b.depth)
@@ -214,59 +182,35 @@ export class MiniRoomScene extends Phaser.Scene {
     }
   }
 
-  private drawFurniturePiece(item: RoomFurniture, spec: FurnitureSpec) {
-    const { tileHeight } = ISO_CONFIG
-    const iso = gridToIso(item.gridX, item.gridY)
-    const depth = getDepthValue(item.gridX, item.gridY)
-    const x = this.originX + iso.x
-    const floorY = this.originY + iso.y + tileHeight / 2
-
-    // Shadow
-    const shadow = this.add.graphics()
-    shadow.fillStyle(0x000000, 0.1)
-    shadow.fillEllipse(x, floorY, spec.widthTiles * 50, spec.heightTiles * 25)
-    shadow.setDepth(depth - 0.1)
-
-    // Sprite
-    const img = this.add.image(x, floorY, spec.sprite)
-    img.setScale(spec.displayScale)
-    img.setOrigin(0.5, 1)
-    img.setDepth(depth)
-  }
-
-  private drawCharacter(gridX: number, gridY: number) {
-    const { tileHeight } = ISO_CONFIG
-    const iso = gridToIso(gridX, gridY)
+  private drawCharacter(cx: number, floorY: number) {
     const char = this.roomData.character
     const color = hexToNumber(char.color)
-    const depth = getDepthValue(gridX, gridY)
+    const depth = 100 // character always on top of most things
 
-    const cx = this.originX + iso.x
-    const floorY = this.originY + iso.y + tileHeight / 2
     const g = this.add.graphics()
 
     // Shadow
     g.fillStyle(0x000000, 0.15)
-    g.fillEllipse(cx, floorY + 3, 40, 20)
+    g.fillEllipse(cx, floorY + 2, 30, 15)
 
     if (char.shape === 'circle') {
       g.fillStyle(color, 1)
-      g.fillCircle(cx, floorY - 40, 20)
+      g.fillCircle(cx, floorY - 28, 14)
       g.fillStyle(color, 0.85)
-      g.fillRoundedRect(cx - 14, floorY - 22, 28, 22, 6)
+      g.fillRoundedRect(cx - 10, floorY - 16, 20, 16, 5)
     } else {
       g.fillStyle(color, 1)
-      g.fillRoundedRect(cx - 16, floorY - 55, 32, 50, 10)
+      g.fillRoundedRect(cx - 12, floorY - 40, 24, 38, 8)
     }
 
     // Eyes
     g.fillStyle(0xFFFFFF, 1)
-    g.fillCircle(cx - 7, floorY - 44, 4)
-    g.fillCircle(cx + 7, floorY - 44, 4)
+    g.fillCircle(cx - 5, floorY - 32, 3)
+    g.fillCircle(cx + 5, floorY - 32, 3)
     g.fillStyle(0x333333, 1)
-    g.fillCircle(cx - 5.5, floorY - 43, 2.5)
-    g.fillCircle(cx + 8.5, floorY - 43, 2.5)
+    g.fillCircle(cx - 4, floorY - 31, 2)
+    g.fillCircle(cx + 6, floorY - 31, 2)
 
-    g.setDepth(depth + 0.5)
+    g.setDepth(depth)
   }
 }
