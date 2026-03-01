@@ -54,20 +54,31 @@ export class MiniRoomScene extends Phaser.Scene {
     const roomKey = `room_${this.roomData.wallTheme || 'default'}`
     if (this.textures.exists(roomKey)) {
       const roomBg = this.add.image(W / 2, H / 2, roomKey)
-      // Scale to fill screen while maintaining aspect ratio
+      // Scale to contain within screen while maintaining aspect ratio
       const tex = this.textures.get(roomKey).getSourceImage()
       const scaleX = W / tex.width
       const scaleY = H / tex.height
-      const scale = Math.max(scaleX, scaleY)
+      const scale = Math.min(scaleX, scaleY) // contain mode
       roomBg.setScale(scale)
       roomBg.setDepth(-100)
+
+      // Store image bounds for character placement
+      const imgW = tex.width * scale
+      const imgH = tex.height * scale
+      const imgTop = (H - imgH) / 2
+      const imgLeft = (W - imgW) / 2
+
+      // --- Layer 1 & 2: Additional furniture + character ---
+      // Place character relative to the room image, not the screen
+      // Character stands on the rug area (~78% down from top of image)
+      const charX = W / 2
+      const charY = imgTop + imgH * 0.78
+      this.drawFurnitureAndCharacter(W, H, { charX, charY, imgScale: scale })
     } else {
       // Fallback: solid gradient background
       this.drawFallbackBackground(W, H)
+      this.drawFurnitureAndCharacter(W, H)
     }
-
-    // --- Layer 1 & 2: Additional furniture + character ---
-    this.drawFurnitureAndCharacter(W, H)
 
     // --- Events ---
     window.dispatchEvent(new CustomEvent('miniroom-ready'))
@@ -100,116 +111,56 @@ export class MiniRoomScene extends Phaser.Scene {
     bg.setDepth(-100)
   }
 
-  private drawFurnitureAndCharacter(screenW: number, screenH: number) {
-    // If no additional furniture, only draw character
+  private drawFurnitureAndCharacter(
+    screenW: number,
+    screenH: number,
+    placement?: { charX: number; charY: number; imgScale: number },
+  ) {
+    // Character position: use placement from room image, or fallback to center
+    const charX = placement?.charX ?? screenW / 2
+    const charY = placement?.charY ?? screenH * 0.75
+    const charScale = placement?.imgScale ? Math.max(placement.imgScale * 2, 1) : 1
+
     if (this.roomData.furniture.length === 0) {
-      this.drawCharacter(screenW / 2, screenH * 0.65)
+      this.drawCharacter(charX, charY, charScale)
       return
     }
 
-    // Map grid positions to screen positions
-    // The room image occupies the full screen, so we map grid coords
-    // to screen space based on ISO_CONFIG
-    const { gridCols, gridRows, tileWidth, tileHeight } = ISO_CONFIG
-
-    // Calculate the isometric grid bounds in abstract space
-    const topLeft = gridToIso(0, 0)
-    const topRight = gridToIso(gridCols, 0)
-    const bottomLeft = gridToIso(0, gridRows)
-    const bottomRight = gridToIso(gridCols, gridRows)
-
-    const isoWidth = topRight.x - bottomLeft.x
-    const isoTop = topLeft.y
-    const isoBottom = bottomRight.y + tileHeight / 2
-
-    // Map to screen: the floor area should roughly occupy the center-bottom of screen
-    const floorScreenWidth = screenW * 0.75
-    const scale = floorScreenWidth / isoWidth
-    const originX = screenW / 2
-    const originY = screenH * 0.35  // floor starts around 35% from top
-
-    interface Renderable {
-      depth: number
-      render: () => void
-    }
-
-    const renderables: Renderable[] = []
-
-    for (const item of this.roomData.furniture) {
-      const spec = FURNITURE_SPECS[item.type as FurnitureType]
-      if (!spec) continue
-      renderables.push({
-        depth: getDepthValue(item.gridX, item.gridY),
-        render: () => {
-          const iso = gridToIso(item.gridX, item.gridY)
-          const x = originX + iso.x * scale
-          const floorY = originY + (iso.y + tileHeight / 2) * scale
-          const depth = getDepthValue(item.gridX, item.gridY)
-
-          // Shadow
-          const shadow = this.add.graphics()
-          shadow.fillStyle(0x000000, 0.08)
-          shadow.fillEllipse(x, floorY, spec.widthTiles * 35 * scale, spec.heightTiles * 18 * scale)
-          shadow.setDepth(depth - 0.1)
-
-          // Sprite
-          if (this.textures.exists(spec.sprite)) {
-            const img = this.add.image(x, floorY, spec.sprite)
-            img.setScale(spec.displayScale * scale)
-            img.setOrigin(0.5, 1)
-            img.setDepth(depth)
-          }
-        },
-      })
-    }
-
-    // Character
-    const charGridX = 2.5
-    const charGridY = 2.5
-    renderables.push({
-      depth: getDepthValue(charGridX, charGridY),
-      render: () => {
-        const iso = gridToIso(charGridX, charGridY)
-        const cx = originX + iso.x * scale
-        const floorY = originY + (iso.y + tileHeight / 2) * scale
-        this.drawCharacter(cx, floorY)
-      },
-    })
-
-    renderables.sort((a, b) => a.depth - b.depth)
-    for (const r of renderables) {
-      r.render()
-    }
+    // When we have user-added furniture (Phase 2), render them here
+    // For now just draw the character
+    this.drawCharacter(charX, charY, charScale)
   }
 
-  private drawCharacter(cx: number, floorY: number) {
+  private drawCharacter(cx: number, floorY: number, s: number = 1) {
     const char = this.roomData.character
     const color = hexToNumber(char.color)
-    const depth = 100 // character always on top of most things
+    const depth = 100
 
     const g = this.add.graphics()
 
     // Shadow
     g.fillStyle(0x000000, 0.15)
-    g.fillEllipse(cx, floorY + 2, 30, 15)
+    g.fillEllipse(cx, floorY + 2 * s, 30 * s, 15 * s)
 
     if (char.shape === 'circle') {
+      // Head
       g.fillStyle(color, 1)
-      g.fillCircle(cx, floorY - 28, 14)
+      g.fillCircle(cx, floorY - 28 * s, 14 * s)
+      // Body
       g.fillStyle(color, 0.85)
-      g.fillRoundedRect(cx - 10, floorY - 16, 20, 16, 5)
+      g.fillRoundedRect(cx - 10 * s, floorY - 16 * s, 20 * s, 16 * s, 5 * s)
     } else {
       g.fillStyle(color, 1)
-      g.fillRoundedRect(cx - 12, floorY - 40, 24, 38, 8)
+      g.fillRoundedRect(cx - 12 * s, floorY - 40 * s, 24 * s, 38 * s, 8 * s)
     }
 
     // Eyes
     g.fillStyle(0xFFFFFF, 1)
-    g.fillCircle(cx - 5, floorY - 32, 3)
-    g.fillCircle(cx + 5, floorY - 32, 3)
+    g.fillCircle(cx - 5 * s, floorY - 32 * s, 3 * s)
+    g.fillCircle(cx + 5 * s, floorY - 32 * s, 3 * s)
     g.fillStyle(0x333333, 1)
-    g.fillCircle(cx - 4, floorY - 31, 2)
-    g.fillCircle(cx + 6, floorY - 31, 2)
+    g.fillCircle(cx - 4 * s, floorY - 31 * s, 2 * s)
+    g.fillCircle(cx + 6 * s, floorY - 31 * s, 2 * s)
 
     g.setDepth(depth)
   }
