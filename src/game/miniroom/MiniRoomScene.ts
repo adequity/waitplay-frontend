@@ -1,6 +1,6 @@
 import type { RoomData, RoomFurniture, FurnitureType, FurnitureSpec } from './RoomConfig'
-import { FURNITURE_SPECS, WALL_THEMES, FLOOR_THEMES, ISO_CONFIG, DEFAULT_ROOM } from './RoomConfig'
-import { gridToIso, getDepthValue, hexToNumber, drawIsoDiamond } from './IsometricUtils'
+import { FURNITURE_SPECS, WALL_THEMES, ISO_CONFIG, DEFAULT_ROOM } from './RoomConfig'
+import { gridToIso, getDepthValue, hexToNumber } from './IsometricUtils'
 
 const SPRITE_BASE = '/assets/miniroom/'
 
@@ -20,6 +20,12 @@ export class MiniRoomScene extends Phaser.Scene {
   }
 
   preload() {
+    // Floor tile
+    if (!this.textures.exists('floorTile')) {
+      this.load.image('floorTile', SPRITE_BASE + 'floorFull_SE.png')
+    }
+
+    // Furniture sprites
     const loaded = new Set<string>()
     for (const item of this.roomData.furniture) {
       const spec = FURNITURE_SPECS[item.type as FurnitureType]
@@ -34,7 +40,7 @@ export class MiniRoomScene extends Phaser.Scene {
     const H = this.scale.height
 
     this.originX = W / 2
-    this.originY = H * 0.35
+    this.originY = H * 0.28
 
     this.drawBackground(W, H)
     this.drawWall()
@@ -113,32 +119,41 @@ export class MiniRoomScene extends Phaser.Scene {
       this.originX + bottomLeft.x, this.originY + bottomLeft.y - wallHeight
     )
 
+    // Wall-floor junction lines
+    wall.lineStyle(1, theme.wallStroke, 0.3)
+    wall.lineBetween(
+      this.originX + topLeft.x, this.originY + topLeft.y,
+      this.originX + topRight.x, this.originY + topRight.y
+    )
+    wall.lineBetween(
+      this.originX + topLeft.x, this.originY + topLeft.y,
+      this.originX + bottomLeft.x, this.originY + bottomLeft.y
+    )
+
     wall.setDepth(-10)
   }
 
   private drawFloor() {
-    const theme = (FLOOR_THEMES[this.roomData.floorTheme] ?? FLOOR_THEMES['default'])!
-    const { tileWidth, tileHeight, gridCols, gridRows } = ISO_CONFIG
+    const { gridCols, gridRows, floorSpriteScale } = ISO_CONFIG
 
-    const floor = this.add.graphics()
     for (let col = 0; col < gridCols; col++) {
       for (let row = 0; row < gridRows; row++) {
         const iso = gridToIso(col, row)
-        const isAlt = (col + row) % 2 === 0
-        const color = isAlt ? theme.floorColor : theme.floorStroke
-        drawIsoDiamond(
-          floor,
+        const tile = this.add.image(
           this.originX + iso.x,
           this.originY + iso.y,
-          tileWidth,
-          tileHeight,
-          color,
-          theme.floorStroke,
-          1
+          'floorTile'
         )
+        tile.setScale(floorSpriteScale)
+        tile.setOrigin(0.5, 0)
+        tile.setDepth(-5)
+
+        // Subtle checkerboard tint
+        if ((col + row) % 2 === 1) {
+          tile.setTint(0xEEEEEE)
+        }
       }
     }
-    floor.setDepth(-5)
   }
 
   private drawFurnitureAndCharacter() {
@@ -175,7 +190,6 @@ export class MiniRoomScene extends Phaser.Scene {
     const { tileHeight } = ISO_CONFIG
     const iso = gridToIso(item.gridX, item.gridY)
     const depth = getDepthValue(item.gridX, item.gridY)
-    // iso position is top vertex of the diamond; center is +tileHeight/2
     const x = this.originX + iso.x
     const floorY = this.originY + iso.y + tileHeight / 2
 
@@ -208,10 +222,8 @@ export class MiniRoomScene extends Phaser.Scene {
     g.fillEllipse(cx, floorY + 2, 24, 12)
 
     if (char.shape === 'circle') {
-      // Head
       g.fillStyle(color, 1)
       g.fillCircle(cx, floorY - 22, 12)
-      // Body
       g.fillStyle(color, 0.85)
       g.fillRoundedRect(cx - 8, floorY - 12, 16, 12, 4)
     } else {
