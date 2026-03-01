@@ -33,12 +33,12 @@ export interface FurnitureSpec {
 }
 
 export const FURNITURE_SPECS: Record<FurnitureType, FurnitureSpec> = {
-  sofa:      { widthTiles: 2, heightTiles: 1, elevationTiles: 0.6, label: '소파', sprite: 'loungeSofa_SE.png', displayScale: 0.5 },
-  table:     { widthTiles: 1.5, heightTiles: 1, elevationTiles: 0.5, label: '테이블', sprite: 'tableCoffee_SE.png', displayScale: 0.45 },
-  lamp:      { widthTiles: 0.5, heightTiles: 0.5, elevationTiles: 1.2, label: '조명', sprite: 'lampRoundFloor_SE.png', displayScale: 0.45 },
-  plant:     { widthTiles: 0.7, heightTiles: 0.7, elevationTiles: 0.8, label: '식물', sprite: 'pottedPlant_SE.png', displayScale: 0.5 },
-  bookshelf: { widthTiles: 1.5, heightTiles: 0.5, elevationTiles: 1.5, label: '책장', sprite: 'bookcaseOpen_SE.png', displayScale: 0.45 },
-  rug:       { widthTiles: 2, heightTiles: 2, elevationTiles: 0, label: '러그', sprite: 'rugRound_SE.png', displayScale: 0.45 },
+  sofa:      { widthTiles: 2, heightTiles: 1, elevationTiles: 0.6, label: '소파', sprite: 'loungeSofa_SE.png', displayScale: 1.3 },
+  table:     { widthTiles: 1.5, heightTiles: 1, elevationTiles: 0.5, label: '테이블', sprite: 'tableCoffee_SE.png', displayScale: 1.2 },
+  lamp:      { widthTiles: 0.5, heightTiles: 0.5, elevationTiles: 1.2, label: '조명', sprite: 'lampRoundFloor_SE.png', displayScale: 1.2 },
+  plant:     { widthTiles: 0.7, heightTiles: 0.7, elevationTiles: 0.8, label: '식물', sprite: 'pottedPlant_SE.png', displayScale: 1.3 },
+  bookshelf: { widthTiles: 1.5, heightTiles: 0.5, elevationTiles: 1.5, label: '책장', sprite: 'bookcaseOpen_SE.png', displayScale: 1.2 },
+  rug:       { widthTiles: 2, heightTiles: 2, elevationTiles: 0, label: '러그', sprite: 'rugRound_SE.png', displayScale: 1.2 },
 }
 
 export const WALL_THEMES: Record<string, { wallColor: number; wallStroke: number }> = {
@@ -53,16 +53,15 @@ export const FLOOR_THEMES: Record<string, { floorColor: number; floorStroke: num
   tile:    { floorColor: 0xA8C8D8, floorStroke: 0x98B8C8 },
 }
 
-// Kenney floorFull_SE.png: 208x152, diamond vertices: top(104,0) left(0,73) right(207,73) bottom(104,146)
-// Diamond face: 207px wide, 146px tall (top-half 73px, bottom-half 73px, +5px 3D extrusion)
-const FLOOR_SCALE = 0.385
+// Kenney floorFull_SE.png: 208x152px
+// Diamond vertices: top(104,0) left(0,73) right(207,73) bottom(104,146)
+// Use Kenney's native pixel dimensions — camera zoom handles screen fitting
 export const ISO_CONFIG = {
-  tileWidth: 207 * FLOOR_SCALE,   // ~79.7
-  tileHeight: 146 * FLOOR_SCALE,  // ~56.2
+  tileWidth: 207,     // diamond horizontal span (px)
+  tileHeight: 146,    // diamond vertical span (px, excluding 3D extrusion)
   gridCols: 6,
   gridRows: 6,
-  wallHeight: 200,
-  floorSpriteScale: FLOOR_SCALE * (207 / 208),  // adjust for image padding
+  wallHeight: 500,
 }
 
 export const DEFAULT_ROOM: RoomData = {
