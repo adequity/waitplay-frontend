@@ -62,6 +62,7 @@ export class MiniRoomScene extends Phaser.Scene {
   private renderRoom() {
     const W = this.scale.width
     const H = this.scale.height
+    const isLandscape = W > H
 
     const roomKey = `room_${this.roomData.wallTheme || 'default'}`
     if (this.textures.exists(roomKey)) {
@@ -69,7 +70,8 @@ export class MiniRoomScene extends Phaser.Scene {
       const tex = this.textures.get(roomKey).getSourceImage()
       const scaleX = W / tex.width
       const scaleY = H / tex.height
-      const scale = Math.min(scaleX, scaleY)
+      // 가로모드: cover (화면 꽉 채움), 세로모드: contain (전체 보임)
+      const scale = isLandscape ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY)
       roomBg.setScale(scale)
       roomBg.setDepth(-100)
 
@@ -238,6 +240,17 @@ export class MiniRoomScene extends Phaser.Scene {
         this.cameras.main.setZoom(1)
         this.scene.restart({ roomData: this.roomData })
       }
+    })
+
+    // Mobile orientation change fallback — force resize after rotation settles
+    const orientationHandler = () => {
+      setTimeout(() => {
+        this.scale.refresh()
+      }, 300)
+    }
+    window.addEventListener('orientationchange', orientationHandler)
+    this.events.on('shutdown', () => {
+      window.removeEventListener('orientationchange', orientationHandler)
     })
   }
 
