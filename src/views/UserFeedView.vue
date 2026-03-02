@@ -762,7 +762,6 @@ async function requestLandscape() {
   if (requestFS && !document.fullscreenElement && !(document as any).webkitFullscreenElement) {
     try {
       await requestFS.call(el)
-      // Wait for fullscreen to fully activate before locking orientation
       await new Promise(resolve => setTimeout(resolve, 200))
     } catch { /* fullscreen not supported (iOS Safari etc.) */ }
   }
@@ -775,12 +774,30 @@ async function requestLandscape() {
     }
   } catch { /* orientation lock failed */ }
 
-  // Fallback: CSS rotation for devices that don't support orientation lock (iOS)
-  if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
-    const container = document.getElementById('miniroom-fullscreen-overlay')
-    if (container && window.innerHeight > window.innerWidth) {
-      container.classList.add('force-landscape')
-    }
+  // Fallback: CSS rotation + Phaser re-init with swapped dimensions
+  const isPortrait = window.innerHeight > window.innerWidth
+  if (isPortrait) {
+    el.classList.add('force-landscape')
+    // Re-init Phaser so it renders at the rotated (swapped) dimensions
+    await new Promise(resolve => setTimeout(resolve, 100))
+    try {
+      const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
+      miniRoomManager.destroy()
+      const roomData = roomConfig.value ? {
+        wallTheme: roomConfig.value.wallTheme,
+        floorTheme: roomConfig.value.floorTheme,
+        furniture: roomConfig.value.furniture.map(f => ({
+          itemId: f.itemId, type: f.type as any, gridX: f.gridX, gridY: f.gridY,
+          rotation: f.rotation, scale: f.scale, color: f.color || '#667eea',
+        })),
+        character: {
+          color: roomConfig.value.character.color,
+          shape: (roomConfig.value.character.shape as 'circle' | 'square') || 'circle',
+          accessory: roomConfig.value.character.accessory,
+        },
+      } : undefined
+      await miniRoomManager.init('miniroom-container', roomData as any)
+    } catch { /* silent */ }
   }
 }
 
@@ -1394,6 +1411,10 @@ const formatRelativeDate = (dateString: string): string => {
   left: 50%;
   margin-top: calc(-50vw);
   margin-left: calc(-50vh);
+}
+.miniroom-fullscreen.force-landscape .miniroom-canvas-container {
+  width: 100%;
+  height: 100%;
 }
 .miniroom-fullscreen.force-landscape .miniroom-rotate-btn { display: none; }
 </style>
