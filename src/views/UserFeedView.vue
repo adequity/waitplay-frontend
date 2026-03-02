@@ -771,28 +771,32 @@ async function requestLandscape() {
     }
   } catch { /* orientation lock failed */ }
 
-  // Fallback: JS-driven landscape layout (no CSS transform on overlay)
+  // Fallback: rotate only the Phaser container, keep overlay buttons in place
   const isPortrait = window.innerHeight > window.innerWidth
   if (isPortrait) {
     const vw = window.innerWidth
     const vh = window.innerHeight
-    // Set overlay to landscape dimensions directly via inline style
-    el.style.width = vh + 'px'
-    el.style.height = vw + 'px'
-    el.style.transform = 'rotate(90deg)'
-    el.style.transformOrigin = 'top left'
-    el.style.top = '0'
-    el.style.left = vw + 'px'
+    const canvasContainer = document.getElementById('miniroom-container')
+    if (canvasContainer) {
+      // Set container to landscape dimensions and rotate it within the overlay
+      canvasContainer.style.width = vh + 'px'
+      canvasContainer.style.height = vw + 'px'
+      canvasContainer.style.transform = 'rotate(90deg)'
+      canvasContainer.style.transformOrigin = 'center center'
+      canvasContainer.style.position = 'absolute'
+      canvasContainer.style.top = '50%'
+      canvasContainer.style.left = '50%'
+      canvasContainer.style.marginTop = -(vw / 2) + 'px'
+      canvasContainer.style.marginLeft = -(vh / 2) + 'px'
+    }
     el.classList.add('force-landscape')
 
-    // Re-init Phaser with explicit landscape pixel dimensions
+    // Re-init Phaser — it reads container's clientWidth/clientHeight (vh × vw = landscape)
     await new Promise(resolve => setTimeout(resolve, 100))
     try {
       const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
       miniRoomManager.destroy()
-      // Clear old canvas
-      const container = document.getElementById('miniroom-container')
-      if (container) container.innerHTML = ''
+      if (canvasContainer) canvasContainer.innerHTML = ''
       await miniRoomManager.init('miniroom-container', buildRoomData() as any)
     } catch { /* silent */ }
   }
@@ -807,15 +811,11 @@ async function closeRoomFullscreen() {
   } catch { /* silent */ }
 
   // Remove CSS fallback rotation and inline styles
-  const container = document.getElementById('miniroom-fullscreen-overlay')
-  if (container) {
-    container.classList.remove('force-landscape')
-    container.style.removeProperty('width')
-    container.style.removeProperty('height')
-    container.style.removeProperty('transform')
-    container.style.removeProperty('transform-origin')
-    container.style.removeProperty('top')
-    container.style.removeProperty('left')
+  const overlay = document.getElementById('miniroom-fullscreen-overlay')
+  overlay?.classList.remove('force-landscape')
+  const canvasContainer = document.getElementById('miniroom-container')
+  if (canvasContainer) {
+    canvasContainer.removeAttribute('style')
   }
 
   const fsElement = document.fullscreenElement || (document as any).webkitFullscreenElement

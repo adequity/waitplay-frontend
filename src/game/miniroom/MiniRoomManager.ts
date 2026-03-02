@@ -18,8 +18,6 @@ export class MiniRoomManager {
 
     const { MiniRoomScene } = await import('./MiniRoomScene')
 
-    // Create scene instance with roomData so it's available on first boot
-    // (avoids unnecessary scene.restart which causes double init)
     const sceneInstance = new MiniRoomScene()
     if (roomData) {
       (sceneInstance as any)._initialRoomData = roomData
@@ -50,8 +48,6 @@ export class MiniRoomManager {
 
     this.game = new this.Phaser.Game(config)
 
-    // Phaser canvas must have touch-action: none directly set
-    // (CSS scoped styles can't reach dynamically created canvas)
     const container = document.getElementById(containerId)
     const canvas = container?.querySelector('canvas')
     if (canvas) {
