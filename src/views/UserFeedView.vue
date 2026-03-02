@@ -771,18 +771,29 @@ async function requestLandscape() {
     }
   } catch { /* orientation lock failed */ }
 
-  // Fallback: CSS layout swap + Phaser re-init with landscape dimensions
+  // Fallback: JS-driven landscape layout (no CSS transform on overlay)
   const isPortrait = window.innerHeight > window.innerWidth
   if (isPortrait) {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    // Set overlay to landscape dimensions directly via inline style
+    el.style.width = vh + 'px'
+    el.style.height = vw + 'px'
+    el.style.transform = 'rotate(90deg)'
+    el.style.transformOrigin = 'top left'
+    el.style.top = '0'
+    el.style.left = vw + 'px'
     el.classList.add('force-landscape')
-    // Wait for CSS layout to apply so Phaser reads correct container size
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-    await new Promise(resolve => setTimeout(resolve, 50))
+
+    // Re-init Phaser with explicit landscape pixel dimensions
+    await new Promise(resolve => setTimeout(resolve, 100))
     try {
       const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
       miniRoomManager.destroy()
-      const roomData = buildRoomData()
-      await miniRoomManager.init('miniroom-container', roomData as any)
+      // Clear old canvas
+      const container = document.getElementById('miniroom-container')
+      if (container) container.innerHTML = ''
+      await miniRoomManager.init('miniroom-container', buildRoomData() as any)
     } catch { /* silent */ }
   }
 }
@@ -795,9 +806,17 @@ async function closeRoomFullscreen() {
     miniRoomManager.destroy()
   } catch { /* silent */ }
 
-  // Remove CSS fallback rotation
+  // Remove CSS fallback rotation and inline styles
   const container = document.getElementById('miniroom-fullscreen-overlay')
-  container?.classList.remove('force-landscape')
+  if (container) {
+    container.classList.remove('force-landscape')
+    container.style.removeProperty('width')
+    container.style.removeProperty('height')
+    container.style.removeProperty('transform')
+    container.style.removeProperty('transform-origin')
+    container.style.removeProperty('top')
+    container.style.removeProperty('left')
+  }
 
   const fsElement = document.fullscreenElement || (document as any).webkitFullscreenElement
   if (fsElement) {
@@ -1387,14 +1406,6 @@ const formatRelativeDate = (dateString: string): string => {
 .miniroom-rotate-btn:active { background: rgba(0,0,0,0.8); }
 @media (orientation: landscape) { .miniroom-rotate-btn { display: none; } }
 
-/* CSS fallback: force landscape without CSS transform (Phaser-compatible) */
-.miniroom-fullscreen.force-landscape {
-  width: 100vh;
-  height: 100vw;
-  transform: rotate(90deg);
-  transform-origin: top left;
-  top: 0;
-  left: 100%;
-}
+/* force-landscape: inline styles handle transform, this just hides rotate btn */
 .miniroom-fullscreen.force-landscape .miniroom-rotate-btn { display: none; }
 </style>
