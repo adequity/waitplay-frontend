@@ -1,6 +1,9 @@
 [phases.setup]
 nixPkgs = ["nodejs_22"]
 
+[phases.install]
+cmds = ["CYPRESS_INSTALL_BINARY=0 npm ci"]
+
 [phases.build]
 cmds = ["npx vite build"]
 
