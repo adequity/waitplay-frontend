@@ -14,23 +14,16 @@
       </a>
     </template>
     <template v-else>
-      <!-- Default WaitPlay branding -->
-      <div class="sidebar-ad-branding">
-        <div class="branding-content">
-          <div class="branding-logo">
-            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="branding-logo-svg">
-              <circle cx="20" cy="20" r="18" fill="#2563eb" opacity="0.1"/>
-              <circle cx="20" cy="20" r="12" fill="#2563eb" opacity="0.2"/>
-              <circle cx="20" cy="20" r="6" fill="#2563eb"/>
-            </svg>
-          </div>
-          <h3 class="branding-title">WaitPlay</h3>
-          <p class="branding-slogan">게임하고<br>혜택받자</p>
-          <div class="branding-decoration">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-          </div>
+      <!-- 광고 없을 때: 뷰포트 전체를 채우는 빈 광고 구좌 -->
+      <div class="sidebar-ad-empty">
+        <div class="ad-slot-label">AD</div>
+        <div class="branding-mini">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="branding-logo-svg">
+            <circle cx="20" cy="20" r="18" fill="#2563eb" opacity="0.1"/>
+            <circle cx="20" cy="20" r="12" fill="#2563eb" opacity="0.2"/>
+            <circle cx="20" cy="20" r="6" fill="#2563eb"/>
+          </svg>
+          <span class="branding-name">WaitPlay</span>
         </div>
       </div>
     </template>
@@ -58,10 +51,26 @@ const filteredAds = computed(() => {
   )
 })
 
+// Detect current page section from route
+function detectPageSection(): string {
+  const path = route.path
+
+  if (path === '/customer') return 'customer'
+  if (path === '/login' || path === '/signup' || path === '/forgot-password') return 'login'
+  if (path.startsWith('/u/') || path.startsWith('/user/') || path === '/settings') return 'profile'
+  if (path.startsWith('/game/')) return 'game'
+  if (path === '/guestbook') return 'guestbook'
+  if (path === '/privacy' || path === '/terms') return 'login'
+  if (path === '/' || path.startsWith('/s/')) return 'customer'
+
+  return 'all'
+}
+
 async function loadAds() {
   try {
     const qrCode = detectQrCode()
-    const newCacheKey = qrCode || 'default'
+    const section = detectPageSection()
+    const newCacheKey = `${qrCode || 'default'}_${section}`
 
     // Use cache if valid
     if (newCacheKey === cacheKey.value && Date.now() < cacheExpiry.value) {
@@ -70,9 +79,9 @@ async function loadAds() {
 
     let result: SidebarAd[]
     if (qrCode) {
-      result = await getSidebarAds(qrCode)
+      result = await getSidebarAds(qrCode, section)
     } else {
-      result = await getDefaultSidebarAds()
+      result = await getDefaultSidebarAds(section)
     }
 
     ads.value = result
@@ -105,12 +114,13 @@ onMounted(() => {
 <style scoped>
 .sidebar-ad {
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  position: sticky;
+  top: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 20px 12px;
+  padding: 0;
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -119,12 +129,11 @@ onMounted(() => {
   display: none;
 }
 
+/* 광고가 있을 때 */
 .sidebar-ad-item {
   display: block;
   width: 100%;
-  max-width: 280px;
-  border-radius: 12px;
-  overflow: hidden;
+  flex-shrink: 0;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -133,7 +142,6 @@ onMounted(() => {
 }
 
 .sidebar-ad-item.clickable:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
@@ -144,60 +152,52 @@ onMounted(() => {
   object-fit: cover;
 }
 
-/* Default branding */
-.sidebar-ad-branding {
+/* 광고 없을 때: 전체 영역을 채우는 빈 구좌 */
+.sidebar-ad-empty {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  background: #f8fafc;
+  border-left: 1px dashed #e2e8f0;
+  border-right: 1px dashed #e2e8f0;
+  gap: 40px;
 }
 
-.branding-content {
-  text-align: center;
-  padding: 40px 20px;
+.sidebar-ad-left .sidebar-ad-empty {
+  border-left: none;
 }
 
-.branding-logo {
-  margin-bottom: 20px;
+.sidebar-ad-right .sidebar-ad-empty {
+  border-right: none;
+}
+
+.ad-slot-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #cbd5e1;
+  letter-spacing: 4px;
+}
+
+.branding-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.6;
 }
 
 .branding-logo-svg {
-  width: 56px;
-  height: 56px;
+  width: 36px;
+  height: 36px;
 }
 
-.branding-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #2563eb;
-  letter-spacing: -0.02em;
-  margin-bottom: 8px;
-}
-
-.branding-slogan {
-  font-size: 0.9rem;
+.branding-name {
+  font-size: 0.8rem;
+  font-weight: 600;
   color: #94a3b8;
-  line-height: 1.5;
-  font-weight: 400;
-}
-
-.branding-decoration {
-  margin-top: 24px;
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-}
-
-.branding-decoration .dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #cbd5e1;
-}
-
-.branding-decoration .dot:nth-child(2) {
-  background: #2563eb;
-  opacity: 0.5;
+  letter-spacing: -0.01em;
 }
 </style>

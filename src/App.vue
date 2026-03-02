@@ -92,8 +92,8 @@ body {
   .app-sidebar {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
+    align-items: stretch;
+    justify-content: stretch;
   }
 }
 
