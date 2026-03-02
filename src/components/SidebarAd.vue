@@ -120,6 +120,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 0;
   overflow-y: auto;
   scrollbar-width: none;
