@@ -6,6 +6,8 @@ const SPRITE_BASE = '/assets/miniroom/custom/'
 
 export class MiniRoomScene extends Phaser.Scene {
   private roomData: RoomData = DEFAULT_ROOM
+  private lastW = 0
+  private lastH = 0
 
   constructor() {
     super({ key: 'MiniRoomScene' })
@@ -45,6 +47,9 @@ export class MiniRoomScene extends Phaser.Scene {
   }
 
   create() {
+    this.lastW = this.scale.width
+    this.lastH = this.scale.height
+    console.log('[MiniRoom] create()', this.lastW, 'x', this.lastH)
     this.renderRoom()
     this.setupCameraControls()
     this.setupResizeHandler()
@@ -114,6 +119,7 @@ export class MiniRoomScene extends Phaser.Scene {
     })
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      console.log('[MiniRoom] pointerdown', pointer.x.toFixed(0), pointer.y.toFixed(0))
       if (this.input.pointer1.isDown && this.input.pointer2.isDown) return
       isDown = true
       hasMoved = false
@@ -164,7 +170,9 @@ export class MiniRoomScene extends Phaser.Scene {
       lastPointerY = pointer.y
     })
 
-    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+    this.input.on('pointerup', (_pointer: Phaser.Input.Pointer) => {
+      const pointer = _pointer
+      console.log('[MiniRoom] pointerup', 'moved:', hasMoved, 'zoom:', cam.zoom.toFixed(2))
       if (wasPinching) {
         if (!this.input.pointer1.isDown && !this.input.pointer2.isDown) {
           wasPinching = false
@@ -220,10 +228,15 @@ export class MiniRoomScene extends Phaser.Scene {
   }
 
   private setupResizeHandler() {
-    // When screen rotates or resizes, re-render everything
-    this.scale.on('resize', () => {
-      this.cameras.main.setZoom(1)
-      this.scene.restart({ roomData: this.roomData })
+    this.scale.on('resize', (gameSize: { width: number; height: number }) => {
+      const newW = gameSize.width
+      const newH = gameSize.height
+      // Only restart if size actually changed (avoid restart loops)
+      if (Math.abs(newW - this.lastW) > 1 || Math.abs(newH - this.lastH) > 1) {
+        console.log('[MiniRoom] resize', this.lastW, 'x', this.lastH, '->', newW, 'x', newH)
+        this.cameras.main.setZoom(1)
+        this.scene.restart({ roomData: this.roomData })
+      }
     })
   }
 
