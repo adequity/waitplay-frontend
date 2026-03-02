@@ -89,6 +89,7 @@
         <CustomerSupportTab v-if="activeTab === 'cs'" />
         <CalendarManageTab v-if="activeTab === 'calendar'" />
         <SettingsTab v-if="activeTab === 'settings'" />
+        <SidebarAdManagement v-if="activeTab === 'sidebar-ads'" mode="admin" />
       </div>
     </main>
   </div>
@@ -108,6 +109,7 @@ import CustomerSupportTab from '@/components/CustomerSupportTab.vue'
 import GuestbookManageTab from '@/components/GuestbookManageTab.vue'
 import CalendarManageTab from '@/components/CalendarManageTab.vue'
 import SettingsTab from '@/components/SettingsTab.vue'
+import SidebarAdManagement from '@/components/SidebarAdManagement.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -142,6 +144,7 @@ const tabs = [
   { id: 'customers', label: '고객 분석', iconName: 'users' },
   { id: 'cs', label: 'CS 게시판', iconName: 'message' },
   { id: 'calendar', label: '캘린더 관리', iconName: 'calendar' },
+  { id: 'sidebar-ads', label: '사이드 광고', iconName: 'image' },
   { id: 'settings', label: '설정', iconName: 'settings' }
 ]
 
