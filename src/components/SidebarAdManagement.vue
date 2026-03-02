@@ -114,10 +114,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import {
-  getAdminSidebarAds,
-  createAdminSidebarAd,
-  deleteAdminSidebarAd,
-  toggleAdminSidebarAd,
   getMasterAdminSidebarAds,
   createDefaultSidebarAd,
   deleteMasterAdminSidebarAd,
@@ -125,12 +121,6 @@ import {
   type SidebarAd
 } from '@/services/sidebarAdService'
 import { useAuthStore } from '@/stores/auth'
-
-const props = withDefaults(defineProps<{
-  mode?: 'admin' | 'masteradmin'
-}>(), {
-  mode: 'admin'
-})
 
 const authStore = useAuthStore()
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
@@ -162,11 +152,7 @@ function positionLabel(pos: string) {
 async function loadAds() {
   loading.value = true
   try {
-    if (props.mode === 'masteradmin') {
-      ads.value = await getMasterAdminSidebarAds()
-    } else {
-      ads.value = await getAdminSidebarAds()
-    }
+    ads.value = await getMasterAdminSidebarAds()
   } catch (e) {
     console.error('Failed to load sidebar ads:', e)
   } finally {
@@ -243,11 +229,7 @@ async function saveAd() {
       displayOrder: form.value.displayOrder
     }
 
-    if (props.mode === 'masteradmin') {
-      await createDefaultSidebarAd(request)
-    } else {
-      await createAdminSidebarAd(request)
-    }
+    await createDefaultSidebarAd(request)
 
     isAdding.value = false
     resetForm()
@@ -262,11 +244,7 @@ async function saveAd() {
 
 async function toggleAd(ad: SidebarAd) {
   try {
-    if (props.mode === 'masteradmin') {
-      await toggleMasterAdminSidebarAd(ad.id)
-    } else {
-      await toggleAdminSidebarAd(ad.id)
-    }
+    await toggleMasterAdminSidebarAd(ad.id)
     await loadAds()
   } catch (e) {
     console.error('Failed to toggle sidebar ad:', e)
@@ -276,11 +254,7 @@ async function toggleAd(ad: SidebarAd) {
 async function deleteAd(ad: SidebarAd) {
   if (!confirm('이 광고를 삭제하시겠습니까?')) return
   try {
-    if (props.mode === 'masteradmin') {
-      await deleteMasterAdminSidebarAd(ad.id)
-    } else {
-      await deleteAdminSidebarAd(ad.id)
-    }
+    await deleteMasterAdminSidebarAd(ad.id)
     await loadAds()
   } catch (e) {
     console.error('Failed to delete sidebar ad:', e)

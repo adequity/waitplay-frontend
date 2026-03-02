@@ -86,7 +86,7 @@
         <MasterBgmManagement v-if="activeTab === 'bgm'" />
         <MasterCalendarManagement v-if="activeTab === 'calendar'" />
         <MasterSettingsManagement v-if="activeTab === 'settings'" />
-        <SidebarAdManagement v-if="activeTab === 'sidebar-ads'" mode="masteradmin" />
+        <SidebarAdManagement v-if="activeTab === 'sidebar-ads'" />
       </div>
     </main>
   </div>

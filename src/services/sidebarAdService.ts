@@ -41,31 +41,6 @@ export async function getDefaultSidebarAds(): Promise<SidebarAd[]> {
   return res.data
 }
 
-// Admin API
-export async function getAdminSidebarAds(): Promise<SidebarAd[]> {
-  const res = await api.get('/api/sidebar-ads/admin')
-  return res.data
-}
-
-export async function createAdminSidebarAd(data: CreateSidebarAdRequest): Promise<SidebarAd> {
-  const res = await api.post('/api/sidebar-ads/admin', data)
-  return res.data
-}
-
-export async function updateAdminSidebarAd(id: string, data: UpdateSidebarAdRequest): Promise<SidebarAd> {
-  const res = await api.put(`/api/sidebar-ads/admin/${id}`, data)
-  return res.data
-}
-
-export async function deleteAdminSidebarAd(id: string): Promise<void> {
-  await api.delete(`/api/sidebar-ads/admin/${id}`)
-}
-
-export async function toggleAdminSidebarAd(id: string): Promise<SidebarAd> {
-  const res = await api.patch(`/api/sidebar-ads/admin/${id}/toggle`)
-  return res.data
-}
-
 // MasterAdmin API
 export async function getMasterAdminSidebarAds(): Promise<SidebarAd[]> {
   const res = await api.get('/api/sidebar-ads/masteradmin')
