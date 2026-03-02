@@ -18,11 +18,18 @@ export class MiniRoomManager {
 
     const { MiniRoomScene } = await import('./MiniRoomScene')
 
+    // Create scene instance with roomData so it's available on first boot
+    // (avoids unnecessary scene.restart which causes double init)
+    const sceneInstance = new MiniRoomScene()
+    if (roomData) {
+      (sceneInstance as any)._initialRoomData = roomData
+    }
+
     const config: PhaserTypes.Types.Core.GameConfig = {
       type: this.Phaser.AUTO,
       parent: containerId,
       backgroundColor: '#F0EDE8',
-      scene: MiniRoomScene,
+      scene: sceneInstance,
       scale: {
         mode: this.Phaser.Scale.RESIZE,
         autoCenter: this.Phaser.Scale.CENTER_BOTH,
@@ -49,15 +56,6 @@ export class MiniRoomManager {
     const canvas = container?.querySelector('canvas')
     if (canvas) {
       canvas.style.touchAction = 'none'
-    }
-
-    if (roomData) {
-      this.game.events.once('ready', () => {
-        const scene = this.game?.scene.getScene('MiniRoomScene')
-        if (scene) {
-          scene.scene.restart({ roomData })
-        }
-      })
     }
 
     return this.game

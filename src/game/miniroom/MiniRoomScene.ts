@@ -16,6 +16,10 @@ export class MiniRoomScene extends Phaser.Scene {
   init(data?: { roomData?: RoomData }) {
     if (data?.roomData) {
       this.roomData = data.roomData
+    } else if ((this as any)._initialRoomData) {
+      // First boot: roomData passed from MiniRoomManager
+      this.roomData = (this as any)._initialRoomData as RoomData
+      delete (this as any)._initialRoomData
     }
   }
 
@@ -172,7 +176,7 @@ export class MiniRoomScene extends Phaser.Scene {
 
     this.input.on('pointerup', (_pointer: Phaser.Input.Pointer) => {
       const pointer = _pointer
-      console.log('[MiniRoom] pointerup', 'moved:', hasMoved, 'zoom:', cam.zoom.toFixed(2))
+      console.log('[MiniRoom] pointerup', 'isDown:', isDown, 'moved:', hasMoved, 'zoom:', cam.zoom.toFixed(2), 'lastTapTime:', lastTapTime)
       if (wasPinching) {
         if (!this.input.pointer1.isDown && !this.input.pointer2.isDown) {
           wasPinching = false
@@ -185,19 +189,25 @@ export class MiniRoomScene extends Phaser.Scene {
       // Tap → double-tap detection
       if (isDown && !hasMoved) {
         const now = Date.now()
-        if (now - lastTapTime < 300) {
+        const elapsed = now - lastTapTime
+        console.log('[MiniRoom] tap detected, elapsed:', elapsed, 'threshold: 300')
+        if (elapsed < 300 && lastTapTime > 0) {
+          console.log('[MiniRoom] DOUBLE TAP! zoom before:', cam.zoom)
           if (cam.zoom > MIN_ZOOM + 0.1) {
             cam.setZoom(MIN_ZOOM)
             this.resetCamera()
+            console.log('[MiniRoom] zoom out to', cam.zoom)
           } else {
             const worldPoint = cam.getWorldPoint(pointer.x, pointer.y)
             cam.setZoom(2)
             cam.centerOn(worldPoint.x, worldPoint.y)
             this.clampCamera()
+            console.log('[MiniRoom] zoom in to', cam.zoom)
           }
           lastTapTime = 0
         } else {
           lastTapTime = now
+          console.log('[MiniRoom] first tap, set lastTapTime:', lastTapTime)
         }
       }
 
