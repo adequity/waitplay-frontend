@@ -753,18 +753,35 @@ async function openRoomFullscreen() {
 
 async function requestLandscape() {
   const el = document.getElementById('miniroom-fullscreen-overlay')
-  // Step 1: Enter fullscreen (requires direct user gesture — this is called from button click)
-  try {
-    if (el && !document.fullscreenElement) {
-      await el.requestFullscreen()
-    }
-  } catch { /* fullscreen not supported */ }
-  // Step 2: Lock to landscape (requires fullscreen on Android)
+  if (!el) return
+
+  // Try fullscreen first (required for orientation lock on Android)
+  const requestFS = el.requestFullscreen
+    || (el as any).webkitRequestFullscreen
+    || (el as any).msRequestFullscreen
+  if (requestFS && !document.fullscreenElement && !(document as any).webkitFullscreenElement) {
+    try {
+      await requestFS.call(el)
+      // Wait for fullscreen to fully activate before locking orientation
+      await new Promise(resolve => setTimeout(resolve, 200))
+    } catch { /* fullscreen not supported (iOS Safari etc.) */ }
+  }
+
+  // Lock to landscape (requires fullscreen on Android, not supported on iOS)
   try {
     if (screen.orientation && 'lock' in screen.orientation) {
       await (screen.orientation as any).lock('landscape')
+      return
     }
-  } catch { /* orientation lock not supported — user must rotate manually */ }
+  } catch { /* orientation lock failed */ }
+
+  // Fallback: CSS rotation for devices that don't support orientation lock (iOS)
+  if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
+    const container = document.getElementById('miniroom-fullscreen-overlay')
+    if (container && window.innerHeight > window.innerWidth) {
+      container.classList.add('force-landscape')
+    }
+  }
 }
 
 async function closeRoomFullscreen() {
@@ -775,8 +792,16 @@ async function closeRoomFullscreen() {
     miniRoomManager.destroy()
   } catch { /* silent */ }
 
-  if (document.fullscreenElement) {
-    try { await document.exitFullscreen() } catch { /* silent */ }
+  // Remove CSS fallback rotation
+  const container = document.getElementById('miniroom-fullscreen-overlay')
+  container?.classList.remove('force-landscape')
+
+  const fsElement = document.fullscreenElement || (document as any).webkitFullscreenElement
+  if (fsElement) {
+    try {
+      if (document.exitFullscreen) await document.exitFullscreen()
+      else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen()
+    } catch { /* silent */ }
   }
   if (screen.orientation && 'unlock' in screen.orientation) {
     try { (screen.orientation as any).unlock() } catch { /* not supported */ }
@@ -1358,4 +1383,17 @@ const formatRelativeDate = (dateString: string): string => {
 .miniroom-rotate-btn { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.6); color: white; padding: 10px 20px; border-radius: 24px; font-size: 14px; font-weight: 500; z-index: 10; white-space: nowrap; border: 1.5px solid rgba(255,255,255,0.3); cursor: pointer; backdrop-filter: blur(4px); transition: background 0.2s; }
 .miniroom-rotate-btn:active { background: rgba(0,0,0,0.8); }
 @media (orientation: landscape) { .miniroom-rotate-btn { display: none; } }
+
+/* CSS fallback: force landscape on devices without orientation.lock (iOS) */
+.miniroom-fullscreen.force-landscape {
+  transform: rotate(90deg);
+  transform-origin: center center;
+  width: 100vh;
+  height: 100vw;
+  top: 50%;
+  left: 50%;
+  margin-top: calc(-50vw);
+  margin-left: calc(-50vh);
+}
+.miniroom-fullscreen.force-landscape .miniroom-rotate-btn { display: none; }
 </style>
