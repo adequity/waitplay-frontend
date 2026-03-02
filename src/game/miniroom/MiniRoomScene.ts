@@ -53,7 +53,6 @@ export class MiniRoomScene extends Phaser.Scene {
   create() {
     this.lastW = this.scale.width
     this.lastH = this.scale.height
-    console.log('[MiniRoom] create()', this.lastW, 'x', this.lastH)
     this.renderRoom()
     this.setupCameraControls()
     this.setupResizeHandler()
@@ -123,7 +122,6 @@ export class MiniRoomScene extends Phaser.Scene {
     })
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      console.log('[MiniRoom] pointerdown', pointer.x.toFixed(0), pointer.y.toFixed(0))
       if (this.input.pointer1.isDown && this.input.pointer2.isDown) return
       isDown = true
       hasMoved = false
@@ -176,7 +174,6 @@ export class MiniRoomScene extends Phaser.Scene {
 
     this.input.on('pointerup', (_pointer: Phaser.Input.Pointer) => {
       const pointer = _pointer
-      console.log('[MiniRoom] pointerup', 'isDown:', isDown, 'moved:', hasMoved, 'zoom:', cam.zoom.toFixed(2), 'lastTapTime:', lastTapTime)
       if (wasPinching) {
         if (!this.input.pointer1.isDown && !this.input.pointer2.isDown) {
           wasPinching = false
@@ -190,24 +187,19 @@ export class MiniRoomScene extends Phaser.Scene {
       if (isDown && !hasMoved) {
         const now = Date.now()
         const elapsed = now - lastTapTime
-        console.log('[MiniRoom] tap detected, elapsed:', elapsed, 'threshold: 300')
         if (elapsed < 300 && lastTapTime > 0) {
-          console.log('[MiniRoom] DOUBLE TAP! zoom before:', cam.zoom)
           if (cam.zoom > MIN_ZOOM + 0.1) {
             cam.setZoom(MIN_ZOOM)
             this.resetCamera()
-            console.log('[MiniRoom] zoom out to', cam.zoom)
           } else {
             const worldPoint = cam.getWorldPoint(pointer.x, pointer.y)
             cam.setZoom(2)
             cam.centerOn(worldPoint.x, worldPoint.y)
             this.clampCamera()
-            console.log('[MiniRoom] zoom in to', cam.zoom)
           }
           lastTapTime = 0
         } else {
           lastTapTime = now
-          console.log('[MiniRoom] first tap, set lastTapTime:', lastTapTime)
         }
       }
 
@@ -243,7 +235,6 @@ export class MiniRoomScene extends Phaser.Scene {
       const newH = gameSize.height
       // Only restart if size actually changed (avoid restart loops)
       if (Math.abs(newW - this.lastW) > 1 || Math.abs(newH - this.lastH) > 1) {
-        console.log('[MiniRoom] resize', this.lastW, 'x', this.lastH, '->', newW, 'x', newH)
         this.cameras.main.setZoom(1)
         this.scene.restart({ roomData: this.roomData })
       }
