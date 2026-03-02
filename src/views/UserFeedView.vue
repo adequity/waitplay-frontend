@@ -712,38 +712,35 @@ async function loadRoomConfig() {
   }
 }
 
+function buildRoomData() {
+  if (!roomConfig.value) return undefined
+  return {
+    wallTheme: roomConfig.value.wallTheme,
+    floorTheme: roomConfig.value.floorTheme,
+    furniture: roomConfig.value.furniture.map(f => ({
+      itemId: f.itemId, type: f.type as any, gridX: f.gridX, gridY: f.gridY,
+      rotation: f.rotation, scale: f.scale, color: f.color || '#667eea',
+    })),
+    character: {
+      color: roomConfig.value.character.color,
+      shape: (roomConfig.value.character.shape as 'circle' | 'square') || 'circle',
+      accessory: roomConfig.value.character.accessory,
+    },
+  }
+}
+
 async function openRoomFullscreen() {
   showRoomFullscreen.value = true
   isRoomLoading.value = true
   await nextTick()
 
-  // Listen for scene ready event to hide loading
   const onReady = () => { isRoomLoading.value = false }
   window.addEventListener('miniroom-ready', onReady, { once: true })
-  // Fallback: hide loading after 8s max
   const loadingTimeout = setTimeout(() => { isRoomLoading.value = false }, 8000)
 
   try {
     const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
-    const roomData = roomConfig.value ? {
-      wallTheme: roomConfig.value.wallTheme,
-      floorTheme: roomConfig.value.floorTheme,
-      furniture: roomConfig.value.furniture.map(f => ({
-        itemId: f.itemId,
-        type: f.type as any,
-        gridX: f.gridX,
-        gridY: f.gridY,
-        rotation: f.rotation,
-        scale: f.scale,
-        color: f.color || '#667eea',
-      })),
-      character: {
-        color: roomConfig.value.character.color,
-        shape: (roomConfig.value.character.shape as 'circle' | 'square') || 'circle',
-        accessory: roomConfig.value.character.accessory,
-      },
-    } : undefined
-    await miniRoomManager.init('miniroom-container', roomData as any)
+    await miniRoomManager.init('miniroom-container', buildRoomData() as any)
   } catch {
     isRoomLoading.value = false
     window.removeEventListener('miniroom-ready', onReady)
@@ -774,28 +771,17 @@ async function requestLandscape() {
     }
   } catch { /* orientation lock failed */ }
 
-  // Fallback: CSS rotation + Phaser re-init with swapped dimensions
+  // Fallback: CSS layout swap + Phaser re-init with landscape dimensions
   const isPortrait = window.innerHeight > window.innerWidth
   if (isPortrait) {
     el.classList.add('force-landscape')
-    // Re-init Phaser so it renders at the rotated (swapped) dimensions
-    await new Promise(resolve => setTimeout(resolve, 100))
+    // Wait for CSS layout to apply so Phaser reads correct container size
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    await new Promise(resolve => setTimeout(resolve, 50))
     try {
       const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
       miniRoomManager.destroy()
-      const roomData = roomConfig.value ? {
-        wallTheme: roomConfig.value.wallTheme,
-        floorTheme: roomConfig.value.floorTheme,
-        furniture: roomConfig.value.furniture.map(f => ({
-          itemId: f.itemId, type: f.type as any, gridX: f.gridX, gridY: f.gridY,
-          rotation: f.rotation, scale: f.scale, color: f.color || '#667eea',
-        })),
-        character: {
-          color: roomConfig.value.character.color,
-          shape: (roomConfig.value.character.shape as 'circle' | 'square') || 'circle',
-          accessory: roomConfig.value.character.accessory,
-        },
-      } : undefined
+      const roomData = buildRoomData()
       await miniRoomManager.init('miniroom-container', roomData as any)
     } catch { /* silent */ }
   }
@@ -1401,20 +1387,14 @@ const formatRelativeDate = (dateString: string): string => {
 .miniroom-rotate-btn:active { background: rgba(0,0,0,0.8); }
 @media (orientation: landscape) { .miniroom-rotate-btn { display: none; } }
 
-/* CSS fallback: force landscape on devices without orientation.lock (iOS) */
+/* CSS fallback: force landscape without CSS transform (Phaser-compatible) */
 .miniroom-fullscreen.force-landscape {
-  transform: rotate(90deg);
-  transform-origin: center center;
   width: 100vh;
   height: 100vw;
-  top: 50%;
-  left: 50%;
-  margin-top: calc(-50vw);
-  margin-left: calc(-50vh);
-}
-.miniroom-fullscreen.force-landscape .miniroom-canvas-container {
-  width: 100%;
-  height: 100%;
+  transform: rotate(90deg);
+  transform-origin: top left;
+  top: 0;
+  left: 100%;
 }
 .miniroom-fullscreen.force-landscape .miniroom-rotate-btn { display: none; }
 </style>
