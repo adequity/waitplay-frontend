@@ -92,15 +92,13 @@ export class VillageRenderer {
     const px = this.worldCX + pixel.x
     const py = this.worldCY + pixel.y
 
-    // Target cube display dimensions
-    const cubeW = CUBE_SIZE_RATIO * this.hexSize
+    // Scale by height to preserve aspect ratio.
     const cubeH = 2 * this.hexSize
-
-    // Scale image to exactly match the cell diamond bounding box.
-    // Independent X/Y scaling ensures no overflow regardless of image ratio.
+    // Width overflow (transparent areas) is harmless; height determines tessellation fit.
     const img = this.scene.add.image(px, py, key)
     const tex = this.scene.textures.get(key).getSourceImage()
-    img.setScale(cubeW / tex.width, cubeH / tex.height)
+    const scale = cubeH / tex.height
+    img.setScale(scale)
 
     // Depth: higher Y (lower on screen) renders on top — painter's algorithm
     img.setDepth(10 + py)

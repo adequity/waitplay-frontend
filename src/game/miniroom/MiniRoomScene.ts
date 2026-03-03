@@ -3,7 +3,7 @@ import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
 import type { VillageStoreRoom } from './VillageConfig'
 import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, calcHexSize, calcVillageZoom, CENTER_LABEL_STYLE } from './VillageConfig'
-import { VillageRenderer, CUBE_SIZE_RATIO } from './VillageRenderer'
+import { VillageRenderer } from './VillageRenderer'
 import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
 
 const SPRITE_BASE = '/assets/miniroom/custom/'
@@ -143,14 +143,15 @@ export class MiniRoomScene extends Phaser.Scene {
       const tex = this.textures.get(roomKey).getSourceImage()
 
       if (this.hasVillage && hexSize) {
-        // Village mode: independent X/Y scaling to fit cell exactly
-        const cubeW = CUBE_SIZE_RATIO * hexSize
+        // Village mode: scale by height to preserve aspect ratio
         const cubeH = 2 * hexSize
-        roomBg.setScale(cubeW / tex.width, cubeH / tex.height)
+        const scale = cubeH / tex.height
+        roomBg.setScale(scale)
         roomBg.setDepth(10 + cy)
-        const imgTop = cy - cubeH / 2
-        const charY = imgTop + cubeH * 0.78
-        const charScale = Math.max((cubeH / 600) * 1.2, 0.5)
+        const imgH = tex.height * scale
+        const imgTop = cy - imgH / 2
+        const charY = imgTop + imgH * 0.78
+        const charScale = Math.max((imgH / 600) * 1.2, 0.5)
         this.drawCharacter(cx, charY, charScale)
       } else {
         // Normal mode: fill viewport
