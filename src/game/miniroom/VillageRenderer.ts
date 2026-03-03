@@ -1,9 +1,6 @@
 import type { VillageStoreRoom } from './VillageConfig'
-import {
-  HEX_STROKE_COLOR, HEX_GHOST_FILL_ALPHA,
-  HEX_LABEL_STYLE, GHOST_RING_EXTRA, MAX_GHOST_RING,
-} from './VillageConfig'
-import { hexToPixel, spiralPositions, neededRings } from '@/utils/hexGridUtils'
+import { HEX_LABEL_STYLE } from './VillageConfig'
+import { hexToPixel } from '@/utils/hexGridUtils'
 
 /** Flat-top hex vertex at given index (0..5) */
 function hexVertex(cx: number, cy: number, size: number, i: number) {
@@ -81,52 +78,6 @@ export class VillageRenderer {
     }
   }
 
-  /** Render ghost cells (empty hex positions as hints) */
-  renderGhostCells() {
-    const rings = neededRings(this.rooms.length)
-    const displayRing = Math.min(rings + GHOST_RING_EXTRA, MAX_GHOST_RING)
-
-    const occupied = new Set<string>()
-    occupied.add('0,0') // center = user room
-    for (const room of this.rooms) {
-      occupied.add(`${room.gridQ},${room.gridR}`)
-    }
-
-    const allPositions = spiralPositions(displayRing)
-    const ghostPositions = allPositions.filter(
-      pos => !occupied.has(`${pos.q},${pos.r}`)
-    )
-
-    const g = this.scene.add.graphics()
-    g.setDepth(-50)
-    this.objects.push(g)
-
-    for (const pos of ghostPositions) {
-      const pixel = hexToPixel(pos.q, pos.r, this.hexSize)
-      const px = this.worldCX + pixel.x
-      const py = this.worldCY + pixel.y
-
-      // Faint fill
-      g.fillStyle(0x000000, HEX_GHOST_FILL_ALPHA)
-      drawHexPath(g, px, py, this.hexSize * 0.96)
-      g.fillPath()
-
-      // Dashed outline effect (solid thin line)
-      g.lineStyle(1, HEX_STROKE_COLOR, 0.3)
-      drawHexPath(g, px, py, this.hexSize * 0.96)
-      g.strokePath()
-
-      // "?" text
-      const q = this.scene.add.text(px, py, '?', {
-        fontFamily: 'sans-serif',
-        fontSize: '16px',
-        color: '#D1D1D6',
-        align: 'center',
-      }).setOrigin(0.5).setDepth(-49)
-      this.objects.push(q)
-    }
-  }
-
   /** Start async loading of store room images */
   startImageLoading() {
     if (this.rooms.length === 0) return
@@ -175,7 +126,7 @@ export class VillageRenderer {
     img.setDepth(1)
 
     // Create hex geometry mask
-    const maskG = this.scene.make.graphics({ x: 0, y: 0, add: false })
+    const maskG = this.scene.make.graphics({ add: false } as any)
     maskG.fillStyle(0xffffff)
     drawHexPath(maskG, px, py, this.hexSize * 0.98)
     maskG.fillPath()

@@ -111,7 +111,6 @@ export class MiniRoomScene extends Phaser.Scene {
       this, this.villageRooms, hexSize, this.worldCX, this.worldCY,
     )
     this.villageRenderer.renderPlaceholders()
-    this.villageRenderer.renderGhostCells()
     this.villageRenderer.startImageLoading()
 
     // Center label under user's room
@@ -146,7 +145,7 @@ export class MiniRoomScene extends Phaser.Scene {
         scale = Math.max(scaleX, scaleY)
 
         // Mask room to hex shape
-        const maskG = this.make.graphics({ x: 0, y: 0, add: false })
+        const maskG = this.make.graphics({ add: false } as any)
         maskG.fillStyle(0xffffff)
         maskG.beginPath()
         for (let i = 0; i < 6; i++) {

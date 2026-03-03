@@ -12,16 +12,6 @@ export interface VillageStoreRoom {
 export const VILLAGE_MAX_ZOOM = 2.5
 export const VILLAGE_DETAIL_ZOOM = 1.0
 
-// Ghost cells
-export const GHOST_RING_EXTRA = 1
-export const MAX_GHOST_RING = 3
-
-// Colors
-export const HEX_STROKE_COLOR = 0xD1D1D6
-export const HEX_GHOST_FILL_ALPHA = 0.04
-export const HEX_CENTER_GRADIENT_TOP = 0x667eea
-export const HEX_CENTER_GRADIENT_BOT = 0x764ba2
-
 // Label styles
 export const HEX_LABEL_STYLE = {
   fontFamily: 'Noto Sans KR, sans-serif',
