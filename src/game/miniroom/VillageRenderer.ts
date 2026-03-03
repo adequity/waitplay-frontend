@@ -7,8 +7,8 @@ import { hexToPixel } from '@/utils/hexGridUtils'
  * in each isometric PNG handle seamless tessellation naturally.
  */
 
-/** Cube display size: width = √3 × size, height = 2 × size */
-export const CUBE_SIZE_RATIO = Math.sqrt(3)
+/** Cube display size: width = 7/4 × size, height = 2 × size (7:8 aspect) */
+export const CUBE_SIZE_RATIO = 7 / 4
 
 export class VillageRenderer {
   private scene: Phaser.Scene
@@ -91,9 +91,8 @@ export class VillageRenderer {
     const px = this.worldCX + pixel.x
     const py = this.worldCY + pixel.y
 
-    // Scale by WIDTH to prevent horizontal overflow into adjacent cells.
-    // For properly proportioned images (W:H = √3:2), this also matches height exactly.
-    const cubeW = CUBE_SIZE_RATIO * this.hexSize  // √3 × size
+    // Scale by width to fit cell — trimmed images have no excess transparent margin
+    const cubeW = CUBE_SIZE_RATIO * this.hexSize
     const img = this.scene.add.image(px, py, key)
     const tex = this.scene.textures.get(key).getSourceImage()
     const scale = cubeW / tex.width
@@ -102,7 +101,7 @@ export class VillageRenderer {
     // Depth: higher Y (lower on screen) renders on top — painter's algorithm
     img.setDepth(10 + py)
 
-    // Interactive: use the full image bounds (alpha-aware)
+    // Interactive: alpha-aware hit testing
     img.setInteractive({ pixelPerfect: true, alphaTolerance: 128 })
     img.on('pointerup', () => {
       window.dispatchEvent(

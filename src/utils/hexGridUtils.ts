@@ -11,7 +11,7 @@
  */
 
 /** Spacing multiplier: 2.0 = edges touch, 2.15 = ~7% gap */
-export const GAP_FACTOR = 2.15
+export const GAP_FACTOR = 1.3
 
 export interface HexPosition {
   q: number

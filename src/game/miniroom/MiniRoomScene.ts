@@ -138,11 +138,12 @@ export class MiniRoomScene extends Phaser.Scene {
       const tex = this.textures.get(roomKey).getSourceImage()
 
       if (this.hasVillage && hexSize) {
-        // Village mode: scale by WIDTH to prevent horizontal overflow
+        // Village mode: scale by width — trimmed images fit cell naturally
         const cubeW = CUBE_SIZE_RATIO * hexSize
         const scale = cubeW / tex.width
         roomBg.setScale(scale)
         roomBg.setDepth(10 + cy)
+
         const imgH = tex.height * scale
         const imgTop = cy - imgH / 2
         const charY = imgTop + imgH * 0.78
