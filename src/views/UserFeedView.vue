@@ -159,21 +159,13 @@
       <!-- ===== 탭 컨텐츠 ===== -->
       <div class="tab-content">
 
-        <!-- ===== 탭0: 나의방 + 빌리지 ===== -->
+        <!-- ===== 탭0: 나의방 ===== -->
         <div v-if="activeTab === 'room'" class="room-tab">
-          <div v-if="isLoadingRoom && isLoadingVillage" class="loading-state">
+          <div v-if="isLoadingRoom" class="loading-state">
             <div class="spinner"></div>
           </div>
           <template v-else>
-            <!-- Hex Village Grid -->
-            <HexVillageGrid
-              :rooms="village?.rooms || []"
-              :nickname="profile?.nickname || ''"
-              :isMyProfile="isMyProfile"
-              @center-tap="openRoomFullscreen"
-            />
-
-            <!-- Room preview card (always visible as quick entry) -->
+            <!-- Room preview card → opens Phaser fullscreen with village -->
             <div class="room-preview-card" @click="openRoomFullscreen">
               <div class="room-preview-icon">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.5">
@@ -182,7 +174,11 @@
                 </svg>
               </div>
               <h3 class="room-preview-title">{{ isMyProfile ? '나의 방' : `${profile?.nickname || ''}의 방` }}</h3>
-              <p class="room-preview-subtitle">탭하여 방 구경하기</p>
+              <p class="room-preview-subtitle">
+                {{ (village?.rooms?.length || 0) > 0
+                  ? `매장 룸 ${village!.rooms.length}개 · 탭하여 빌리지 보기`
+                  : '탭하여 방 구경하기' }}
+              </p>
             </div>
           </template>
         </div>
@@ -589,7 +585,7 @@ import followService from '@/services/followService'
 import notificationService from '@/services/notificationService'
 import { getRoomConfiguration, type RoomConfiguration } from '@/services/roomService'
 import { getUserVillage, type UserVillage } from '@/services/storeRoomService'
-import HexVillageGrid from '@/components/HexVillageGrid.vue'
+import type { VillageStoreRoom } from '@/game/miniroom/VillageConfig'
 import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse, ActivityHeatmapResponse } from '@/services/guestbookService'
 import type { NotificationItem } from '@/services/notificationService'
 import { getCardBg } from '@/constants/guestbookColors'
@@ -764,7 +760,16 @@ async function openRoomFullscreen() {
 
   try {
     const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
-    await miniRoomManager.init('miniroom-container', buildRoomData() as any)
+    const villageRooms: VillageStoreRoom[] = (village.value?.rooms || []).map(r => ({
+      id: r.id,
+      roomImageUrl: r.roomImageUrl,
+      roomName: r.roomName,
+      roomColor: r.roomColor,
+      gridQ: r.gridQ,
+      gridR: r.gridR,
+      storeName: r.storeName,
+    }))
+    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms)
   } catch {
     isRoomLoading.value = false
     window.removeEventListener('miniroom-ready', onReady)

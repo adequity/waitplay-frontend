@@ -1,4 +1,5 @@
 import type * as PhaserTypes from 'phaser'
+import type { VillageStoreRoom } from './VillageConfig'
 
 export class MiniRoomManager {
   private game: PhaserTypes.Game | null = null
@@ -6,7 +7,8 @@ export class MiniRoomManager {
 
   public async init(
     containerId: string,
-    roomData?: Record<string, unknown>
+    roomData?: Record<string, unknown>,
+    villageRooms?: VillageStoreRoom[]
   ): Promise<PhaserTypes.Game> {
     if (this.game) {
       this.destroy()
@@ -21,6 +23,9 @@ export class MiniRoomManager {
     const sceneInstance = new MiniRoomScene()
     if (roomData) {
       (sceneInstance as any)._initialRoomData = roomData
+    }
+    if (villageRooms && villageRooms.length > 0) {
+      (sceneInstance as any)._initialVillageRooms = villageRooms
     }
 
     const config: PhaserTypes.Types.Core.GameConfig = {

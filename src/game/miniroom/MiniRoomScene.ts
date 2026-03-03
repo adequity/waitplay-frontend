@@ -1,25 +1,43 @@
 import type { RoomData, FurnitureType } from './RoomConfig'
 import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
+import type { VillageStoreRoom } from './VillageConfig'
+import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, calcHexSize, calcVillageZoom, CENTER_LABEL_STYLE } from './VillageConfig'
+import { VillageRenderer } from './VillageRenderer'
+import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
 
 const SPRITE_BASE = '/assets/miniroom/custom/'
 
 export class MiniRoomScene extends Phaser.Scene {
   private roomData: RoomData = DEFAULT_ROOM
+  private villageRooms: VillageStoreRoom[] = []
   private lastW = 0
   private lastH = 0
+
+  // Village mode state
+  private hasVillage = false
+  private villageRenderer: VillageRenderer | null = null
+  private villageMinZoom = 1
+  private worldCX = 0
+  private worldCY = 0
 
   constructor() {
     super({ key: 'MiniRoomScene' })
   }
 
-  init(data?: { roomData?: RoomData }) {
+  init(data?: { roomData?: RoomData; villageRooms?: VillageStoreRoom[] }) {
     if (data?.roomData) {
       this.roomData = data.roomData
     } else if ((this as any)._initialRoomData) {
-      // First boot: roomData passed from MiniRoomManager
       this.roomData = (this as any)._initialRoomData as RoomData
       delete (this as any)._initialRoomData
+    }
+
+    if (data?.villageRooms) {
+      this.villageRooms = data.villageRooms
+    } else if ((this as any)._initialVillageRooms) {
+      this.villageRooms = (this as any)._initialVillageRooms as VillageStoreRoom[]
+      delete (this as any)._initialVillageRooms
     }
   }
 
@@ -53,48 +71,122 @@ export class MiniRoomScene extends Phaser.Scene {
   create() {
     this.lastW = this.scale.width
     this.lastH = this.scale.height
-    this.renderRoom()
+    this.hasVillage = this.villageRooms.length > 0
+
+    if (this.hasVillage) {
+      this.createVillageMode()
+    } else {
+      this.renderRoom()
+    }
+
     this.setupCameraControls()
     this.setupResizeHandler()
     this.setupEvents()
   }
 
-  private renderRoom() {
+  private createVillageMode() {
     const W = this.scale.width
     const H = this.scale.height
-    const isLandscape = W > H
+    const hexSize = calcHexSize(W, H)
+
+    // Compute world bounds from all positions
+    const allPositions: HexPosition[] = this.villageRooms.map(r => ({ q: r.gridQ, r: r.gridR }))
+    const bounds = hexBoundingBox(allPositions, hexSize)
+    const padding = hexSize * 3
+    const worldW = bounds.width + padding * 2
+    const worldH = bounds.height + padding * 2
+
+    this.worldCX = -bounds.minX + padding
+    this.worldCY = -bounds.minY + padding
+
+    // Set camera world bounds
+    const cam = this.cameras.main
+    cam.setBounds(0, 0, worldW, worldH)
+
+    // Render center room (user's own room)
+    this.renderRoom(this.worldCX, this.worldCY, hexSize)
+
+    // Render village hex grid
+    this.villageRenderer = new VillageRenderer(
+      this, this.villageRooms, hexSize, this.worldCX, this.worldCY,
+    )
+    this.villageRenderer.renderPlaceholders()
+    this.villageRenderer.renderGhostCells()
+    this.villageRenderer.startImageLoading()
+
+    // Center label under user's room
+    const hexH = hexSize * Math.sqrt(3)
+    this.add.text(this.worldCX, this.worldCY + hexH / 2 + 6, '나의 방', CENTER_LABEL_STYLE)
+      .setOrigin(0.5, 0).setDepth(2)
+
+    // Set initial zoom to see entire village
+    this.villageMinZoom = calcVillageZoom(worldW, worldH, W, H)
+    cam.setZoom(this.villageMinZoom)
+    cam.centerOn(this.worldCX, this.worldCY)
+  }
+
+  private renderRoom(centerX?: number, centerY?: number, hexSize?: number) {
+    const W = this.scale.width
+    const H = this.scale.height
+    const cx = centerX ?? W / 2
+    const cy = centerY ?? H / 2
 
     const roomKey = `room_${this.roomData.wallTheme || 'default'}`
     if (this.textures.exists(roomKey)) {
-      const roomBg = this.add.image(W / 2, H / 2, roomKey)
+      const roomBg = this.add.image(cx, cy, roomKey)
       const tex = this.textures.get(roomKey).getSourceImage()
-      const scaleX = W / tex.width
-      const scaleY = H / tex.height
-      // 가로모드: cover (화면 꽉 채움), 세로모드: contain (전체 보임)
-      const scale = isLandscape ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY)
+
+      let scale: number
+      if (this.hasVillage && hexSize) {
+        // In village mode: scale room to fit hex area
+        const hexW = hexSize * 2
+        const hexH = hexSize * Math.sqrt(3)
+        const scaleX = hexW / tex.width
+        const scaleY = hexH / tex.height
+        scale = Math.max(scaleX, scaleY)
+
+        // Mask room to hex shape
+        const maskG = this.make.graphics({ x: 0, y: 0, add: false })
+        maskG.fillStyle(0xffffff)
+        maskG.beginPath()
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI / 3) * i
+          const vx = cx + hexSize * 0.98 * Math.cos(angle)
+          const vy = cy + hexSize * 0.98 * Math.sin(angle)
+          i === 0 ? maskG.moveTo(vx, vy) : maskG.lineTo(vx, vy)
+        }
+        maskG.closePath()
+        maskG.fillPath()
+        roomBg.setMask(maskG.createGeometryMask())
+      } else {
+        // Normal mode: fill viewport
+        const isLandscape = W > H
+        const scaleX = W / tex.width
+        const scaleY = H / tex.height
+        scale = isLandscape ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY)
+      }
+
       roomBg.setScale(scale)
       roomBg.setDepth(-100)
 
-      // Character placement relative to room image
+      // Character
       const imgH = tex.height * scale
-      const imgTop = (H - imgH) / 2
-      const charX = W / 2
+      const imgTop = (cy - imgH / 2)
       const charY = imgTop + imgH * 0.78
-
-      // Scale character proportional to rendered image height
-      // Base: character designed at ~40px tall for a ~600px image height
       const charScale = Math.max((imgH / 600) * 1.2, 0.5)
-      this.drawCharacter(charX, charY, charScale)
+      this.drawCharacter(cx, charY, charScale)
     } else {
-      this.drawFallbackBackground(W, H)
-      this.drawCharacter(W / 2, H * 0.75, 1)
+      if (!this.hasVillage) {
+        this.drawFallbackBackground(W, H)
+      }
+      this.drawCharacter(cx, cy + (hexSize || H * 0.25) * 0.5, this.hasVillage ? 0.6 : 1)
     }
   }
 
   private setupCameraControls() {
     const cam = this.cameras.main
-    const MIN_ZOOM = 1
-    const MAX_ZOOM = 3
+    const MIN_ZOOM = this.hasVillage ? this.villageMinZoom : 1
+    const MAX_ZOOM = this.hasVillage ? VILLAGE_MAX_ZOOM : 3
     const TAP_MOVE_THRESHOLD = 10
 
     let isDown = false
@@ -116,10 +208,9 @@ export class MiniRoomScene extends Phaser.Scene {
     ) => {
       const newZoom = Phaser.Math.Clamp(cam.zoom - deltaY * 0.002, MIN_ZOOM, MAX_ZOOM)
       cam.setZoom(newZoom)
-      if (newZoom <= MIN_ZOOM) {
-        this.resetCamera()
-      } else {
-        this.clampCamera()
+      if (!this.hasVillage) {
+        if (newZoom <= MIN_ZOOM) this.resetCamera()
+        else this.clampCamera()
       }
     })
 
@@ -145,10 +236,9 @@ export class MiniRoomScene extends Phaser.Scene {
           const zoomDelta = (dist - pinchDistance) * 0.005
           const newZoom = Phaser.Math.Clamp(cam.zoom + zoomDelta, MIN_ZOOM, MAX_ZOOM)
           cam.setZoom(newZoom)
-          if (newZoom <= MIN_ZOOM) {
-            this.resetCamera()
-          } else {
-            this.clampCamera()
+          if (!this.hasVillage) {
+            if (newZoom <= MIN_ZOOM) this.resetCamera()
+            else this.clampCamera()
           }
         }
         pinchDistance = dist
@@ -162,13 +252,14 @@ export class MiniRoomScene extends Phaser.Scene {
         hasMoved = true
       }
 
-      // Pan only when zoomed in
-      if (hasMoved && cam.zoom > MIN_ZOOM) {
+      // Pan: always in village mode, only when zoomed in normal mode
+      const canPan = this.hasVillage || cam.zoom > MIN_ZOOM
+      if (hasMoved && canPan) {
         const dx = (lastPointerX - pointer.x) / cam.zoom
         const dy = (lastPointerY - pointer.y) / cam.zoom
         cam.scrollX += dx
         cam.scrollY += dy
-        this.clampCamera()
+        if (!this.hasVillage) this.clampCamera()
       }
       lastPointerX = pointer.x
       lastPointerY = pointer.y
@@ -190,14 +281,27 @@ export class MiniRoomScene extends Phaser.Scene {
         const now = Date.now()
         const elapsed = now - lastTapTime
         if (elapsed < 300 && lastTapTime > 0) {
-          if (cam.zoom > MIN_ZOOM + 0.1) {
-            cam.setZoom(MIN_ZOOM)
-            this.resetCamera()
+          if (this.hasVillage) {
+            // Village: toggle overview ↔ detail
+            if (cam.zoom > MIN_ZOOM + 0.05) {
+              cam.setZoom(MIN_ZOOM)
+              cam.centerOn(this.worldCX, this.worldCY)
+            } else {
+              cam.setZoom(VILLAGE_DETAIL_ZOOM)
+              const wp = cam.getWorldPoint(pointer.x, pointer.y)
+              cam.centerOn(wp.x, wp.y)
+            }
           } else {
-            const worldPoint = cam.getWorldPoint(pointer.x, pointer.y)
-            cam.setZoom(2)
-            cam.centerOn(worldPoint.x, worldPoint.y)
-            this.clampCamera()
+            // Normal: toggle 1x ↔ 2x
+            if (cam.zoom > MIN_ZOOM + 0.1) {
+              cam.setZoom(MIN_ZOOM)
+              this.resetCamera()
+            } else {
+              const worldPoint = cam.getWorldPoint(pointer.x, pointer.y)
+              cam.setZoom(2)
+              cam.centerOn(worldPoint.x, worldPoint.y)
+              this.clampCamera()
+            }
           }
           lastTapTime = 0
         } else {
@@ -213,12 +317,17 @@ export class MiniRoomScene extends Phaser.Scene {
 
   private resetCamera() {
     const cam = this.cameras.main
-    const W = this.scale.width
-    const H = this.scale.height
-    cam.centerOn(W / 2, H / 2)
+    if (this.hasVillage) {
+      cam.centerOn(this.worldCX, this.worldCY)
+    } else {
+      const W = this.scale.width
+      const H = this.scale.height
+      cam.centerOn(W / 2, H / 2)
+    }
   }
 
   private clampCamera() {
+    if (this.hasVillage) return // camera.setBounds handles it
     const cam = this.cameras.main
     const W = this.scale.width
     const H = this.scale.height
@@ -235,22 +344,20 @@ export class MiniRoomScene extends Phaser.Scene {
     this.scale.on('resize', (gameSize: { width: number; height: number }) => {
       const newW = gameSize.width
       const newH = gameSize.height
-      // Only restart if size actually changed (avoid restart loops)
       if (Math.abs(newW - this.lastW) > 1 || Math.abs(newH - this.lastH) > 1) {
         this.cameras.main.setZoom(1)
-        this.scene.restart({ roomData: this.roomData })
+        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms })
       }
     })
 
-    // Mobile orientation change fallback — force resize after rotation settles
     const orientationHandler = () => {
-      setTimeout(() => {
-        this.scale.refresh()
-      }, 300)
+      setTimeout(() => { this.scale.refresh() }, 300)
     }
     window.addEventListener('orientationchange', orientationHandler)
     this.events.on('shutdown', () => {
       window.removeEventListener('orientationchange', orientationHandler)
+      this.villageRenderer?.destroy()
+      this.villageRenderer = null
     })
   }
 
@@ -261,7 +368,7 @@ export class MiniRoomScene extends Phaser.Scene {
       const detail = (e as CustomEvent).detail
       if (detail?.roomData) {
         this.roomData = detail.roomData
-        this.scene.restart({ roomData: this.roomData })
+        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms })
       }
     }
     window.addEventListener('miniroom-update', updateHandler)
@@ -292,7 +399,6 @@ export class MiniRoomScene extends Phaser.Scene {
 
     const g = this.add.graphics()
 
-    // Shadow
     g.fillStyle(0x000000, 0.15)
     g.fillEllipse(cx, floorY + 2 * s, 30 * s, 15 * s)
 
@@ -306,7 +412,6 @@ export class MiniRoomScene extends Phaser.Scene {
       g.fillRoundedRect(cx - 12 * s, floorY - 40 * s, 24 * s, 38 * s, 8 * s)
     }
 
-    // Eyes
     g.fillStyle(0xFFFFFF, 1)
     g.fillCircle(cx - 5 * s, floorY - 32 * s, 3 * s)
     g.fillCircle(cx + 5 * s, floorY - 32 * s, 3 * s)
