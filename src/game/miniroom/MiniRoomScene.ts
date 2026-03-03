@@ -2,7 +2,7 @@ import type { RoomData, FurnitureType } from './RoomConfig'
 import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
 import type { VillageStoreRoom } from './VillageConfig'
-import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, calcHexSize, calcVillageZoom, CENTER_LABEL_STYLE } from './VillageConfig'
+import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, calcHexSize, calcVillageZoom, CENTER_LABEL_STYLE } from './VillageConfig'
 import { VillageRenderer } from './VillageRenderer'
 import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
 
@@ -92,7 +92,7 @@ export class MiniRoomScene extends Phaser.Scene {
     // Compute world bounds from all positions
     const allPositions: HexPosition[] = this.villageRooms.map(r => ({ q: r.gridQ, r: r.gridR }))
     const bounds = hexBoundingBox(allPositions, hexSize)
-    const padding = hexSize * 3
+    const padding = hexSize * 1.5
     const worldW = bounds.width + padding * 2
     const worldH = bounds.height + padding * 2
 
@@ -102,6 +102,12 @@ export class MiniRoomScene extends Phaser.Scene {
     // Set camera world bounds
     const cam = this.cameras.main
     cam.setBounds(0, 0, worldW, worldH)
+
+    // Dark background
+    const bg = this.add.graphics()
+    bg.fillStyle(VILLAGE_BG_COLOR, 1)
+    bg.fillRect(0, 0, worldW, worldH)
+    bg.setDepth(-200)
 
     // Render center room (user's own room)
     this.renderRoom(this.worldCX, this.worldCY, hexSize)
@@ -114,8 +120,8 @@ export class MiniRoomScene extends Phaser.Scene {
     this.villageRenderer.startImageLoading()
 
     // Center label under user's room
-    const hexH = hexSize * Math.sqrt(3)
-    this.add.text(this.worldCX, this.worldCY + hexH / 2 + 6, '나의 방', CENTER_LABEL_STYLE)
+    const hexH = hexSize * Math.sqrt(3) * 0.96
+    this.add.text(this.worldCX, this.worldCY + hexH / 2 + 4, '나의 방', CENTER_LABEL_STYLE)
       .setOrigin(0.5, 0).setDepth(2)
 
     // Set initial zoom to see entire village
@@ -138,8 +144,9 @@ export class MiniRoomScene extends Phaser.Scene {
       let scale: number
       if (this.hasVillage && hexSize) {
         // In village mode: scale room to fit hex area
-        const hexW = hexSize * 2
-        const hexH = hexSize * Math.sqrt(3)
+        const maskSize = hexSize * 0.96
+        const hexW = maskSize * 2
+        const hexH = maskSize * Math.sqrt(3)
         const scaleX = hexW / tex.width
         const scaleY = hexH / tex.height
         scale = Math.max(scaleX, scaleY)
@@ -150,8 +157,8 @@ export class MiniRoomScene extends Phaser.Scene {
         maskG.beginPath()
         for (let i = 0; i < 6; i++) {
           const angle = (Math.PI / 3) * i
-          const vx = cx + hexSize * 0.98 * Math.cos(angle)
-          const vy = cy + hexSize * 0.98 * Math.sin(angle)
+          const vx = cx + maskSize * Math.cos(angle)
+          const vy = cy + maskSize * Math.sin(angle)
           i === 0 ? maskG.moveTo(vx, vy) : maskG.lineTo(vx, vy)
         }
         maskG.closePath()

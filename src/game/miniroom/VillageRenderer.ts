@@ -2,6 +2,9 @@ import type { VillageStoreRoom } from './VillageConfig'
 import { HEX_LABEL_STYLE } from './VillageConfig'
 import { hexToPixel } from '@/utils/hexGridUtils'
 
+/** Hex mask scale — slightly smaller than full size to create thin dark gap between hexes */
+const HEX_MASK_SCALE = 0.96
+
 /** Flat-top hex vertex at given index (0..5) */
 function hexVertex(cx: number, cy: number, size: number, i: number) {
   const angle = (Math.PI / 3) * i
@@ -28,12 +31,6 @@ function getHexPoints(cx: number, cy: number, size: number): Phaser.Geom.Point[]
   return pts
 }
 
-/** Parse hex color string to number */
-function hexColorToNum(hex: string): number {
-  const clean = hex.replace('#', '')
-  return parseInt(clean, 16) || 0x6366F1
-}
-
 export class VillageRenderer {
   private scene: Phaser.Scene
   private rooms: VillageStoreRoom[]
@@ -56,7 +53,7 @@ export class VillageRenderer {
     this.worldCY = worldCenterY
   }
 
-  /** Render colored hex placeholders for each store room */
+  /** Render dark hex placeholders (shown until images load) */
   renderPlaceholders() {
     const g = this.scene.add.graphics()
     g.setDepth(0)
@@ -67,14 +64,10 @@ export class VillageRenderer {
       const px = this.worldCX + pixel.x
       const py = this.worldCY + pixel.y
 
-      g.fillStyle(hexColorToNum(room.roomColor), 0.85)
-      drawHexPath(g, px, py, this.hexSize * 0.98)
+      // Dark placeholder fill
+      g.fillStyle(0x1e293b, 1)
+      drawHexPath(g, px, py, this.hexSize * HEX_MASK_SCALE)
       g.fillPath()
-
-      // Thin border
-      g.lineStyle(1, 0xffffff, 0.3)
-      drawHexPath(g, px, py, this.hexSize * 0.98)
-      g.strokePath()
     }
   }
 
@@ -91,13 +84,11 @@ export class VillageRenderer {
           this.onImageLoaded(room)
         })
       } else {
-        // Already loaded (e.g., scene restart)
         this.onImageLoaded(room)
       }
     }
 
     this.scene.load.on('loaderror', (file: { key: string }) => {
-      // Keep placeholder on error
       console.warn('Failed to load store room image:', file.key)
     })
 
@@ -113,8 +104,9 @@ export class VillageRenderer {
     const px = this.worldCX + pixel.x
     const py = this.worldCY + pixel.y
 
-    const hexW = this.hexSize * 2
-    const hexH = this.hexSize * Math.sqrt(3)
+    const maskSize = this.hexSize * HEX_MASK_SCALE
+    const hexW = maskSize * 2
+    const hexH = maskSize * Math.sqrt(3)
 
     // Create image and scale to cover hex
     const img = this.scene.add.image(px, py, key)
@@ -128,7 +120,7 @@ export class VillageRenderer {
     // Create hex geometry mask
     const maskG = this.scene.make.graphics({ add: false } as any)
     maskG.fillStyle(0xffffff)
-    drawHexPath(maskG, px, py, this.hexSize * 0.98)
+    drawHexPath(maskG, px, py, maskSize)
     maskG.fillPath()
     const mask = maskG.createGeometryMask()
     img.setMask(mask)
@@ -138,14 +130,14 @@ export class VillageRenderer {
     img.setInteractive(hitPoly, Phaser.Geom.Polygon.Contains)
     img.on('pointerup', () => {
       window.dispatchEvent(
-        new CustomEvent('miniroom-store-tap', { detail: { room } })
+        new CustomEvent('miniroom-store-tap', { detail: { room } }),
       )
     })
 
     this.objects.push(img)
 
     // Store name label below hex
-    const labelY = py + hexH / 2 + 6
+    const labelY = py + hexH / 2 + 4
     const label = this.scene.add.text(px, labelY, room.storeName, HEX_LABEL_STYLE)
       .setOrigin(0.5, 0)
       .setDepth(2)
