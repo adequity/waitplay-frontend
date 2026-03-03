@@ -96,15 +96,11 @@ export class VillageRenderer {
     const cubeW = CUBE_SIZE_RATIO * this.hexSize
     const cubeH = 2 * this.hexSize
 
-    // Scale image so the isometric content fills the cube area.
-    // Image is roughly square; the diamond content occupies ~90% of image.
-    // Use max(scaleX, scaleY) to cover, then no masking needed.
+    // Scale image to exactly match the cell diamond bounding box.
+    // Independent X/Y scaling ensures no overflow regardless of image ratio.
     const img = this.scene.add.image(px, py, key)
     const tex = this.scene.textures.get(key).getSourceImage()
-    const scaleX = cubeW / tex.width
-    const scaleY = cubeH / tex.height
-    const scale = Math.max(scaleX, scaleY)
-    img.setScale(scale)
+    img.setScale(cubeW / tex.width, cubeH / tex.height)
 
     // Depth: higher Y (lower on screen) renders on top — painter's algorithm
     img.setDepth(10 + py)

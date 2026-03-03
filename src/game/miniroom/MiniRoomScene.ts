@@ -142,33 +142,30 @@ export class MiniRoomScene extends Phaser.Scene {
       const roomBg = this.add.image(cx, cy, roomKey)
       const tex = this.textures.get(roomKey).getSourceImage()
 
-      let scale: number
       if (this.hasVillage && hexSize) {
-        // In village mode: scale image to match isometric cube cell size
-        // No masking — the PNG's transparent areas handle tessellation
+        // Village mode: independent X/Y scaling to fit cell exactly
         const cubeW = CUBE_SIZE_RATIO * hexSize
         const cubeH = 2 * hexSize
-        const scaleX = cubeW / tex.width
-        const scaleY = cubeH / tex.height
-        scale = Math.max(scaleX, scaleY)
+        roomBg.setScale(cubeW / tex.width, cubeH / tex.height)
+        roomBg.setDepth(10 + cy)
+        const imgTop = cy - cubeH / 2
+        const charY = imgTop + cubeH * 0.78
+        const charScale = Math.max((cubeH / 600) * 1.2, 0.5)
+        this.drawCharacter(cx, charY, charScale)
       } else {
         // Normal mode: fill viewport
         const isLandscape = W > H
         const scaleX = W / tex.width
         const scaleY = H / tex.height
-        scale = isLandscape ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY)
+        const scale = isLandscape ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY)
+        roomBg.setScale(scale)
+        roomBg.setDepth(-100)
+        const imgH = tex.height * scale
+        const imgTop = cy - imgH / 2
+        const charY = imgTop + imgH * 0.78
+        const charScale = Math.max((imgH / 600) * 1.2, 0.5)
+        this.drawCharacter(cx, charY, charScale)
       }
-
-      roomBg.setScale(scale)
-      // In village: depth by Y position (painter's algorithm); standalone: behind everything
-      roomBg.setDepth(this.hasVillage ? 10 + cy : -100)
-
-      // Character
-      const imgH = tex.height * scale
-      const imgTop = (cy - imgH / 2)
-      const charY = imgTop + imgH * 0.78
-      const charScale = Math.max((imgH / 600) * 1.2, 0.5)
-      this.drawCharacter(cx, charY, charScale)
     } else {
       if (!this.hasVillage) {
         this.drawFallbackBackground(W, H)
