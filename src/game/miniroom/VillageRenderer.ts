@@ -103,7 +103,7 @@ export class VillageRenderer {
     const tex = this.scene.textures.get(key).getSourceImage()
     const scaleX = cubeW / tex.width
     const scaleY = cubeH / tex.height
-    const scale = Math.max(scaleX, scaleY)
+    const scale = Math.min(scaleX, scaleY)
     img.setScale(scale)
 
     // Depth: higher Y (lower on screen) renders on top — painter's algorithm
