@@ -20,62 +20,6 @@ export function hexToPixel(q: number, r: number, size: number): PixelPosition {
   return { x, y }
 }
 
-/** CSS clip-path for flat-top hexagon */
-export const HEX_CLIP_PATH = 'polygon(75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%, 25% 0%)'
-
-/** Generate hex ring positions */
-export function hexRing(radius: number): HexPosition[] {
-  if (radius === 0) return [{ q: 0, r: 0 }]
-
-  const directions: HexPosition[] = [
-    { q: 1, r: 0 }, { q: 0, r: 1 }, { q: -1, r: 1 },
-    { q: -1, r: 0 }, { q: 0, r: -1 }, { q: 1, r: -1 }
-  ]
-
-  const results: HexPosition[] = []
-  let q = radius
-  let r = 0
-
-  for (let side = 0; side < 6; side++) {
-    const dir = directions[(side + 2) % 6]!
-    for (let step = 0; step < radius; step++) {
-      results.push({ q, r })
-      q += dir.q
-      r += dir.r
-    }
-  }
-
-  return results
-}
-
-/** Generate spiral positions (ring 1, 2, 3...) excluding center */
-export function spiralPositions(maxRing: number = 5): HexPosition[] {
-  const positions: HexPosition[] = []
-  for (let ring = 1; ring <= maxRing; ring++) {
-    positions.push(...hexRing(ring))
-  }
-  return positions
-}
-
-/** Calculate needed ring count to hold N rooms */
-export function neededRings(roomCount: number): number {
-  if (roomCount <= 0) return 1
-  let total = 0
-  for (let ring = 1; ring <= 20; ring++) {
-    total += 6 * ring
-    if (total >= roomCount) return ring
-  }
-  return 5
-}
-
-/** Flat-top hex dimensions */
-export function hexDimensions(size: number) {
-  return {
-    width: size * 2,
-    height: size * Math.sqrt(3),
-  }
-}
-
 /** Bounding box of hex positions + center for viewport sizing */
 export function hexBoundingBox(positions: HexPosition[], size: number) {
   const allPositions = [{ q: 0, r: 0 }, ...positions]

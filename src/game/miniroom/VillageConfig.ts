@@ -12,21 +12,21 @@ export interface VillageStoreRoom {
 export const VILLAGE_MAX_ZOOM = 3.0
 export const VILLAGE_DETAIL_ZOOM = 1.2
 
-// Dark background
-export const VILLAGE_BG_COLOR = 0x111827
+// Bright background
+export const VILLAGE_BG_COLOR = 0xF0F0F5
 
-// Label styles (white for dark bg)
+// Label styles
 export const HEX_LABEL_STYLE = {
   fontFamily: 'Noto Sans KR, sans-serif',
   fontSize: '11px',
-  color: '#ffffff',
+  color: '#555555',
   align: 'center' as const,
 }
 
 export const CENTER_LABEL_STYLE = {
   fontFamily: 'Noto Sans KR, sans-serif',
   fontSize: '12px',
-  color: '#a5b4fc',
+  color: '#6366F1',
   fontStyle: 'bold',
   align: 'center' as const,
 }

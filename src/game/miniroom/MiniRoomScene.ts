@@ -3,7 +3,7 @@ import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
 import type { VillageStoreRoom } from './VillageConfig'
 import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, calcHexSize, calcVillageZoom, CENTER_LABEL_STYLE } from './VillageConfig'
-import { VillageRenderer } from './VillageRenderer'
+import { VillageRenderer, drawHexPath, HEX_MASK_SCALE } from './VillageRenderer'
 import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
 
 const SPRITE_BASE = '/assets/miniroom/custom/'
@@ -103,7 +103,7 @@ export class MiniRoomScene extends Phaser.Scene {
     const cam = this.cameras.main
     cam.setBounds(0, 0, worldW, worldH)
 
-    // Dark background
+    // Bright background
     const bg = this.add.graphics()
     bg.fillStyle(VILLAGE_BG_COLOR, 1)
     bg.fillRect(0, 0, worldW, worldH)
@@ -120,13 +120,14 @@ export class MiniRoomScene extends Phaser.Scene {
     this.villageRenderer.startImageLoading()
 
     // Center label under user's room
-    const hexH = hexSize * Math.sqrt(3) * 0.96
+    const hexH = hexSize * Math.sqrt(3) * HEX_MASK_SCALE
     this.add.text(this.worldCX, this.worldCY + hexH / 2 + 4, '나의 방', CENTER_LABEL_STYLE)
       .setOrigin(0.5, 0).setDepth(2)
 
-    // Set initial zoom to see entire village
+    // Start at zoom 1.0 centered on user's room — drag to explore neighbors
     this.villageMinZoom = calcVillageZoom(worldW, worldH, W, H)
-    cam.setZoom(this.villageMinZoom)
+    const startZoom = Math.max(1.0, this.villageMinZoom)
+    cam.setZoom(startZoom)
     cam.centerOn(this.worldCX, this.worldCY)
   }
 
@@ -144,24 +145,17 @@ export class MiniRoomScene extends Phaser.Scene {
       let scale: number
       if (this.hasVillage && hexSize) {
         // In village mode: scale room to fit hex area
-        const maskSize = hexSize * 0.96
+        const maskSize = hexSize * HEX_MASK_SCALE
         const hexW = maskSize * 2
         const hexH = maskSize * Math.sqrt(3)
         const scaleX = hexW / tex.width
         const scaleY = hexH / tex.height
         scale = Math.max(scaleX, scaleY)
 
-        // Mask room to hex shape
+        // Mask room to hex shape (reuse shared drawHexPath)
         const maskG = this.make.graphics({ add: false } as any)
         maskG.fillStyle(0xffffff)
-        maskG.beginPath()
-        for (let i = 0; i < 6; i++) {
-          const angle = (Math.PI / 3) * i
-          const vx = cx + maskSize * Math.cos(angle)
-          const vy = cy + maskSize * Math.sin(angle)
-          i === 0 ? maskG.moveTo(vx, vy) : maskG.lineTo(vx, vy)
-        }
-        maskG.closePath()
+        drawHexPath(maskG, cx, cy, maskSize)
         maskG.fillPath()
         roomBg.setMask(maskG.createGeometryMask())
       } else {

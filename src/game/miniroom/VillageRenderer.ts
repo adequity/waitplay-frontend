@@ -3,7 +3,7 @@ import { HEX_LABEL_STYLE } from './VillageConfig'
 import { hexToPixel } from '@/utils/hexGridUtils'
 
 /** Hex mask scale — slightly smaller than full size to create thin dark gap between hexes */
-const HEX_MASK_SCALE = 0.96
+export const HEX_MASK_SCALE = 0.96
 
 /** Flat-top hex vertex at given index (0..5) */
 function hexVertex(cx: number, cy: number, size: number, i: number) {
@@ -12,7 +12,7 @@ function hexVertex(cx: number, cy: number, size: number, i: number) {
 }
 
 /** Draw flat-top hex path on graphics */
-function drawHexPath(g: Phaser.GameObjects.Graphics, cx: number, cy: number, size: number) {
+export function drawHexPath(g: Phaser.GameObjects.Graphics, cx: number, cy: number, size: number) {
   g.beginPath()
   for (let i = 0; i < 6; i++) {
     const v = hexVertex(cx, cy, size, i)
@@ -64,8 +64,8 @@ export class VillageRenderer {
       const px = this.worldCX + pixel.x
       const py = this.worldCY + pixel.y
 
-      // Dark placeholder fill
-      g.fillStyle(0x1e293b, 1)
+      // Light placeholder fill
+      g.fillStyle(0xe5e7eb, 1)
       drawHexPath(g, px, py, this.hexSize * HEX_MASK_SCALE)
       g.fillPath()
     }
