@@ -1,5 +1,4 @@
 import type { VillageStoreRoom } from './VillageConfig'
-import { HEX_LABEL_STYLE } from './VillageConfig'
 import { hexToPixel } from '@/utils/hexGridUtils'
 
 /**
@@ -92,12 +91,12 @@ export class VillageRenderer {
     const px = this.worldCX + pixel.x
     const py = this.worldCY + pixel.y
 
-    // Scale by height to preserve aspect ratio.
-    const cubeH = 2 * this.hexSize
-    // Width overflow (transparent areas) is harmless; height determines tessellation fit.
+    // Scale by WIDTH to prevent horizontal overflow into adjacent cells.
+    // For properly proportioned images (W:H = √3:2), this also matches height exactly.
+    const cubeW = CUBE_SIZE_RATIO * this.hexSize  // √3 × size
     const img = this.scene.add.image(px, py, key)
     const tex = this.scene.textures.get(key).getSourceImage()
-    const scale = cubeH / tex.height
+    const scale = cubeW / tex.width
     img.setScale(scale)
 
     // Depth: higher Y (lower on screen) renders on top — painter's algorithm
@@ -112,13 +111,6 @@ export class VillageRenderer {
     })
 
     this.objects.push(img)
-
-    // Store name label below the cube's bottom vertex
-    const labelY = py + cubeH / 2 + 4
-    const label = this.scene.add.text(px, labelY, room.storeName, HEX_LABEL_STYLE)
-      .setOrigin(0.5, 0)
-      .setDepth(1000)
-    this.objects.push(label)
   }
 
   /** Cleanup all rendered objects */

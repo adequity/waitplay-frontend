@@ -2,8 +2,8 @@ import type { RoomData, FurnitureType } from './RoomConfig'
 import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
 import type { VillageStoreRoom } from './VillageConfig'
-import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, calcHexSize, calcVillageZoom, CENTER_LABEL_STYLE } from './VillageConfig'
-import { VillageRenderer } from './VillageRenderer'
+import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, calcHexSize, calcVillageZoom } from './VillageConfig'
+import { VillageRenderer, CUBE_SIZE_RATIO } from './VillageRenderer'
 import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
 
 const SPRITE_BASE = '/assets/miniroom/custom/'
@@ -119,11 +119,6 @@ export class MiniRoomScene extends Phaser.Scene {
     this.villageRenderer.renderPlaceholders()
     this.villageRenderer.startImageLoading()
 
-    // Center label under user's room (bottom of isometric cube)
-    const cubeHalfH = hexSize
-    this.add.text(this.worldCX, this.worldCY + cubeHalfH + 4, '나의 방', CENTER_LABEL_STYLE)
-      .setOrigin(0.5, 0).setDepth(1000)
-
     // Start at zoom 1.0 centered on user's room — drag to explore neighbors
     this.villageMinZoom = calcVillageZoom(worldW, worldH, W, H)
     const startZoom = Math.max(1.0, this.villageMinZoom)
@@ -143,9 +138,9 @@ export class MiniRoomScene extends Phaser.Scene {
       const tex = this.textures.get(roomKey).getSourceImage()
 
       if (this.hasVillage && hexSize) {
-        // Village mode: scale by height to preserve aspect ratio
-        const cubeH = 2 * hexSize
-        const scale = cubeH / tex.height
+        // Village mode: scale by WIDTH to prevent horizontal overflow
+        const cubeW = CUBE_SIZE_RATIO * hexSize
+        const scale = cubeW / tex.width
         roomBg.setScale(scale)
         roomBg.setDepth(10 + cy)
         const imgH = tex.height * scale
