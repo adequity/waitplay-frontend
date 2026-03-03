@@ -159,25 +159,32 @@
       <!-- ===== 탭 컨텐츠 ===== -->
       <div class="tab-content">
 
-        <!-- ===== 탭0: 나의방 ===== -->
+        <!-- ===== 탭0: 나의방 + 빌리지 ===== -->
         <div v-if="activeTab === 'room'" class="room-tab">
-          <div v-if="isLoadingRoom" class="loading-state">
+          <div v-if="isLoadingRoom && isLoadingVillage" class="loading-state">
             <div class="spinner"></div>
           </div>
-          <div v-else class="room-preview-card" @click="openRoomFullscreen">
-            <div class="room-preview-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.5">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9,22 9,12 15,12 15,22"/>
-              </svg>
+          <template v-else>
+            <!-- Hex Village Grid -->
+            <HexVillageGrid
+              :rooms="village?.rooms || []"
+              :nickname="profile?.nickname || ''"
+              :isMyProfile="isMyProfile"
+              @center-tap="openRoomFullscreen"
+            />
+
+            <!-- Room preview card (always visible as quick entry) -->
+            <div class="room-preview-card" @click="openRoomFullscreen">
+              <div class="room-preview-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.5">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+              </div>
+              <h3 class="room-preview-title">{{ isMyProfile ? '나의 방' : `${profile?.nickname || ''}의 방` }}</h3>
+              <p class="room-preview-subtitle">탭하여 방 구경하기</p>
             </div>
-            <h3 class="room-preview-title">{{ isMyProfile ? '나의 방' : `${profile?.nickname || ''}의 방` }}</h3>
-            <p class="room-preview-subtitle">탭하여 방 구경하기</p>
-            <button class="room-enter-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg>
-              방 보기
-            </button>
-          </div>
+          </template>
         </div>
 
         <!-- ===== 탭1: 방명록 (프로필 방명록) ===== -->
@@ -581,6 +588,8 @@ import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import notificationService from '@/services/notificationService'
 import { getRoomConfiguration, type RoomConfiguration } from '@/services/roomService'
+import { getUserVillage, type UserVillage } from '@/services/storeRoomService'
+import HexVillageGrid from '@/components/HexVillageGrid.vue'
 import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse, ActivityHeatmapResponse } from '@/services/guestbookService'
 import type { NotificationItem } from '@/services/notificationService'
 import { getCardBg } from '@/constants/guestbookColors'
@@ -608,6 +617,10 @@ const isLoadingRoom = ref(false)
 const roomLoaded = ref(false)
 const showRoomFullscreen = ref(false)
 const isRoomLoading = ref(false)
+
+// Village
+const village = ref<UserVillage | null>(null)
+const isLoadingVillage = ref(false)
 
 // Profile guestbook
 const profileGuestbookMessages = ref<GuestbookMessageResponse[]>([])
@@ -666,6 +679,7 @@ onMounted(async () => {
   await loadProfile()
   if (profile.value) {
     loadRoomConfig()
+    loadVillage()
   }
   if (isMyProfile.value && isAuthenticated.value) {
     loadUnreadCount()
@@ -697,6 +711,16 @@ async function loadProfile() {
     error.value = '사용자를 찾을 수 없습니다'
   } finally {
     isLoadingProfile.value = false
+  }
+}
+
+// ===== Village =====
+async function loadVillage() {
+  isLoadingVillage.value = true
+  try {
+    village.value = await getUserVillage(userCode)
+  } catch { /* silent */ } finally {
+    isLoadingVillage.value = false
   }
 }
 
