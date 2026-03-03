@@ -219,7 +219,7 @@ async function uploadImage(file: File): Promise<string | null> {
     const formData = new FormData()
     formData.append('file', file)
     const token = authStore.accessToken
-    const response = await fetch(`${API_BASE_URL}/api/FileUpload/background`, {
+    const response = await fetch(`${API_BASE_URL}/api/FileUpload/room-asset`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,
