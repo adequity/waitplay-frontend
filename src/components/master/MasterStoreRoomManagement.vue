@@ -47,9 +47,9 @@
         </div>
         <input ref="fileInput" type="file" accept="image/*" hidden @change="handleFileSelect" />
         <p class="upload-hint">
-          권장 사이즈: <strong>1200 × 896px</strong> (비율 약 4:3)<br />
-          투명 배경 PNG 권장 · 아이소메트릭 다이아몬드 형태<br />
-          업로드 시 자동으로 1200×896 캔버스에 맞춰 리사이즈됩니다.
+          권장 사이즈: <strong>776 × 896px</strong> (비율 √3:2, 아이소메트릭 다이아몬드)<br />
+          투명 배경 PNG 권장 · 다이아몬드 밖은 투명 처리<br />
+          업로드 시 자동으로 776×896 캔버스에 맞춰 리사이즈됩니다.
         </p>
       </div>
 

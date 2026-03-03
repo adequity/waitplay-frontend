@@ -150,7 +150,7 @@ export class MiniRoomScene extends Phaser.Scene {
         const cubeH = 2 * hexSize
         const scaleX = cubeW / tex.width
         const scaleY = cubeH / tex.height
-        scale = Math.min(scaleX, scaleY)
+        scale = Math.max(scaleX, scaleY)
       } else {
         // Normal mode: fill viewport
         const isLandscape = W > H
