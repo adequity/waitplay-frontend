@@ -4,8 +4,14 @@
  *
  * Each "cell" is an isometric cube (diamond silhouette).
  * size = half the cube's on-screen height.
- * Cube dimensions: width = √3 × size, height = 2 × size.
+ * Cube dimensions: width = 7/4 × size, height = 2 × size (7:8 aspect).
+ *
+ * GAP_FACTOR spaces cells apart so rectangular images don't overlap.
+ * 2.0 = edges touching, >2.0 = visible gap between rooms.
  */
+
+/** Spacing multiplier: 2.0 = edges touch, 2.15 = ~7% gap */
+export const GAP_FACTOR = 2.15
 
 export interface HexPosition {
   q: number
@@ -18,13 +24,13 @@ export interface PixelPosition {
 }
 
 /**
- * Axial (q, r) → pixel for isometric cube tessellation.
- * Adjacent cubes share edges seamlessly.
+ * Axial (q, r) → pixel with spacing for non-overlapping rectangular images.
+ * The isometric diamond layout is preserved but with gaps between rooms.
  */
 export function hexToPixel(q: number, r: number, size: number): PixelPosition {
-  const cubeHalfW = (Math.sqrt(3) / 2) * size // √3/2 × size
-  const x = cubeHalfW * (q - r)
-  const y = size * (q + r)
+  const cubeHalfW = (7 / 8) * size
+  const x = GAP_FACTOR * cubeHalfW * (q - r)
+  const y = GAP_FACTOR * size * (q + r)
   return { x, y }
 }
 
@@ -33,7 +39,7 @@ export function hexBoundingBox(positions: HexPosition[], size: number) {
   const allPositions = [{ q: 0, r: 0 }, ...positions]
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
 
-  const cubeHalfW = (Math.sqrt(3) / 2) * size
+  const cubeHalfW = (7 / 8) * size
 
   for (const pos of allPositions) {
     const pixel = hexToPixel(pos.q, pos.r, size)
