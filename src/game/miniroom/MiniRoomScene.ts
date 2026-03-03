@@ -3,7 +3,7 @@ import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
 import type { VillageStoreRoom } from './VillageConfig'
 import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, calcHexSize, calcVillageZoom, CENTER_LABEL_STYLE } from './VillageConfig'
-import { VillageRenderer, drawHexPath, HEX_MASK_SCALE } from './VillageRenderer'
+import { VillageRenderer, CUBE_SIZE_RATIO } from './VillageRenderer'
 import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
 
 const SPRITE_BASE = '/assets/miniroom/custom/'
@@ -119,10 +119,10 @@ export class MiniRoomScene extends Phaser.Scene {
     this.villageRenderer.renderPlaceholders()
     this.villageRenderer.startImageLoading()
 
-    // Center label under user's room
-    const hexH = hexSize * Math.sqrt(3) * HEX_MASK_SCALE
-    this.add.text(this.worldCX, this.worldCY + hexH / 2 + 4, '나의 방', CENTER_LABEL_STYLE)
-      .setOrigin(0.5, 0).setDepth(2)
+    // Center label under user's room (bottom of isometric cube)
+    const cubeHalfH = hexSize
+    this.add.text(this.worldCX, this.worldCY + cubeHalfH + 4, '나의 방', CENTER_LABEL_STYLE)
+      .setOrigin(0.5, 0).setDepth(1000)
 
     // Start at zoom 1.0 centered on user's room — drag to explore neighbors
     this.villageMinZoom = calcVillageZoom(worldW, worldH, W, H)
@@ -144,20 +144,13 @@ export class MiniRoomScene extends Phaser.Scene {
 
       let scale: number
       if (this.hasVillage && hexSize) {
-        // In village mode: scale room to fit hex area
-        const maskSize = hexSize * HEX_MASK_SCALE
-        const hexW = maskSize * 2
-        const hexH = maskSize * Math.sqrt(3)
-        const scaleX = hexW / tex.width
-        const scaleY = hexH / tex.height
+        // In village mode: scale image to match isometric cube cell size
+        // No masking — the PNG's transparent areas handle tessellation
+        const cubeW = CUBE_SIZE_RATIO * hexSize
+        const cubeH = 2 * hexSize
+        const scaleX = cubeW / tex.width
+        const scaleY = cubeH / tex.height
         scale = Math.max(scaleX, scaleY)
-
-        // Mask room to hex shape (reuse shared drawHexPath)
-        const maskG = this.make.graphics({ add: false } as any)
-        maskG.fillStyle(0xffffff)
-        drawHexPath(maskG, cx, cy, maskSize)
-        maskG.fillPath()
-        roomBg.setMask(maskG.createGeometryMask())
       } else {
         // Normal mode: fill viewport
         const isLandscape = W > H
@@ -167,7 +160,8 @@ export class MiniRoomScene extends Phaser.Scene {
       }
 
       roomBg.setScale(scale)
-      roomBg.setDepth(-100)
+      // In village: depth by Y position (painter's algorithm); standalone: behind everything
+      roomBg.setDepth(this.hasVillage ? 10 + cy : -100)
 
       // Character
       const imgH = tex.height * scale

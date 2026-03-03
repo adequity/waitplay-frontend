@@ -2,34 +2,14 @@ import type { VillageStoreRoom } from './VillageConfig'
 import { HEX_LABEL_STYLE } from './VillageConfig'
 import { hexToPixel } from '@/utils/hexGridUtils'
 
-/** Hex mask scale — slightly smaller than full size to create thin dark gap between hexes */
-export const HEX_MASK_SCALE = 0.96
+/**
+ * Isometric cube village renderer.
+ * Room images are displayed as-is (no hex masking) — the transparent areas
+ * in each isometric PNG handle seamless tessellation naturally.
+ */
 
-/** Flat-top hex vertex at given index (0..5) */
-function hexVertex(cx: number, cy: number, size: number, i: number) {
-  const angle = (Math.PI / 3) * i
-  return { x: cx + size * Math.cos(angle), y: cy + size * Math.sin(angle) }
-}
-
-/** Draw flat-top hex path on graphics */
-export function drawHexPath(g: Phaser.GameObjects.Graphics, cx: number, cy: number, size: number) {
-  g.beginPath()
-  for (let i = 0; i < 6; i++) {
-    const v = hexVertex(cx, cy, size, i)
-    i === 0 ? g.moveTo(v.x, v.y) : g.lineTo(v.x, v.y)
-  }
-  g.closePath()
-}
-
-/** Get hex vertices as Phaser Point array (for hit area) */
-function getHexPoints(cx: number, cy: number, size: number): Phaser.Geom.Point[] {
-  const pts: Phaser.Geom.Point[] = []
-  for (let i = 0; i < 6; i++) {
-    const v = hexVertex(cx, cy, size, i)
-    pts.push(new Phaser.Geom.Point(v.x - cx, v.y - cy))
-  }
-  return pts
-}
+/** Cube display size: width = √3 × size, height = 2 × size */
+export const CUBE_SIZE_RATIO = Math.sqrt(3)
 
 export class VillageRenderer {
   private scene: Phaser.Scene
@@ -53,20 +33,28 @@ export class VillageRenderer {
     this.worldCY = worldCenterY
   }
 
-  /** Render dark hex placeholders (shown until images load) */
+  /** Render light diamond placeholders (shown until images load) */
   renderPlaceholders() {
     const g = this.scene.add.graphics()
     g.setDepth(0)
     this.objects.push(g)
+
+    const cubeW = CUBE_SIZE_RATIO * this.hexSize
+    const cubeH = 2 * this.hexSize
 
     for (const room of this.rooms) {
       const pixel = hexToPixel(room.gridQ, room.gridR, this.hexSize)
       const px = this.worldCX + pixel.x
       const py = this.worldCY + pixel.y
 
-      // Light placeholder fill
-      g.fillStyle(0xe5e7eb, 1)
-      drawHexPath(g, px, py, this.hexSize * HEX_MASK_SCALE)
+      // Draw diamond placeholder matching isometric cube silhouette
+      g.fillStyle(0xe5e7eb, 0.5)
+      g.beginPath()
+      g.moveTo(px, py - cubeH / 2) // top
+      g.lineTo(px + cubeW / 2, py)  // right
+      g.lineTo(px, py + cubeH / 2) // bottom
+      g.lineTo(px - cubeW / 2, py)  // left
+      g.closePath()
       g.fillPath()
     }
   }
@@ -104,30 +92,25 @@ export class VillageRenderer {
     const px = this.worldCX + pixel.x
     const py = this.worldCY + pixel.y
 
-    const maskSize = this.hexSize * HEX_MASK_SCALE
-    const hexW = maskSize * 2
-    const hexH = maskSize * Math.sqrt(3)
+    // Target cube display dimensions
+    const cubeW = CUBE_SIZE_RATIO * this.hexSize
+    const cubeH = 2 * this.hexSize
 
-    // Create image and scale to cover hex
+    // Scale image so the isometric content fills the cube area.
+    // Image is roughly square; the diamond content occupies ~90% of image.
+    // Use max(scaleX, scaleY) to cover, then no masking needed.
     const img = this.scene.add.image(px, py, key)
     const tex = this.scene.textures.get(key).getSourceImage()
-    const scaleX = hexW / tex.width
-    const scaleY = hexH / tex.height
+    const scaleX = cubeW / tex.width
+    const scaleY = cubeH / tex.height
     const scale = Math.max(scaleX, scaleY)
     img.setScale(scale)
-    img.setDepth(1)
 
-    // Create hex geometry mask
-    const maskG = this.scene.make.graphics({ add: false } as any)
-    maskG.fillStyle(0xffffff)
-    drawHexPath(maskG, px, py, maskSize)
-    maskG.fillPath()
-    const mask = maskG.createGeometryMask()
-    img.setMask(mask)
+    // Depth: higher Y (lower on screen) renders on top — painter's algorithm
+    img.setDepth(10 + py)
 
-    // Interactive hit area (hex polygon)
-    const hitPoly = new Phaser.Geom.Polygon(getHexPoints(px, py, this.hexSize))
-    img.setInteractive(hitPoly, Phaser.Geom.Polygon.Contains)
+    // Interactive: use the full image bounds (alpha-aware)
+    img.setInteractive({ pixelPerfect: true, alphaTolerance: 128 })
     img.on('pointerup', () => {
       window.dispatchEvent(
         new CustomEvent('miniroom-store-tap', { detail: { room } }),
@@ -136,11 +119,11 @@ export class VillageRenderer {
 
     this.objects.push(img)
 
-    // Store name label below hex
-    const labelY = py + hexH / 2 + 4
+    // Store name label below the cube's bottom vertex
+    const labelY = py + cubeH / 2 + 4
     const label = this.scene.add.text(px, labelY, room.storeName, HEX_LABEL_STYLE)
       .setOrigin(0.5, 0)
-      .setDepth(2)
+      .setDepth(1000)
     this.objects.push(label)
   }
 
