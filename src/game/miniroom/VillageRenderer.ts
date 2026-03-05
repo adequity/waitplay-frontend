@@ -1,18 +1,32 @@
-import type { VillageStoreRoom } from './VillageConfig'
+import type { VillageStoreRoom, VillageEmptySlot } from './VillageConfig'
 import { hexToPixel } from '@/utils/hexGridUtils'
 
 /**
  * Isometric cube village renderer.
  * Room images are displayed as-is (no hex masking) — the transparent areas
  * in each isometric PNG handle seamless tessellation naturally.
+ * Empty slots rendered as dashed isometric hexagon + "+" for owner to add stores.
  */
 
 /** Cube display size: width = 7/4 × size, height = 2 × size (7:8 aspect) */
 export const CUBE_SIZE_RATIO = 7 / 4
 
+/** Get 6 vertices of an isometric cube silhouette (hexagon) centered at (cx, cy) */
+function cubeHexPoints(cx: number, cy: number, cubeW: number, cubeH: number) {
+  return [
+    { x: cx, y: cy - cubeH * 0.5 },            // top
+    { x: cx + cubeW * 0.5, y: cy - cubeH * 0.25 }, // upper-right
+    { x: cx + cubeW * 0.5, y: cy + cubeH * 0.25 }, // lower-right
+    { x: cx, y: cy + cubeH * 0.5 },            // bottom
+    { x: cx - cubeW * 0.5, y: cy + cubeH * 0.25 }, // lower-left
+    { x: cx - cubeW * 0.5, y: cy - cubeH * 0.25 }, // upper-left
+  ]
+}
+
 export class VillageRenderer {
   private scene: Phaser.Scene
   private rooms: VillageStoreRoom[]
+  private emptySlots: VillageEmptySlot[]
   private hexSize: number
   private worldCX: number
   private worldCY: number
@@ -21,12 +35,14 @@ export class VillageRenderer {
   constructor(
     scene: Phaser.Scene,
     rooms: VillageStoreRoom[],
+    emptySlots: VillageEmptySlot[],
     hexSize: number,
     worldCenterX: number,
     worldCenterY: number,
   ) {
     this.scene = scene
     this.rooms = rooms
+    this.emptySlots = emptySlots
     this.hexSize = hexSize
     this.worldCX = worldCenterX
     this.worldCY = worldCenterY
@@ -46,15 +62,75 @@ export class VillageRenderer {
       const px = this.worldCX + pixel.x
       const py = this.worldCY + pixel.y
 
-      // Draw diamond placeholder matching isometric cube silhouette
+      // Draw isometric cube hexagon placeholder
+      const pts = cubeHexPoints(px, py, cubeW, cubeH)
       g.fillStyle(0xe5e7eb, 0.5)
       g.beginPath()
-      g.moveTo(px, py - cubeH / 2) // top
-      g.lineTo(px + cubeW / 2, py)  // right
-      g.lineTo(px, py + cubeH / 2) // bottom
-      g.lineTo(px - cubeW / 2, py)  // left
+      g.moveTo(pts[0]!.x, pts[0]!.y)
+      for (let i = 1; i < pts.length; i++) g.lineTo(pts[i]!.x, pts[i]!.y)
       g.closePath()
       g.fillPath()
+    }
+  }
+
+  /** Render empty slot placeholders with dashed diamond + "+" text */
+  renderEmptySlots() {
+    if (this.emptySlots.length === 0) return
+
+    const cubeW = CUBE_SIZE_RATIO * this.hexSize
+    const cubeH = 2 * this.hexSize
+
+    for (const slot of this.emptySlots) {
+      const pixel = hexToPixel(slot.gridQ, slot.gridR, this.hexSize)
+      const px = this.worldCX + pixel.x
+      const py = this.worldCY + pixel.y
+
+      // Dashed isometric hexagon outline
+      const g = this.scene.add.graphics()
+      g.lineStyle(2, 0xc4c4c4, 0.6)
+
+      const points = cubeHexPoints(px, py, cubeW, cubeH)
+      for (let i = 0; i < 6; i++) {
+        const from = points[i]!
+        const to = points[(i + 1) % 6]!
+        // Draw dashed line segments
+        const segments = 4
+        for (let s = 0; s < segments; s += 2) {
+          const t1 = s / segments
+          const t2 = (s + 1) / segments
+          g.beginPath()
+          g.moveTo(from.x + (to.x - from.x) * t1, from.y + (to.y - from.y) * t1)
+          g.lineTo(from.x + (to.x - from.x) * t2, from.y + (to.y - from.y) * t2)
+          g.strokePath()
+        }
+      }
+      g.setDepth(5 + py)
+      this.objects.push(g)
+
+      // "+" text in center
+      const fontSize = Math.max(16, this.hexSize * 0.4)
+      const plus = this.scene.add.text(px, py, '+', {
+        fontFamily: 'Noto Sans KR, sans-serif',
+        fontSize: `${fontSize}px`,
+        color: '#b0b0b0',
+        fontStyle: 'bold',
+      })
+      plus.setOrigin(0.5, 0.5)
+      plus.setDepth(6 + py)
+      this.objects.push(plus)
+
+      // Interactive hit area for empty slot tap
+      const hitZone = this.scene.add.zone(px, py, cubeW * 0.8, cubeH * 0.8)
+      hitZone.setInteractive()
+      hitZone.setDepth(7 + py)
+      hitZone.on('pointerup', () => {
+        window.dispatchEvent(
+          new CustomEvent('miniroom-empty-slot-tap', {
+            detail: { slotQ: slot.gridQ, slotR: slot.gridR },
+          }),
+        )
+      })
+      this.objects.push(hitZone)
     }
   }
 

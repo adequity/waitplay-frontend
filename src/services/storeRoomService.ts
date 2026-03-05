@@ -31,24 +31,9 @@ export interface UpdateStoreRoomTemplateRequest {
   isActive?: boolean
 }
 
-export interface UserStoreRoom {
-  id: string
-  qrCodeId: string
-  storeName: string
-  storeCode: string | null
-  roomImageUrl: string
-  roomName: string
-  roomColor: string
-  gridQ: number
-  gridR: number
-  earnedAt: string
-}
-
-export interface UserVillage {
-  userId: string
-  nickname: string
-  totalRooms: number
-  rooms: UserStoreRoom[]
+export interface VillageSettings {
+  gapFactor: number
+  gapFactorX: number
 }
 
 export interface StoreWithTemplateStatus {
@@ -58,14 +43,65 @@ export interface StoreWithTemplateStatus {
   hasTemplate: boolean
 }
 
+// ===== Village Slot System =====
+
+export interface VillageSlot {
+  slotQ: number
+  slotR: number
+  isEmpty: boolean
+  adminId?: string
+  storeName?: string
+  storeCode?: string
+  roomImageUrl?: string
+  roomName?: string
+  roomColor?: string
+}
+
+export interface VillageResponse {
+  userId: string
+  nickname: string
+  isOwner: boolean
+  totalRings: number
+  filledSlots: number
+  totalSlots: number
+  slots: VillageSlot[]
+  gapFactor: number
+  gapFactorX: number
+}
+
+export interface UnplacedStore {
+  adminId: string
+  storeName: string
+  storeProfileImage: string | null
+  storeCode: string | null
+}
+
 // Public API
-export async function getUserVillage(profileCode: string): Promise<UserVillage> {
+export async function getUserVillage(profileCode: string): Promise<VillageResponse> {
   const res = await api.get(`/api/store-rooms/user/${profileCode}`)
   return res.data
 }
 
-export async function getMyVillage(): Promise<UserVillage> {
+export async function getMyVillage(): Promise<VillageResponse> {
   const res = await api.get('/api/store-rooms/my')
+  return res.data
+}
+
+// Village Slot Management API
+export async function placeSlot(adminId: string, slotQ: number, slotR: number): Promise<void> {
+  await api.put('/api/store-rooms/village/place', { adminId, slotQ, slotR })
+}
+
+export async function swapSlots(fromQ: number, fromR: number, toQ: number, toR: number): Promise<void> {
+  await api.put('/api/store-rooms/village/swap', { fromQ, fromR, toQ, toR })
+}
+
+export async function removeSlot(slotQ: number, slotR: number): Promise<void> {
+  await api.delete(`/api/store-rooms/village/remove?slotQ=${slotQ}&slotR=${slotR}`)
+}
+
+export async function getUnplacedStores(): Promise<UnplacedStore[]> {
+  const res = await api.get('/api/store-rooms/village/unplaced')
   return res.data
 }
 
@@ -91,5 +127,15 @@ export async function deleteTemplate(id: string): Promise<void> {
 
 export async function getStoresWithTemplateStatus(): Promise<StoreWithTemplateStatus[]> {
   const res = await api.get('/api/store-rooms/templates/stores')
+  return res.data
+}
+
+export async function getVillageSettings(): Promise<VillageSettings> {
+  const res = await api.get('/api/store-rooms/settings')
+  return res.data
+}
+
+export async function updateVillageSettings(data: { gapFactor: number; gapFactorX: number }): Promise<VillageSettings> {
+  const res = await api.put('/api/store-rooms/settings', data)
   return res.data
 }

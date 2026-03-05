@@ -175,8 +175,8 @@
               </div>
               <h3 class="room-preview-title">{{ isMyProfile ? '나의 방' : `${profile?.nickname || ''}의 방` }}</h3>
               <p class="room-preview-subtitle">
-                {{ (village?.rooms?.length || 0) > 0
-                  ? `매장 룸 ${village!.rooms.length}개 · 탭하여 빌리지 보기`
+                {{ (village?.filledSlots || 0) > 0
+                  ? `매장 룸 ${village!.filledSlots}개 · 탭하여 빌리지 보기`
                   : '탭하여 방 구경하기' }}
               </p>
             </div>
@@ -561,10 +561,31 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
         <div class="miniroom-owner-label">{{ profile?.nickname || '' }}의 방</div>
-        <button class="miniroom-rotate-btn" @click="requestLandscape">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2h4v4"/><path d="M21 2l-7 7"/><rect x="3" y="11" width="10" height="10" rx="2"/></svg>
-          <span>가로로 보기</span>
-        </button>
+        <!-- 이동 모드 배너 -->
+        <div v-if="moveMode" class="move-mode-banner">
+          <span>{{ moveFromStoreName }}의 새 위치를 탭하세요</span>
+          <button @click="cancelMoveMode">취소</button>
+        </div>
+
+        <!-- 매장 액션 시트 -->
+        <div v-if="showStoreActionSheet" class="action-sheet-overlay" @click.self="showStoreActionSheet = false">
+          <div class="action-sheet">
+            <div class="action-sheet-title">{{ actionSheetRoom?.storeName }}</div>
+            <button class="action-sheet-btn" @click="actionGoToStore">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              매장 페이지로 이동
+            </button>
+            <button class="action-sheet-btn" @click="actionMoveStore">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l4-4 4 4"/><path d="M9 5v14"/><path d="M19 15l-4 4-4-4"/><path d="M15 19V5"/></svg>
+              위치 변경
+            </button>
+            <button class="action-sheet-btn action-sheet-danger" @click="actionRemoveStore">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+              빌리지에서 제거
+            </button>
+            <button class="action-sheet-btn action-sheet-cancel" @click="showStoreActionSheet = false">취소</button>
+          </div>
+        </div>
       </div>
     </Teleport>
 
@@ -572,6 +593,13 @@
     <Transition name="toast">
       <div v-if="showShareToast" class="share-toast">{{ shareToastMessage }}</div>
     </Transition>
+
+    <!-- 매장 선택 모달 -->
+    <StorePickerModal
+      v-if="showStorePicker"
+      @close="showStorePicker = false; pendingSlot = null"
+      @select="handleStorePlaced"
+    />
   </div>
 </template>
 
@@ -584,13 +612,14 @@ import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import notificationService from '@/services/notificationService'
 import { getRoomConfiguration, type RoomConfiguration } from '@/services/roomService'
-import { getUserVillage, type UserVillage } from '@/services/storeRoomService'
-import type { VillageStoreRoom } from '@/game/miniroom/VillageConfig'
+import { getUserVillage, placeSlot, removeSlot, swapSlots, type VillageResponse } from '@/services/storeRoomService'
+import type { VillageStoreRoom, VillageEmptySlot } from '@/game/miniroom/VillageConfig'
 import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse, ActivityHeatmapResponse } from '@/services/guestbookService'
 import type { NotificationItem } from '@/services/notificationService'
 import { getCardBg } from '@/constants/guestbookColors'
 import MessageDetailModal from '@/components/blocks/guestbook/MessageDetailModal.vue'
 import DrawingModal from '@/components/blocks/guestbook/DrawingModal.vue'
+import StorePickerModal from '@/components/StorePickerModal.vue'
 import apiClient from '@/services/api'
 
 const route = useRoute()
@@ -615,8 +644,17 @@ const showRoomFullscreen = ref(false)
 const isRoomLoading = ref(false)
 
 // Village
-const village = ref<UserVillage | null>(null)
+const village = ref<VillageResponse | null>(null)
 const isLoadingVillage = ref(false)
+
+// Store picker modal
+const showStorePicker = ref(false)
+const pendingSlot = ref<{ q: number; r: number } | null>(null)
+
+// Move mode (슬롯 위치 변경)
+const moveMode = ref(false)
+const moveFromSlot = ref<{ q: number; r: number } | null>(null)
+const moveFromStoreName = ref('')
 
 // Profile guestbook
 const profileGuestbookMessages = ref<GuestbookMessageResponse[]>([])
@@ -680,10 +718,14 @@ onMounted(async () => {
   if (isMyProfile.value && isAuthenticated.value) {
     loadUnreadCount()
   }
+  window.addEventListener('miniroom-empty-slot-tap', onEmptySlotTap)
+  window.addEventListener('miniroom-store-tap', onStoreTap)
 })
 
 onUnmounted(() => {
   closeRoomFullscreen()
+  window.removeEventListener('miniroom-empty-slot-tap', onEmptySlotTap)
+  window.removeEventListener('miniroom-store-tap', onStoreTap)
 })
 
 watch(activeTab, (tab) => {
@@ -759,75 +801,31 @@ async function openRoomFullscreen() {
   const loadingTimeout = setTimeout(() => { isRoomLoading.value = false }, 8000)
 
   try {
+    const { setGapFactorXY } = await import('@/utils/hexGridUtils')
+    setGapFactorXY(village.value?.gapFactorX ?? 1.5, village.value?.gapFactor ?? 1.5)
+
     const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
-    const villageRooms: VillageStoreRoom[] = (village.value?.rooms || []).map(r => ({
-      id: r.id,
-      roomImageUrl: r.roomImageUrl,
-      roomName: r.roomName,
-      roomColor: r.roomColor,
-      gridQ: r.gridQ,
-      gridR: r.gridR,
-      storeName: r.storeName,
-    }))
-    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms)
+    const slots = village.value?.slots || []
+    const villageRooms: VillageStoreRoom[] = slots
+      .filter(s => !s.isEmpty)
+      .map(s => ({
+        id: s.adminId!,
+        roomImageUrl: s.roomImageUrl!,
+        roomName: s.roomName || '',
+        roomColor: s.roomColor || '#6366F1',
+        gridQ: s.slotQ,
+        gridR: s.slotR,
+        storeName: s.storeName || '',
+        storeCode: s.storeCode,
+      }))
+    const emptySlots: VillageEmptySlot[] = slots
+      .filter(s => s.isEmpty)
+      .map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
+    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots)
   } catch {
     isRoomLoading.value = false
     window.removeEventListener('miniroom-ready', onReady)
     clearTimeout(loadingTimeout)
-  }
-}
-
-async function requestLandscape() {
-  const el = document.getElementById('miniroom-fullscreen-overlay')
-  if (!el) return
-
-  // Try fullscreen first (required for orientation lock on Android)
-  const requestFS = el.requestFullscreen
-    || (el as any).webkitRequestFullscreen
-    || (el as any).msRequestFullscreen
-  if (requestFS && !document.fullscreenElement && !(document as any).webkitFullscreenElement) {
-    try {
-      await requestFS.call(el)
-      await new Promise(resolve => setTimeout(resolve, 200))
-    } catch { /* fullscreen not supported (iOS Safari etc.) */ }
-  }
-
-  // Lock to landscape (requires fullscreen on Android, not supported on iOS)
-  try {
-    if (screen.orientation && 'lock' in screen.orientation) {
-      await (screen.orientation as any).lock('landscape')
-      return
-    }
-  } catch { /* orientation lock failed */ }
-
-  // Fallback: rotate only the Phaser container, keep overlay buttons in place
-  const isPortrait = window.innerHeight > window.innerWidth
-  if (isPortrait) {
-    const vw = window.innerWidth
-    const vh = window.innerHeight
-    const canvasContainer = document.getElementById('miniroom-container')
-    if (canvasContainer) {
-      // Set container to landscape dimensions and rotate it within the overlay
-      canvasContainer.style.width = vh + 'px'
-      canvasContainer.style.height = vw + 'px'
-      canvasContainer.style.transform = 'rotate(90deg)'
-      canvasContainer.style.transformOrigin = 'center center'
-      canvasContainer.style.position = 'absolute'
-      canvasContainer.style.top = '50%'
-      canvasContainer.style.left = '50%'
-      canvasContainer.style.marginTop = -(vw / 2) + 'px'
-      canvasContainer.style.marginLeft = -(vh / 2) + 'px'
-    }
-    el.classList.add('force-landscape')
-
-    // Re-init Phaser — it reads container's clientWidth/clientHeight (vh × vw = landscape)
-    await new Promise(resolve => setTimeout(resolve, 100))
-    try {
-      const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
-      miniRoomManager.destroy()
-      if (canvasContainer) canvasContainer.innerHTML = ''
-      await miniRoomManager.init('miniroom-container', buildRoomData() as any)
-    } catch { /* silent */ }
   }
 }
 
@@ -839,26 +837,144 @@ async function closeRoomFullscreen() {
     miniRoomManager.destroy()
   } catch { /* silent */ }
 
-  // Remove CSS fallback rotation and inline styles
-  const overlay = document.getElementById('miniroom-fullscreen-overlay')
-  overlay?.classList.remove('force-landscape')
-  const canvasContainer = document.getElementById('miniroom-container')
-  if (canvasContainer) {
-    canvasContainer.removeAttribute('style')
-  }
-
-  const fsElement = document.fullscreenElement || (document as any).webkitFullscreenElement
-  if (fsElement) {
-    try {
-      if (document.exitFullscreen) await document.exitFullscreen()
-      else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen()
-    } catch { /* silent */ }
-  }
-  if (screen.orientation && 'unlock' in screen.orientation) {
-    try { (screen.orientation as any).unlock() } catch { /* not supported */ }
-  }
-
   showRoomFullscreen.value = false
+}
+
+// ===== Village Slot Events =====
+function onEmptySlotTap(e: Event) {
+  const detail = (e as CustomEvent).detail as { slotQ: number; slotR: number }
+
+  if (moveMode.value && moveFromSlot.value) {
+    // Move mode: move/swap to this empty slot
+    handleSwap(moveFromSlot.value.q, moveFromSlot.value.r, detail.slotQ, detail.slotR)
+    return
+  }
+
+  pendingSlot.value = { q: detail.slotQ, r: detail.slotR }
+  showStorePicker.value = true
+}
+
+function onStoreTap(e: Event) {
+  const detail = (e as CustomEvent).detail as { room: VillageStoreRoom }
+  const room = detail.room
+
+  if (moveMode.value && moveFromSlot.value) {
+    // Move mode: swap with this store's slot
+    handleSwap(moveFromSlot.value.q, moveFromSlot.value.r, room.gridQ, room.gridR)
+    return
+  }
+
+  if (isMyProfile.value) {
+    // Owner: show action sheet
+    showStoreActionSheet.value = true
+    actionSheetRoom.value = room
+  } else {
+    // Visitor: navigate to store
+    if (room.storeCode) {
+      closeRoomFullscreen()
+      router.push(`/customer?qr=${room.storeCode}`)
+    }
+  }
+}
+
+// Action sheet state
+const showStoreActionSheet = ref(false)
+const actionSheetRoom = ref<VillageStoreRoom | null>(null)
+
+function actionGoToStore() {
+  const room = actionSheetRoom.value
+  showStoreActionSheet.value = false
+  if (room?.storeCode) {
+    closeRoomFullscreen()
+    router.push(`/customer?qr=${room.storeCode}`)
+  }
+}
+
+function actionMoveStore() {
+  const room = actionSheetRoom.value
+  showStoreActionSheet.value = false
+  if (room) {
+    moveMode.value = true
+    moveFromSlot.value = { q: room.gridQ, r: room.gridR }
+    moveFromStoreName.value = room.storeName
+  }
+}
+
+function actionRemoveStore() {
+  const room = actionSheetRoom.value
+  showStoreActionSheet.value = false
+  if (room) {
+    handleSlotRemove(room.gridQ, room.gridR)
+  }
+}
+
+function cancelMoveMode() {
+  moveMode.value = false
+  moveFromSlot.value = null
+  moveFromStoreName.value = ''
+}
+
+async function handleSwap(fromQ: number, fromR: number, toQ: number, toR: number) {
+  try {
+    await swapSlots(fromQ, fromR, toQ, toR)
+    cancelMoveMode()
+    await loadVillage()
+    await reloadMiniroom()
+  } catch { /* silent */ }
+}
+
+async function handleStorePlaced(adminId: string) {
+  if (!pendingSlot.value) return
+  try {
+    await placeSlot(adminId, pendingSlot.value.q, pendingSlot.value.r)
+    showStorePicker.value = false
+    pendingSlot.value = null
+    // Reload village and re-init Phaser
+    await loadVillage()
+    await reloadMiniroom()
+  } catch (err: any) {
+    alert(err?.response?.data || '배치에 실패했습니다')
+  }
+}
+
+async function handleSlotRemove(slotQ: number, slotR: number) {
+  if (!confirm('이 매장을 빌리지에서 제거할까요?')) return
+  try {
+    await removeSlot(slotQ, slotR)
+    await loadVillage()
+    await reloadMiniroom()
+  } catch { /* silent */ }
+}
+
+async function reloadMiniroom() {
+  if (!showRoomFullscreen.value) return
+  try {
+    const { setGapFactorXY } = await import('@/utils/hexGridUtils')
+    setGapFactorXY(village.value?.gapFactorX ?? 1.5, village.value?.gapFactor ?? 1.5)
+
+    const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
+    miniRoomManager.destroy()
+    const container = document.getElementById('miniroom-container')
+    if (container) container.innerHTML = ''
+
+    const slots = village.value?.slots || []
+    const villageRooms: VillageStoreRoom[] = slots
+      .filter(s => !s.isEmpty)
+      .map(s => ({
+        id: s.adminId!,
+        roomImageUrl: s.roomImageUrl!,
+        roomName: s.roomName || '',
+        roomColor: s.roomColor || '#6366F1',
+        gridQ: s.slotQ,
+        gridR: s.slotR,
+        storeName: s.storeName || '',
+        storeCode: s.storeCode,
+      }))
+    const emptySlots: VillageEmptySlot[] = slots
+      .filter(s => s.isEmpty)
+      .map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
+    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots)
+  } catch { /* silent */ }
 }
 
 async function loadProfileGuestbook() {
@@ -1431,10 +1547,88 @@ const formatRelativeDate = (dateString: string): string => {
 .miniroom-loading-spinner { width: 32px; height: 32px; border: 3px solid #D8CFC4; border-top-color: #8B7E74; border-radius: 50%; animation: miniroom-spin 0.8s linear infinite; }
 @keyframes miniroom-spin { to { transform: rotate(360deg); } }
 .miniroom-owner-label { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 10; white-space: nowrap; }
-.miniroom-rotate-btn { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.6); color: white; padding: 10px 20px; border-radius: 24px; font-size: 14px; font-weight: 500; z-index: 10; white-space: nowrap; border: 1.5px solid rgba(255,255,255,0.3); cursor: pointer; backdrop-filter: blur(4px); transition: background 0.2s; }
-.miniroom-rotate-btn:active { background: rgba(0,0,0,0.8); }
-@media (orientation: landscape) { .miniroom-rotate-btn { display: none; } }
+/* Move mode banner */
+.move-mode-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(99, 102, 241, 0.95);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+}
+.move-mode-banner button {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.move-mode-banner button:active { background: rgba(255, 255, 255, 0.4); }
 
-/* force-landscape: inline styles handle transform, this just hides rotate btn */
-.miniroom-fullscreen.force-landscape .miniroom-rotate-btn { display: none; }
+/* Action sheet */
+.action-sheet-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 30;
+}
+.action-sheet {
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 0;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+  animation: slideUp 0.2s ease-out;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.action-sheet-title {
+  padding: 16px 20px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #86868b;
+  text-align: center;
+}
+.action-sheet-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  background: none;
+  font-size: 16px;
+  color: #1d1d1f;
+  cursor: pointer;
+  text-align: left;
+}
+.action-sheet-btn:active { background: #f5f5f7; }
+.action-sheet-btn svg { color: #86868b; flex-shrink: 0; }
+.action-sheet-danger { color: #ff3b30; }
+.action-sheet-danger svg { color: #ff3b30; }
+.action-sheet-cancel {
+  margin-top: 4px;
+  border-top: 1px solid #f0f0f0;
+  justify-content: center;
+  font-weight: 600;
+  color: #86868b;
+}
 </style>

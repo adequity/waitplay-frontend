@@ -1,7 +1,7 @@
 import type { RoomData, FurnitureType } from './RoomConfig'
 import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
-import type { VillageStoreRoom } from './VillageConfig'
+import type { VillageStoreRoom, VillageEmptySlot } from './VillageConfig'
 import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, calcHexSize, calcVillageZoom } from './VillageConfig'
 import { VillageRenderer, CUBE_SIZE_RATIO } from './VillageRenderer'
 import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
@@ -11,6 +11,7 @@ const SPRITE_BASE = '/assets/miniroom/custom/'
 export class MiniRoomScene extends Phaser.Scene {
   private roomData: RoomData = DEFAULT_ROOM
   private villageRooms: VillageStoreRoom[] = []
+  private emptySlots: VillageEmptySlot[] = []
   private lastW = 0
   private lastH = 0
 
@@ -25,7 +26,7 @@ export class MiniRoomScene extends Phaser.Scene {
     super({ key: 'MiniRoomScene' })
   }
 
-  init(data?: { roomData?: RoomData; villageRooms?: VillageStoreRoom[] }) {
+  init(data?: { roomData?: RoomData; villageRooms?: VillageStoreRoom[]; emptySlots?: VillageEmptySlot[] }) {
     if (data?.roomData) {
       this.roomData = data.roomData
     } else if ((this as any)._initialRoomData) {
@@ -38,6 +39,13 @@ export class MiniRoomScene extends Phaser.Scene {
     } else if ((this as any)._initialVillageRooms) {
       this.villageRooms = (this as any)._initialVillageRooms as VillageStoreRoom[]
       delete (this as any)._initialVillageRooms
+    }
+
+    if (data?.emptySlots) {
+      this.emptySlots = data.emptySlots
+    } else if ((this as any)._initialEmptySlots) {
+      this.emptySlots = (this as any)._initialEmptySlots as VillageEmptySlot[]
+      delete (this as any)._initialEmptySlots
     }
   }
 
@@ -71,7 +79,7 @@ export class MiniRoomScene extends Phaser.Scene {
   create() {
     this.lastW = this.scale.width
     this.lastH = this.scale.height
-    this.hasVillage = this.villageRooms.length > 0
+    this.hasVillage = this.villageRooms.length > 0 || this.emptySlots.length > 0
 
     if (this.hasVillage) {
       this.createVillageMode()
@@ -89,8 +97,11 @@ export class MiniRoomScene extends Phaser.Scene {
     const H = this.scale.height
     const hexSize = calcHexSize(W, H)
 
-    // Compute world bounds from all positions
-    const allPositions: HexPosition[] = this.villageRooms.map(r => ({ q: r.gridQ, r: r.gridR }))
+    // Compute world bounds from all positions (filled + empty)
+    const allPositions: HexPosition[] = [
+      ...this.villageRooms.map(r => ({ q: r.gridQ, r: r.gridR })),
+      ...this.emptySlots.map(s => ({ q: s.gridQ, r: s.gridR })),
+    ]
     const bounds = hexBoundingBox(allPositions, hexSize)
     const padding = hexSize * 1.5
     const worldW = bounds.width + padding * 2
@@ -114,9 +125,10 @@ export class MiniRoomScene extends Phaser.Scene {
 
     // Render village hex grid
     this.villageRenderer = new VillageRenderer(
-      this, this.villageRooms, hexSize, this.worldCX, this.worldCY,
+      this, this.villageRooms, this.emptySlots, hexSize, this.worldCX, this.worldCY,
     )
     this.villageRenderer.renderPlaceholders()
+    this.villageRenderer.renderEmptySlots()
     this.villageRenderer.startImageLoading()
 
     // Start at zoom 1.0 centered on user's room — drag to explore neighbors
@@ -334,7 +346,7 @@ export class MiniRoomScene extends Phaser.Scene {
       const newH = gameSize.height
       if (Math.abs(newW - this.lastW) > 1 || Math.abs(newH - this.lastH) > 1) {
         this.cameras.main.setZoom(1)
-        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms })
+        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms, emptySlots: this.emptySlots })
       }
     })
 
@@ -356,7 +368,7 @@ export class MiniRoomScene extends Phaser.Scene {
       const detail = (e as CustomEvent).detail
       if (detail?.roomData) {
         this.roomData = detail.roomData
-        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms })
+        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms, emptySlots: this.emptySlots })
       }
     }
     window.addEventListener('miniroom-update', updateHandler)

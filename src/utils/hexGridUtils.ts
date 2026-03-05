@@ -6,12 +6,24 @@
  * size = half the cube's on-screen height.
  * Cube dimensions: width = 7/4 × size, height = 2 × size (7:8 aspect).
  *
- * GAP_FACTOR spaces cells apart so rectangular images don't overlap.
- * 2.0 = edges touching, >2.0 = visible gap between rooms.
+ * GAP_FACTOR_X / GAP_FACTOR_Y space cells apart independently.
  */
 
-/** Spacing multiplier: 2.0 = edges touch, 2.15 = ~7% gap */
-export const GAP_FACTOR = 1.5
+/** Spacing multipliers for X (horizontal) and Y (vertical) axes */
+export let GAP_FACTOR_X = 1.5
+export let GAP_FACTOR_Y = 1.5
+
+/** Set both gap factors at once (legacy single-value API) */
+export function setGapFactor(value: number) {
+  GAP_FACTOR_X = value
+  GAP_FACTOR_Y = value
+}
+
+/** Set X and Y gap factors independently */
+export function setGapFactorXY(x: number, y: number) {
+  GAP_FACTOR_X = x
+  GAP_FACTOR_Y = y
+}
 
 export interface HexPosition {
   q: number
@@ -24,13 +36,12 @@ export interface PixelPosition {
 }
 
 /**
- * Axial (q, r) → pixel with spacing for non-overlapping rectangular images.
- * The isometric diamond layout is preserved but with gaps between rooms.
+ * Axial (q, r) → pixel with independent X/Y spacing.
  */
 export function hexToPixel(q: number, r: number, size: number): PixelPosition {
   const cubeHalfW = (7 / 8) * size
-  const x = GAP_FACTOR * cubeHalfW * (q - r)
-  const y = GAP_FACTOR * size * (q + r)
+  const x = GAP_FACTOR_X * cubeHalfW * (q - r)
+  const y = GAP_FACTOR_Y * size * (q + r)
   return { x, y }
 }
 

@@ -6,6 +6,12 @@ export interface VillageStoreRoom {
   gridQ: number
   gridR: number
   storeName: string
+  storeCode?: string
+}
+
+export interface VillageEmptySlot {
+  gridQ: number
+  gridR: number
 }
 
 // Zoom

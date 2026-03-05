@@ -5,6 +5,44 @@
       <p class="section-desc">매장별 게임 클리어 시 유저에게 주어지는 육각형 룸을 관리합니다.</p>
     </div>
 
+    <!-- Village Settings -->
+    <div class="form-card settings-card">
+      <h3>빌리지 전역 설정</h3>
+      <div class="form-group">
+        <label>GAP Y (상하 간격)</label>
+        <div class="gap-factor-row">
+          <input
+            v-model.number="gapFactor"
+            type="number"
+            min="1.0"
+            max="5.0"
+            step="0.05"
+            class="form-input gap-factor-input"
+          />
+          <span class="gap-hint">1.0 = 원래 간격 · 값이 클수록 상하 넓어짐</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>GAP X (좌우 간격)</label>
+        <div class="gap-factor-row">
+          <input
+            v-model.number="gapFactorX"
+            type="number"
+            min="1.0"
+            max="5.0"
+            step="0.05"
+            class="form-input gap-factor-input"
+          />
+          <span class="gap-hint">1.0 = 원래 간격 · 값이 클수록 좌우 넓어짐</span>
+        </div>
+      </div>
+      <div class="gap-factor-row" style="margin-top: 8px;">
+        <button class="btn-save btn-save-small" :disabled="savingSettings" @click="saveVillageSettings">
+          {{ savingSettings ? '저장 중...' : '저장' }}
+        </button>
+      </div>
+    </div>
+
     <!-- Add Button -->
     <div class="add-card" v-if="!isAdding">
       <button class="btn-add" @click="startAdding">
@@ -127,6 +165,8 @@ import {
   updateTemplate,
   deleteTemplate as deleteTemplateApi,
   getStoresWithTemplateStatus,
+  getVillageSettings,
+  updateVillageSettings,
   type StoreRoomTemplate,
   type StoreWithTemplateStatus,
 } from '@/services/storeRoomService'
@@ -136,6 +176,9 @@ const authStore = useAuthStore()
 
 const loading = ref(true)
 const saving = ref(false)
+const gapFactor = ref(1.5)
+const gapFactorX = ref(1.5)
+const savingSettings = ref(false)
 const templates = ref<StoreRoomTemplate[]>([])
 const stores = ref<StoreWithTemplateStatus[]>([])
 const isAdding = ref(false)
@@ -168,16 +211,32 @@ onMounted(async () => {
 async function loadData() {
   loading.value = true
   try {
-    const [tpls, storeList] = await Promise.all([
+    const [tpls, storeList, settings] = await Promise.all([
       getAllTemplates(),
       getStoresWithTemplateStatus(),
+      getVillageSettings(),
     ])
     templates.value = tpls
     stores.value = storeList
+    gapFactor.value = settings.gapFactor
+    gapFactorX.value = settings.gapFactorX
   } catch (e) {
     console.error('Failed to load store room data:', e)
   } finally {
     loading.value = false
+  }
+}
+
+async function saveVillageSettings() {
+  if (savingSettings.value) return
+  savingSettings.value = true
+  try {
+    await updateVillageSettings({ gapFactor: gapFactor.value, gapFactorX: gapFactorX.value })
+    alert('설정이 저장되었습니다.')
+  } catch {
+    alert('설정 저장에 실패했습니다.')
+  } finally {
+    savingSettings.value = false
   }
 }
 
@@ -501,6 +560,33 @@ async function deleteTemplate(tpl: StoreRoomTemplate) {
 .btn-save:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-save-small {
+  padding: 8px 20px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.settings-card {
+  margin-bottom: 16px;
+}
+
+.gap-factor-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gap-factor-input {
+  width: 100px;
+  text-align: center;
+}
+
+.gap-hint {
+  font-size: 12px;
+  color: #86868b;
 }
 
 .loading-state {
