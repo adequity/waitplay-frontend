@@ -118,6 +118,14 @@
             </span>
             <span class="tab-label">나의방</span>
           </button>
+          <button v-if="isMyProfile" class="tab-btn" :class="{ active: activeTab === 'decorate' }" @click="activeTab = 'decorate'">
+            <span class="tab-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="tab-label">방꾸미기</span>
+          </button>
           <button class="tab-btn" :class="{ active: activeTab === 'guestbook' }" @click="activeTab = 'guestbook'">
             <span class="tab-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -133,14 +141,6 @@
               </svg>
             </span>
             <span class="tab-label">매장기록</span>
-          </button>
-          <button class="tab-btn" :class="{ active: activeTab === 'activity' }" @click="switchToActivity">
-            <span class="tab-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 20V10M12 20V4M6 20V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </span>
-            <span class="tab-label">활동</span>
           </button>
           <button v-if="isMyProfile" class="tab-btn" :class="{ active: activeTab === 'notifications' }" @click="switchToNotifications">
             <span class="tab-icon">
@@ -181,56 +181,6 @@
               </p>
             </div>
 
-            <!-- 내 방 에셋 관리 (본인 프로필만) -->
-            <div v-if="isMyProfile" class="room-asset-section">
-              <div class="room-asset-header">
-                <h4>내 방 꾸미기</h4>
-                <button class="room-asset-toggle" @click="showRoomAssets = !showRoomAssets">
-                  {{ showRoomAssets ? '접기' : '펼치기' }}
-                </button>
-              </div>
-              <div v-if="showRoomAssets" class="room-asset-list">
-                <!-- 완료된 에셋들 -->
-                <div
-                  v-for="asset in completedRoomAssets"
-                  :key="asset.id"
-                  class="room-asset-item"
-                  :class="{ selected: asset.isSelected }"
-                  @click="toggleAssetSelection(asset)"
-                >
-                  <img :src="asset.assetImageUrl!" class="room-asset-thumb" />
-                  <div class="room-asset-info">
-                    <span class="room-asset-name">{{ asset.assetName || '나의 에셋' }}</span>
-                    <span v-if="asset.isSelected" class="room-asset-selected">사용 중</span>
-                  </div>
-                </div>
-
-                <!-- 대기중 에셋 -->
-                <div v-for="asset in pendingRoomAssets" :key="asset.id" class="room-asset-item pending">
-                  <div class="room-asset-pending-icon">⏳</div>
-                  <div class="room-asset-info">
-                    <span class="room-asset-name">관리자가 방을 꾸미고 있어요</span>
-                    <span class="room-asset-date">{{ formatAssetDate(asset.createdAt) }}</span>
-                  </div>
-                </div>
-
-                <!-- 새 사진 제출 -->
-                <div class="room-asset-item add-new" @click="triggerPhotoSubmit">
-                  <div class="room-asset-add-icon">+</div>
-                  <div class="room-asset-info">
-                    <span class="room-asset-name">새 공간 사진 제출</span>
-                    <span class="room-asset-date">사진을 제출하면 에셋을 제작해드려요</span>
-                  </div>
-                </div>
-                <input
-                  ref="photoSubmitInput"
-                  type="file"
-                  accept="image/*"
-                  style="display:none"
-                  @change="handlePhotoSubmit"
-                />
-              </div>
-            </div>
           </template>
         </div>
 
@@ -440,59 +390,49 @@
           </div>
         </div>
 
-        <!-- ===== 탭3: 활동 ===== -->
-        <div v-else-if="activeTab === 'activity'" class="activity-tab">
-          <div v-if="isLoadingActivity" class="loading-state"><div class="spinner"></div></div>
-          <template v-else-if="activityData">
-            <!-- 히트맵 -->
-            <div class="heatmap-section">
-              <h3 class="section-title">방문 활동</h3>
-              <div class="heatmap-grid">
-                <div v-for="(week, wi) in heatmapWeeks" :key="wi" class="heatmap-week">
-                  <div
-                    v-for="(day, di) in week"
-                    :key="di"
-                    class="heatmap-cell"
-                    :class="getHeatmapLevel(day.count)"
-                    :title="day.date ? `${day.date}: ${day.count}개` : ''"
-                  ></div>
-                </div>
-              </div>
-              <div class="heatmap-legend">
-                <span class="heatmap-summary">올해 {{ activityData.yearTotalStores }}개 매장 · {{ activityData.yearTotalMessages }}개 방명록</span>
-                <div class="heatmap-levels">
-                  <span>적음</span>
-                  <div class="heatmap-cell level-0"></div>
-                  <div class="heatmap-cell level-1"></div>
-                  <div class="heatmap-cell level-2"></div>
-                  <div class="heatmap-cell level-3"></div>
-                  <span>많음</span>
-                </div>
+        <!-- ===== 탭3: 방꾸미기 ===== -->
+        <div v-else-if="activeTab === 'decorate'" class="decorate-tab">
+          <div class="room-asset-list">
+            <!-- 완료된 에셋들 -->
+            <div
+              v-for="asset in completedRoomAssets"
+              :key="asset.id"
+              class="room-asset-item"
+              :class="{ selected: asset.isSelected }"
+              @click="toggleAssetSelection(asset)"
+            >
+              <img :src="asset.assetImageUrl!" class="room-asset-thumb" />
+              <div class="room-asset-info">
+                <span class="room-asset-name">{{ asset.assetName || '나의 에셋' }}</span>
+                <span v-if="asset.isSelected" class="room-asset-selected">사용 중</span>
               </div>
             </div>
 
-            <!-- 이번 달 요약 -->
-            <div class="monthly-summary">
-              <h3 class="section-title">이번 달 요약</h3>
-              <div class="stats-grid">
-                <div class="stat-card">
-                  <span class="stat-icon">📝</span>
-                  <span class="stat-num">{{ activityData.currentMonth.messagesWritten }}</span>
-                  <span class="stat-desc">방명록 작성</span>
-                </div>
-                <div class="stat-card">
-                  <span class="stat-icon">🏠</span>
-                  <span class="stat-num">{{ activityData.currentMonth.newStoresVisited }}</span>
-                  <span class="stat-desc">새 매장 방문</span>
-                </div>
-                <div class="stat-card">
-                  <span class="stat-icon">❤️</span>
-                  <span class="stat-num">{{ activityData.currentMonth.likesReceived }}</span>
-                  <span class="stat-desc">받은 좋아요</span>
-                </div>
+            <!-- 대기중 에셋 -->
+            <div v-for="asset in pendingRoomAssets" :key="asset.id" class="room-asset-item pending">
+              <div class="room-asset-pending-icon">⏳</div>
+              <div class="room-asset-info">
+                <span class="room-asset-name">관리자가 방을 꾸미고 있어요</span>
+                <span class="room-asset-date">{{ formatAssetDate(asset.createdAt) }}</span>
               </div>
             </div>
-          </template>
+
+            <!-- 새 사진 제출 -->
+            <div class="room-asset-item add-new" @click="triggerPhotoSubmit">
+              <div class="room-asset-add-icon">+</div>
+              <div class="room-asset-info">
+                <span class="room-asset-name">새 공간 사진 제출</span>
+                <span class="room-asset-date">사진을 제출하면 에셋을 제작해드려요</span>
+              </div>
+            </div>
+            <input
+              ref="photoSubmitInput"
+              type="file"
+              accept="image/*"
+              style="display:none"
+              @change="handlePhotoSubmit"
+            />
+          </div>
         </div>
 
         <!-- ===== 탭4: 알림 (기존) ===== -->
@@ -665,7 +605,7 @@ import notificationService from '@/services/notificationService'
 import { getRoomConfiguration, type RoomConfiguration, type RoomAsset, getMyRoomAssets, submitRoomPhoto, selectRoomAsset, deselectRoomAsset } from '@/services/roomService'
 import { getUserVillage, placeSlot, removeSlot, swapSlots, type VillageResponse } from '@/services/storeRoomService'
 import type { VillageStoreRoom, VillageEmptySlot } from '@/game/miniroom/VillageConfig'
-import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse, ActivityHeatmapResponse } from '@/services/guestbookService'
+import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse } from '@/services/guestbookService'
 import type { NotificationItem } from '@/services/notificationService'
 import { getCardBg } from '@/constants/guestbookColors'
 import MessageDetailModal from '@/components/blocks/guestbook/MessageDetailModal.vue'
@@ -682,7 +622,7 @@ const profile = ref<UserPublicProfile | null>(null)
 const isLoadingProfile = ref(true)
 const error = ref<string | null>(null)
 
-const activeTab = ref<'room' | 'guestbook' | 'stores' | 'activity' | 'notifications'>('room')
+const activeTab = ref<'room' | 'decorate' | 'guestbook' | 'stores' | 'notifications'>('room')
 const showDetail = ref(false)
 const selectedMessage = ref<any>(null)
 const likingMessageId = ref<string | null>(null)
@@ -733,10 +673,6 @@ const storeAlbums = ref<StoreAlbumResponse[]>([])
 const isLoadingAlbums = ref(false)
 const albumsLoaded = ref(false)
 
-// Activity
-const activityData = ref<ActivityHeatmapResponse | null>(null)
-const isLoadingActivity = ref(false)
-const activityLoaded = ref(false)
 
 // Notifications
 const notifications = ref<NotificationItem[]>([])
@@ -793,7 +729,7 @@ watch(activeTab, (tab) => {
     loadStoreAlbums()
     if (messages.value.length === 0) loadMessages()
   }
-  if (tab === 'activity' && !activityLoaded.value) loadActivity()
+  if (tab === 'decorate' && myRoomAssets.value.length === 0) loadMyRoomAssets()
   if (tab === 'notifications' && !notificationsLoaded.value) loadNotifications()
 })
 
@@ -1131,16 +1067,6 @@ async function loadStoreAlbums() {
   }
 }
 
-async function loadActivity() {
-  isLoadingActivity.value = true
-  try {
-    activityData.value = await guestbookService.getActivityHeatmap(userCode)
-    activityLoaded.value = true
-  } catch { /* silent */ } finally {
-    isLoadingActivity.value = false
-  }
-}
-
 // Notifications
 async function loadUnreadCount() {
   try { unreadCount.value = await notificationService.getUnreadCount() } catch { /* silent */ }
@@ -1194,9 +1120,6 @@ async function deleteProfileMsg(messageId: string) {
 
 function switchToStores() {
   activeTab.value = 'stores'
-}
-function switchToActivity() {
-  activeTab.value = 'activity'
 }
 function switchToNotifications() {
   activeTab.value = 'notifications'
@@ -1273,33 +1196,6 @@ async function handleMarkAllRead() {
   } catch { /* silent */ }
 }
 
-// ===== Heatmap helpers =====
-
-const heatmapWeeks = computed(() => {
-  if (!activityData.value) return []
-  const activityMap = new Map<string, number>()
-  activityData.value.dailyActivities.forEach(d => activityMap.set(d.date, d.count))
-  const weeks: { date: string; count: number }[][] = []
-  const today = new Date()
-  for (let w = 11; w >= 0; w--) {
-    const week: { date: string; count: number }[] = []
-    for (let d = 0; d < 7; d++) {
-      const date = new Date(today)
-      date.setDate(today.getDate() - (w * 7 + (6 - d)))
-      const dateStr = date.toISOString().split('T')[0] ?? ''
-      week.push({ date: dateStr, count: activityMap.get(dateStr) ?? 0 })
-    }
-    weeks.push(week)
-  }
-  return weeks
-})
-
-function getHeatmapLevel(count: number) {
-  if (count === 0) return 'level-0'
-  if (count <= 1) return 'level-1'
-  if (count <= 3) return 'level-2'
-  return 'level-3'
-}
 
 // ===== Profile edit =====
 
@@ -1525,28 +1421,8 @@ const formatRelativeDate = (dateString: string): string => {
 .album-store-name { font-size: 13px; font-weight: 600; color: #262626; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .album-visit-count { font-size: 11px; color: #8e8e8e; }
 
-/* ===== Activity Tab ===== */
-.activity-tab { padding: 1rem; }
-.section-title { font-size: 15px; font-weight: 700; color: #262626; margin: 0 0 0.75rem; }
-.heatmap-section { background: white; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
-.heatmap-grid { display: flex; gap: 3px; justify-content: center; margin-bottom: 0.75rem; overflow-x: auto; }
-.heatmap-week { display: flex; flex-direction: column; gap: 3px; }
-.heatmap-cell { width: 14px; height: 14px; border-radius: 3px; }
-.level-0 { background: #ebedf0; }
-.level-1 { background: #9be9a8; }
-.level-2 { background: #40c463; }
-.level-3 { background: #216e39; }
-.heatmap-legend { display: flex; justify-content: space-between; align-items: center; }
-.heatmap-summary { font-size: 12px; color: #8e8e8e; }
-.heatmap-levels { display: flex; align-items: center; gap: 3px; font-size: 11px; color: #8e8e8e; }
-.heatmap-levels .heatmap-cell { width: 10px; height: 10px; }
-
-.monthly-summary { background: white; border-radius: 12px; padding: 1rem; }
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
-.stat-card { display: flex; flex-direction: column; align-items: center; padding: 0.75rem; background: #f8f8f8; border-radius: 10px; gap: 0.25rem; }
-.stat-icon { font-size: 1.25rem; }
-.stat-num { font-size: 1.375rem; font-weight: 800; color: #262626; }
-.stat-desc { font-size: 0.6875rem; color: #8e8e8e; font-weight: 500; }
+/* ===== Decorate Tab ===== */
+.decorate-tab { padding: 1rem; }
 
 /* ===== Notifications ===== */
 .notifications-tab { background: white; }
