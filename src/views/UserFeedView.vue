@@ -209,7 +209,7 @@
                 <div v-for="asset in pendingRoomAssets" :key="asset.id" class="room-asset-item pending">
                   <div class="room-asset-pending-icon">⏳</div>
                   <div class="room-asset-info">
-                    <span class="room-asset-name">에셋 제작 대기중</span>
+                    <span class="room-asset-name">관리자가 방을 꾸미고 있어요</span>
                     <span class="room-asset-date">{{ formatAssetDate(asset.createdAt) }}</span>
                   </div>
                 </div>
