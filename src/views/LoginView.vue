@@ -180,7 +180,14 @@ const handleLogin = async () => {
       case 'user':
       default: {
         const qr = route.query.qr as string
-        router.push(qr ? `/customer?qr=${qr}` : '/customer')
+        const profileCode = authStore.user?.profileCode
+        if (qr) {
+          router.push(`/customer?qr=${qr}`)
+        } else if (profileCode) {
+          router.push(`/u/${profileCode}`)
+        } else {
+          router.push('/customer')
+        }
         break
       }
     }
