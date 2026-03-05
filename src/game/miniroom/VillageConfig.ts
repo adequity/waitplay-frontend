@@ -7,6 +7,8 @@ export interface VillageStoreRoom {
   gridR: number
   storeName: string
   storeCode?: string
+  isFriend?: boolean
+  friendProfileCode?: string
 }
 
 export interface VillageEmptySlot {

@@ -55,6 +55,13 @@ export interface VillageSlot {
   roomImageUrl?: string
   roomName?: string
   roomColor?: string
+  // 친구 슬롯 필드
+  isFriend?: boolean
+  friendUserId?: string
+  friendNickname?: string
+  friendProfileImage?: string
+  friendProfileCode?: string
+  friendRoomAssetUrl?: string
 }
 
 export interface VillageResponse {
@@ -77,6 +84,14 @@ export interface UnplacedStore {
   storeCode: string | null
 }
 
+export interface UnplacedFriend {
+  userId: string
+  nickname: string
+  profileImage: string | null
+  profileCode: string | null
+  roomAssetUrl: string | null
+}
+
 // Public API
 export async function getUserVillage(profileCode: string): Promise<VillageResponse> {
   const res = await api.get(`/api/store-rooms/user/${profileCode}`)
@@ -89,8 +104,8 @@ export async function getMyVillage(): Promise<VillageResponse> {
 }
 
 // Village Slot Management API
-export async function placeSlot(adminId: string, slotQ: number, slotR: number): Promise<void> {
-  await api.put('/api/store-rooms/village/place', { adminId, slotQ, slotR })
+export async function placeSlot(slotQ: number, slotR: number, adminId?: string, friendUserId?: string): Promise<void> {
+  await api.put('/api/store-rooms/village/place', { adminId, friendUserId, slotQ, slotR })
 }
 
 export async function swapSlots(fromQ: number, fromR: number, toQ: number, toR: number): Promise<void> {
@@ -103,6 +118,11 @@ export async function removeSlot(slotQ: number, slotR: number): Promise<void> {
 
 export async function getUnplacedStores(): Promise<UnplacedStore[]> {
   const res = await api.get('/api/store-rooms/village/unplaced')
+  return res.data
+}
+
+export async function getUnplacedFriends(): Promise<UnplacedFriend[]> {
+  const res = await api.get('/api/store-rooms/village/unplaced-friends')
   return res.data
 }
 

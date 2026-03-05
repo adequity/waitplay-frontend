@@ -3,68 +3,135 @@
     <div class="store-picker-overlay" @click.self="$emit('close')">
       <div class="store-picker-modal">
         <div class="store-picker-header">
-          <h3>매장 배치</h3>
+          <h3>빌리지 배치</h3>
           <button class="store-picker-close" @click="$emit('close')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
 
+        <!-- 탭 -->
+        <div class="store-picker-tabs">
+          <button
+            class="store-picker-tab"
+            :class="{ active: activeTab === 'store' }"
+            @click="activeTab = 'store'"
+          >매장</button>
+          <button
+            class="store-picker-tab"
+            :class="{ active: activeTab === 'friend' }"
+            @click="activeTab = 'friend'"
+          >친구</button>
+        </div>
+
         <div v-if="isLoading" class="store-picker-loading">
           <div class="store-picker-spinner"></div>
-          <span>매장 목록 불러오는 중...</span>
+          <span>목록 불러오는 중...</span>
         </div>
 
-        <div v-else-if="stores.length === 0" class="store-picker-empty">
-          <p>배치할 수 있는 매장이 없습니다</p>
-          <p class="store-picker-hint">팔로우한 매장 중 아직 빌리지에 배치하지 않은 매장이 여기 표시됩니다</p>
-        </div>
-
-        <div v-else class="store-picker-list">
-          <button
-            v-for="store in stores"
-            :key="store.adminId"
-            class="store-picker-item"
-            @click="$emit('select', store.adminId)"
-          >
-            <div class="store-picker-avatar">
-              <img
-                v-if="store.storeProfileImage"
-                :src="store.storeProfileImage"
-                :alt="store.storeName"
-              />
-              <div v-else class="store-picker-avatar-placeholder">
-                {{ store.storeName.charAt(0) }}
+        <!-- 매장 탭 -->
+        <template v-else-if="activeTab === 'store'">
+          <div v-if="stores.length === 0" class="store-picker-empty">
+            <p>배치할 수 있는 매장이 없습니다</p>
+            <p class="store-picker-hint">팔로우한 매장 중 아직 빌리지에 배치하지 않은 매장이 여기 표시됩니다</p>
+          </div>
+          <div v-else class="store-picker-list">
+            <button
+              v-for="store in stores"
+              :key="store.adminId"
+              class="store-picker-item"
+              @click="$emit('select', { type: 'store', id: store.adminId })"
+            >
+              <div class="store-picker-avatar">
+                <img v-if="store.storeProfileImage" :src="store.storeProfileImage" :alt="store.storeName" />
+                <div v-else class="store-picker-avatar-placeholder store">
+                  {{ store.storeName.charAt(0) }}
+                </div>
               </div>
-            </div>
-            <div class="store-picker-info">
-              <span class="store-picker-name">{{ store.storeName }}</span>
-              <span v-if="store.storeCode" class="store-picker-code">@{{ store.storeCode }}</span>
-            </div>
-          </button>
-        </div>
+              <div class="store-picker-info">
+                <span class="store-picker-name">{{ store.storeName }}</span>
+                <span v-if="store.storeCode" class="store-picker-code">@{{ store.storeCode }}</span>
+              </div>
+            </button>
+          </div>
+        </template>
+
+        <!-- 친구 탭 -->
+        <template v-else-if="activeTab === 'friend'">
+          <div v-if="friends.length === 0" class="store-picker-empty">
+            <p>배치할 수 있는 친구가 없습니다</p>
+            <p class="store-picker-hint">맞팔(서로 팔로우) 상태인 친구 중 아직 배치하지 않은 친구가 여기 표시됩니다</p>
+          </div>
+          <div v-else class="store-picker-list">
+            <button
+              v-for="friend in friends"
+              :key="friend.userId"
+              class="store-picker-item"
+              @click="$emit('select', { type: 'friend', id: friend.userId })"
+            >
+              <div class="store-picker-avatar friend-avatar">
+                <img v-if="friend.profileImage" :src="friend.profileImage" :alt="friend.nickname" />
+                <div v-else class="store-picker-avatar-placeholder friend">
+                  {{ friend.nickname.charAt(0) }}
+                </div>
+              </div>
+              <div class="store-picker-info">
+                <span class="store-picker-name">{{ friend.nickname }}</span>
+                <span v-if="friend.profileCode" class="store-picker-code">@{{ friend.profileCode }}</span>
+              </div>
+              <div v-if="friend.roomAssetUrl" class="store-picker-room-preview">
+                <img :src="friend.roomAssetUrl" alt="room" />
+              </div>
+            </button>
+          </div>
+        </template>
       </div>
     </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getUnplacedStores, type UnplacedStore } from '@/services/storeRoomService'
+import { ref, onMounted, watch } from 'vue'
+import { getUnplacedStores, getUnplacedFriends, type UnplacedStore, type UnplacedFriend } from '@/services/storeRoomService'
 
 defineEmits<{
   close: []
-  select: [adminId: string]
+  select: [selection: { type: 'store' | 'friend'; id: string }]
 }>()
 
+const activeTab = ref<'store' | 'friend'>('store')
 const stores = ref<UnplacedStore[]>([])
+const friends = ref<UnplacedFriend[]>([])
 const isLoading = ref(true)
+const storesLoaded = ref(false)
+const friendsLoaded = ref(false)
 
-onMounted(async () => {
+async function loadStores() {
+  if (storesLoaded.value) return
+  isLoading.value = true
   try {
     stores.value = await getUnplacedStores()
+    storesLoaded.value = true
   } catch { /* silent */ } finally {
     isLoading.value = false
   }
+}
+
+async function loadFriends() {
+  if (friendsLoaded.value) return
+  isLoading.value = true
+  try {
+    friends.value = await getUnplacedFriends()
+    friendsLoaded.value = true
+  } catch { /* silent */ } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => loadStores())
+
+watch(activeTab, (tab) => {
+  if (tab === 'store') loadStores()
+  else loadFriends()
 })
 </script>
 
@@ -102,7 +169,6 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 20px 20px 12px;
-  border-bottom: 1px solid #f0f0f0;
 }
 
 .store-picker-header h3 {
@@ -126,6 +192,32 @@ onMounted(async () => {
 
 .store-picker-close:active {
   background: #f0f0f0;
+}
+
+/* 탭 */
+.store-picker-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.store-picker-tab {
+  flex: 1;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #86868b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.store-picker-tab.active {
+  color: #6366F1;
+  border-bottom-color: #6366F1;
 }
 
 .store-picker-loading {
@@ -200,6 +292,10 @@ onMounted(async () => {
   background: #f0f0f0;
 }
 
+.store-picker-avatar.friend-avatar {
+  border-radius: 50%;
+}
+
 .store-picker-avatar img {
   width: 100%;
   height: 100%;
@@ -215,7 +311,14 @@ onMounted(async () => {
   font-size: 18px;
   font-weight: 700;
   color: #fff;
+}
+
+.store-picker-avatar-placeholder.store {
   background: linear-gradient(135deg, #6366F1, #8B5CF6);
+}
+
+.store-picker-avatar-placeholder.friend {
+  background: linear-gradient(135deg, #10B981, #34D399);
 }
 
 .store-picker-info {
@@ -223,6 +326,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex: 1;
 }
 
 .store-picker-name {
@@ -237,5 +341,20 @@ onMounted(async () => {
 .store-picker-code {
   font-size: 13px;
   color: #86868b;
+}
+
+.store-picker-room-preview {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f5f5f7;
+}
+
+.store-picker-room-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>
