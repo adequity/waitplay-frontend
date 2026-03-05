@@ -358,20 +358,22 @@ export class MiniRoomScene extends Phaser.Scene {
   }
 
   private setupResizeHandler() {
-    this.scale.on('resize', (gameSize: { width: number; height: number }) => {
+    const resizeHandler = (gameSize: { width: number; height: number }) => {
       const newW = gameSize.width
       const newH = gameSize.height
       if (Math.abs(newW - this.lastW) > 1 || Math.abs(newH - this.lastH) > 1) {
         this.cameras.main.setZoom(1)
-        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms, emptySlots: this.emptySlots })
+        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms, emptySlots: this.emptySlots, selectedRoomAssetUrl: this.selectedRoomAssetUrl ?? undefined })
       }
-    })
+    }
+    this.scale.on('resize', resizeHandler)
 
     const orientationHandler = () => {
       setTimeout(() => { this.scale.refresh() }, 300)
     }
     window.addEventListener('orientationchange', orientationHandler)
     this.events.on('shutdown', () => {
+      this.scale.off('resize', resizeHandler)
       window.removeEventListener('orientationchange', orientationHandler)
       this.villageRenderer?.destroy()
       this.villageRenderer = null
