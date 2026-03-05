@@ -76,6 +76,25 @@ export class MiniRoomManager {
     )
   }
 
+  /** Reload village by restarting the scene — preserves WebGL context and texture cache */
+  public reloadVillage(
+    roomData: Record<string, unknown>,
+    villageRooms: VillageStoreRoom[],
+    emptySlots: VillageEmptySlot[],
+    selectedRoomAssetUrl?: string,
+  ): void {
+    if (!this.game) return
+    const scene = this.game.scene.getScene('MiniRoomScene')
+    if (scene) {
+      scene.scene.restart({
+        roomData,
+        villageRooms,
+        emptySlots,
+        selectedRoomAssetUrl,
+      })
+    }
+  }
+
   public destroy(): void {
     if (this.game) {
       this.game.destroy(true)

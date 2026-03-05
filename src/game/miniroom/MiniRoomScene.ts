@@ -35,14 +35,14 @@ export class MiniRoomScene extends Phaser.Scene {
       delete (this as any)._initialRoomData
     }
 
-    if (data?.villageRooms) {
+    if (data?.villageRooms !== undefined) {
       this.villageRooms = data.villageRooms
     } else if ((this as any)._initialVillageRooms) {
       this.villageRooms = (this as any)._initialVillageRooms as VillageStoreRoom[]
       delete (this as any)._initialVillageRooms
     }
 
-    if (data?.emptySlots) {
+    if (data?.emptySlots !== undefined) {
       this.emptySlots = data.emptySlots
     } else if ((this as any)._initialEmptySlots) {
       this.emptySlots = (this as any)._initialEmptySlots as VillageEmptySlot[]

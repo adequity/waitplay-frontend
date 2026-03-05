@@ -979,7 +979,11 @@ async function handleSwap(fromQ: number, fromR: number, toQ: number, toR: number
     cancelMoveMode()
     await loadVillage()
     await reloadMiniroom()
-  } catch { /* silent */ }
+  } catch (err: any) {
+    cancelMoveMode()
+    console.error('handleSwap error:', err)
+    alert(err?.response?.data?.message || '위치 변경에 실패했습니다')
+  }
 }
 
 async function handleStorePlaced(selection: { type: 'store' | 'friend'; id: string }) {
@@ -1012,35 +1016,34 @@ async function handleSlotRemove(slotQ: number, slotR: number) {
 
 async function reloadMiniroom() {
   if (!showRoomFullscreen.value) return
-  try {
-    const { setGapFactorXY } = await import('@/utils/hexGridUtils')
-    setGapFactorXY(village.value?.gapFactorX ?? 1.5, village.value?.gapFactor ?? 1.5)
 
-    const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
-    miniRoomManager.destroy()
-    const container = document.getElementById('miniroom-container')
-    if (container) container.innerHTML = ''
+  const { setGapFactorXY } = await import('@/utils/hexGridUtils')
+  setGapFactorXY(village.value?.gapFactorX ?? 1.5, village.value?.gapFactor ?? 1.5)
 
-    const slots = village.value?.slots || []
-    const villageRooms: VillageStoreRoom[] = slots
-      .filter(s => !s.isEmpty)
-      .map(s => ({
-        id: s.isFriend ? s.friendUserId! : s.adminId!,
-        roomImageUrl: s.roomImageUrl || '',
-        roomName: s.roomName || '',
-        roomColor: s.roomColor || (s.isFriend ? '#10B981' : '#6366F1'),
-        gridQ: s.slotQ,
-        gridR: s.slotR,
-        storeName: s.isFriend ? (s.friendNickname || '친구') : (s.storeName || ''),
-        storeCode: s.storeCode,
-        isFriend: s.isFriend,
-        friendProfileCode: s.friendProfileCode,
-      }))
-    const emptySlots: VillageEmptySlot[] = slots
-      .filter(s => s.isEmpty)
-      .map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
-    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl)
-  } catch { /* silent */ }
+  const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
+
+  const slots = village.value?.slots || []
+  const villageRooms: VillageStoreRoom[] = slots
+    .filter(s => !s.isEmpty)
+    .map(s => ({
+      id: s.isFriend ? s.friendUserId! : s.adminId!,
+      roomImageUrl: s.roomImageUrl || '',
+      roomName: s.roomName || '',
+      roomColor: s.roomColor || (s.isFriend ? '#10B981' : '#6366F1'),
+      gridQ: s.slotQ,
+      gridR: s.slotR,
+      storeName: s.isFriend ? (s.friendNickname || '친구') : (s.storeName || ''),
+      storeCode: s.storeCode,
+      isFriend: s.isFriend,
+      friendProfileCode: s.friendProfileCode,
+    }))
+  const emptySlots: VillageEmptySlot[] = slots
+    .filter(s => s.isEmpty)
+    .map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
+
+  // Use scene restart instead of full game destroy/recreate
+  // This preserves WebGL context and texture cache, allowing unlimited consecutive swaps
+  miniRoomManager.reloadVillage(buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl)
 }
 
 async function loadProfileGuestbook() {
@@ -1327,7 +1330,7 @@ const formatRelativeDate = (dateString: string): string => {
 }
 
 /* ===== Header ===== */
-.page-header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: white; border-bottom: 1px solid #efefef; }
+.page-header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: white; }
 .back-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; border-radius: 50%; cursor: pointer; color: #262626; transition: all 0.2s; }
 .back-btn:hover { background: #f5f5f5; }
 .page-title { font-size: 16px; font-weight: 600; color: #262626; margin: 0; }
