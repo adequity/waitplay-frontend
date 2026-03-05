@@ -9,7 +9,8 @@ export class MiniRoomManager {
     containerId: string,
     roomData?: Record<string, unknown>,
     villageRooms?: VillageStoreRoom[],
-    emptySlots?: VillageEmptySlot[]
+    emptySlots?: VillageEmptySlot[],
+    selectedRoomAssetUrl?: string,
   ): Promise<PhaserTypes.Game> {
     if (this.game) {
       this.destroy()
@@ -30,6 +31,9 @@ export class MiniRoomManager {
     }
     if (emptySlots && emptySlots.length > 0) {
       (sceneInstance as any)._initialEmptySlots = emptySlots
+    }
+    if (selectedRoomAssetUrl) {
+      (sceneInstance as any)._initialSelectedRoomAssetUrl = selectedRoomAssetUrl
     }
 
     const config: PhaserTypes.Types.Core.GameConfig = {

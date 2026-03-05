@@ -88,6 +88,7 @@
         <MasterSettingsManagement v-if="activeTab === 'settings'" />
         <SidebarAdManagement v-if="activeTab === 'sidebar-ads'" />
         <MasterStoreRoomManagement v-if="activeTab === 'store-rooms'" />
+        <MasterRoomAssetManagement v-if="activeTab === 'room-assets'" />
       </div>
     </main>
   </div>
@@ -112,6 +113,7 @@ import MasterCalendarManagement from '@/components/master/MasterCalendarManageme
 import MasterSettingsManagement from '@/components/master/MasterSettingsManagement.vue'
 import SidebarAdManagement from '@/components/SidebarAdManagement.vue'
 import MasterStoreRoomManagement from '@/components/master/MasterStoreRoomManagement.vue'
+import MasterRoomAssetManagement from '@/components/master/MasterRoomAssetManagement.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -146,6 +148,7 @@ const tabs = [
   { id: 'calendar', label: '캘린더 관리', iconName: 'calendar' },
   { id: 'sidebar-ads', label: '사이드 광고', iconName: 'image' },
   { id: 'store-rooms', label: '매장 룸', iconName: 'grid' },
+  { id: 'room-assets', label: '룸 에셋', iconName: 'image' },
   { id: 'settings', label: '설정', iconName: 'settings' }
 ]
 

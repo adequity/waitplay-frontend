@@ -180,6 +180,57 @@
                   : '탭하여 방 구경하기' }}
               </p>
             </div>
+
+            <!-- 내 방 에셋 관리 (본인 프로필만) -->
+            <div v-if="isMyProfile" class="room-asset-section">
+              <div class="room-asset-header">
+                <h4>내 방 꾸미기</h4>
+                <button class="room-asset-toggle" @click="showRoomAssets = !showRoomAssets">
+                  {{ showRoomAssets ? '접기' : '펼치기' }}
+                </button>
+              </div>
+              <div v-if="showRoomAssets" class="room-asset-list">
+                <!-- 완료된 에셋들 -->
+                <div
+                  v-for="asset in completedRoomAssets"
+                  :key="asset.id"
+                  class="room-asset-item"
+                  :class="{ selected: asset.isSelected }"
+                  @click="toggleAssetSelection(asset)"
+                >
+                  <img :src="asset.assetImageUrl!" class="room-asset-thumb" />
+                  <div class="room-asset-info">
+                    <span class="room-asset-name">{{ asset.assetName || '나의 에셋' }}</span>
+                    <span v-if="asset.isSelected" class="room-asset-selected">사용 중</span>
+                  </div>
+                </div>
+
+                <!-- 대기중 에셋 -->
+                <div v-for="asset in pendingRoomAssets" :key="asset.id" class="room-asset-item pending">
+                  <div class="room-asset-pending-icon">⏳</div>
+                  <div class="room-asset-info">
+                    <span class="room-asset-name">에셋 제작 대기중</span>
+                    <span class="room-asset-date">{{ formatAssetDate(asset.createdAt) }}</span>
+                  </div>
+                </div>
+
+                <!-- 새 사진 제출 -->
+                <div class="room-asset-item add-new" @click="triggerPhotoSubmit">
+                  <div class="room-asset-add-icon">+</div>
+                  <div class="room-asset-info">
+                    <span class="room-asset-name">새 공간 사진 제출</span>
+                    <span class="room-asset-date">사진을 제출하면 에셋을 제작해드려요</span>
+                  </div>
+                </div>
+                <input
+                  ref="photoSubmitInput"
+                  type="file"
+                  accept="image/*"
+                  style="display:none"
+                  @change="handlePhotoSubmit"
+                />
+              </div>
+            </div>
           </template>
         </div>
 
@@ -611,7 +662,7 @@ import authService from '@/services/authService'
 import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import notificationService from '@/services/notificationService'
-import { getRoomConfiguration, type RoomConfiguration } from '@/services/roomService'
+import { getRoomConfiguration, type RoomConfiguration, type RoomAsset, getMyRoomAssets, submitRoomPhoto, selectRoomAsset, deselectRoomAsset } from '@/services/roomService'
 import { getUserVillage, placeSlot, removeSlot, swapSlots, type VillageResponse } from '@/services/storeRoomService'
 import type { VillageStoreRoom, VillageEmptySlot } from '@/game/miniroom/VillageConfig'
 import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse, ActivityHeatmapResponse } from '@/services/guestbookService'
@@ -646,6 +697,13 @@ const isRoomLoading = ref(false)
 // Village
 const village = ref<VillageResponse | null>(null)
 const isLoadingVillage = ref(false)
+
+// Room Assets
+const showRoomAssets = ref(false)
+const myRoomAssets = ref<RoomAsset[]>([])
+const completedRoomAssets = computed(() => myRoomAssets.value.filter(a => a.status === 'completed'))
+const pendingRoomAssets = computed(() => myRoomAssets.value.filter(a => a.status === 'pending'))
+const photoSubmitInput = ref<HTMLInputElement | null>(null)
 
 // Store picker modal
 const showStorePicker = ref(false)
@@ -717,6 +775,7 @@ onMounted(async () => {
   }
   if (isMyProfile.value && isAuthenticated.value) {
     loadUnreadCount()
+    loadMyRoomAssets()
   }
   window.addEventListener('miniroom-empty-slot-tap', onEmptySlotTap)
   window.addEventListener('miniroom-store-tap', onStoreTap)
@@ -774,6 +833,58 @@ async function loadRoomConfig() {
   }
 }
 
+// ===== Room Assets =====
+async function loadMyRoomAssets() {
+  try {
+    myRoomAssets.value = await getMyRoomAssets()
+  } catch { /* silent */ }
+}
+
+function formatAssetDate(dateStr: string) {
+  const d = new Date(dateStr)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+function triggerPhotoSubmit() {
+  photoSubmitInput.value?.click()
+}
+
+async function handlePhotoSubmit(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  try {
+    await submitRoomPhoto(file)
+    alert('사진이 제출되었습니다! 에셋 제작이 완료되면 알려드릴게요.')
+    await loadMyRoomAssets()
+  } catch {
+    alert('사진 제출에 실패했습니다.')
+  } finally {
+    input.value = ''
+  }
+}
+
+async function toggleAssetSelection(asset: RoomAsset) {
+  try {
+    if (asset.isSelected) {
+      await deselectRoomAsset()
+    } else {
+      await selectRoomAsset(asset.id)
+    }
+    await loadMyRoomAssets()
+    // 빌리지 다시 불러오기 (중앙 룸 이미지 변경 반영)
+    isLoadingVillage.value = true
+    try {
+      const { getMyVillage } = await import('@/services/storeRoomService')
+      village.value = await getMyVillage()
+    } catch { /* silent */ } finally {
+      isLoadingVillage.value = false
+    }
+  } catch {
+    alert('에셋 선택에 실패했습니다.')
+  }
+}
+
 function buildRoomData() {
   if (!roomConfig.value) return undefined
   return {
@@ -821,7 +932,7 @@ async function openRoomFullscreen() {
     const emptySlots: VillageEmptySlot[] = slots
       .filter(s => s.isEmpty)
       .map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
-    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots)
+    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl)
   } catch {
     isRoomLoading.value = false
     window.removeEventListener('miniroom-ready', onReady)
@@ -973,7 +1084,7 @@ async function reloadMiniroom() {
     const emptySlots: VillageEmptySlot[] = slots
       .filter(s => s.isEmpty)
       .map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
-    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots)
+    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl)
   } catch { /* silent */ }
 }
 
@@ -1536,6 +1647,27 @@ const formatRelativeDate = (dateString: string): string => {
 .room-preview-subtitle { font-size: 0.8125rem; color: #8e8e8e; margin: 0 0 1.25rem; }
 .room-enter-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.625rem 1.5rem; background: #262626; color: white; border: none; border-radius: 10px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .room-enter-btn:hover { background: #363636; }
+
+/* ===== Room Asset Section ===== */
+.room-asset-section { margin-top: 1rem; background: white; border-radius: 16px; border: 1px solid #efefef; overflow: hidden; }
+.room-asset-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; }
+.room-asset-header h4 { margin: 0; font-size: 15px; font-weight: 700; color: #262626; }
+.room-asset-toggle { background: none; border: none; color: #6366F1; font-size: 13px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.room-asset-toggle:hover { background: #f0f0ff; }
+.room-asset-list { border-top: 1px solid #f0f0f2; }
+.room-asset-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid #f8f8f8; }
+.room-asset-item:last-child { border-bottom: none; }
+.room-asset-item:hover { background: #fafafa; }
+.room-asset-item.selected { background: #f0f0ff; }
+.room-asset-item.pending { cursor: default; opacity: 0.7; }
+.room-asset-item.add-new { cursor: pointer; }
+.room-asset-thumb { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: #f5f5f7; }
+.room-asset-pending-icon { width: 52px; height: 52px; border-radius: 10px; background: #fff3e0; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.room-asset-add-icon { width: 52px; height: 52px; border-radius: 10px; background: #f0f0ff; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 300; color: #6366F1; }
+.room-asset-info { display: flex; flex-direction: column; gap: 2px; }
+.room-asset-name { font-size: 14px; font-weight: 600; color: #262626; }
+.room-asset-date { font-size: 12px; color: #8e8e8e; }
+.room-asset-selected { font-size: 11px; font-weight: 700; color: #6366F1; }
 
 /* ===== MiniRoom Fullscreen Overlay ===== */
 .miniroom-fullscreen { position: fixed; inset: 0; z-index: 9999; background: #F0EDE8; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }

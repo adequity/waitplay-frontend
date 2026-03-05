@@ -67,6 +67,7 @@ export interface VillageResponse {
   slots: VillageSlot[]
   gapFactor: number
   gapFactorX: number
+  selectedRoomAssetUrl?: string
 }
 
 export interface UnplacedStore {

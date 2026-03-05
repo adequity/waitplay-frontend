@@ -12,6 +12,7 @@ export class MiniRoomScene extends Phaser.Scene {
   private roomData: RoomData = DEFAULT_ROOM
   private villageRooms: VillageStoreRoom[] = []
   private emptySlots: VillageEmptySlot[] = []
+  private selectedRoomAssetUrl: string | null = null
   private lastW = 0
   private lastH = 0
 
@@ -26,7 +27,7 @@ export class MiniRoomScene extends Phaser.Scene {
     super({ key: 'MiniRoomScene' })
   }
 
-  init(data?: { roomData?: RoomData; villageRooms?: VillageStoreRoom[]; emptySlots?: VillageEmptySlot[] }) {
+  init(data?: { roomData?: RoomData; villageRooms?: VillageStoreRoom[]; emptySlots?: VillageEmptySlot[]; selectedRoomAssetUrl?: string }) {
     if (data?.roomData) {
       this.roomData = data.roomData
     } else if ((this as any)._initialRoomData) {
@@ -47,9 +48,23 @@ export class MiniRoomScene extends Phaser.Scene {
       this.emptySlots = (this as any)._initialEmptySlots as VillageEmptySlot[]
       delete (this as any)._initialEmptySlots
     }
+
+    if (data?.selectedRoomAssetUrl) {
+      this.selectedRoomAssetUrl = data.selectedRoomAssetUrl
+    } else if ((this as any)._initialSelectedRoomAssetUrl) {
+      this.selectedRoomAssetUrl = (this as any)._initialSelectedRoomAssetUrl as string
+      delete (this as any)._initialSelectedRoomAssetUrl
+    }
   }
 
   preload() {
+    // If user has a selected room asset, load that instead of the preset theme
+    if (this.selectedRoomAssetUrl) {
+      if (!this.textures.exists('user_room_asset')) {
+        this.load.image('user_room_asset', this.selectedRoomAssetUrl)
+      }
+    }
+
     const roomTheme = this.roomData.wallTheme || 'default'
     const roomKey = `room_${roomTheme}`
     if (!this.textures.exists(roomKey)) {
@@ -144,7 +159,9 @@ export class MiniRoomScene extends Phaser.Scene {
     const cx = centerX ?? W / 2
     const cy = centerY ?? H / 2
 
-    const roomKey = `room_${this.roomData.wallTheme || 'default'}`
+    // Use user's selected room asset if available, otherwise fall back to preset theme
+    const userAssetKey = this.selectedRoomAssetUrl && this.textures.exists('user_room_asset') ? 'user_room_asset' : null
+    const roomKey = userAssetKey || `room_${this.roomData.wallTheme || 'default'}`
     if (this.textures.exists(roomKey)) {
       const roomBg = this.add.image(cx, cy, roomKey)
       const tex = this.textures.get(roomKey).getSourceImage()
