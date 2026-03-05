@@ -392,47 +392,47 @@
 
         <!-- ===== 탭3: 방꾸미기 ===== -->
         <div v-else-if="activeTab === 'decorate'" class="decorate-tab">
-          <div class="room-asset-list">
+          <div class="asset-grid">
             <!-- 완료된 에셋들 -->
             <div
               v-for="asset in completedRoomAssets"
               :key="asset.id"
-              class="room-asset-item"
+              class="asset-card"
               :class="{ selected: asset.isSelected }"
               @click="toggleAssetSelection(asset)"
             >
-              <img :src="asset.assetImageUrl!" class="room-asset-thumb" />
-              <div class="room-asset-info">
-                <span class="room-asset-name">{{ asset.assetName || '나의 에셋' }}</span>
-                <span v-if="asset.isSelected" class="room-asset-selected">사용 중</span>
+              <div class="asset-card-img">
+                <img :src="asset.assetImageUrl!" alt="" />
+                <span v-if="asset.isSelected" class="asset-badge">사용 중</span>
               </div>
+              <span class="asset-card-name">{{ asset.assetName || '나의 에셋' }}</span>
             </div>
 
             <!-- 대기중 에셋 -->
-            <div v-for="asset in pendingRoomAssets" :key="asset.id" class="room-asset-item pending">
-              <div class="room-asset-pending-icon">⏳</div>
-              <div class="room-asset-info">
-                <span class="room-asset-name">관리자가 방을 꾸미고 있어요</span>
-                <span class="room-asset-date">{{ formatAssetDate(asset.createdAt) }}</span>
+            <div v-for="asset in pendingRoomAssets" :key="asset.id" class="asset-card pending">
+              <div class="asset-card-img placeholder">
+                <span class="pending-emoji">⏳</span>
               </div>
+              <span class="asset-card-name">제작 중</span>
             </div>
 
             <!-- 새 사진 제출 -->
-            <div class="room-asset-item add-new" @click="triggerPhotoSubmit">
-              <div class="room-asset-add-icon">+</div>
-              <div class="room-asset-info">
-                <span class="room-asset-name">새 공간 사진 제출</span>
-                <span class="room-asset-date">사진을 제출하면 에셋을 제작해드려요</span>
+            <div class="asset-card add-new" @click="triggerPhotoSubmit">
+              <div class="asset-card-img placeholder add">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.5">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
               </div>
+              <span class="asset-card-name">사진 제출</span>
             </div>
-            <input
-              ref="photoSubmitInput"
-              type="file"
-              accept="image/*"
-              style="display:none"
-              @change="handlePhotoSubmit"
-            />
           </div>
+          <input
+            ref="photoSubmitInput"
+            type="file"
+            accept="image/*"
+            style="display:none"
+            @change="handlePhotoSubmit"
+          />
         </div>
 
         <!-- ===== 탭4: 알림 (기존) ===== -->
@@ -1422,7 +1422,19 @@ const formatRelativeDate = (dateString: string): string => {
 .album-visit-count { font-size: 11px; color: #8e8e8e; }
 
 /* ===== Decorate Tab ===== */
-.decorate-tab { padding: 1rem; }
+.decorate-tab { padding: 0.75rem; }
+.asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.asset-card { display: flex; flex-direction: column; gap: 8px; cursor: pointer; border-radius: 16px; padding: 6px; transition: transform 0.15s, box-shadow 0.15s; }
+.asset-card:active { transform: scale(0.97); }
+.asset-card.selected { background: #f0f0ff; box-shadow: 0 0 0 2px #6366F1; border-radius: 16px; }
+.asset-card.pending { cursor: default; opacity: 0.65; }
+.asset-card-img { position: relative; width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #f5f5f7; }
+.asset-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.asset-card-img.placeholder { display: flex; align-items: center; justify-content: center; }
+.asset-card-img.placeholder.add { border: 2px dashed #d1d5db; background: #fafafe; }
+.pending-emoji { font-size: 2rem; }
+.asset-badge { position: absolute; top: 8px; right: 8px; background: #6366F1; color: white; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; }
+.asset-card-name { font-size: 13px; font-weight: 600; color: #262626; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ===== Notifications ===== */
 .notifications-tab { background: white; }
@@ -1525,25 +1537,6 @@ const formatRelativeDate = (dateString: string): string => {
 .room-enter-btn:hover { background: #363636; }
 
 /* ===== Room Asset Section ===== */
-.room-asset-section { margin-top: 1rem; background: white; border-radius: 16px; border: 1px solid #efefef; overflow: hidden; }
-.room-asset-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; }
-.room-asset-header h4 { margin: 0; font-size: 15px; font-weight: 700; color: #262626; }
-.room-asset-toggle { background: none; border: none; color: #6366F1; font-size: 13px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
-.room-asset-toggle:hover { background: #f0f0ff; }
-.room-asset-list { border-top: 1px solid #f0f0f2; }
-.room-asset-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid #f8f8f8; }
-.room-asset-item:last-child { border-bottom: none; }
-.room-asset-item:hover { background: #fafafa; }
-.room-asset-item.selected { background: #f0f0ff; }
-.room-asset-item.pending { cursor: default; opacity: 0.7; }
-.room-asset-item.add-new { cursor: pointer; }
-.room-asset-thumb { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: #f5f5f7; }
-.room-asset-pending-icon { width: 52px; height: 52px; border-radius: 10px; background: #fff3e0; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-.room-asset-add-icon { width: 52px; height: 52px; border-radius: 10px; background: #f0f0ff; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 300; color: #6366F1; }
-.room-asset-info { display: flex; flex-direction: column; gap: 2px; }
-.room-asset-name { font-size: 14px; font-weight: 600; color: #262626; }
-.room-asset-date { font-size: 12px; color: #8e8e8e; }
-.room-asset-selected { font-size: 11px; font-weight: 700; color: #6366F1; }
 
 /* ===== MiniRoom Fullscreen Overlay ===== */
 .miniroom-fullscreen { position: fixed; inset: 0; z-index: 9999; background: #F0EDE8; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
