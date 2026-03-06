@@ -1760,20 +1760,20 @@ const formatRelativeDate = (dateString: string): string => {
 .miniroom-fullscreen { position: fixed; inset: 0; z-index: 9999; background: #ffffff; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .miniroom-canvas-container { width: 100%; height: 100%; touch-action: none; -webkit-touch-callout: none; }
 .miniroom-canvas-container :deep(canvas) { touch-action: none; }
-.miniroom-close-btn { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; z-index: 10; }
+.miniroom-close-btn { position: absolute; top: 16px; right: 16px; width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; z-index: 100; pointer-events: auto; }
 .miniroom-close-btn:hover { background: rgba(0,0,0,0.6); }
 .miniroom-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #ffffff; z-index: 5; color: #8B7E74; font-size: 14px; }
 .miniroom-loading-spinner { width: 32px; height: 32px; border: 3px solid #D8CFC4; border-top-color: #8B7E74; border-radius: 50%; animation: miniroom-spin 0.8s linear infinite; }
 @keyframes miniroom-spin { to { transform: rotate(360deg); } }
-.miniroom-owner-label { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 10; white-space: nowrap; }
+.miniroom-owner-label { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 100; white-space: nowrap; pointer-events: auto; }
 /* Visitor floating dock */
-.miniroom-visitor-dock { position: absolute; top: 16px; left: 16px; display: flex; align-items: center; gap: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 16px; padding: 6px 14px; z-index: 10; }
+.miniroom-visitor-dock { position: absolute; top: 16px; left: 16px; display: flex; align-items: center; gap: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 16px; padding: 6px 14px; z-index: 100; pointer-events: auto; }
 .visitor-dock-item { display: flex; flex-direction: column; align-items: center; gap: 1px; }
 .visitor-dock-label { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.6); letter-spacing: 0.5px; line-height: 1; }
 .visitor-dock-value { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .visitor-dock-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.2); margin: 0 10px; }
 /* Guestbook/notification FAB */
-.miniroom-guestbook-fab { position: absolute; bottom: 20px; right: 20px; width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: background 0.2s, transform 0.15s; }
+.miniroom-guestbook-fab { position: absolute; bottom: 20px; right: 20px; width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; pointer-events: auto; transition: background 0.2s, transform 0.15s; }
 .miniroom-guestbook-fab:active { transform: scale(0.9); }
 .miniroom-notif-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; background: #ed4956; color: #fff; font-size: 11px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; line-height: 1; box-shadow: 0 2px 8px rgba(237,73,86,0.5); }
 .bounce-badge { animation: badge-bounce 2s ease-in-out infinite; }
