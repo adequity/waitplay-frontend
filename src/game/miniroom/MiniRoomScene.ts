@@ -2,7 +2,7 @@ import type { RoomData, FurnitureType } from './RoomConfig'
 import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
 import type { VillageStoreRoom, VillageEmptySlot } from './VillageConfig'
-import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, VILLAGE_THEMES, VILLAGE_THEME_IMAGES, isImageTheme, calcHexSize, calcVillageZoom } from './VillageConfig'
+import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, isImageTheme, getImageThemeData, getColorThemeValue, calcHexSize, calcVillageZoom } from './VillageConfig'
 import { VillageRenderer, CUBE_SIZE_RATIO } from './VillageRenderer'
 import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
 
@@ -74,11 +74,9 @@ export class MiniRoomScene extends Phaser.Scene {
     }
 
     // Load village theme background image if applicable
-    if (isImageTheme(this.villageTheme)) {
-      const themeImg = VILLAGE_THEME_IMAGES[this.villageTheme]
-      if (themeImg && !this.textures.exists('village_theme_bg')) {
-        this.load.image('village_theme_bg', themeImg.imageUrl)
-      }
+    const themeImgData = getImageThemeData(this.villageTheme)
+    if (themeImgData && !this.textures.exists('village_theme_bg')) {
+      this.load.image('village_theme_bg', themeImgData.imageUrl)
     }
 
     const roomTheme = this.roomData.wallTheme || 'default'
@@ -153,7 +151,7 @@ export class MiniRoomScene extends Phaser.Scene {
       bgImg.setScale(scale)
       bgImg.setDepth(-200)
     } else {
-      const bgColor = VILLAGE_THEMES[this.villageTheme] ?? VILLAGE_BG_COLOR
+      const bgColor = getColorThemeValue(this.villageTheme)
       const bg = this.add.graphics()
       bg.fillStyle(bgColor, 1)
       bg.fillRect(0, 0, worldW, worldH)

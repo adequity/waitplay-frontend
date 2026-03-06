@@ -656,6 +656,8 @@ import notificationService from '@/services/notificationService'
 import { getRoomConfiguration, updateRoomConfiguration, type RoomConfiguration, type RoomAsset, getMyRoomAssets, submitRoomPhoto, selectRoomAsset, deselectRoomAsset } from '@/services/roomService'
 import { getUserVillage, placeSlot, removeSlot, swapSlots, type VillageResponse } from '@/services/storeRoomService'
 import type { VillageStoreRoom, VillageEmptySlot } from '@/game/miniroom/VillageConfig'
+import { setDynamicThemes } from '@/game/miniroom/VillageConfig'
+import { getActiveVillageThemes } from '@/services/villageThemeService'
 import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse } from '@/services/guestbookService'
 import type { NotificationItem } from '@/services/notificationService'
 import { getCardBg } from '@/constants/guestbookColors'
@@ -696,8 +698,9 @@ const completedRoomAssets = computed(() => myRoomAssets.value.filter(a => a.stat
 const pendingRoomAssets = computed(() => myRoomAssets.value.filter(a => a.status === 'pending'))
 const photoSubmitInput = ref<HTMLInputElement | null>(null)
 
-// Village theme
-const VILLAGE_THEME_OPTIONS: { key: string; label: string; type: 'color' | 'image'; color?: string; thumbnail?: string; bgColor?: string }[] = [
+// Village theme (loaded from API, fallback to hardcoded)
+type ThemeOption = { key: string; label: string; type: 'color' | 'image'; color?: string; thumbnail?: string; bgColor?: string }
+const FALLBACK_THEME_OPTIONS: ThemeOption[] = [
   { key: 'white', label: '화이트', type: 'color', color: '#FFFFFF' },
   { key: 'cream', label: '크림', type: 'color', color: '#FFF8F0' },
   { key: 'sky', label: '하늘', type: 'color', color: '#E8F4FD' },
@@ -706,20 +709,39 @@ const VILLAGE_THEME_OPTIONS: { key: string; label: string; type: 'color' | 'imag
   { key: 'peach', label: '피치', type: 'color', color: '#FFF0E8' },
   { key: 'gray', label: '그레이', type: 'color', color: '#F0F0F0' },
   { key: 'dark', label: '다크', type: 'color', color: '#2C2C2C' },
-  // Image themes
   { key: 'tema1', label: '시티', type: 'image', thumbnail: '/assets/village-themes/tema1.png', bgColor: '#87CEEB' },
 ]
-const colorThemes = VILLAGE_THEME_OPTIONS.filter(t => t.type === 'color')
-const imageThemes = VILLAGE_THEME_OPTIONS.filter(t => t.type === 'image')
+const villageThemeOptions = ref<ThemeOption[]>(FALLBACK_THEME_OPTIONS)
+const colorThemes = computed(() => villageThemeOptions.value.filter(t => t.type === 'color'))
+const imageThemes = computed(() => villageThemeOptions.value.filter(t => t.type === 'image'))
 const selectedVillageTheme = ref('white')
 const isSavingTheme = ref(false)
 const villageThemeBgColor = computed(() => {
   const theme = village.value?.villageTheme || selectedVillageTheme.value
-  const opt = VILLAGE_THEME_OPTIONS.find(t => t.key === theme)
+  const opt = villageThemeOptions.value.find(t => t.key === theme)
   if (!opt) return '#FFFFFF'
   if (opt.type === 'image') return opt.bgColor || '#FFFFFF'
   return opt.color || '#FFFFFF'
 })
+
+async function loadVillageThemes() {
+  try {
+    const themes = await getActiveVillageThemes()
+    if (themes.length > 0) {
+      setDynamicThemes(themes)
+      villageThemeOptions.value = themes.map(t => ({
+        key: t.themeKey,
+        label: t.displayName,
+        type: t.themeType,
+        color: t.colorValue || undefined,
+        thumbnail: t.imageUrl || undefined,
+        bgColor: t.bgColor || undefined,
+      }))
+    }
+  } catch {
+    // API 실패 시 fallback 유지
+  }
+}
 
 // Store picker modal
 const showStorePicker = ref(false)
@@ -780,6 +802,7 @@ const isMyProfile = computed(() => {
 })
 
 onMounted(async () => {
+  loadVillageThemes()
   await loadProfile()
   if (profile.value) {
     loadRoomConfig()

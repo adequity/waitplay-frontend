@@ -29,6 +29,8 @@ export const VILLAGE_DETAIL_ZOOM = 1.2
 // White background (default)
 export const VILLAGE_BG_COLOR = 0xFFFFFF
 
+// ========== Fallback: Hardcoded theme presets (used if API unavailable) ==========
+
 // Village theme presets (color)
 export const VILLAGE_THEMES: Record<string, number> = {
   white: 0xFFFFFF,
@@ -56,14 +58,73 @@ export const VILLAGE_THEME_IMAGES: Record<string, VillageImageTheme> = {
   },
 }
 
+// ========== Dynamic theme data (loaded from API) ==========
+
+export interface VillageThemeDynamic {
+  themeKey: string
+  displayName: string
+  themeType: 'color' | 'image'
+  colorValue: string | null
+  imageUrl: string | null
+  bgColor: string | null
+}
+
+let _dynamicThemes: VillageThemeDynamic[] | null = null
+
+export function setDynamicThemes(themes: VillageThemeDynamic[]) {
+  _dynamicThemes = themes
+}
+
+export function getDynamicThemes(): VillageThemeDynamic[] | null {
+  return _dynamicThemes
+}
+
+// ========== Theme helper functions (dynamic → fallback) ==========
+
 export function isImageTheme(key: string): boolean {
+  if (_dynamicThemes) {
+    return _dynamicThemes.some(t => t.themeKey === key && t.themeType === 'image')
+  }
   return key in VILLAGE_THEME_IMAGES
 }
 
 export function getThemeBgColorCss(key: string): string {
+  if (_dynamicThemes) {
+    const dt = _dynamicThemes.find(t => t.themeKey === key)
+    if (dt) {
+      if (dt.themeType === 'image') return dt.bgColor || '#FFFFFF'
+      return dt.colorValue || '#FFFFFF'
+    }
+  }
+  // Fallback
   if (VILLAGE_THEME_IMAGES[key]) return VILLAGE_THEME_IMAGES[key].bgColorCss
   const hex = VILLAGE_THEMES[key] ?? VILLAGE_BG_COLOR
   return '#' + hex.toString(16).padStart(6, '0')
+}
+
+/** Get image theme data — dynamic first, fallback to hardcoded */
+export function getImageThemeData(key: string): VillageImageTheme | null {
+  if (_dynamicThemes) {
+    const dt = _dynamicThemes.find(t => t.themeKey === key && t.themeType === 'image')
+    if (dt && dt.imageUrl) {
+      const bgHex = dt.bgColor || '#87CEEB'
+      return {
+        imageUrl: dt.imageUrl,
+        bgColor: parseInt(bgHex.replace('#', ''), 16),
+        bgColorCss: bgHex,
+      }
+    }
+  }
+  return VILLAGE_THEME_IMAGES[key] || null
+}
+
+/** Get color theme value as Phaser hex number — dynamic first, fallback to hardcoded */
+export function getColorThemeValue(key: string): number {
+  if (_dynamicThemes) {
+    const dt = _dynamicThemes.find(t => t.themeKey === key && t.themeType === 'color')
+    if (dt?.colorValue) return parseInt(dt.colorValue.replace('#', ''), 16)
+  }
+  return VILLAGE_THEMES[key] ?? VILLAGE_BG_COLOR
 }
 
 // Label styles

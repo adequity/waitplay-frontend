@@ -90,6 +90,7 @@
         <MasterVillageAdManagement v-if="activeTab === 'village-ads'" />
         <MasterStoreRoomManagement v-if="activeTab === 'store-rooms'" />
         <MasterRoomAssetManagement v-if="activeTab === 'room-assets'" />
+        <MasterVillageThemeManagement v-if="activeTab === 'village-themes'" />
       </div>
     </main>
   </div>
@@ -116,6 +117,7 @@ import SidebarAdManagement from '@/components/SidebarAdManagement.vue'
 import MasterVillageAdManagement from '@/components/master/MasterVillageAdManagement.vue'
 import MasterStoreRoomManagement from '@/components/master/MasterStoreRoomManagement.vue'
 import MasterRoomAssetManagement from '@/components/master/MasterRoomAssetManagement.vue'
+import MasterVillageThemeManagement from '@/components/master/MasterVillageThemeManagement.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -152,6 +154,7 @@ const tabs = [
   { id: 'village-ads', label: '빌리지 광고', iconName: 'image' },
   { id: 'store-rooms', label: '매장 룸', iconName: 'grid' },
   { id: 'room-assets', label: '룸 에셋', iconName: 'image' },
+  { id: 'village-themes', label: '빌리지 테마', iconName: 'image' },
   { id: 'settings', label: '설정', iconName: 'settings' }
 ]
 
