@@ -2,7 +2,7 @@ import type { RoomData, FurnitureType } from './RoomConfig'
 import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
 import type { VillageStoreRoom, VillageEmptySlot } from './VillageConfig'
-import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, VILLAGE_THEMES, calcHexSize, calcVillageZoom } from './VillageConfig'
+import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, VILLAGE_THEMES, VILLAGE_THEME_IMAGES, isImageTheme, calcHexSize, calcVillageZoom } from './VillageConfig'
 import { VillageRenderer, CUBE_SIZE_RATIO } from './VillageRenderer'
 import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
 
@@ -73,6 +73,14 @@ export class MiniRoomScene extends Phaser.Scene {
       }
     }
 
+    // Load village theme background image if applicable
+    if (isImageTheme(this.villageTheme)) {
+      const themeImg = VILLAGE_THEME_IMAGES[this.villageTheme]
+      if (themeImg && !this.textures.exists('village_theme_bg')) {
+        this.load.image('village_theme_bg', themeImg.imageUrl)
+      }
+    }
+
     const roomTheme = this.roomData.wallTheme || 'default'
     const roomKey = `room_${roomTheme}`
     if (!this.textures.exists(roomKey)) {
@@ -137,12 +145,20 @@ export class MiniRoomScene extends Phaser.Scene {
     const cam = this.cameras.main
     cam.setBounds(0, 0, worldW, worldH)
 
-    // Themed background
-    const bgColor = VILLAGE_THEMES[this.villageTheme] ?? VILLAGE_BG_COLOR
-    const bg = this.add.graphics()
-    bg.fillStyle(bgColor, 1)
-    bg.fillRect(0, 0, worldW, worldH)
-    bg.setDepth(-200)
+    // Themed background — image or color
+    if (isImageTheme(this.villageTheme) && this.textures.exists('village_theme_bg')) {
+      const bgImg = this.add.image(worldW / 2, worldH / 2, 'village_theme_bg')
+      const tex = this.textures.get('village_theme_bg').getSourceImage()
+      const scale = Math.max(worldW / tex.width, worldH / tex.height)
+      bgImg.setScale(scale)
+      bgImg.setDepth(-200)
+    } else {
+      const bgColor = VILLAGE_THEMES[this.villageTheme] ?? VILLAGE_BG_COLOR
+      const bg = this.add.graphics()
+      bg.fillStyle(bgColor, 1)
+      bg.fillRect(0, 0, worldW, worldH)
+      bg.setDepth(-200)
+    }
 
     // Render center room (user's own room)
     this.renderRoom(this.worldCX, this.worldCY, hexSize)
@@ -387,7 +403,7 @@ export class MiniRoomScene extends Phaser.Scene {
       const newH = gameSize.height
       if (Math.abs(newW - this.lastW) > 1 || Math.abs(newH - this.lastH) > 1) {
         this.cameras.main.setZoom(1)
-        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms, emptySlots: this.emptySlots, selectedRoomAssetUrl: this.selectedRoomAssetUrl ?? undefined })
+        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms, emptySlots: this.emptySlots, selectedRoomAssetUrl: this.selectedRoomAssetUrl ?? undefined, villageTheme: this.villageTheme })
       }
     }
     this.scale.on('resize', resizeHandler)
@@ -411,7 +427,7 @@ export class MiniRoomScene extends Phaser.Scene {
       const detail = (e as CustomEvent).detail
       if (detail?.roomData) {
         this.roomData = detail.roomData
-        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms, emptySlots: this.emptySlots })
+        this.scene.restart({ roomData: this.roomData, villageRooms: this.villageRooms, emptySlots: this.emptySlots, villageTheme: this.villageTheme })
       }
     }
     window.addEventListener('miniroom-update', updateHandler)

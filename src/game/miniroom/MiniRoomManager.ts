@@ -1,6 +1,6 @@
 import type * as PhaserTypes from 'phaser'
 import type { VillageStoreRoom, VillageEmptySlot } from './VillageConfig'
-import { VILLAGE_THEMES } from './VillageConfig'
+import { getThemeBgColorCss } from './VillageConfig'
 
 export class MiniRoomManager {
   private game: PhaserTypes.Game | null = null
@@ -42,9 +42,7 @@ export class MiniRoomManager {
     }
 
     // Convert theme to hex color string for Phaser game config
-    const themeColor = villageTheme && VILLAGE_THEMES[villageTheme]
-      ? '#' + VILLAGE_THEMES[villageTheme].toString(16).padStart(6, '0')
-      : '#FFFFFF'
+    const themeColor = villageTheme ? getThemeBgColorCss(villageTheme) : '#FFFFFF'
 
     const config: PhaserTypes.Types.Core.GameConfig = {
       type: this.Phaser.AUTO,

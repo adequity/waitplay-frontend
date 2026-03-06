@@ -397,7 +397,7 @@
             <h3 class="theme-section-title">빌리지 테마</h3>
             <div class="theme-swatches">
               <button
-                v-for="t in VILLAGE_THEME_OPTIONS"
+                v-for="t in colorThemes"
                 :key="t.key"
                 class="theme-swatch"
                 :class="{ active: selectedVillageTheme === t.key }"
@@ -406,6 +406,20 @@
                 @click="selectVillageTheme(t.key)"
               >
                 <svg v-if="selectedVillageTheme === t.key" width="16" height="16" viewBox="0 0 24 24" fill="none" :stroke="t.key === 'dark' ? '#fff' : '#333'" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              </button>
+            </div>
+            <div v-if="imageThemes.length" class="theme-images">
+              <button
+                v-for="t in imageThemes"
+                :key="t.key"
+                class="theme-image-btn"
+                :class="{ active: selectedVillageTheme === t.key }"
+                :disabled="isSavingTheme"
+                @click="selectVillageTheme(t.key)"
+              >
+                <img :src="t.thumbnail" :alt="t.label" class="theme-image-preview" loading="lazy" />
+                <span class="theme-image-label">{{ t.label }}</span>
+                <svg v-if="selectedVillageTheme === t.key" class="theme-image-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
               </button>
             </div>
           </div>
@@ -683,22 +697,28 @@ const pendingRoomAssets = computed(() => myRoomAssets.value.filter(a => a.status
 const photoSubmitInput = ref<HTMLInputElement | null>(null)
 
 // Village theme
-const VILLAGE_THEME_OPTIONS = [
-  { key: 'white', label: '화이트', color: '#FFFFFF' },
-  { key: 'cream', label: '크림', color: '#FFF8F0' },
-  { key: 'sky', label: '하늘', color: '#E8F4FD' },
-  { key: 'mint', label: '민트', color: '#E8F5E8' },
-  { key: 'lavender', label: '라벤더', color: '#F0E8F5' },
-  { key: 'peach', label: '피치', color: '#FFF0E8' },
-  { key: 'gray', label: '그레이', color: '#F0F0F0' },
-  { key: 'dark', label: '다크', color: '#2C2C2C' },
+const VILLAGE_THEME_OPTIONS: { key: string; label: string; type: 'color' | 'image'; color?: string; thumbnail?: string; bgColor?: string }[] = [
+  { key: 'white', label: '화이트', type: 'color', color: '#FFFFFF' },
+  { key: 'cream', label: '크림', type: 'color', color: '#FFF8F0' },
+  { key: 'sky', label: '하늘', type: 'color', color: '#E8F4FD' },
+  { key: 'mint', label: '민트', type: 'color', color: '#E8F5E8' },
+  { key: 'lavender', label: '라벤더', type: 'color', color: '#F0E8F5' },
+  { key: 'peach', label: '피치', type: 'color', color: '#FFF0E8' },
+  { key: 'gray', label: '그레이', type: 'color', color: '#F0F0F0' },
+  { key: 'dark', label: '다크', type: 'color', color: '#2C2C2C' },
+  // Image themes
+  { key: 'tema1', label: '시티', type: 'image', thumbnail: '/assets/village-themes/tema1.png', bgColor: '#87CEEB' },
 ]
+const colorThemes = VILLAGE_THEME_OPTIONS.filter(t => t.type === 'color')
+const imageThemes = VILLAGE_THEME_OPTIONS.filter(t => t.type === 'image')
 const selectedVillageTheme = ref('white')
 const isSavingTheme = ref(false)
 const villageThemeBgColor = computed(() => {
   const theme = village.value?.villageTheme || selectedVillageTheme.value
   const opt = VILLAGE_THEME_OPTIONS.find(t => t.key === theme)
-  return opt?.color || '#FFFFFF'
+  if (!opt) return '#FFFFFF'
+  if (opt.type === 'image') return opt.bgColor || '#FFFFFF'
+  return opt.color || '#FFFFFF'
 })
 
 // Store picker modal
@@ -851,6 +871,27 @@ async function selectVillageTheme(themeKey: string) {
     }
   } catch { /* ignore */ }
   isSavingTheme.value = false
+}
+
+// Reload village scene with current theme (called after theme change when fullscreen is open)
+async function reloadVillageWithTheme() {
+  if (!showRoomFullscreen.value || !village.value) return
+  const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
+  const slots = village.value.slots || []
+  const villageRooms: VillageStoreRoom[] = slots
+    .filter(s => !s.isEmpty)
+    .map(s => ({
+      id: s.adminId || s.friendUserId || '',
+      roomImageUrl: s.isFriend ? (s.friendRoomAssetUrl || '') : (s.roomImageUrl || ''),
+      roomName: s.roomName || '',
+      roomColor: s.roomColor || (s.isAd ? '#FF6B35' : s.isFriend ? '#10B981' : '#6366F1'),
+      gridQ: s.slotQ, gridR: s.slotR,
+      storeName: s.isFriend ? (s.friendNickname || '친구') : (s.storeName || ''),
+      storeCode: s.storeCode, isFriend: s.isFriend, friendProfileCode: s.friendProfileCode,
+      isAd: s.isAd, adId: s.adId, adLinkType: s.adLinkType, adLinkUrl: s.adLinkUrl, adStoreCode: s.adStoreCode,
+    }))
+  const emptySlots: VillageEmptySlot[] = slots.filter(s => s.isEmpty).map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
+  miniRoomManager.reloadVillage(buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl, village.value?.villageTheme)
 }
 
 function triggerPhotoSubmit() {
@@ -1562,6 +1603,14 @@ const formatRelativeDate = (dateString: string): string => {
 .theme-swatch:active { transform: scale(0.92); }
 .theme-swatch.active { border-color: #6366F1; box-shadow: 0 0 0 2px #6366F1; }
 .theme-swatch:disabled { opacity: 0.5; cursor: default; }
+.theme-images { display: flex; gap: 10px; overflow-x: auto; padding: 8px 0; -webkit-overflow-scrolling: touch; }
+.theme-image-btn { position: relative; width: 72px; flex-shrink: 0; border: 2px solid #e0e0e0; border-radius: 12px; overflow: hidden; cursor: pointer; background: #f5f5f5; padding: 0; transition: transform 0.15s, box-shadow 0.15s; }
+.theme-image-btn:active { transform: scale(0.95); }
+.theme-image-btn.active { border-color: #6366F1; box-shadow: 0 0 0 2px #6366F1; }
+.theme-image-btn:disabled { opacity: 0.5; cursor: default; }
+.theme-image-preview { width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block; }
+.theme-image-label { display: block; font-size: 11px; font-weight: 600; color: #333; text-align: center; padding: 4px 0; }
+.theme-image-check { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
 .asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .asset-card { display: flex; flex-direction: column; gap: 8px; cursor: pointer; border-radius: 16px; padding: 6px; transition: transform 0.15s, box-shadow 0.15s; }
 .asset-card:active { transform: scale(0.97); }

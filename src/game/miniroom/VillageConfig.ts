@@ -29,7 +29,7 @@ export const VILLAGE_DETAIL_ZOOM = 1.2
 // White background (default)
 export const VILLAGE_BG_COLOR = 0xFFFFFF
 
-// Village theme presets
+// Village theme presets (color)
 export const VILLAGE_THEMES: Record<string, number> = {
   white: 0xFFFFFF,
   cream: 0xFFF8F0,
@@ -39,6 +39,31 @@ export const VILLAGE_THEMES: Record<string, number> = {
   peach: 0xFFF0E8,
   gray: 0xF0F0F0,
   dark: 0x2C2C2C,
+}
+
+// Village theme presets (image)
+export interface VillageImageTheme {
+  imageUrl: string
+  bgColor: number
+  bgColorCss: string
+}
+
+export const VILLAGE_THEME_IMAGES: Record<string, VillageImageTheme> = {
+  tema1: {
+    imageUrl: '/assets/village-themes/tema1.png',
+    bgColor: 0x87CEEB,
+    bgColorCss: '#87CEEB',
+  },
+}
+
+export function isImageTheme(key: string): boolean {
+  return key in VILLAGE_THEME_IMAGES
+}
+
+export function getThemeBgColorCss(key: string): string {
+  if (VILLAGE_THEME_IMAGES[key]) return VILLAGE_THEME_IMAGES[key].bgColorCss
+  const hex = VILLAGE_THEMES[key] ?? VILLAGE_BG_COLOR
+  return '#' + hex.toString(16).padStart(6, '0')
 }
 
 // Label styles
