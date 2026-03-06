@@ -134,29 +134,32 @@ export class VillageRenderer {
     }
   }
 
-  /** Start async loading of store room images */
+  /** Start parallel loading of store room images using native Image() */
   startImageLoading() {
     if (this.rooms.length === 0) return
 
     for (const room of this.rooms) {
       if (!room.roomImageUrl) continue
       const key = `storeroom_${room.id}`
-      if (!this.scene.textures.exists(key)) {
-        this.scene.load.image(key, room.roomImageUrl)
+      if (this.scene.textures.exists(key)) {
+        this.onImageLoaded(room)
+        continue
+      }
 
-        this.scene.load.on(`filecomplete-image-${key}`, () => {
-          this.onImageLoaded(room)
-        })
-      } else {
+      // Parallel load via native Image — browser handles 6-8 concurrent downloads
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        if (this.scene && this.scene.textures && !this.scene.textures.exists(key)) {
+          this.scene.textures.addImage(key, img)
+        }
         this.onImageLoaded(room)
       }
+      img.onerror = () => {
+        console.warn('Failed to load store room image:', key)
+      }
+      img.src = room.roomImageUrl
     }
-
-    this.scene.load.on('loaderror', (file: { key: string }) => {
-      console.warn('Failed to load store room image:', file.key)
-    })
-
-    this.scene.load.start()
   }
 
   /** Called when a store room image finishes loading */
