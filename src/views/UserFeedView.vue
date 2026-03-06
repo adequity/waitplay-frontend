@@ -490,13 +490,15 @@
               </div>
               <div class="noti-content">
                 <p class="noti-text">
-                  <span class="noti-username">{{ noti.fromUserName || '누군가' }}</span>
-                  <span v-if="noti.type === 'like'">님이 좋아요를 눌렀습니다.</span>
-                  <span v-else-if="noti.type === 'new_guestbook'">님이 방명록을 남겼습니다.</span>
-                  <span v-else-if="noti.type === 'reply'">님이 답글을 달았습니다.</span>
-                  <span v-else-if="noti.type === 'profile_guestbook'">님이 프로필 방명록을 남겼습니다.</span>
-                  <span v-else-if="noti.type === 'user_follow'">님이 회원님을 팔로우했습니다.</span>
-                  <span v-else-if="noti.type === 'room_asset_ready'">님이 룸 에셋을 완성했습니다.</span>
+                  <span v-if="noti.type === 'room_asset_ready'">요청하신 방을 다 꾸며봤어요! 확인해보세요!</span>
+                  <template v-else>
+                    <span class="noti-username">{{ noti.fromUserName || '누군가' }}</span>
+                    <span v-if="noti.type === 'like'">님이 좋아요를 눌렀습니다.</span>
+                    <span v-else-if="noti.type === 'new_guestbook'">님이 방명록을 남겼습니다.</span>
+                    <span v-else-if="noti.type === 'reply'">님이 답글을 달았습니다.</span>
+                    <span v-else-if="noti.type === 'profile_guestbook'">님이 프로필 방명록을 남겼습니다.</span>
+                    <span v-else-if="noti.type === 'user_follow'">님이 회원님을 팔로우했습니다.</span>
+                  </template>
                   <span class="noti-time">{{ formatRelativeDate(noti.createdAt) }}</span>
                 </p>
                 <p v-if="noti.storeName" class="noti-store">{{ noti.storeName }}</p>
