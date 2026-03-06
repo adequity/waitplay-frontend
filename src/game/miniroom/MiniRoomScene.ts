@@ -146,11 +146,26 @@ export class MiniRoomScene extends Phaser.Scene {
     this.villageRenderer.renderEmptySlots()
     this.villageRenderer.startImageLoading()
 
-    // Start at zoom 1.0 centered on user's room — drag to explore neighbors
+    // Zoom-in entrance: start zoomed out from center, smoothly zoom into user's room
     this.villageMinZoom = calcVillageZoom(worldW, worldH, W, H)
-    const startZoom = Math.max(1.0, this.villageMinZoom)
-    cam.setZoom(startZoom)
+    const targetZoom = Math.max(1.0, this.villageMinZoom)
+    // Start at 60% of target zoom — enough to see surroundings without showing edges
+    const entryZoom = targetZoom * 0.6
+    cam.setZoom(entryZoom)
     cam.centerOn(this.worldCX, this.worldCY)
+
+    // Smooth zoom-in tween centered on user's room
+    this.tweens.add({
+      targets: { zoom: entryZoom },
+      zoom: targetZoom,
+      duration: 1200,
+      ease: 'Cubic.easeOut',
+      delay: 150,
+      onUpdate: (_tween: Phaser.Tweens.Tween, target: { zoom: number }) => {
+        cam.setZoom(target.zoom)
+        cam.centerOn(this.worldCX, this.worldCY)
+      },
+    })
   }
 
   private renderRoom(centerX?: number, centerY?: number, hexSize?: number) {

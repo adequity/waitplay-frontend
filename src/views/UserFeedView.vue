@@ -552,6 +552,25 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
         <div class="miniroom-owner-label">{{ profile?.nickname || '' }}의 방</div>
+        <!-- 방문자 플로팅 독 -->
+        <div class="miniroom-visitor-dock">
+          <div class="visitor-dock-item">
+            <span class="visitor-dock-label">TODAY</span>
+            <span class="visitor-dock-value">{{ profile?.todayVisitors ?? 0 }}</span>
+          </div>
+          <div class="visitor-dock-sep"></div>
+          <div class="visitor-dock-item">
+            <span class="visitor-dock-label">TOTAL</span>
+            <span class="visitor-dock-value">{{ formatNumber(profile?.totalVisitors ?? 0) }}</span>
+          </div>
+        </div>
+        <!-- 방명록/알림 플로팅 버튼 -->
+        <button v-if="isMyProfile && unreadCount > 0" class="miniroom-guestbook-fab" @click="goToGuestbookFromVillage">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          <span class="miniroom-notif-badge bounce-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+        </button>
         <!-- 이동 모드 배너 -->
         <div v-if="moveMode" class="move-mode-banner">
           <span>{{ moveFromStoreName }}의 새 위치를 탭하세요</span>
@@ -856,20 +875,34 @@ async function openRoomFullscreen() {
     const villageRooms: VillageStoreRoom[] = slots
       .filter(s => !s.isEmpty)
       .map(s => ({
-        id: s.isFriend ? s.friendUserId! : s.adminId!,
+        id: s.isAd ? s.adId! : (s.isFriend ? s.friendUserId! : s.adminId!),
         roomImageUrl: s.roomImageUrl || '',
         roomName: s.roomName || '',
-        roomColor: s.roomColor || (s.isFriend ? '#10B981' : '#6366F1'),
+        roomColor: s.roomColor || (s.isAd ? '#FF6B35' : s.isFriend ? '#10B981' : '#6366F1'),
         gridQ: s.slotQ,
         gridR: s.slotR,
         storeName: s.isFriend ? (s.friendNickname || '친구') : (s.storeName || ''),
         storeCode: s.storeCode,
         isFriend: s.isFriend,
         friendProfileCode: s.friendProfileCode,
+        isAd: s.isAd,
+        adId: s.adId,
+        adLinkType: s.adLinkType,
+        adLinkUrl: s.adLinkUrl,
+        adStoreCode: s.adStoreCode,
       }))
     const emptySlots: VillageEmptySlot[] = slots
       .filter(s => s.isEmpty)
       .map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
+
+    // 광고 노출 트래킹
+    const adRooms = villageRooms.filter(r => r.isAd && r.adId)
+    if (adRooms.length > 0) {
+      import('@/services/villageAdService').then(({ trackAdEvent }) => {
+        adRooms.forEach(r => trackAdEvent(r.adId!, 'impression'))
+      })
+    }
+
     await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl)
   } catch {
     isRoomLoading.value = false
@@ -913,6 +946,20 @@ function onStoreTap(e: Event) {
     return
   }
 
+  // 광고 룸 클릭 → 광고 링크 이동 + 클릭 트래킹
+  if (room.isAd && room.adId) {
+    import('@/services/villageAdService').then(({ trackAdEvent }) => {
+      trackAdEvent(room.adId!, 'click')
+    })
+    if (room.adLinkType === 'internal_store' && room.adStoreCode) {
+      closeRoomFullscreen()
+      router.push(`/customer?qr=${room.adStoreCode}`)
+    } else if (room.adLinkUrl) {
+      window.open(room.adLinkUrl, '_blank')
+    }
+    return
+  }
+
   // 친구 룸 클릭 → 프로필로 이동
   if (room.isFriend && room.friendProfileCode) {
     closeRoomFullscreen()
@@ -936,6 +983,11 @@ function onStoreTap(e: Event) {
 // Action sheet state
 const showStoreActionSheet = ref(false)
 const actionSheetRoom = ref<VillageStoreRoom | null>(null)
+
+function goToGuestbookFromVillage() {
+  closeRoomFullscreen()
+  activeTab.value = 'notifications'
+}
 
 function actionGoToStore() {
   const room = actionSheetRoom.value
@@ -1026,16 +1078,21 @@ async function reloadMiniroom() {
   const villageRooms: VillageStoreRoom[] = slots
     .filter(s => !s.isEmpty)
     .map(s => ({
-      id: s.isFriend ? s.friendUserId! : s.adminId!,
+      id: s.isAd ? s.adId! : (s.isFriend ? s.friendUserId! : s.adminId!),
       roomImageUrl: s.roomImageUrl || '',
       roomName: s.roomName || '',
-      roomColor: s.roomColor || (s.isFriend ? '#10B981' : '#6366F1'),
+      roomColor: s.roomColor || (s.isAd ? '#FF6B35' : s.isFriend ? '#10B981' : '#6366F1'),
       gridQ: s.slotQ,
       gridR: s.slotR,
       storeName: s.isFriend ? (s.friendNickname || '친구') : (s.storeName || ''),
       storeCode: s.storeCode,
       isFriend: s.isFriend,
       friendProfileCode: s.friendProfileCode,
+      isAd: s.isAd,
+      adId: s.adId,
+      adLinkType: s.adLinkType,
+      adLinkUrl: s.adLinkUrl,
+      adStoreCode: s.adStoreCode,
     }))
   const emptySlots: VillageEmptySlot[] = slots
     .filter(s => s.isEmpty)
@@ -1561,15 +1618,27 @@ const formatRelativeDate = (dateString: string): string => {
 /* ===== Room Asset Section ===== */
 
 /* ===== MiniRoom Fullscreen Overlay ===== */
-.miniroom-fullscreen { position: fixed; inset: 0; z-index: 9999; background: #F0EDE8; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.miniroom-fullscreen { position: fixed; inset: 0; z-index: 9999; background: #ffffff; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .miniroom-canvas-container { width: 100%; height: 100%; touch-action: none; -webkit-touch-callout: none; }
 .miniroom-canvas-container :deep(canvas) { touch-action: none; }
 .miniroom-close-btn { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; z-index: 10; }
 .miniroom-close-btn:hover { background: rgba(0,0,0,0.6); }
-.miniroom-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #F0EDE8; z-index: 5; color: #8B7E74; font-size: 14px; }
+.miniroom-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #ffffff; z-index: 5; color: #8B7E74; font-size: 14px; }
 .miniroom-loading-spinner { width: 32px; height: 32px; border: 3px solid #D8CFC4; border-top-color: #8B7E74; border-radius: 50%; animation: miniroom-spin 0.8s linear infinite; }
 @keyframes miniroom-spin { to { transform: rotate(360deg); } }
 .miniroom-owner-label { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 10; white-space: nowrap; }
+/* Visitor floating dock */
+.miniroom-visitor-dock { position: absolute; top: 16px; left: 16px; display: flex; align-items: center; gap: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 16px; padding: 6px 14px; z-index: 10; }
+.visitor-dock-item { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.visitor-dock-label { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.6); letter-spacing: 0.5px; line-height: 1; }
+.visitor-dock-value { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.visitor-dock-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.2); margin: 0 10px; }
+/* Guestbook/notification FAB */
+.miniroom-guestbook-fab { position: absolute; bottom: 20px; right: 20px; width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: background 0.2s, transform 0.15s; }
+.miniroom-guestbook-fab:active { transform: scale(0.9); }
+.miniroom-notif-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; background: #ed4956; color: #fff; font-size: 11px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; line-height: 1; box-shadow: 0 2px 8px rgba(237,73,86,0.5); }
+.bounce-badge { animation: badge-bounce 2s ease-in-out infinite; }
+@keyframes badge-bounce { 0%, 100% { transform: translateY(0) scale(1); } 15% { transform: translateY(-6px) scale(1.15); } 30% { transform: translateY(0) scale(0.95); } 42% { transform: translateY(-3px) scale(1.05); } 55% { transform: translateY(0) scale(1); } }
 /* Move mode banner */
 .move-mode-banner {
   position: absolute;

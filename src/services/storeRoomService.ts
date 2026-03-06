@@ -62,6 +62,12 @@ export interface VillageSlot {
   friendProfileImage?: string
   friendProfileCode?: string
   friendRoomAssetUrl?: string
+  // 광고 슬롯 필드
+  isAd?: boolean
+  adId?: string
+  adLinkType?: string
+  adLinkUrl?: string
+  adStoreCode?: string
 }
 
 export interface VillageResponse {

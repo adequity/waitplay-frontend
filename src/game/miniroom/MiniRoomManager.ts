@@ -39,7 +39,7 @@ export class MiniRoomManager {
     const config: PhaserTypes.Types.Core.GameConfig = {
       type: this.Phaser.AUTO,
       parent: containerId,
-      backgroundColor: '#F0EDE8',
+      backgroundColor: '#FFFFFF',
       scene: sceneInstance,
       scale: {
         mode: this.Phaser.Scale.RESIZE,

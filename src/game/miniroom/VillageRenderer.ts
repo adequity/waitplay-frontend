@@ -186,6 +186,21 @@ export class VillageRenderer {
     })
 
     this.objects.push(img)
+
+    // AD badge for ad rooms
+    if (room.isAd) {
+      const cubeH = 2 * this.hexSize
+      const badgeFontSize = Math.max(8, this.hexSize * 0.18)
+      const badge = this.scene.add.text(px, py - cubeH * 0.35, 'AD', {
+        fontFamily: 'Noto Sans KR, sans-serif',
+        fontSize: `${badgeFontSize}px`,
+        color: '#ffffff',
+        backgroundColor: '#FF6B35',
+        padding: { x: 4, y: 2 },
+      })
+      badge.setOrigin(0.5, 0.5).setDepth(11 + py)
+      this.objects.push(badge)
+    }
   }
 
   /** Cleanup all rendered objects */

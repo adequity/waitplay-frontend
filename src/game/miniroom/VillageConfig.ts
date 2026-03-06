@@ -9,6 +9,12 @@ export interface VillageStoreRoom {
   storeCode?: string
   isFriend?: boolean
   friendProfileCode?: string
+  // 광고 필드
+  isAd?: boolean
+  adId?: string
+  adLinkType?: string
+  adLinkUrl?: string
+  adStoreCode?: string
 }
 
 export interface VillageEmptySlot {
@@ -20,8 +26,8 @@ export interface VillageEmptySlot {
 export const VILLAGE_MAX_ZOOM = 3.0
 export const VILLAGE_DETAIL_ZOOM = 1.2
 
-// Bright background
-export const VILLAGE_BG_COLOR = 0xF0F0F5
+// White background
+export const VILLAGE_BG_COLOR = 0xFFFFFF
 
 // Label styles
 export const HEX_LABEL_STYLE = {
