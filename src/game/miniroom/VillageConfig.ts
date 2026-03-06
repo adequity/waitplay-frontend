@@ -26,8 +26,20 @@ export interface VillageEmptySlot {
 export const VILLAGE_MAX_ZOOM = 3.0
 export const VILLAGE_DETAIL_ZOOM = 1.2
 
-// White background
+// White background (default)
 export const VILLAGE_BG_COLOR = 0xFFFFFF
+
+// Village theme presets
+export const VILLAGE_THEMES: Record<string, number> = {
+  white: 0xFFFFFF,
+  cream: 0xFFF8F0,
+  sky: 0xE8F4FD,
+  mint: 0xE8F5E8,
+  lavender: 0xF0E8F5,
+  peach: 0xFFF0E8,
+  gray: 0xF0F0F0,
+  dark: 0x2C2C2C,
+}
 
 // Label styles
 export const HEX_LABEL_STYLE = {

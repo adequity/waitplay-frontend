@@ -2,7 +2,7 @@ import type { RoomData, FurnitureType } from './RoomConfig'
 import { FURNITURE_SPECS, DEFAULT_ROOM } from './RoomConfig'
 import { hexToNumber } from './IsometricUtils'
 import type { VillageStoreRoom, VillageEmptySlot } from './VillageConfig'
-import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, calcHexSize, calcVillageZoom } from './VillageConfig'
+import { VILLAGE_MAX_ZOOM, VILLAGE_DETAIL_ZOOM, VILLAGE_BG_COLOR, VILLAGE_THEMES, calcHexSize, calcVillageZoom } from './VillageConfig'
 import { VillageRenderer, CUBE_SIZE_RATIO } from './VillageRenderer'
 import { hexBoundingBox, type HexPosition } from '@/utils/hexGridUtils'
 
@@ -13,6 +13,7 @@ export class MiniRoomScene extends Phaser.Scene {
   private villageRooms: VillageStoreRoom[] = []
   private emptySlots: VillageEmptySlot[] = []
   private selectedRoomAssetUrl: string | null = null
+  private villageTheme: string = 'white'
   private lastW = 0
   private lastH = 0
 
@@ -27,7 +28,7 @@ export class MiniRoomScene extends Phaser.Scene {
     super({ key: 'MiniRoomScene' })
   }
 
-  init(data?: { roomData?: RoomData; villageRooms?: VillageStoreRoom[]; emptySlots?: VillageEmptySlot[]; selectedRoomAssetUrl?: string }) {
+  init(data?: { roomData?: RoomData; villageRooms?: VillageStoreRoom[]; emptySlots?: VillageEmptySlot[]; selectedRoomAssetUrl?: string; villageTheme?: string }) {
     if (data?.roomData) {
       this.roomData = data.roomData
     } else if ((this as any)._initialRoomData) {
@@ -54,6 +55,13 @@ export class MiniRoomScene extends Phaser.Scene {
     } else if ((this as any)._initialSelectedRoomAssetUrl) {
       this.selectedRoomAssetUrl = (this as any)._initialSelectedRoomAssetUrl as string
       delete (this as any)._initialSelectedRoomAssetUrl
+    }
+
+    if (data?.villageTheme) {
+      this.villageTheme = data.villageTheme
+    } else if ((this as any)._initialVillageTheme) {
+      this.villageTheme = (this as any)._initialVillageTheme as string
+      delete (this as any)._initialVillageTheme
     }
   }
 
@@ -129,9 +137,10 @@ export class MiniRoomScene extends Phaser.Scene {
     const cam = this.cameras.main
     cam.setBounds(0, 0, worldW, worldH)
 
-    // Bright background
+    // Themed background
+    const bgColor = VILLAGE_THEMES[this.villageTheme] ?? VILLAGE_BG_COLOR
     const bg = this.add.graphics()
-    bg.fillStyle(VILLAGE_BG_COLOR, 1)
+    bg.fillStyle(bgColor, 1)
     bg.fillRect(0, 0, worldW, worldH)
     bg.setDepth(-200)
 

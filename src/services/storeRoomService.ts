@@ -81,6 +81,7 @@ export interface VillageResponse {
   gapFactor: number
   gapFactorX: number
   selectedRoomAssetUrl?: string
+  villageTheme?: string
 }
 
 export interface UnplacedStore {

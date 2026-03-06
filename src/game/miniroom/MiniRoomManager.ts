@@ -1,5 +1,6 @@
 import type * as PhaserTypes from 'phaser'
 import type { VillageStoreRoom, VillageEmptySlot } from './VillageConfig'
+import { VILLAGE_THEMES } from './VillageConfig'
 
 export class MiniRoomManager {
   private game: PhaserTypes.Game | null = null
@@ -11,6 +12,7 @@ export class MiniRoomManager {
     villageRooms?: VillageStoreRoom[],
     emptySlots?: VillageEmptySlot[],
     selectedRoomAssetUrl?: string,
+    villageTheme?: string,
   ): Promise<PhaserTypes.Game> {
     if (this.game) {
       this.destroy()
@@ -35,11 +37,19 @@ export class MiniRoomManager {
     if (selectedRoomAssetUrl) {
       (sceneInstance as any)._initialSelectedRoomAssetUrl = selectedRoomAssetUrl
     }
+    if (villageTheme) {
+      (sceneInstance as any)._initialVillageTheme = villageTheme
+    }
+
+    // Convert theme to hex color string for Phaser game config
+    const themeColor = villageTheme && VILLAGE_THEMES[villageTheme]
+      ? '#' + VILLAGE_THEMES[villageTheme].toString(16).padStart(6, '0')
+      : '#FFFFFF'
 
     const config: PhaserTypes.Types.Core.GameConfig = {
       type: this.Phaser.AUTO,
       parent: containerId,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: themeColor,
       scene: sceneInstance,
       scale: {
         mode: this.Phaser.Scale.RESIZE,
@@ -82,6 +92,7 @@ export class MiniRoomManager {
     villageRooms: VillageStoreRoom[],
     emptySlots: VillageEmptySlot[],
     selectedRoomAssetUrl?: string,
+    villageTheme?: string,
   ): void {
     if (!this.game) return
     const scene = this.game.scene.getScene('MiniRoomScene')
@@ -91,6 +102,7 @@ export class MiniRoomManager {
         villageRooms,
         emptySlots,
         selectedRoomAssetUrl,
+        villageTheme,
       })
     }
   }

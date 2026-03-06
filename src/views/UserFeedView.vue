@@ -392,6 +392,24 @@
 
         <!-- ===== 탭3: 방꾸미기 ===== -->
         <div v-else-if="activeTab === 'decorate'" class="decorate-tab">
+          <!-- 테마 선택 -->
+          <div v-if="isMyProfile" class="theme-section">
+            <h3 class="theme-section-title">빌리지 테마</h3>
+            <div class="theme-swatches">
+              <button
+                v-for="t in VILLAGE_THEME_OPTIONS"
+                :key="t.key"
+                class="theme-swatch"
+                :class="{ active: selectedVillageTheme === t.key }"
+                :style="{ backgroundColor: t.color }"
+                :disabled="isSavingTheme"
+                @click="selectVillageTheme(t.key)"
+              >
+                <svg v-if="selectedVillageTheme === t.key" width="16" height="16" viewBox="0 0 24 24" fill="none" :stroke="t.key === 'dark' ? '#fff' : '#333'" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              </button>
+            </div>
+          </div>
+
           <div class="asset-grid">
             <!-- 완료된 에셋들 -->
             <div
@@ -542,7 +560,7 @@
 
     <!-- 미니룸 풀스크린 오버레이 -->
     <Teleport to="body">
-      <div v-if="showRoomFullscreen" id="miniroom-fullscreen-overlay" class="miniroom-fullscreen">
+      <div v-if="showRoomFullscreen" id="miniroom-fullscreen-overlay" class="miniroom-fullscreen" :style="{ background: villageThemeBgColor }">
         <div id="miniroom-container" class="miniroom-canvas-container"></div>
         <div v-if="isRoomLoading" class="miniroom-loading">
           <div class="miniroom-loading-spinner"></div>
@@ -621,7 +639,7 @@ import authService from '@/services/authService'
 import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
 import notificationService from '@/services/notificationService'
-import { getRoomConfiguration, type RoomConfiguration, type RoomAsset, getMyRoomAssets, submitRoomPhoto, selectRoomAsset, deselectRoomAsset } from '@/services/roomService'
+import { getRoomConfiguration, updateRoomConfiguration, type RoomConfiguration, type RoomAsset, getMyRoomAssets, submitRoomPhoto, selectRoomAsset, deselectRoomAsset } from '@/services/roomService'
 import { getUserVillage, placeSlot, removeSlot, swapSlots, type VillageResponse } from '@/services/storeRoomService'
 import type { VillageStoreRoom, VillageEmptySlot } from '@/game/miniroom/VillageConfig'
 import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse } from '@/services/guestbookService'
@@ -663,6 +681,25 @@ const myRoomAssets = ref<RoomAsset[]>([])
 const completedRoomAssets = computed(() => myRoomAssets.value.filter(a => a.status === 'completed'))
 const pendingRoomAssets = computed(() => myRoomAssets.value.filter(a => a.status === 'pending'))
 const photoSubmitInput = ref<HTMLInputElement | null>(null)
+
+// Village theme
+const VILLAGE_THEME_OPTIONS = [
+  { key: 'white', label: '화이트', color: '#FFFFFF' },
+  { key: 'cream', label: '크림', color: '#FFF8F0' },
+  { key: 'sky', label: '하늘', color: '#E8F4FD' },
+  { key: 'mint', label: '민트', color: '#E8F5E8' },
+  { key: 'lavender', label: '라벤더', color: '#F0E8F5' },
+  { key: 'peach', label: '피치', color: '#FFF0E8' },
+  { key: 'gray', label: '그레이', color: '#F0F0F0' },
+  { key: 'dark', label: '다크', color: '#2C2C2C' },
+]
+const selectedVillageTheme = ref('white')
+const isSavingTheme = ref(false)
+const villageThemeBgColor = computed(() => {
+  const theme = village.value?.villageTheme || selectedVillageTheme.value
+  const opt = VILLAGE_THEME_OPTIONS.find(t => t.key === theme)
+  return opt?.color || '#FFFFFF'
+})
 
 // Store picker modal
 const showStorePicker = ref(false)
@@ -783,6 +820,9 @@ async function loadRoomConfig() {
   try {
     roomConfig.value = await getRoomConfiguration(userCode)
     roomLoaded.value = true
+    if (roomConfig.value?.villageTheme) {
+      selectedVillageTheme.value = roomConfig.value.villageTheme
+    }
   } catch { /* silent */ } finally {
     isLoadingRoom.value = false
   }
@@ -798,6 +838,19 @@ async function loadMyRoomAssets() {
 function formatAssetDate(dateStr: string) {
   const d = new Date(dateStr)
   return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+async function selectVillageTheme(themeKey: string) {
+  if (themeKey === selectedVillageTheme.value || isSavingTheme.value) return
+  isSavingTheme.value = true
+  try {
+    await updateRoomConfiguration({ villageTheme: themeKey })
+    selectedVillageTheme.value = themeKey
+    if (village.value) {
+      village.value.villageTheme = themeKey
+    }
+  } catch { /* ignore */ }
+  isSavingTheme.value = false
 }
 
 function triggerPhotoSubmit() {
@@ -903,7 +956,7 @@ async function openRoomFullscreen() {
       })
     }
 
-    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl)
+    await miniRoomManager.init('miniroom-container', buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl, village.value?.villageTheme)
   } catch {
     isRoomLoading.value = false
     window.removeEventListener('miniroom-ready', onReady)
@@ -1100,7 +1153,7 @@ async function reloadMiniroom() {
 
   // Use scene restart instead of full game destroy/recreate
   // This preserves WebGL context and texture cache, allowing unlimited consecutive swaps
-  miniRoomManager.reloadVillage(buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl)
+  miniRoomManager.reloadVillage(buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl, village.value?.villageTheme)
 }
 
 async function loadProfileGuestbook() {
@@ -1502,6 +1555,13 @@ const formatRelativeDate = (dateString: string): string => {
 
 /* ===== Decorate Tab ===== */
 .decorate-tab { padding: 0.75rem; }
+.theme-section { margin-bottom: 16px; }
+.theme-section-title { font-size: 14px; font-weight: 700; color: #262626; margin: 0 0 10px 2px; }
+.theme-swatches { display: flex; gap: 10px; overflow-x: auto; padding: 2px 0 8px; -webkit-overflow-scrolling: touch; }
+.theme-swatch { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e0e0e0; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: transform 0.15s, box-shadow 0.15s; }
+.theme-swatch:active { transform: scale(0.92); }
+.theme-swatch.active { border-color: #6366F1; box-shadow: 0 0 0 2px #6366F1; }
+.theme-swatch:disabled { opacity: 0.5; cursor: default; }
 .asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .asset-card { display: flex; flex-direction: column; gap: 8px; cursor: pointer; border-radius: 16px; padding: 6px; transition: transform 0.15s, box-shadow 0.15s; }
 .asset-card:active { transform: scale(0.97); }

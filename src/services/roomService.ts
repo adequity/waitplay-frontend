@@ -22,6 +22,7 @@ export interface RoomConfiguration {
   floorTheme: string
   furniture: FurnitureItem[]
   character: CharacterStyle
+  villageTheme?: string
 }
 
 export async function getRoomConfiguration(profileCode: string): Promise<RoomConfiguration> {
