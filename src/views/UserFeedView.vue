@@ -496,6 +496,7 @@
                   <span v-else-if="noti.type === 'reply'">님이 답글을 달았습니다.</span>
                   <span v-else-if="noti.type === 'profile_guestbook'">님이 프로필 방명록을 남겼습니다.</span>
                   <span v-else-if="noti.type === 'user_follow'">님이 회원님을 팔로우했습니다.</span>
+                  <span v-else-if="noti.type === 'room_asset_ready'">님이 룸 에셋을 완성했습니다.</span>
                   <span class="noti-time">{{ formatRelativeDate(noti.createdAt) }}</span>
                 </p>
                 <p v-if="noti.storeName" class="noti-store">{{ noti.storeName }}</p>
@@ -1375,6 +1376,10 @@ async function handleNotificationClick(noti: NotificationItem) {
     noti.isRead = true
     unreadCount.value = Math.max(0, unreadCount.value - 1)
     notificationService.markAsRead(noti.id).catch(() => {})
+  }
+  if (noti.type === 'room_asset_ready') {
+    activeTab.value = 'decorate'
+    return
   }
   if (noti.guestbookMessageId) {
     try {

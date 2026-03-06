@@ -2,7 +2,7 @@ import apiClient from './api'
 
 export interface NotificationItem {
   id: string
-  type: 'like' | 'new_guestbook' | 'reply'
+  type: 'like' | 'new_guestbook' | 'reply' | 'user_follow' | 'profile_guestbook' | 'room_asset_ready'
   fromUserId: string | null
   fromUserName: string | null
   fromUserProfileImage: string | null
