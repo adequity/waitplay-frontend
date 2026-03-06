@@ -139,6 +139,7 @@ export class VillageRenderer {
     if (this.rooms.length === 0) return
 
     for (const room of this.rooms) {
+      if (!room.roomImageUrl) continue
       const key = `storeroom_${room.id}`
       if (!this.scene.textures.exists(key)) {
         this.scene.load.image(key, room.roomImageUrl)

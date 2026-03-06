@@ -171,7 +171,7 @@ export class MiniRoomScene extends Phaser.Scene {
 
     // Zoom-in entrance: start zoomed out from center, smoothly zoom into user's room
     this.villageMinZoom = calcVillageZoom(worldW, worldH, W, H)
-    const targetZoom = Math.max(1.0, this.villageMinZoom)
+    const targetZoom = Math.max(VILLAGE_DETAIL_ZOOM, this.villageMinZoom)
     // Start at 60% of target zoom — enough to see surroundings without showing edges
     const entryZoom = targetZoom * 0.6
     cam.setZoom(entryZoom)
