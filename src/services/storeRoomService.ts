@@ -62,6 +62,9 @@ export interface VillageSlot {
   friendProfileImage?: string
   friendProfileCode?: string
   friendRoomAssetUrl?: string
+  // 랜덤 추천 슬롯 필드
+  isRandom?: boolean
+  randomType?: string
   // 광고 슬롯 필드
   isAd?: boolean
   adId?: string

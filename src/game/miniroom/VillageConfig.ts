@@ -9,6 +9,9 @@ export interface VillageStoreRoom {
   storeCode?: string
   isFriend?: boolean
   friendProfileCode?: string
+  // 랜덤 추천
+  isRandom?: boolean
+  randomType?: string
   // 광고 필드
   isAd?: boolean
   adId?: string

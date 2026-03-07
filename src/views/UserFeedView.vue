@@ -618,7 +618,7 @@
             <div class="action-sheet-title">{{ actionSheetRoom?.storeName }}</div>
             <button class="action-sheet-btn" @click="actionGoToStore">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-              {{ actionSheetRoom?.isFriend ? '프로필로 이동' : '매장 페이지로 이동' }}
+              {{ actionSheetRoom?.isRandom ? '방 노크하기' : actionSheetRoom?.isFriend ? '프로필로 이동' : '매장 페이지로 이동' }}
             </button>
             <button class="action-sheet-btn" @click="actionMoveStore">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l4-4 4 4"/><path d="M9 5v14"/><path d="M19 15l-4 4-4-4"/><path d="M15 19V5"/></svg>
@@ -907,13 +907,14 @@ async function reloadVillageWithTheme() {
   const villageRooms: VillageStoreRoom[] = slots
     .filter(s => !s.isEmpty)
     .map(s => ({
-      id: s.adminId || s.friendUserId || '',
-      roomImageUrl: s.isFriend ? (s.friendRoomAssetUrl || '') : (s.roomImageUrl || ''),
+      id: s.isAd ? (s.adId || '') : (s.isFriend || s.isRandom ? (s.friendUserId || '') : (s.adminId || '')),
+      roomImageUrl: (s.isFriend || s.isRandom) ? (s.friendRoomAssetUrl || '') : (s.roomImageUrl || ''),
       roomName: s.roomName || '',
-      roomColor: s.roomColor || (s.isAd ? '#FF6B35' : s.isFriend ? '#10B981' : '#6366F1'),
+      roomColor: s.roomColor || (s.isAd ? '#FF6B35' : s.isFriend ? '#10B981' : s.isRandom ? '#8B5CF6' : '#6366F1'),
       gridQ: s.slotQ, gridR: s.slotR,
-      storeName: s.isFriend ? (s.friendNickname || '친구') : (s.storeName || ''),
+      storeName: (s.isFriend || s.isRandom) ? (s.friendNickname || '추천') : (s.storeName || ''),
       storeCode: s.storeCode, isFriend: s.isFriend, friendProfileCode: s.friendProfileCode,
+      isRandom: s.isRandom, randomType: s.randomType,
       isAd: s.isAd, adId: s.adId, adLinkType: s.adLinkType, adLinkUrl: s.adLinkUrl, adStoreCode: s.adStoreCode,
     }))
   const emptySlots: VillageEmptySlot[] = slots.filter(s => s.isEmpty).map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
@@ -995,16 +996,18 @@ async function openRoomFullscreen() {
     const villageRooms: VillageStoreRoom[] = slots
       .filter(s => !s.isEmpty)
       .map(s => ({
-        id: s.isAd ? s.adId! : (s.isFriend ? s.friendUserId! : s.adminId!),
+        id: s.isAd ? s.adId! : ((s.isFriend || s.isRandom) ? s.friendUserId! : s.adminId!),
         roomImageUrl: s.roomImageUrl || '',
         roomName: s.roomName || '',
-        roomColor: s.roomColor || (s.isAd ? '#FF6B35' : s.isFriend ? '#10B981' : '#6366F1'),
+        roomColor: s.roomColor || (s.isAd ? '#FF6B35' : s.isFriend ? '#10B981' : s.isRandom ? '#8B5CF6' : '#6366F1'),
         gridQ: s.slotQ,
         gridR: s.slotR,
-        storeName: s.isFriend ? (s.friendNickname || '친구') : (s.storeName || ''),
+        storeName: (s.isFriend || s.isRandom) ? (s.friendNickname || '추천') : (s.storeName || ''),
         storeCode: s.storeCode,
         isFriend: s.isFriend,
         friendProfileCode: s.friendProfileCode,
+        isRandom: s.isRandom,
+        randomType: s.randomType,
         isAd: s.isAd,
         adId: s.adId,
         adLinkType: s.adLinkType,
@@ -1080,6 +1083,19 @@ function onStoreTap(e: Event) {
     return
   }
 
+  // 랜덤 추천 룸 클릭 → 노크 확인 후 프로필 이동
+  if (room.isRandom && room.friendProfileCode) {
+    const name = room.storeName || '이 유저'
+    const msg = room.randomType === 'admin'
+      ? `'${name}' 노크하기`
+      : `'${name}'님의 방에 노크하기`
+    if (confirm(msg)) {
+      closeRoomFullscreen()
+      router.push(`/u/${room.friendProfileCode}`)
+    }
+    return
+  }
+
   // 친구 룸 클릭 → 프로필로 이동
   if (room.isFriend && room.friendProfileCode) {
     closeRoomFullscreen()
@@ -1112,6 +1128,17 @@ function goToGuestbookFromVillage() {
 function actionGoToStore() {
   const room = actionSheetRoom.value
   showStoreActionSheet.value = false
+  if (room?.isRandom && room?.friendProfileCode) {
+    const name = room.storeName || '이 유저'
+    const msg = room.randomType === 'admin'
+      ? `'${name}' 노크하기`
+      : `'${name}'님의 방에 노크하기`
+    if (confirm(msg)) {
+      closeRoomFullscreen()
+      router.push(`/u/${room.friendProfileCode}`)
+    }
+    return
+  }
   if (room?.isFriend && room?.friendProfileCode) {
     closeRoomFullscreen()
     router.push(`/u/${room.friendProfileCode}`)
@@ -1198,16 +1225,18 @@ async function reloadMiniroom() {
   const villageRooms: VillageStoreRoom[] = slots
     .filter(s => !s.isEmpty)
     .map(s => ({
-      id: s.isAd ? s.adId! : (s.isFriend ? s.friendUserId! : s.adminId!),
+      id: s.isAd ? s.adId! : ((s.isFriend || s.isRandom) ? s.friendUserId! : s.adminId!),
       roomImageUrl: s.roomImageUrl || '',
       roomName: s.roomName || '',
-      roomColor: s.roomColor || (s.isAd ? '#FF6B35' : s.isFriend ? '#10B981' : '#6366F1'),
+      roomColor: s.roomColor || (s.isAd ? '#FF6B35' : s.isFriend ? '#10B981' : s.isRandom ? '#8B5CF6' : '#6366F1'),
       gridQ: s.slotQ,
       gridR: s.slotR,
-      storeName: s.isFriend ? (s.friendNickname || '친구') : (s.storeName || ''),
+      storeName: (s.isFriend || s.isRandom) ? (s.friendNickname || '추천') : (s.storeName || ''),
       storeCode: s.storeCode,
       isFriend: s.isFriend,
       friendProfileCode: s.friendProfileCode,
+      isRandom: s.isRandom,
+      randomType: s.randomType,
       isAd: s.isAd,
       adId: s.adId,
       adLinkType: s.adLinkType,

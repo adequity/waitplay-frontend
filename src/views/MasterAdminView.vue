@@ -91,6 +91,7 @@
         <MasterStoreRoomManagement v-if="activeTab === 'store-rooms'" />
         <MasterRoomAssetManagement v-if="activeTab === 'room-assets'" />
         <MasterVillageThemeManagement v-if="activeTab === 'village-themes'" />
+        <MasterRecommendedPoolManagement v-if="activeTab === 'recommended-pool'" />
       </div>
     </main>
   </div>
@@ -118,6 +119,7 @@ import MasterVillageAdManagement from '@/components/master/MasterVillageAdManage
 import MasterStoreRoomManagement from '@/components/master/MasterStoreRoomManagement.vue'
 import MasterRoomAssetManagement from '@/components/master/MasterRoomAssetManagement.vue'
 import MasterVillageThemeManagement from '@/components/master/MasterVillageThemeManagement.vue'
+import MasterRecommendedPoolManagement from '@/components/master/MasterRecommendedPoolManagement.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -155,6 +157,7 @@ const tabs = [
   { id: 'store-rooms', label: '매장 룸', iconName: 'grid' },
   { id: 'room-assets', label: '룸 에셋', iconName: 'image' },
   { id: 'village-themes', label: '빌리지 테마', iconName: 'image' },
+  { id: 'recommended-pool', label: '추천 유저', iconName: 'users' },
   { id: 'settings', label: '설정', iconName: 'settings' }
 ]
 
