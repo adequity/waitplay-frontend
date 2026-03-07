@@ -205,6 +205,25 @@ export class VillageRenderer {
       badge.setOrigin(0.5, 0.5).setDepth(11 + py)
       this.objects.push(badge)
     }
+
+    // N badge for random/recommended rooms
+    if (room.isRandom) {
+      const cubeH = 2 * this.hexSize
+      const cubeW2 = CUBE_SIZE_RATIO * this.hexSize
+      const badgeFontSize = Math.max(8, this.hexSize * 0.16)
+      const badgeX = px + cubeW2 * 0.3
+      const badgeY = py - cubeH * 0.35
+      const badge = this.scene.add.text(badgeX, badgeY, 'N', {
+        fontFamily: 'Noto Sans KR, sans-serif',
+        fontSize: `${badgeFontSize}px`,
+        fontStyle: 'bold',
+        color: '#ffffff',
+        backgroundColor: '#8B5CF6',
+        padding: { x: 4, y: 2 },
+      })
+      badge.setOrigin(0.5, 0.5).setDepth(11 + py)
+      this.objects.push(badge)
+    }
   }
 
   /** Cleanup all rendered objects */
