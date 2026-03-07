@@ -126,7 +126,7 @@ const followService = {
    * @returns 내가 팔로우 중인 userId 배열
    */
   async getBatchFollowStatus(userIds: string[]): Promise<string[]> {
-    const response = await api.post('/api/follow/user/batch-status', userIds)
+    const response = await api.post('/api/follow/users/batch-status', userIds)
     return response.data
   },
 
