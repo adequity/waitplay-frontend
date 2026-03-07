@@ -47,6 +47,14 @@ export interface StoreFollowersResponse {
   page: number
 }
 
+export interface FollowUserItem {
+  userId: string
+  nickname: string
+  profileImage: string | null
+  profileCode: string | null
+  followedAt: string
+}
+
 const followService = {
   /**
    * 매장 팔로우 (단골 등록)
@@ -110,6 +118,31 @@ const followService = {
 
   async getUserFollowStatus(profileCode: string): Promise<{ isFollowing: boolean; followerCount: number; followingCount: number }> {
     const response = await api.get(`/api/follow/user/${profileCode}/status`)
+    return response.data
+  },
+
+  /**
+   * 배치 팔로우 상태 확인 (여러 유저 ID)
+   * @returns 내가 팔로우 중인 userId 배열
+   */
+  async getBatchFollowStatus(userIds: string[]): Promise<string[]> {
+    const response = await api.post('/api/follow/user/batch-status', userIds)
+    return response.data
+  },
+
+  /**
+   * 유저 팔로워 목록 조회
+   */
+  async getUserFollowers(profileCode: string, page = 1, limit = 20): Promise<{ totalCount: number; followers: FollowUserItem[]; hasMore: boolean; page: number }> {
+    const response = await api.get(`/api/follow/user/${profileCode}/followers?page=${page}&limit=${limit}`)
+    return response.data
+  },
+
+  /**
+   * 유저 팔로잉 목록 조회
+   */
+  async getUserFollowing(profileCode: string, page = 1, limit = 20): Promise<{ totalCount: number; following: FollowUserItem[]; hasMore: boolean; page: number }> {
+    const response = await api.get(`/api/follow/user/${profileCode}/following?page=${page}&limit=${limit}`)
     return response.data
   }
 }

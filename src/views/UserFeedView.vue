@@ -59,12 +59,12 @@
             <span class="counter-value">{{ formatNumber(profile.totalVisitors) }}</span>
           </div>
           <div class="counter-divider"></div>
-          <div class="counter-item">
+          <div class="counter-item clickable" @click="openFollowList('followers')">
             <span class="counter-label">팔로워</span>
             <span class="counter-value">{{ formatNumber(profile.userFollowerCount || 0) }}</span>
           </div>
           <div class="counter-divider"></div>
-          <div class="counter-item">
+          <div class="counter-item clickable" @click="openFollowList('following')">
             <span class="counter-label">팔로잉</span>
             <span class="counter-value">{{ formatNumber(profile.userFollowingCount || 0) }}</span>
           </div>
@@ -167,7 +167,19 @@
           <template v-else>
             <!-- Room preview card → opens Phaser fullscreen with village -->
             <div class="room-preview-card" @click="openRoomFullscreen">
-              <div class="room-preview-icon">
+              <div v-if="villagePreviewImages.length > 0" class="room-preview-thumbnails">
+                <img
+                  v-for="(img, i) in villagePreviewImages"
+                  :key="i"
+                  :src="img"
+                  class="room-preview-thumb"
+                  alt=""
+                />
+                <div v-if="(village?.filledSlots || 0) > 4" class="room-preview-more">
+                  +{{ (village?.filledSlots || 0) - 4 }}
+                </div>
+              </div>
+              <div v-else class="room-preview-icon">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.5">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                   <polyline points="9,22 9,12 15,12 15,22"/>
@@ -499,6 +511,7 @@
                     <span v-else-if="noti.type === 'profile_guestbook'">님이 프로필 방명록을 남겼습니다.</span>
                     <span v-else-if="noti.type === 'user_follow'">님이 회원님을 팔로우했습니다.</span>
                     <span v-else-if="noti.type === 'knock'">님이 회원님의 방을 노크했습니다. 👋</span>
+                    <span v-else-if="noti.type === 'store_follow'">님이 매장을 팔로우했습니다. ⭐</span>
                   </template>
                   <span class="noti-time">{{ formatRelativeDate(noti.createdAt) }}</span>
                 </p>
@@ -510,6 +523,15 @@
                   <span>{{ noti.guestbookMessageText.slice(0, 20) }}</span>
                 </div>
               </div>
+              <button
+                v-else-if="['user_follow', 'knock', 'store_follow'].includes(noti.type) && noti.fromUserId && !notiFollowStatus[noti.fromUserId]"
+                class="noti-follow-btn"
+                @click="quickFollowBack(noti, $event)"
+              >팔로우</button>
+              <span
+                v-else-if="['user_follow', 'knock', 'store_follow'].includes(noti.type) && noti.fromUserId && notiFollowStatus[noti.fromUserId]"
+                class="noti-following-label"
+              >팔로잉</span>
             </div>
           </div>
           <div v-if="hasMoreNotifications" class="load-more">
@@ -653,6 +675,43 @@
             <div class="knock-modal-buttons">
               <button class="knock-btn knock-btn-cancel" @click="cancelKnock">취소</button>
               <button class="knock-btn knock-btn-confirm" @click="confirmKnock">노크하기</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- 팔로워/팔로잉 목록 모달 -->
+    <Teleport to="body">
+      <Transition name="knock-modal">
+        <div v-if="showFollowListModal" class="knock-modal-overlay" @click.self="showFollowListModal = false">
+          <div class="follow-list-modal">
+            <div class="follow-list-header">
+              <button class="follow-list-tab" :class="{ active: followListTab === 'followers' }" @click="switchFollowTab('followers')">
+                팔로워 {{ formatNumber(profile?.userFollowerCount || 0) }}
+              </button>
+              <button class="follow-list-tab" :class="{ active: followListTab === 'following' }" @click="switchFollowTab('following')">
+                팔로잉 {{ formatNumber(profile?.userFollowingCount || 0) }}
+              </button>
+              <button class="follow-list-close" @click="showFollowListModal = false">✕</button>
+            </div>
+            <div class="follow-list-body">
+              <div v-if="isLoadingFollowList" class="loading-state"><div class="spinner"></div></div>
+              <div v-else-if="followListItems.length === 0" class="empty-state" style="padding: 2rem;">
+                <p class="empty-title">{{ followListTab === 'followers' ? '아직 팔로워가 없어요' : '아직 팔로잉이 없어요' }}</p>
+              </div>
+              <div v-else class="follow-list-items">
+                <div v-for="item in followListItems" :key="item.userId" class="follow-list-item" @click="goToFollowProfile(item.profileCode)">
+                  <div class="follow-list-avatar">
+                    <img v-if="item.profileImage" :src="item.profileImage" :alt="item.nickname" class="avatar-img-small" />
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"/><path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"/></svg>
+                  </div>
+                  <span class="follow-list-name">{{ item.nickname }}</span>
+                </div>
+                <button v-if="followListHasMore" class="load-more-btn" @click="loadMoreFollowList" :disabled="isLoadingFollowList">
+                  더 보기
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -807,6 +866,7 @@ const unreadCount = ref(0)
 const notificationOffset = ref(0)
 const hasMoreNotifications = ref(false)
 const notificationsLoaded = ref(false)
+const notiFollowStatus = ref<Record<string, boolean>>({})
 
 const userCode = route.params.code as string
 
@@ -1347,11 +1407,88 @@ async function loadNotifications() {
     notifications.value.push(...data)
     hasMoreNotifications.value = data.length === 20
     notificationsLoaded.value = true
+    // 팔로우 타입 알림의 fromUserId로 배치 팔로우 상태 조회
+    const followUserIds = data
+      .filter(n => ['user_follow', 'knock', 'store_follow'].includes(n.type) && n.fromUserId)
+      .map(n => n.fromUserId!)
+      .filter(id => !(id in notiFollowStatus.value))
+    if (followUserIds.length > 0) {
+      try {
+        const followingIds = await followService.getBatchFollowStatus(followUserIds)
+        for (const uid of followUserIds) {
+          notiFollowStatus.value[uid] = followingIds.includes(uid)
+        }
+      } catch { /* silent */ }
+    }
   } catch { /* silent */ } finally { isLoadingNotifications.value = false }
 }
 async function loadMoreNotifications() {
   notificationOffset.value += 20
   await loadNotifications()
+}
+// ===== Village preview thumbnails =====
+const villagePreviewImages = computed(() => {
+  if (!village.value?.slots) return []
+  return village.value.slots
+    .filter(s => !s.isEmpty && s.roomImageUrl)
+    .slice(0, 4)
+    .map(s => s.roomImageUrl!)
+})
+
+// ===== Follow list modal =====
+import type { FollowUserItem } from '@/services/followService'
+const showFollowListModal = ref(false)
+const followListTab = ref<'followers' | 'following'>('followers')
+const followListItems = ref<FollowUserItem[]>([])
+const isLoadingFollowList = ref(false)
+const followListHasMore = ref(false)
+const followListPage = ref(1)
+
+async function openFollowList(tab: 'followers' | 'following') {
+  followListTab.value = tab
+  followListItems.value = []
+  followListPage.value = 1
+  showFollowListModal.value = true
+  await loadFollowList()
+}
+async function switchFollowTab(tab: 'followers' | 'following') {
+  followListTab.value = tab
+  followListItems.value = []
+  followListPage.value = 1
+  await loadFollowList()
+}
+async function loadFollowList() {
+  isLoadingFollowList.value = true
+  try {
+    if (followListTab.value === 'followers') {
+      const res = await followService.getUserFollowers(userCode, followListPage.value)
+      followListItems.value.push(...res.followers)
+      followListHasMore.value = res.hasMore
+    } else {
+      const res = await followService.getUserFollowing(userCode, followListPage.value)
+      followListItems.value.push(...res.following)
+      followListHasMore.value = res.hasMore
+    }
+  } catch { /* silent */ }
+  isLoadingFollowList.value = false
+}
+async function loadMoreFollowList() {
+  followListPage.value++
+  await loadFollowList()
+}
+function goToFollowProfile(profileCode: string | null) {
+  if (!profileCode) return
+  showFollowListModal.value = false
+  router.push(`/u/${profileCode}`)
+}
+
+async function quickFollowBack(noti: NotificationItem, event: Event) {
+  event.stopPropagation()
+  if (!noti.fromUserProfileCode || !noti.fromUserId) return
+  try {
+    await followService.followUser(noti.fromUserProfileCode)
+    notiFollowStatus.value[noti.fromUserId] = true
+  } catch { /* silent */ }
 }
 
 // ===== Actions =====
@@ -1457,7 +1594,7 @@ async function handleNotificationClick(noti: NotificationItem) {
     router.push(`/u/${noti.fromUserProfileCode}`)
     return
   }
-  if (noti.type === 'user_follow' && noti.fromUserProfileCode) {
+  if ((noti.type === 'user_follow' || noti.type === 'store_follow') && noti.fromUserProfileCode) {
     router.push(`/u/${noti.fromUserProfileCode}`)
     return
   }
@@ -1753,6 +1890,9 @@ const formatRelativeDate = (dateString: string): string => {
 .noti-thumb-img { width: 100%; height: 100%; object-fit: cover; }
 .noti-thumb-text { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 4px; }
 .noti-thumb-text span { font-size: 8px; color: #262626; line-height: 1.2; text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.noti-follow-btn { flex-shrink: 0; padding: 6px 14px; border-radius: 8px; border: none; background: #6366F1; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.noti-follow-btn:active { background: #4F46E5; }
+.noti-following-label { flex-shrink: 0; padding: 6px 14px; border-radius: 8px; border: 1px solid #e5e7eb; background: transparent; color: #86868b; font-size: 12px; font-weight: 500; white-space: nowrap; }
 
 /* ===== Modal ===== */
 .modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; }
@@ -1829,6 +1969,9 @@ const formatRelativeDate = (dateString: string): string => {
 .room-preview-icon { margin-bottom: 1rem; }
 .room-preview-title { font-size: 1.125rem; font-weight: 700; color: #262626; margin: 0 0 0.25rem; }
 .room-preview-subtitle { font-size: 0.8125rem; color: #8e8e8e; margin: 0 0 1.25rem; }
+.room-preview-thumbnails { display: flex; gap: 6px; margin-bottom: 12px; align-items: center; justify-content: center; }
+.room-preview-thumb { width: 52px; height: 52px; object-fit: contain; border-radius: 8px; background: #f5f5f7; }
+.room-preview-more { width: 52px; height: 52px; border-radius: 8px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #86868b; }
 .room-enter-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.625rem 1.5rem; background: #262626; color: white; border: none; border-radius: 10px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .room-enter-btn:hover { background: #363636; }
 
@@ -2018,4 +2161,20 @@ const formatRelativeDate = (dateString: string): string => {
 .knock-modal-enter-from .knock-modal { transform: scale(0.9); opacity: 0; }
 .knock-modal-leave-to { opacity: 0; }
 .knock-modal-leave-to .knock-modal { transform: scale(0.9); opacity: 0; }
+
+/* ===== Follow list modal ===== */
+.follow-list-modal { background: #fff; border-radius: 20px; width: 90%; max-width: 400px; max-height: 70vh; display: flex; flex-direction: column; overflow: hidden; }
+.follow-list-header { display: flex; align-items: center; border-bottom: 1px solid #f0f0f0; padding: 0; }
+.follow-list-tab { flex: 1; padding: 14px 0; font-size: 14px; font-weight: 600; color: #86868b; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+.follow-list-tab.active { color: #1d1d1f; border-bottom-color: #1d1d1f; }
+.follow-list-close { width: 44px; padding: 14px 0; font-size: 16px; background: none; border: none; color: #86868b; cursor: pointer; }
+.follow-list-body { flex: 1; overflow-y: auto; padding: 8px 0; }
+.follow-list-items { padding: 0; }
+.follow-list-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background 0.15s; }
+.follow-list-item:active { background: #f5f5f7; }
+.follow-list-avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.follow-list-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.follow-list-name { font-size: 14px; font-weight: 500; color: #1d1d1f; }
+.counter-item.clickable { cursor: pointer; }
+.counter-item.clickable:active { opacity: 0.6; }
 </style>
