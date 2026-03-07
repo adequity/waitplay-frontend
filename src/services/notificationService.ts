@@ -2,7 +2,7 @@ import apiClient from './api'
 
 export interface NotificationItem {
   id: string
-  type: 'like' | 'new_guestbook' | 'reply' | 'user_follow' | 'profile_guestbook' | 'room_asset_ready'
+  type: 'like' | 'new_guestbook' | 'reply' | 'user_follow' | 'profile_guestbook' | 'room_asset_ready' | 'knock'
   fromUserId: string | null
   fromUserName: string | null
   fromUserProfileImage: string | null
@@ -67,6 +67,13 @@ class NotificationService {
    */
   async deleteAllNotifications(): Promise<void> {
     await apiClient.delete('/api/notifications')
+  }
+
+  /**
+   * 노크 알림 보내기
+   */
+  async sendKnock(targetProfileCode: string): Promise<void> {
+    await apiClient.post('/api/notifications/knock', { targetProfileCode })
   }
 }
 

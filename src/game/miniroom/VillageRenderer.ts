@@ -206,42 +206,37 @@ export class VillageRenderer {
       this.objects.push(badge)
     }
 
-    // N badge for random/recommended rooms — circular with pulse animation
+    // N badge for random/recommended rooms
     if (room.isRandom) {
       const cubeH = 2 * this.hexSize
-      const cubeW2 = CUBE_SIZE_RATIO * this.hexSize
       const badgeRadius = Math.max(8, this.hexSize * 0.14)
-      const badgeX = px + cubeW2 * 0.32
-      const badgeY = py - cubeH * 0.38
+      const badgeX = px
+      const badgeY = py - cubeH * 0.42
+      const depth = 11 + py
 
-      // Pulse ring (animated glow)
-      const pulseRing = this.scene.add.graphics()
-      pulseRing.fillStyle(0x8B5CF6, 0.3)
-      pulseRing.fillCircle(badgeX, badgeY, badgeRadius * 1.6)
-      pulseRing.setDepth(11 + py - 0.2)
-      this.objects.push(pulseRing)
+      // Use Phaser.GameObjects.Arc for proper pivot-based scaling
+      const pulseCircle = this.scene.add.circle(badgeX, badgeY, badgeRadius * 1.4, 0x8B5CF6, 0.3)
+      pulseCircle.setDepth(depth - 0.2)
+      this.objects.push(pulseCircle)
 
       this.scene.tweens.add({
-        targets: pulseRing,
-        scaleX: 1.5,
-        scaleY: 1.5,
+        targets: pulseCircle,
+        scaleX: 2,
+        scaleY: 2,
         alpha: 0,
-        duration: 1200,
+        duration: 1400,
         ease: 'Sine.easeOut',
         repeat: -1,
-        yoyo: false,
         onRepeat: () => {
-          pulseRing.setScale(1)
-          pulseRing.setAlpha(1)
+          pulseCircle.setScale(1)
+          pulseCircle.setAlpha(0.3)
         },
       })
 
-      // Solid circle background
-      const bg = this.scene.add.graphics()
-      bg.fillStyle(0x8B5CF6, 1)
-      bg.fillCircle(badgeX, badgeY, badgeRadius)
-      bg.setDepth(11 + py)
-      this.objects.push(bg)
+      // Solid badge circle
+      const bgCircle = this.scene.add.circle(badgeX, badgeY, badgeRadius, 0x8B5CF6, 1)
+      bgCircle.setDepth(depth)
+      this.objects.push(bgCircle)
 
       // "N" text
       const badgeFontSize = Math.max(7, badgeRadius * 1.2)
@@ -251,15 +246,15 @@ export class VillageRenderer {
         fontStyle: 'bold',
         color: '#ffffff',
       })
-      nText.setOrigin(0.5, 0.5).setDepth(11 + py + 0.1)
+      nText.setOrigin(0.5, 0.5).setDepth(depth + 0.1)
       this.objects.push(nText)
 
-      // Gentle bounce on the badge group
+      // Gentle pulse on badge
       this.scene.tweens.add({
-        targets: [bg, nText],
+        targets: [bgCircle, nText],
         scaleX: 1.15,
         scaleY: 1.15,
-        duration: 800,
+        duration: 900,
         ease: 'Sine.easeInOut',
         yoyo: true,
         repeat: -1,

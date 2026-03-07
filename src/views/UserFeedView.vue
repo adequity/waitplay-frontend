@@ -498,6 +498,7 @@
                     <span v-else-if="noti.type === 'reply'">님이 답글을 달았습니다.</span>
                     <span v-else-if="noti.type === 'profile_guestbook'">님이 프로필 방명록을 남겼습니다.</span>
                     <span v-else-if="noti.type === 'user_follow'">님이 회원님을 팔로우했습니다.</span>
+                    <span v-else-if="noti.type === 'knock'">님이 회원님의 방을 노크했습니다. 👋</span>
                   </template>
                   <span class="noti-time">{{ formatRelativeDate(noti.createdAt) }}</span>
                 </p>
@@ -1151,11 +1152,14 @@ function openKnockModal(room: VillageStoreRoom) {
   showKnockModal.value = true
 }
 
-function confirmKnock() {
+async function confirmKnock() {
   if (!knockTarget.value) return
+  const profileCode = knockTarget.value.profileCode
   showKnockModal.value = false
   closeRoomFullscreen()
-  router.push(`/u/${knockTarget.value.profileCode}`)
+  // 노크 알림 전송 (실패해도 이동은 진행)
+  notificationService.sendKnock(profileCode).catch(() => {})
+  router.push(`/u/${profileCode}`)
   knockTarget.value = null
 }
 
@@ -1447,6 +1451,14 @@ async function handleNotificationClick(noti: NotificationItem) {
   }
   if (noti.type === 'room_asset_ready') {
     activeTab.value = 'decorate'
+    return
+  }
+  if (noti.type === 'knock' && noti.fromUserProfileCode) {
+    router.push(`/u/${noti.fromUserProfileCode}`)
+    return
+  }
+  if (noti.type === 'user_follow' && noti.fromUserProfileCode) {
+    router.push(`/u/${noti.fromUserProfileCode}`)
     return
   }
   if (noti.guestbookMessageId) {
