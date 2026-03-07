@@ -206,23 +206,64 @@ export class VillageRenderer {
       this.objects.push(badge)
     }
 
-    // N badge for random/recommended rooms
+    // N badge for random/recommended rooms — circular with pulse animation
     if (room.isRandom) {
       const cubeH = 2 * this.hexSize
       const cubeW2 = CUBE_SIZE_RATIO * this.hexSize
-      const badgeFontSize = Math.max(8, this.hexSize * 0.16)
-      const badgeX = px + cubeW2 * 0.3
-      const badgeY = py - cubeH * 0.35
-      const badge = this.scene.add.text(badgeX, badgeY, 'N', {
+      const badgeRadius = Math.max(8, this.hexSize * 0.14)
+      const badgeX = px + cubeW2 * 0.32
+      const badgeY = py - cubeH * 0.38
+
+      // Pulse ring (animated glow)
+      const pulseRing = this.scene.add.graphics()
+      pulseRing.fillStyle(0x8B5CF6, 0.3)
+      pulseRing.fillCircle(badgeX, badgeY, badgeRadius * 1.6)
+      pulseRing.setDepth(11 + py - 0.2)
+      this.objects.push(pulseRing)
+
+      this.scene.tweens.add({
+        targets: pulseRing,
+        scaleX: 1.5,
+        scaleY: 1.5,
+        alpha: 0,
+        duration: 1200,
+        ease: 'Sine.easeOut',
+        repeat: -1,
+        yoyo: false,
+        onRepeat: () => {
+          pulseRing.setScale(1)
+          pulseRing.setAlpha(1)
+        },
+      })
+
+      // Solid circle background
+      const bg = this.scene.add.graphics()
+      bg.fillStyle(0x8B5CF6, 1)
+      bg.fillCircle(badgeX, badgeY, badgeRadius)
+      bg.setDepth(11 + py)
+      this.objects.push(bg)
+
+      // "N" text
+      const badgeFontSize = Math.max(7, badgeRadius * 1.2)
+      const nText = this.scene.add.text(badgeX, badgeY, 'N', {
         fontFamily: 'Noto Sans KR, sans-serif',
         fontSize: `${badgeFontSize}px`,
         fontStyle: 'bold',
         color: '#ffffff',
-        backgroundColor: '#8B5CF6',
-        padding: { x: 4, y: 2 },
       })
-      badge.setOrigin(0.5, 0.5).setDepth(11 + py)
-      this.objects.push(badge)
+      nText.setOrigin(0.5, 0.5).setDepth(11 + py + 0.1)
+      this.objects.push(nText)
+
+      // Gentle bounce on the badge group
+      this.scene.tweens.add({
+        targets: [bg, nText],
+        scaleX: 1.15,
+        scaleY: 1.15,
+        duration: 800,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1,
+      })
     }
   }
 
