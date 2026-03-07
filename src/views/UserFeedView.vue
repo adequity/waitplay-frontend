@@ -634,6 +634,30 @@
       </div>
     </Teleport>
 
+    <!-- 노크 확인 모달 -->
+    <Teleport to="body">
+      <Transition name="knock-modal">
+        <div v-if="showKnockModal && knockTarget" class="knock-modal-overlay" @click.self="cancelKnock">
+          <div class="knock-modal">
+            <div class="knock-modal-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+            </div>
+            <div class="knock-modal-name">{{ knockTarget.name }}</div>
+            <div class="knock-modal-msg">
+              {{ knockTarget.randomType === 'admin' ? '이 매장을 노크할까요?' : '이 유저의 방을 노크할까요?' }}
+            </div>
+            <div class="knock-modal-buttons">
+              <button class="knock-btn knock-btn-cancel" @click="cancelKnock">취소</button>
+              <button class="knock-btn knock-btn-confirm" @click="confirmKnock">노크하기</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- 공유 토스트 -->
     <Transition name="toast">
       <div v-if="showShareToast" class="share-toast">{{ shareToastMessage }}</div>
@@ -1083,16 +1107,9 @@ function onStoreTap(e: Event) {
     return
   }
 
-  // 랜덤 추천 룸 클릭 → 노크 확인 후 프로필 이동
+  // 랜덤 추천 룸 클릭 → 노크 모달
   if (room.isRandom && room.friendProfileCode) {
-    const name = room.storeName || '이 유저'
-    const msg = room.randomType === 'admin'
-      ? `'${name}' 노크하기`
-      : `'${name}'님의 방에 노크하기`
-    if (confirm(msg)) {
-      closeRoomFullscreen()
-      router.push(`/u/${room.friendProfileCode}`)
-    }
+    openKnockModal(room)
     return
   }
 
@@ -1120,6 +1137,33 @@ function onStoreTap(e: Event) {
 const showStoreActionSheet = ref(false)
 const actionSheetRoom = ref<VillageStoreRoom | null>(null)
 
+// 노크 모달 state
+const showKnockModal = ref(false)
+const knockTarget = ref<{ name: string; profileCode: string; randomType: string } | null>(null)
+
+function openKnockModal(room: VillageStoreRoom) {
+  const name = room.storeName || '이 유저'
+  knockTarget.value = {
+    name,
+    profileCode: room.friendProfileCode!,
+    randomType: room.randomType || 'user',
+  }
+  showKnockModal.value = true
+}
+
+function confirmKnock() {
+  if (!knockTarget.value) return
+  showKnockModal.value = false
+  closeRoomFullscreen()
+  router.push(`/u/${knockTarget.value.profileCode}`)
+  knockTarget.value = null
+}
+
+function cancelKnock() {
+  showKnockModal.value = false
+  knockTarget.value = null
+}
+
 function goToGuestbookFromVillage() {
   closeRoomFullscreen()
   activeTab.value = 'notifications'
@@ -1129,14 +1173,7 @@ function actionGoToStore() {
   const room = actionSheetRoom.value
   showStoreActionSheet.value = false
   if (room?.isRandom && room?.friendProfileCode) {
-    const name = room.storeName || '이 유저'
-    const msg = room.randomType === 'admin'
-      ? `'${name}' 노크하기`
-      : `'${name}'님의 방에 노크하기`
-    if (confirm(msg)) {
-      closeRoomFullscreen()
-      router.push(`/u/${room.friendProfileCode}`)
-    }
+    openKnockModal(room)
     return
   }
   if (room?.isFriend && room?.friendProfileCode) {
@@ -1891,4 +1928,82 @@ const formatRelativeDate = (dateString: string): string => {
   font-weight: 600;
   color: #86868b;
 }
+
+/* 노크 모달 */
+.knock-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+.knock-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px 28px 24px;
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+.knock-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B5CF6, #6366F1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #fff;
+}
+.knock-modal-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 6px;
+}
+.knock-modal-msg {
+  font-size: 14px;
+  color: #86868b;
+  margin-bottom: 24px;
+}
+.knock-modal-buttons {
+  display: flex;
+  gap: 10px;
+}
+.knock-btn {
+  flex: 1;
+  padding: 12px 0;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.knock-btn:active {
+  transform: scale(0.97);
+}
+.knock-btn-cancel {
+  background: #f5f5f7;
+  color: #86868b;
+}
+.knock-btn-confirm {
+  background: linear-gradient(135deg, #8B5CF6, #6366F1);
+  color: #fff;
+}
+
+/* 노크 모달 트랜지션 */
+.knock-modal-enter-active { transition: opacity 0.2s ease; }
+.knock-modal-enter-active .knock-modal { transition: transform 0.2s ease, opacity 0.2s ease; }
+.knock-modal-leave-active { transition: opacity 0.15s ease; }
+.knock-modal-leave-active .knock-modal { transition: transform 0.15s ease, opacity 0.15s ease; }
+.knock-modal-enter-from { opacity: 0; }
+.knock-modal-enter-from .knock-modal { transform: scale(0.9); opacity: 0; }
+.knock-modal-leave-to { opacity: 0; }
+.knock-modal-leave-to .knock-modal { transform: scale(0.9); opacity: 0; }
 </style>
