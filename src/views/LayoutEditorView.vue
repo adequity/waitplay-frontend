@@ -1868,7 +1868,9 @@ async function loadLayout() {
 
   try {
     isLoading.value = true
-    const response = await fetch(`${API_BASE_URL}/api/landingpage/layout/${qrCodeId.value}`)
+    const response = await fetch(`${API_BASE_URL}/api/landingpage/layout/${qrCodeId.value}`, {
+      credentials: 'include'
+    })
 
     if (response.ok) {
       const layout = await response.json()
@@ -2889,6 +2891,7 @@ async function useExistingImageAsThumbnail(index: number) {
     // 기존 이미지 URL에서 파일명 추출하여 썸네일 API 호출
     const response = await fetch(`${API_BASE_URL}/api/fileupload/thumbnail-from-url`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageUrl: item.imageUrl })
     })
@@ -2951,6 +2954,7 @@ async function saveLayout() {
 
     const response = await fetch(`${API_BASE_URL}/api/landingpage/layout`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },

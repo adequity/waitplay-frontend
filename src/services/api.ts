@@ -19,8 +19,23 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Flag to prevent multiple refresh attempts
+// Token refresh state
 let isRefreshing = false
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void
+  reject: (reason?: unknown) => void
+}> = []
+
+function processQueue(error: unknown) {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error)
+    } else {
+      resolve()
+    }
+  })
+  failedQueue = []
+}
 
 // Response interceptor to handle token refresh
 apiClient.interceptors.response.use(
@@ -51,13 +66,21 @@ apiClient.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    // If 401, not an auth endpoint, not already retrying, and not currently refreshing
+    // If 401, not an auth endpoint, not already retrying
     if (
       error.response?.status === 401 &&
       originalRequest &&
-      !originalRequest._retry &&
-      !isRefreshing
+      !originalRequest._retry
     ) {
+      // If already refreshing, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        }).then(() => {
+          return apiClient(originalRequest)
+        })
+      }
+
       originalRequest._retry = true
       isRefreshing = true
 
@@ -66,9 +89,11 @@ apiClient.interceptors.response.use(
         const refreshed = await authStore.refreshAccessToken()
 
         if (refreshed) {
-          // 쿠키가 자동 갱신되므로 헤더 설정 불필요
+          // 쿠키가 자동 갱신됨 — 큐에 대기 중인 요청 재시도
+          processQueue(null)
           return apiClient(originalRequest)
         } else {
+          processQueue(new Error('Token refresh failed'))
           // Refresh failed, only redirect if on a protected page
           const currentPath = window.location.pathname
           const publicPaths = ['/customer', '/game', '/login', '/signup', '/forgot-password']
@@ -78,6 +103,8 @@ apiClient.interceptors.response.use(
             window.location.href = '/login'
           }
         }
+      } catch (refreshError) {
+        processQueue(refreshError)
       } finally {
         isRefreshing = false
       }

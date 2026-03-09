@@ -90,11 +90,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function setTokens(data: TokenResponse) {
+  async function setTokens(data: TokenResponse) {
     // 쿠키는 서버가 자동 설정
     userRole.value = data.userRole
     localStorage.setItem('userRole', data.userRole)
-    fetchUser()
+    await fetchUser()
   }
 
   async function logout() {

@@ -355,6 +355,7 @@ const uploadAudioFile = async (file: File): Promise<string> => {
 
   const response = await fetch(`${API_URL}/api/FileUpload/audio`, {
     method: 'POST',
+    credentials: 'include',
     body: formData
   })
 
