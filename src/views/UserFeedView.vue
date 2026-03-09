@@ -8,7 +8,11 @@
         </svg>
       </button>
       <h1 class="page-title">{{ profile?.nickname || '프로필' }}</h1>
-      <div class="header-spacer"></div>
+      <button @click="showUserSearch = true" class="search-btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
     </header>
 
     <!-- 로딩 -->
@@ -198,6 +202,60 @@
 
         <!-- ===== 탭1: 방명록 (프로필 방명록) ===== -->
         <div v-if="activeTab === 'guestbook'" class="guestbook-tab">
+          <!-- 서브탭: 방명록 / 트렌딩 -->
+          <div class="view-toggle" style="margin-bottom: 12px;">
+            <button :class="{ active: guestbookSubTab === 'mine' }" @click="guestbookSubTab = 'mine'">방명록</button>
+            <button :class="{ active: guestbookSubTab === 'trending' }" @click="guestbookSubTab = 'trending'; loadTrending()">트렌딩 🔥</button>
+          </div>
+
+          <!-- 트렌딩 서브탭 -->
+          <div v-if="guestbookSubTab === 'trending'" class="trending-section">
+            <div class="trending-period-toggle">
+              <button v-for="p in trendingPeriods" :key="p.value" :class="{ active: trendingPeriod === p.value }" class="period-btn" @click="trendingPeriod = p.value; loadTrending()">{{ p.label }}</button>
+            </div>
+            <div v-if="isLoadingTrending" class="loading-state"><div class="spinner"></div></div>
+            <div v-else-if="trendingMessages.length === 0" class="empty-state">
+              <p class="empty-title">트렌딩 방명록이 없어요</p>
+            </div>
+            <div v-else class="feed-list">
+              <div v-for="msg in trendingMessages" :key="msg.id" class="feed-post">
+                <div class="feed-post-header">
+                  <div class="feed-author" @click="goToUserProfile(msg.userProfileCode || msg.userId)">
+                    <div class="feed-author-avatar">
+                      <div class="avatar-gradient-ring-small"><div class="avatar-inner-small">
+                        <img v-if="msg.userProfileImage" :src="msg.userProfileImage" :alt="msg.userName" class="avatar-img-small"/>
+                        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/><path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2"/></svg>
+                      </div></div>
+                    </div>
+                    <div class="feed-author-info">
+                      <p class="feed-author-name">{{ msg.userName }}</p>
+                      <p class="feed-timestamp">{{ formatRelativeDate(msg.createdAt) }}</p>
+                    </div>
+                  </div>
+                  <div class="trending-score">🔥 {{ msg.score }}</div>
+                </div>
+                <div class="feed-content" @click="openDetail(msg)">
+                  <div v-if="msg.imageUrl" class="feed-image-wrapper">
+                    <img :src="msg.imageUrl" :alt="`${msg.userName}의 방명록`" class="feed-image" loading="lazy"/>
+                  </div>
+                  <div v-else-if="msg.message" class="feed-postit" :style="{ background: getCardBg(msg.color) }">
+                    <p class="feed-postit-text">{{ msg.message }}</p>
+                  </div>
+                </div>
+                <div class="trending-stats">
+                  <span>❤️ {{ msg.likeCount }}</span>
+                  <span>😊 {{ msg.reactionCount }}</span>
+                  <span>👁️ {{ msg.viewCount }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-if="trendingMessages.length >= 20" class="load-more">
+              <button class="load-more-btn" @click="loadMoreTrending">더 보기</button>
+            </div>
+          </div>
+
+          <!-- 기존 방명록 서브탭 -->
+          <template v-else>
           <!-- 방명록 작성 버튼 (다른 사람 프로필 방문 시) -->
           <div v-if="!isMyProfile && isAuthenticated" class="write-guestbook-bar">
             <button class="write-guestbook-btn" @click="openDrawingModal">
@@ -304,6 +362,7 @@
               <span v-else>더 보기</span>
             </button>
           </div>
+          </template>
         </div>
 
         <!-- ===== 탭2: 매장기록 ===== -->
@@ -512,6 +571,9 @@
                     <span v-else-if="noti.type === 'user_follow'">님이 회원님을 팔로우했습니다.</span>
                     <span v-else-if="noti.type === 'knock'">님이 회원님의 방을 노크했습니다. 👋</span>
                     <span v-else-if="noti.type === 'store_follow'">님이 매장을 팔로우했습니다. ⭐</span>
+                    <span v-else-if="noti.type === 'profile_visit'">님이 프로필을 방문했습니다. 👀</span>
+                    <span v-else-if="noti.type === 'reaction'">님이 반응을 남겼습니다.</span>
+                    <span v-else-if="noti.type === 'mention'">님이 회원님을 멘션했습니다. @</span>
                   </template>
                   <span class="noti-time">{{ formatRelativeDate(noti.createdAt) }}</span>
                 </p>
@@ -523,13 +585,28 @@
                   <span>{{ noti.guestbookMessageText.slice(0, 20) }}</span>
                 </div>
               </div>
+              <!-- knock 타입: 노크 답장 + 팔로우 버튼 -->
+              <div v-else-if="noti.type === 'knock' && noti.fromUserId" class="noti-knock-actions">
+                <button
+                  v-if="!knockReplySent[noti.id]"
+                  class="noti-knock-reply-btn"
+                  @click="knockReply(noti, $event)"
+                >👋 답장</button>
+                <span v-else class="noti-knock-replied-label">답장 완료</span>
+                <button
+                  v-if="!notiFollowStatus[noti.fromUserId]"
+                  class="noti-follow-btn-sm"
+                  @click="quickFollowBack(noti, $event)"
+                >팔로우</button>
+                <span v-else class="noti-following-label-sm">팔로잉</span>
+              </div>
               <button
-                v-else-if="['user_follow', 'knock', 'store_follow'].includes(noti.type) && noti.fromUserId && !notiFollowStatus[noti.fromUserId]"
+                v-else-if="['user_follow', 'store_follow'].includes(noti.type) && noti.fromUserId && !notiFollowStatus[noti.fromUserId]"
                 class="noti-follow-btn"
                 @click="quickFollowBack(noti, $event)"
               >팔로우</button>
               <span
-                v-else-if="['user_follow', 'knock', 'store_follow'].includes(noti.type) && noti.fromUserId && notiFollowStatus[noti.fromUserId]"
+                v-else-if="['user_follow', 'store_follow'].includes(noti.type) && noti.fromUserId && notiFollowStatus[noti.fromUserId]"
                 class="noti-following-label"
               >팔로잉</span>
             </div>
@@ -729,6 +806,11 @@
       @close="showStorePicker = false; pendingSlot = null"
       @select="handleStorePlaced"
     />
+
+    <UserSearchModal
+      :visible="showUserSearch"
+      @close="showUserSearch = false"
+    />
   </div>
 </template>
 
@@ -745,11 +827,12 @@ import { getUserVillage, placeSlot, removeSlot, swapSlots, type VillageResponse 
 import type { VillageStoreRoom, VillageEmptySlot } from '@/game/miniroom/VillageConfig'
 import { setDynamicThemes } from '@/game/miniroom/VillageConfig'
 import { getActiveVillageThemes } from '@/services/villageThemeService'
-import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse } from '@/services/guestbookService'
+import type { UserPublicProfile, MyGuestbookMessageResponse, GuestbookMessageResponse, StoreAlbumResponse, TrendingMessage } from '@/services/guestbookService'
 import type { NotificationItem } from '@/services/notificationService'
 import { getCardBg } from '@/constants/guestbookColors'
 import MessageDetailModal from '@/components/blocks/guestbook/MessageDetailModal.vue'
 import DrawingModal from '@/components/blocks/guestbook/DrawingModal.vue'
+import UserSearchModal from '@/components/UserSearchModal.vue'
 import StorePickerModal from '@/components/StorePickerModal.vue'
 import apiClient from '@/services/api'
 
@@ -846,6 +929,18 @@ const profileGuestbookPage = ref(1)
 const hasMoreProfileGuestbook = ref(false)
 const showDrawing = ref(false)
 
+// Trending
+const guestbookSubTab = ref<'mine' | 'trending'>('mine')
+const trendingMessages = ref<TrendingMessage[]>([])
+const isLoadingTrending = ref(false)
+const trendingPeriod = ref<'day' | 'week' | 'month'>('week')
+const trendingPage = ref(1)
+const trendingPeriods = [
+  { value: 'day' as const, label: '오늘' },
+  { value: 'week' as const, label: '이번 주' },
+  { value: 'month' as const, label: '이번 달' },
+]
+
 // Store records (existing feed)
 const messages = ref<MyGuestbookMessageResponse[]>([])
 const isLoadingMessages = ref(false)
@@ -867,11 +962,13 @@ const notificationOffset = ref(0)
 const hasMoreNotifications = ref(false)
 const notificationsLoaded = ref(false)
 const notiFollowStatus = ref<Record<string, boolean>>({})
+const knockReplySent = ref<Record<string, boolean>>({})
 
 const userCode = route.params.code as string
 
 // Edit profile
 const showEditProfile = ref(false)
+const showUserSearch = ref(false)
 const isSavingProfile = ref(false)
 const editForm = ref({ nickname: '', profileImage: '' as string | undefined, bio: '' })
 const photoInput = ref<HTMLInputElement | null>(null)
@@ -1383,6 +1480,23 @@ async function loadMoreProfileGuestbook() {
   await loadProfileGuestbook()
 }
 
+async function loadTrending() {
+  isLoadingTrending.value = true
+  trendingPage.value = 1
+  try {
+    trendingMessages.value = await guestbookService.getTrending(trendingPeriod.value, 1)
+  } catch { trendingMessages.value = [] }
+  finally { isLoadingTrending.value = false }
+}
+
+async function loadMoreTrending() {
+  trendingPage.value++
+  try {
+    const more = await guestbookService.getTrending(trendingPeriod.value, trendingPage.value)
+    trendingMessages.value.push(...more)
+  } catch { /* silent */ }
+}
+
 async function loadMessages() {
   isLoadingMessages.value = true
   try {
@@ -1505,6 +1619,19 @@ async function quickFollowBack(noti: NotificationItem, event: Event) {
   } catch { /* silent */ }
 }
 
+async function knockReply(noti: NotificationItem, event: Event) {
+  event.stopPropagation()
+  if (!noti.fromUserProfileCode) return
+  try {
+    await notificationService.sendKnock(noti.fromUserProfileCode)
+    knockReplySent.value[noti.id] = true
+  } catch (err: any) {
+    if (err?.response?.status === 429) {
+      alert('노크 답장은 1시간에 한 번만 보낼 수 있습니다.')
+    }
+  }
+}
+
 // ===== Actions =====
 
 function openDrawingModal() {
@@ -1608,7 +1735,7 @@ async function handleNotificationClick(noti: NotificationItem) {
     router.push(`/u/${noti.fromUserProfileCode}`)
     return
   }
-  if ((noti.type === 'user_follow' || noti.type === 'store_follow') && noti.fromUserProfileCode) {
+  if ((noti.type === 'user_follow' || noti.type === 'store_follow' || noti.type === 'profile_visit') && noti.fromUserProfileCode) {
     router.push(`/u/${noti.fromUserProfileCode}`)
     return
   }
@@ -1745,6 +1872,8 @@ const formatRelativeDate = (dateString: string): string => {
 .back-btn:hover { background: #f5f5f5; }
 .page-title { font-size: 16px; font-weight: 600; color: #262626; margin: 0; }
 .header-spacer { width: 40px; }
+.search-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; border-radius: 50%; cursor: pointer; color: #262626; transition: all 0.2s; }
+.search-btn:hover { background: #f5f5f5; }
 
 /* ===== Loading / Empty ===== */
 .loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; gap: 1rem; color: #8e8e8e; }
@@ -1838,6 +1967,12 @@ const formatRelativeDate = (dateString: string): string => {
 .view-toggle { display: flex; padding: 0.75rem 1rem; gap: 0.5rem; background: white; border-bottom: 1px solid #efefef; }
 .view-toggle button { flex: 1; padding: 0.5rem; border: 1px solid #dbdbdb; border-radius: 8px; background: white; font-size: 13px; font-weight: 600; color: #8e8e8e; cursor: pointer; transition: all 0.2s; }
 .view-toggle button.active { background: #262626; color: white; border-color: #262626; }
+.trending-section { background: white; }
+.trending-period-toggle { display: flex; gap: 6px; padding: 8px 16px; }
+.period-btn { padding: 6px 14px; border-radius: 16px; border: 1px solid #e5e7eb; background: white; font-size: 13px; font-weight: 500; color: #6b7280; cursor: pointer; transition: all 0.15s; }
+.period-btn.active { background: #1d1d1f; color: white; border-color: #1d1d1f; }
+.trending-score { font-size: 13px; font-weight: 600; color: #F59E0B; }
+.trending-stats { display: flex; gap: 12px; padding: 4px 0 8px; font-size: 13px; color: #6b7280; }
 
 /* ===== Album Grid ===== */
 .album-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #efefef; }
@@ -1907,6 +2042,13 @@ const formatRelativeDate = (dateString: string): string => {
 .noti-follow-btn { flex-shrink: 0; padding: 6px 14px; border-radius: 8px; border: none; background: #6366F1; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .noti-follow-btn:active { background: #4F46E5; }
 .noti-following-label { flex-shrink: 0; padding: 6px 14px; border-radius: 8px; border: 1px solid #e5e7eb; background: transparent; color: #86868b; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.noti-knock-actions { flex-shrink: 0; display: flex; gap: 4px; align-items: center; }
+.noti-knock-reply-btn { padding: 5px 10px; border-radius: 8px; border: none; background: #F59E0B; color: #fff; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.noti-knock-reply-btn:active { background: #D97706; }
+.noti-knock-replied-label { padding: 5px 10px; border-radius: 8px; border: 1px solid #e5e7eb; background: transparent; color: #86868b; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.noti-follow-btn-sm { padding: 5px 8px; border-radius: 8px; border: none; background: #6366F1; color: #fff; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.noti-follow-btn-sm:active { background: #4F46E5; }
+.noti-following-label-sm { padding: 5px 8px; border-radius: 8px; border: 1px solid #e5e7eb; background: transparent; color: #86868b; font-size: 11px; font-weight: 500; white-space: nowrap; }
 
 /* ===== Modal ===== */
 .modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; }

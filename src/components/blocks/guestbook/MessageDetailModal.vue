@@ -85,6 +85,20 @@
             </div>
           </div>
 
+          <!-- 이모지 반응 -->
+          <div class="detail-reactions">
+            <button
+              v-for="r in reactionTypes"
+              :key="r.type"
+              class="reaction-btn"
+              :class="{ active: myReactions.includes(r.type) }"
+              @click="toggleReaction(r.type)"
+            >
+              <span class="reaction-emoji">{{ r.emoji }}</span>
+              <span v-if="getReactionCount(r.type) > 0" class="reaction-count">{{ getReactionCount(r.type) }}</span>
+            </button>
+          </div>
+
           <!-- 사장님 답글 -->
           <div v-if="isLoadingReplies" class="detail-replies-loading">
             <span class="loading-spinner-small"></span>
@@ -129,6 +143,48 @@ const emit = defineEmits<{
 const replies = ref<any[]>([])
 const isLoadingReplies = ref(false)
 const isLiking = ref(false)
+
+// 이모지 반응
+const reactionTypes = [
+  { type: 'heart', emoji: '❤️' },
+  { type: 'laugh', emoji: '😂' },
+  { type: 'wow', emoji: '😮' },
+  { type: 'sad', emoji: '😢' },
+  { type: 'clap', emoji: '👏' },
+  { type: 'fire', emoji: '🔥' },
+]
+const reactionCounts = ref<Record<string, number>>({})
+const myReactions = ref<string[]>([])
+
+function getReactionCount(type: string): number {
+  return reactionCounts.value[type] || 0
+}
+
+async function loadReactions(messageId: string) {
+  try {
+    const data = await guestbookService.getReactions(messageId)
+    const counts: Record<string, number> = {}
+    for (const r of data.reactions) {
+      counts[r.type] = r.count
+    }
+    reactionCounts.value = counts
+    myReactions.value = data.myReactions
+  } catch { /* silent */ }
+}
+
+async function toggleReaction(type: string) {
+  if (!props.message) return
+  try {
+    const result = await guestbookService.toggleReaction(props.message.id, type)
+    if (result.toggled) {
+      reactionCounts.value[type] = (reactionCounts.value[type] || 0) + 1
+      myReactions.value.push(type)
+    } else {
+      reactionCounts.value[type] = Math.max(0, (reactionCounts.value[type] || 0) - 1)
+      myReactions.value = myReactions.value.filter(r => r !== type)
+    }
+  } catch { /* silent */ }
+}
 
 // 오디오 플레이어 상태
 const audioEl = ref<HTMLAudioElement | null>(null)
@@ -222,10 +278,13 @@ watch(() => props.visible, async (newVal) => {
     // 조회수 증가 (실패 시 무시)
     guestbookService.incrementViewCount(props.message.id).catch(() => {})
 
-    // 답글 로드
+    // 답글 + 반응 로드
     await loadReplies(props.message.id)
+    await loadReactions(props.message.id)
   } else {
     replies.value = []
+    reactionCounts.value = {}
+    myReactions.value = []
     cleanupAudio()
   }
 })
@@ -547,6 +606,44 @@ const formatDate = (dateString: string): string => {
   min-width: 36px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* 이모지 반응 */
+.detail-reactions {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.reaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+}
+.reaction-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.reaction-btn.active {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.reaction-emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+.reaction-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* 답글 섹션 */

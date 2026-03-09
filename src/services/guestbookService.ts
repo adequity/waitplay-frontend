@@ -102,6 +102,25 @@ export interface GuestbookStatsSummary {
   qrCodeCount: number
 }
 
+export interface TrendingMessage {
+  id: string
+  userId: string
+  userName: string
+  userProfileImage?: string
+  userProfileCode?: string
+  message?: string
+  imageUrl?: string
+  audioUrl?: string
+  rotation: number
+  color: string
+  createdAt: string
+  viewCount: number
+  likeCount: number
+  isLikedByMe: boolean
+  reactionCount: number
+  score: number
+}
+
 export interface StickerAsset {
   id: string
   type: 'logo' | 'asset'
@@ -568,6 +587,27 @@ class GuestbookService {
 
   async getActivityHeatmap(userCode: string): Promise<ActivityHeatmapResponse> {
     const response = await apiClient.get<ActivityHeatmapResponse>(`/api/guestbook/user/${userCode}/activity`)
+    return response.data
+  }
+
+  // ===== Reactions =====
+
+  async toggleReaction(messageId: string, reactionType: string): Promise<{ toggled: boolean; reactionType: string }> {
+    const response = await apiClient.post(`/api/guestbook/${messageId}/reaction`, { reactionType })
+    return response.data
+  }
+
+  async getReactions(messageId: string): Promise<{ reactions: { type: string; count: number }[]; myReactions: string[] }> {
+    const response = await apiClient.get(`/api/guestbook/${messageId}/reactions`)
+    return response.data
+  }
+
+  // ===== Trending =====
+
+  async getTrending(period: 'day' | 'week' | 'month' = 'week', page = 1, pageSize = 20): Promise<TrendingMessage[]> {
+    const response = await apiClient.get<TrendingMessage[]>('/api/guestbook/trending', {
+      params: { period, page, pageSize }
+    })
     return response.data
   }
 }
