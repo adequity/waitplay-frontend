@@ -985,12 +985,18 @@ async function selectVillageTheme(themeKey: string) {
 }
 
 // Reload village scene with current theme (called after theme change when fullscreen is open)
+/** 슬롯에 표시할 이미지가 있는지 확인 */
+function slotHasImage(s: any): boolean {
+  if (s.isFriend || s.isRandom) return !!(s.friendRoomAssetUrl || s.roomImageUrl)
+  return !!s.roomImageUrl
+}
+
 async function reloadVillageWithTheme() {
   if (!showRoomFullscreen.value || !village.value) return
   const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
   const slots = village.value.slots || []
   const villageRooms: VillageStoreRoom[] = slots
-    .filter(s => !s.isEmpty)
+    .filter(s => !s.isEmpty && slotHasImage(s))
     .map(s => ({
       id: s.isAd ? (s.adId || '') : (s.isFriend || s.isRandom ? (s.friendUserId || '') : (s.adminId || '')),
       roomImageUrl: (s.isFriend || s.isRandom) ? (s.friendRoomAssetUrl || '') : (s.roomImageUrl || ''),
@@ -1002,7 +1008,7 @@ async function reloadVillageWithTheme() {
       isRandom: s.isRandom, randomType: s.randomType,
       isAd: s.isAd, adId: s.adId, adLinkType: s.adLinkType, adLinkUrl: s.adLinkUrl, adStoreCode: s.adStoreCode,
     }))
-  const emptySlots: VillageEmptySlot[] = slots.filter(s => s.isEmpty).map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
+  const emptySlots: VillageEmptySlot[] = slots.filter(s => s.isEmpty || (!s.isEmpty && !slotHasImage(s))).map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
   miniRoomManager.reloadVillage(buildRoomData() as any, villageRooms, emptySlots, village.value?.selectedRoomAssetUrl, village.value?.villageTheme)
 }
 
@@ -1079,7 +1085,7 @@ async function openRoomFullscreen() {
     const { miniRoomManager } = await import('@/game/miniroom/MiniRoomManager')
     const slots = village.value?.slots || []
     const villageRooms: VillageStoreRoom[] = slots
-      .filter(s => !s.isEmpty)
+      .filter(s => !s.isEmpty && slotHasImage(s))
       .map(s => ({
         id: s.isAd ? s.adId! : ((s.isFriend || s.isRandom) ? s.friendUserId! : s.adminId!),
         roomImageUrl: s.roomImageUrl || '',
@@ -1100,7 +1106,7 @@ async function openRoomFullscreen() {
         adStoreCode: s.adStoreCode,
       }))
     const emptySlots: VillageEmptySlot[] = slots
-      .filter(s => s.isEmpty)
+      .filter(s => s.isEmpty || (!s.isEmpty && !slotHasImage(s)))
       .map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
 
     // 광고 노출 트래킹
@@ -1332,7 +1338,7 @@ async function reloadMiniroom() {
 
   const slots = village.value?.slots || []
   const villageRooms: VillageStoreRoom[] = slots
-    .filter(s => !s.isEmpty)
+    .filter(s => !s.isEmpty && slotHasImage(s))
     .map(s => ({
       id: s.isAd ? s.adId! : ((s.isFriend || s.isRandom) ? s.friendUserId! : s.adminId!),
       roomImageUrl: s.roomImageUrl || '',
@@ -1353,7 +1359,7 @@ async function reloadMiniroom() {
       adStoreCode: s.adStoreCode,
     }))
   const emptySlots: VillageEmptySlot[] = slots
-    .filter(s => s.isEmpty)
+    .filter(s => s.isEmpty || (!s.isEmpty && !slotHasImage(s)))
     .map(s => ({ gridQ: s.slotQ, gridR: s.slotR }))
 
   // Use scene restart instead of full game destroy/recreate
