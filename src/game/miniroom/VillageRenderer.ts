@@ -206,16 +206,20 @@ export class VillageRenderer {
       this.objects.push(badge)
     }
 
-    // N badge for random/recommended rooms
-    if (room.isRandom) {
+    // FN badge for friend rooms, N badge for random/recommended rooms
+    if (room.isFriend || room.isRandom) {
+      const isFriend = !!room.isFriend
+      const badgeText = isFriend ? 'FN' : 'N'
+      const badgeColor = isFriend ? 0x10B981 : 0x8B5CF6
+
       const cubeH = 2 * this.hexSize
-      const badgeRadius = Math.max(8, this.hexSize * 0.14)
+      const badgeRadius = Math.max(8, this.hexSize * (isFriend ? 0.17 : 0.14))
       const badgeX = px
       const badgeY = py - cubeH * 0.42
       const depth = 11 + py
 
       // Use Phaser.GameObjects.Arc for proper pivot-based scaling
-      const pulseCircle = this.scene.add.circle(badgeX, badgeY, badgeRadius * 1.4, 0x8B5CF6, 0.3)
+      const pulseCircle = this.scene.add.circle(badgeX, badgeY, badgeRadius * 1.4, badgeColor, 0.3)
       pulseCircle.setDepth(depth - 0.2)
       this.objects.push(pulseCircle)
 
@@ -234,13 +238,13 @@ export class VillageRenderer {
       })
 
       // Solid badge circle
-      const bgCircle = this.scene.add.circle(badgeX, badgeY, badgeRadius, 0x8B5CF6, 1)
+      const bgCircle = this.scene.add.circle(badgeX, badgeY, badgeRadius, badgeColor, 1)
       bgCircle.setDepth(depth)
       this.objects.push(bgCircle)
 
-      // "N" text
-      const badgeFontSize = Math.max(7, badgeRadius * 1.2)
-      const nText = this.scene.add.text(badgeX, badgeY, 'N', {
+      // Badge text
+      const badgeFontSize = Math.max(7, badgeRadius * (isFriend ? 1.0 : 1.2))
+      const nText = this.scene.add.text(badgeX, badgeY, badgeText, {
         fontFamily: 'Noto Sans KR, sans-serif',
         fontSize: `${badgeFontSize}px`,
         fontStyle: 'bold',

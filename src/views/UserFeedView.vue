@@ -1144,9 +1144,14 @@ function onEmptySlotTap(e: Event) {
   showStorePicker.value = true
 }
 
+let blockStoreTapUntil = 0
+
 function onStoreTap(e: Event) {
   const detail = (e as CustomEvent).detail as { room: VillageStoreRoom }
   const room = detail.room
+
+  // 모달이 열려있거나 방금 닫힌 직후면 무시 (Phaser pointerup 이벤트 차단)
+  if (showKnockModal.value || showStoreActionSheet.value || Date.now() < blockStoreTapUntil) return
 
   if (moveMode.value && moveFromSlot.value) {
     // Move mode: swap with this store's slot
@@ -1203,6 +1208,7 @@ const showKnockModal = ref(false)
 const knockTarget = ref<{ name: string; profileCode: string; randomType: string } | null>(null)
 
 function openKnockModal(room: VillageStoreRoom) {
+  blockStoreTapUntil = Date.now() + 500
   const name = room.storeName || '이 유저'
   knockTarget.value = {
     name,
@@ -1226,6 +1232,7 @@ async function confirmKnock() {
 function cancelKnock() {
   showKnockModal.value = false
   knockTarget.value = null
+  blockStoreTapUntil = Date.now() + 500
 }
 
 function goToGuestbookFromVillage() {
