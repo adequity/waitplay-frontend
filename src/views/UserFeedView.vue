@@ -987,15 +987,13 @@ const isMyProfile = computed(() => {
 })
 
 onMounted(async () => {
-  loadVillageThemes()
-  await loadProfile()
+  // 독립 API 호출 병렬 실행
+  await Promise.all([loadVillageThemes(), loadProfile()])
   if (profile.value) {
-    loadRoomConfig()
-    loadVillage()
+    Promise.all([loadRoomConfig(), loadVillage()])
   }
   if (isMyProfile.value && isAuthenticated.value) {
-    loadUnreadCount()
-    loadMyRoomAssets()
+    Promise.all([loadUnreadCount(), loadMyRoomAssets()])
   }
   window.addEventListener('miniroom-empty-slot-tap', onEmptySlotTap)
   window.addEventListener('miniroom-store-tap', onStoreTap)
