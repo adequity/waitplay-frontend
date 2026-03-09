@@ -2099,8 +2099,9 @@ const formatRelativeDate = (dateString: string): string => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 10001;
   padding: 20px;
+  touch-action: auto;
 }
 .knock-modal {
   background: #fff;
