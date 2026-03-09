@@ -79,9 +79,7 @@ const affiliationStatus = ref<AffiliationStatus | null>(null)
 const fetchAffiliationStatus = async () => {
   try {
     const response = await fetch(`${API_URL}/api/inquiry/affiliation-status`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) {
@@ -108,9 +106,9 @@ const submitRequest = async () => {
   try {
     const response = await fetch(`${API_URL}/api/inquiry/request-affiliation`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.accessToken}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         inviteCode: inviteCode.value.toUpperCase()

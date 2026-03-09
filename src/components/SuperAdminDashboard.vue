@@ -126,9 +126,7 @@ const loading = ref(true)
 const fetchDashboardStats = async () => {
   try {
     const response = await fetch(`${API_URL}/api/superadmin/dashboard/stats`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) {
@@ -149,9 +147,7 @@ const fetchDashboardStats = async () => {
 const fetchTopStores = async () => {
   try {
     const response = await fetch(`${API_URL}/api/superadmin/dashboard/top-stores`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) {

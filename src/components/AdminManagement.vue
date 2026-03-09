@@ -162,16 +162,12 @@ const fetchAdmins = async () => {
   try {
     // 승인된 Admin 조회
     const approvedResponse = await fetch(`${API_URL}/api/superadmin/admins`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     // 승인 대기 Admin 조회
     const pendingResponse = await fetch(`${API_URL}/api/superadmin/admins/pending`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!approvedResponse.ok || !pendingResponse.ok) {
@@ -198,9 +194,7 @@ const approveStore = async (id: string) => {
   try {
     const response = await fetch(`${API_URL}/api/superadmin/admins/${id}/approve`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to approve admin')
@@ -221,9 +215,7 @@ const rejectStore = async (id: string) => {
   try {
     const response = await fetch(`${API_URL}/api/superadmin/admins/${id}/reject`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to reject admin')
@@ -244,9 +236,7 @@ const removeStore = async (id: string) => {
   try {
     const response = await fetch(`${API_URL}/api/superadmin/admins/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to remove admin')

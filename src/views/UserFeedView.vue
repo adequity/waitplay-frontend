@@ -87,15 +87,47 @@
             </button>
           </template>
           <template v-else>
-            <button class="profile-action-btn" :class="{ primary: !profile.isFollowedByMe, following: profile.isFollowedByMe }" @click="toggleUserFollow">
-              {{ profile.isFollowedByMe ? '팔로잉' : '팔로우' }}
-            </button>
+            <template v-if="!profile.isBlockedByThem">
+              <button class="profile-action-btn" :class="{ primary: !profile.isFollowedByMe, following: profile.isFollowedByMe }" @click="toggleUserFollow">
+                {{ profile.isFollowedByMe ? '팔로잉' : '팔로우' }}
+              </button>
+            </template>
             <button class="profile-action-btn" @click="shareProfile">프로필 공유</button>
+            <button class="profile-action-btn icon-btn" @click="showBlockMenu = !showBlockMenu" v-if="isAuthenticated">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+              </svg>
+            </button>
+            <!-- 차단 드롭다운 메뉴 -->
+            <div v-if="showBlockMenu" class="block-dropdown">
+              <button v-if="!profile.isBlockedByMe" class="block-dropdown-item danger" @click="handleBlockUser">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+                이 사용자 차단
+              </button>
+              <button v-else class="block-dropdown-item" @click="handleUnblockUser">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>
+                </svg>
+                차단 해제
+              </button>
+            </div>
           </template>
         </div>
 
+        <!-- 차단된 유저 안내 -->
+        <div v-if="profile.isBlockedByMe || profile.isBlockedByThem" class="blocked-notice">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+          <p v-if="profile.isBlockedByMe">이 사용자를 차단했습니다.</p>
+          <p v-else>이 사용자의 콘텐츠를 볼 수 없습니다.</p>
+          <button v-if="profile.isBlockedByMe" class="unblock-btn" @click="handleUnblockUser">차단 해제</button>
+        </div>
+
         <!-- 단골 매장 -->
-        <div v-if="profile.followedStores && profile.followedStores.length > 0" class="followed-stores-section">
+        <div v-if="!profile.isBlockedByMe && !profile.isBlockedByThem && profile.followedStores && profile.followedStores.length > 0" class="followed-stores-section">
           <h3 class="section-subtitle">단골 매장</h3>
           <div class="followed-stores-scroll">
             <div v-for="store in profile.followedStores" :key="store.adminId" class="followed-store-item" @click="goToStore(store.qrCode)">
@@ -111,8 +143,8 @@
           </div>
         </div>
 
-        <!-- 탭 메뉴 (5탭) -->
-        <div class="profile-tabs">
+        <!-- 탭 메뉴 (5탭, 차단 시 숨김) -->
+        <div v-if="!profile.isBlockedByMe && !profile.isBlockedByThem" class="profile-tabs">
           <button class="tab-btn" :class="{ active: activeTab === 'room' }" @click="activeTab = 'room'">
             <span class="tab-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -161,7 +193,7 @@
       </div>
 
       <!-- ===== 탭 컨텐츠 ===== -->
-      <div class="tab-content">
+      <div v-if="!profile.isBlockedByMe && !profile.isBlockedByThem" class="tab-content">
 
         <!-- ===== 탭0: 나의방 ===== -->
         <div v-if="activeTab === 'room'" class="room-tab">
@@ -821,6 +853,7 @@ import { useAuthStore } from '@/stores/auth'
 import authService from '@/services/authService'
 import guestbookService from '@/services/guestbookService'
 import followService from '@/services/followService'
+import blockService from '@/services/blockService'
 import notificationService from '@/services/notificationService'
 import { getRoomConfiguration, updateRoomConfiguration, type RoomConfiguration, type RoomAsset, getMyRoomAssets, submitRoomPhoto, selectRoomAsset, deselectRoomAsset } from '@/services/roomService'
 import { getUserVillage, placeSlot, removeSlot, swapSlots, type VillageResponse } from '@/services/storeRoomService'
@@ -844,6 +877,8 @@ const isAuthenticated = computed(() => authStore.isAuthenticated)
 const profile = ref<UserPublicProfile | null>(null)
 const isLoadingProfile = ref(true)
 const error = ref<string | null>(null)
+
+const showBlockMenu = ref(false)
 
 const activeTab = ref<'room' | 'decorate' | 'guestbook' | 'stores' | 'notifications'>('room')
 const showDetail = ref(false)
@@ -1819,6 +1854,27 @@ async function toggleUserFollow() {
   } catch { /* ignore */ }
 }
 
+// ===== Block =====
+async function handleBlockUser() {
+  if (!profile.value) return
+  if (!confirm(`${profile.value.nickname}님을 차단하시겠습니까?\n차단하면 서로의 방명록, 알림, 검색에서 제외됩니다.`)) return
+  try {
+    await blockService.blockUser(profile.value.id)
+    profile.value.isBlockedByMe = true
+    profile.value.isFollowedByMe = false
+    showBlockMenu.value = false
+  } catch { /* ignore */ }
+}
+
+async function handleUnblockUser() {
+  if (!profile.value) return
+  try {
+    await blockService.unblockUser(profile.value.id)
+    profile.value.isBlockedByMe = false
+    showBlockMenu.value = false
+  } catch { /* ignore */ }
+}
+
 // ===== Reply =====
 function toggleReplyInput(messageId: string) {
   if (replyingTo.value === messageId) {
@@ -2332,4 +2388,15 @@ const formatRelativeDate = (dateString: string): string => {
 .follow-list-name { font-size: 14px; font-weight: 500; color: #1d1d1f; }
 .counter-item.clickable { cursor: pointer; }
 .counter-item.clickable:active { opacity: 0.6; }
+
+/* Block UI */
+.profile-actions { position: relative; }
+.block-dropdown { position: absolute; top: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); overflow: hidden; z-index: 100; min-width: 160px; }
+.block-dropdown-item { display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-size: 14px; color: #333; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
+.block-dropdown-item:active { background: #f5f5f5; }
+.block-dropdown-item.danger { color: #ff3b30; }
+.blocked-notice { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 48px 20px; text-align: center; }
+.blocked-notice p { font-size: 15px; color: #999; margin: 0; }
+.unblock-btn { padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; background: white; font-size: 14px; color: #333; cursor: pointer; }
+.unblock-btn:active { background: #f5f5f5; }
 </style>

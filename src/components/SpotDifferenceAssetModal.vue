@@ -746,10 +746,7 @@ watch(() => props.isOpen, async (newVal) => {
 const loadAssets = async () => {
   isLoading.value = true
   try {
-    const token = authStore.accessToken
-    if (!token) return
-
-    const result = await getMySpotDifferenceAssets(token)
+    const result = await getMySpotDifferenceAssets()
     assets.value = result.assets
     totalAssets.value = result.total
     assetLimit.value = result.limit
@@ -882,13 +879,7 @@ const createAsset = async () => {
 
   isCreating.value = true
   try {
-    const token = authStore.accessToken
-    if (!token) {
-      alert('인증이 필요합니다.')
-      return
-    }
-
-    const result = await createSpotDifferenceAsset(token, {
+    const result = await createSpotDifferenceAsset({
       name: form.value.name,
       originalImageUrl: form.value.originalImageUrl,
       modifiedImageUrl: form.value.modifiedImageUrl,
@@ -917,10 +908,7 @@ const createAsset = async () => {
 
 const toggleAsset = async (asset: SpotDifferenceAsset) => {
   try {
-    const token = authStore.accessToken
-    if (!token) return
-
-    const success = await updateSpotDifferenceAsset(token, asset.id, {
+    const success = await updateSpotDifferenceAsset(asset.id, {
       isActive: !asset.isActive
     })
 
@@ -936,10 +924,7 @@ const deleteAsset = async (assetId: string) => {
   if (!confirm('이 에셋을 삭제하시겠습니까?')) return
 
   try {
-    const token = authStore.accessToken
-    if (!token) return
-
-    const success = await deleteSpotDifferenceAsset(token, assetId)
+    const success = await deleteSpotDifferenceAsset(assetId)
     if (success) {
       assets.value = assets.value.filter(a => a.id !== assetId)
       selectedAssets.value.delete(assetId)
@@ -977,15 +962,12 @@ const deleteSelectedAssets = async () => {
 
   isDeleting.value = true
   try {
-    const token = authStore.accessToken
-    if (!token) return
-
     const idsToDelete = Array.from(selectedAssets.value)
     let deletedCount = 0
 
     for (const assetId of idsToDelete) {
       try {
-        const success = await deleteSpotDifferenceAsset(token, assetId)
+        const success = await deleteSpotDifferenceAsset(assetId)
         if (success) {
           assets.value = assets.value.filter(a => a.id !== assetId)
           selectedAssets.value.delete(assetId)
@@ -1154,13 +1136,6 @@ const createAllAssets = async () => {
   isBulkCreating.value = true
   bulkProgress.value = 0
 
-  const token = authStore.accessToken
-  if (!token) {
-    alert('인증이 필요합니다.')
-    isBulkCreating.value = false
-    return
-  }
-
   let successCount = 0
   let failCount = 0
 
@@ -1169,7 +1144,7 @@ const createAllAssets = async () => {
     if (!item || !item.isReady) continue
 
     try {
-      const result = await createSpotDifferenceAsset(token, {
+      const result = await createSpotDifferenceAsset({
         name: item.name || `에셋 ${i + 1}`,
         originalImageUrl: item.originalImageUrl,
         modifiedImageUrl: item.modifiedImageUrl,

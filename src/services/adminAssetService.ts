@@ -48,7 +48,6 @@ export interface SelectedAsset {
  * SuperAdmin의 에셋 목록 조회 (Admin용)
  */
 export async function getSuperAdminAssets(
-  token: string,
   gameType?: string,
   category?: string
 ): Promise<{ assets: AdminAsset[]; total: number }> {
@@ -60,9 +59,7 @@ export async function getSuperAdminAssets(
     const response = await fetch(
       `${API_BASE_URL}/api/admin/assets?${params.toString()}`,
       {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       }
     )
 
@@ -82,15 +79,14 @@ export async function getSuperAdminAssets(
  * 에셋 선택/저장
  */
 export async function selectGameAssets(
-  token: string,
   gameType: string,
   assetIds: string[]
 ): Promise<{ success: boolean; message: string }> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/admin/assets/select`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ gameType, assetIds })
@@ -112,7 +108,6 @@ export async function selectGameAssets(
  * 선택된 에셋 목록 조회
  */
 export async function getSelectedAssets(
-  token: string,
   gameType?: string
 ): Promise<{ assets: SelectedAsset[]; total: number }> {
   try {
@@ -122,9 +117,7 @@ export async function getSelectedAssets(
     const response = await fetch(
       `${API_BASE_URL}/api/admin/assets/selected?${params.toString()}`,
       {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       }
     )
 
@@ -144,15 +137,12 @@ export async function getSelectedAssets(
  * 선택된 에셋 제거
  */
 export async function removeSelectedAsset(
-  token: string,
   assetId: string
 ): Promise<{ success: boolean; message: string }> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/admin/assets/selected/${assetId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) {

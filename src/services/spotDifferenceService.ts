@@ -136,15 +136,12 @@ export interface SpotDifferenceAssetsResponse {
 
 /**
  * 내 틀린그림찾기 에셋 목록 조회 (Admin용)
- * @param token JWT 토큰
  * @returns 에셋 목록 및 제한 정보
  */
-export async function getMySpotDifferenceAssets(token: string): Promise<SpotDifferenceAssetsResponse> {
+export async function getMySpotDifferenceAssets(): Promise<SpotDifferenceAssetsResponse> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/spot-difference/admin/assets`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) {
@@ -166,19 +163,17 @@ export async function getMySpotDifferenceAssets(token: string): Promise<SpotDiff
 
 /**
  * 틀린그림찾기 에셋 생성 (Admin용)
- * @param token JWT 토큰
  * @param request 생성 요청 데이터
  * @returns 생성된 에셋 또는 null
  */
 export async function createSpotDifferenceAsset(
-  token: string,
   request: CreateSpotDifferenceRequest
 ): Promise<SpotDifferenceAsset | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/spot-difference/admin/assets`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(request)
@@ -199,21 +194,19 @@ export async function createSpotDifferenceAsset(
 
 /**
  * 틀린그림찾기 에셋 수정 (Admin용)
- * @param token JWT 토큰
  * @param assetId 에셋 ID
  * @param request 수정 요청 데이터
  * @returns 성공 여부
  */
 export async function updateSpotDifferenceAsset(
-  token: string,
   assetId: string,
   request: UpdateSpotDifferenceRequest
 ): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/spot-difference/admin/assets/${assetId}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(request)
@@ -228,17 +221,14 @@ export async function updateSpotDifferenceAsset(
 
 /**
  * 틀린그림찾기 에셋 삭제 (Admin용)
- * @param token JWT 토큰
  * @param assetId 에셋 ID
  * @returns 성공 여부
  */
-export async function deleteSpotDifferenceAsset(token: string, assetId: string): Promise<boolean> {
+export async function deleteSpotDifferenceAsset(assetId: string): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/spot-difference/admin/assets/${assetId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     })
 
     return response.ok

@@ -207,6 +207,8 @@ export interface UserPublicProfile {
   userFollowerCount: number
   userFollowingCount: number
   isFollowedByMe: boolean
+  isBlockedByMe: boolean
+  isBlockedByThem: boolean
   followedStores: UserFollowedStoreInfo[]
 }
 

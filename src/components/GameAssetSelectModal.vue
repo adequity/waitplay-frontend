@@ -192,13 +192,7 @@ const loadAssets = async () => {
   selectedIds.value = []
 
   try {
-    const token = authStore.accessToken
-    if (!token) {
-      console.error('No access token')
-      return
-    }
-
-    const result = await getSuperAdminAssets(token, gameType.value)
+    const result = await getSuperAdminAssets(gameType.value)
     assets.value = result.assets
 
     // Mark already selected assets
@@ -272,16 +266,10 @@ const addAsset = async () => {
   isUploading.value = true
 
   try {
-    const token = authStore.accessToken
-    if (!token) {
-      alert('인증이 필요합니다.')
-      return
-    }
-
     const response = await fetch(`${API_URL}/api/admin/assets/upload`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -313,13 +301,7 @@ const save = async () => {
   isSaving.value = true
 
   try {
-    const token = authStore.accessToken
-    if (!token) {
-      alert('인증이 필요합니다.')
-      return
-    }
-
-    const result = await selectGameAssets(token, gameType.value, selectedIds.value)
+    const result = await selectGameAssets(gameType.value, selectedIds.value)
 
     if (result.success) {
       emit('saved')

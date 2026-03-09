@@ -273,7 +273,7 @@ async function loadHolidays() {
     loading.value = true
     const params = filterYear.value ? `?year=${filterYear.value}` : ''
     const response = await fetch(`${API_URL}/api/calendar/holidays${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     holidays.value = await response.json()
@@ -292,8 +292,8 @@ async function saveHoliday() {
 
     const response = await fetch(url, {
       method: editingHoliday.value ? 'PUT' : 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(form.value)
@@ -325,8 +325,8 @@ async function toggleActive(holiday: any) {
   try {
     const response = await fetch(`${API_URL}/api/calendar/holidays/${holiday.id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ isActive: !holiday.isActive })
@@ -344,7 +344,7 @@ async function confirmDelete(holiday: any) {
   try {
     const response = await fetch(`${API_URL}/api/calendar/holidays/${holiday.id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     await loadHolidays()
@@ -359,7 +359,7 @@ async function seedKoreanHolidays() {
   try {
     const response = await fetch(`${API_URL}/api/calendar/holidays/seed-korean`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const result = await response.json()
@@ -393,7 +393,7 @@ async function loadDefaults() {
   try {
     defaultsLoading.value = true
     const response = await fetch(`${API_URL}/api/calendar/default-holidays`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     defaults.value = await response.json()
@@ -412,8 +412,8 @@ async function saveDefault() {
 
     const response = await fetch(url, {
       method: editingDefault.value ? 'PUT' : 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(defaultForm.value)
@@ -445,8 +445,8 @@ async function toggleDefaultActive(d: any) {
   try {
     const response = await fetch(`${API_URL}/api/calendar/default-holidays/${d.id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ isActive: !d.isActive })
@@ -464,7 +464,7 @@ async function confirmDeleteDefault(d: any) {
   try {
     const response = await fetch(`${API_URL}/api/calendar/default-holidays/${d.id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     await loadDefaults()

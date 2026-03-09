@@ -93,7 +93,7 @@ const fetchAssets = async () => {
     if (gameTypeFilter.value) params.append('gameType', gameTypeFilter.value)
 
     const response = await fetch(`${API_URL}/api/masteradmin/assets?${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -121,7 +121,7 @@ const confirmDelete = async (asset: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/assets/${asset.id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     fetchAssets()

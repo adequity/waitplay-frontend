@@ -357,9 +357,7 @@ const fetchQRCodes = async () => {
     if (statusFilter.value) params.append('isActive', statusFilter.value === 'active' ? 'true' : 'false')
 
     const response = await fetch(`${API_URL}/api/masteradmin/qrcodes?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to fetch QR codes')
@@ -386,9 +384,7 @@ const toggleActive = async (qr: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/qrcodes/${qr.id}/toggle-active`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to toggle QR status')
@@ -405,9 +401,7 @@ const confirmDelete = async (qr: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/qrcodes/${qr.id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to delete QR code')
@@ -435,9 +429,7 @@ const openDetailModal = async (qr: any) => {
 
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/qrcodes/${qr.id}`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to fetch QR detail')

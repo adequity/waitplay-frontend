@@ -56,6 +56,27 @@
         <button class="settings-btn logout-btn" @click="handleLogout">로그아웃</button>
       </section>
 
+      <!-- 차단된 사용자 -->
+      <section class="settings-section">
+        <h3 class="section-title">차단된 사용자</h3>
+        <div v-if="isLoadingBlocked" class="loading-text">불러오는 중...</div>
+        <div v-else-if="blockedUsers.length === 0" class="empty-text">차단된 사용자가 없습니다.</div>
+        <div v-else class="blocked-users-list">
+          <div v-for="user in blockedUsers" :key="user.userId" class="blocked-user-item">
+            <div class="blocked-user-info">
+              <div class="blocked-user-avatar">
+                <img v-if="user.profileImage" :src="user.profileImage" :alt="user.nickname"/>
+                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2">
+                  <circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+                </svg>
+              </div>
+              <span class="blocked-user-name">{{ user.nickname }}</span>
+            </div>
+            <button class="unblock-small-btn" @click="handleUnblock(user.userId)">해제</button>
+          </div>
+        </div>
+      </section>
+
       <!-- 계정 삭제 -->
       <section class="settings-section danger-section">
         <h3 class="section-title danger">계정 삭제</h3>
@@ -96,6 +117,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import authService from '@/services/authService'
+import blockService, { type BlockedUser } from '@/services/blockService'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -118,10 +140,32 @@ const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
 
+const blockedUsers = ref<BlockedUser[]>([])
+const isLoadingBlocked = ref(false)
+
+async function loadBlockedUsers() {
+  isLoadingBlocked.value = true
+  try {
+    blockedUsers.value = await blockService.getBlockedUsers()
+  } catch { /* ignore */ }
+  isLoadingBlocked.value = false
+}
+
+async function handleUnblock(userId: string) {
+  try {
+    await blockService.unblockUser(userId)
+    blockedUsers.value = blockedUsers.value.filter(u => u.userId !== userId)
+    toast('차단이 해제되었습니다.', 'success')
+  } catch {
+    toast('차단 해제에 실패했습니다.', 'error')
+  }
+}
+
 onMounted(async () => {
   if (!authStore.user) {
     await authStore.fetchUser()
   }
+  loadBlockedUsers()
 })
 
 function goBack() {
@@ -459,4 +503,15 @@ async function handleDeleteAccount() {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+/* Blocked Users */
+.blocked-users-list { display: flex; flex-direction: column; gap: 8px; }
+.blocked-user-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.blocked-user-info { display: flex; align-items: center; gap: 10px; }
+.blocked-user-avatar { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.blocked-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.blocked-user-name { font-size: 14px; font-weight: 500; color: #1d1d1f; }
+.unblock-small-btn { padding: 6px 14px; border-radius: 16px; border: 1px solid #ddd; background: white; font-size: 13px; color: #333; cursor: pointer; }
+.unblock-small-btn:active { background: #f5f5f5; }
+.loading-text, .empty-text { font-size: 14px; color: #999; text-align: center; padding: 20px 0; }
 </style>

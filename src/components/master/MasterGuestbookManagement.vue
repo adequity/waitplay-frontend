@@ -840,7 +840,7 @@ const fetchMessages = async () => {
     if (messageReportFilter.value) params.append('reportStatus', messageReportFilter.value)
 
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook?${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -873,7 +873,7 @@ const openDetailModal = async (msg: any) => {
   try {
     const response = await fetch(`${API_URL}/api/guestbook/${msg.id}/view`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (response.ok) {
       const data = await response.json()
@@ -907,7 +907,7 @@ const deleteMessage = async (messageId: string) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook/${messageId}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     fetchMessages()
@@ -956,7 +956,7 @@ const fetchReports = async () => {
     }
 
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook/reports?${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -990,8 +990,8 @@ const handleReport = async (reportId: string, action: 'approve' | 'reject') => {
 
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook/reports/${reportId}`, {
       method: 'PATCH',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
@@ -1107,7 +1107,7 @@ const fetchTemplates = async () => {
   try {
     templatesLoading.value = true
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook/templates`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -1140,8 +1140,8 @@ const saveTemplate = async () => {
 
     const response = await fetch(url, {
       method,
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -1164,7 +1164,7 @@ const deleteTemplate = async (id: string) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook/templates/${id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     fetchTemplates()
@@ -1178,8 +1178,8 @@ const toggleTemplateActive = async (tmpl: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook/templates/${tmpl.id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ isActive: !tmpl.isActive })
@@ -1208,7 +1208,7 @@ const onTemplateFileSelect = async (e: Event) => {
 
     const response = await fetch(`${API_URL}/api/fileupload/image`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` },
+      credentials: 'include',
       body: formData
     })
     if (!response.ok) throw new Error('Failed')
@@ -1272,7 +1272,7 @@ const fetchPalette = async () => {
   try {
     paletteLoading.value = true
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook/palette`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -1291,8 +1291,8 @@ const savePalette = async () => {
     paletteSaving.value = true
     const response = await fetch(`${API_URL}/api/masteradmin/guestbook/palette`, {
       method: 'PUT',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ colors: paletteColors.value })

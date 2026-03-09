@@ -324,7 +324,7 @@ async function loadSchedules() {
     loading.value = true
     const params = `?year=${currentYear.value}&month=${currentMonth.value}`
     const response = await fetch(`${API_URL}/api/calendar/schedules${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) {
       const errBody = await response.json().catch(() => ({}))
@@ -350,8 +350,8 @@ async function saveSchedule() {
 
     const response = await fetch(url, {
       method: editingSchedule.value ? 'PUT' : 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
@@ -392,7 +392,7 @@ async function confirmDelete(schedule: any) {
   try {
     const response = await fetch(`${API_URL}/api/calendar/schedules/${schedule.id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     await loadSchedules()

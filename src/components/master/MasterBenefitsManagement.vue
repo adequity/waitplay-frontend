@@ -92,7 +92,7 @@ const generateDefaultBenefits = async () => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/benefits/generate-defaults`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -118,7 +118,7 @@ const fetchBenefits = async () => {
 
     console.log('Fetching benefits from:', `${API_URL}/api/masteradmin/benefits?${params}`)
     const response = await fetch(`${API_URL}/api/masteradmin/benefits?${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) {
       console.error('Benefits API error:', response.status, response.statusText)
@@ -145,7 +145,7 @@ const toggleActive = async (benefit: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/benefits/${benefit.id}/toggle-active`, {
       method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     benefit.isActive = !benefit.isActive
@@ -159,7 +159,7 @@ const confirmDelete = async (benefit: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/benefits/${benefit.id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     fetchBenefits()

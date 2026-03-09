@@ -2506,9 +2506,7 @@ async function uploadImage(file: File): Promise<string> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/FileUpload/image`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      },
+      credentials: 'include',
       body: formData
     })
 
@@ -2727,9 +2725,7 @@ async function uploadAudio(file: File): Promise<string> {
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`
-        },
+        credentials: 'include',
         body: formData
       })
 
@@ -2861,9 +2857,7 @@ async function handleMenuThumbnailUpload(event: Event, index: number) {
 
     const response = await fetch(`${API_BASE_URL}/api/fileupload/thumbnail`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      },
+      credentials: 'include',
       body: formData
     })
 
@@ -3088,9 +3082,7 @@ async function handleBackgroundImageUpload(event: Event) {
 
     const response = await fetch(`${API_BASE_URL}/api/FileUpload/background`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      },
+      credentials: 'include',
       body: formData
     })
 
@@ -3179,9 +3171,7 @@ async function handleBannerSlideImageUpload(event: Event, slideIndex: number) {
 
     const response = await fetch(`${API_BASE_URL}/api/FileUpload/background`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      },
+      credentials: 'include',
       body: formData
     })
 

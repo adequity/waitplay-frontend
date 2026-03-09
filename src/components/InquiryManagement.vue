@@ -269,9 +269,7 @@ const fetchInquiries = async () => {
   loading.value = true
   try {
     const response = await fetch(`${API_URL}/api/superadmin/inquiries`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to fetch inquiries')
@@ -325,9 +323,9 @@ const submitAnswer = async () => {
   try {
     const response = await fetch(`${API_URL}/api/superadmin/inquiries/${selectedInquiry.value.id}/answer`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.accessToken}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         answer: answerText.value

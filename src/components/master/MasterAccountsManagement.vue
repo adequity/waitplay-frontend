@@ -372,9 +372,7 @@ const fetchAccounts = async () => {
     if (roleFilter.value) params.append('role', roleFilter.value)
 
     const response = await fetch(`${API_URL}/api/masteradmin/accounts?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to fetch accounts')
@@ -395,9 +393,7 @@ const fetchAccountDetail = async (accountId: string) => {
   try {
     detailLoading.value = true
     const response = await fetch(`${API_URL}/api/masteradmin/accounts/${accountId}`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to fetch account detail')
@@ -424,8 +420,8 @@ const createAccount = async () => {
     creating.value = true
     const response = await fetch(`${API_URL}/api/masteradmin/accounts`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(newAccount.value)
@@ -492,8 +488,8 @@ const updateAccount = async () => {
 
     const response = await fetch(`${API_URL}/api/masteradmin/accounts/${editAccount.value.id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(updateData)
@@ -509,8 +505,8 @@ const updateAccount = async () => {
     if (originalAccount && originalAccount.userRole !== editAccount.value.userRole && editAccount.value.userRole !== 'masteradmin') {
       const roleResponse = await fetch(`${API_URL}/api/masteradmin/accounts/${editAccount.value.id}/role`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ role: editAccount.value.userRole })
@@ -542,9 +538,7 @@ const confirmDelete = async (account: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/accounts/${account.id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to delete account')

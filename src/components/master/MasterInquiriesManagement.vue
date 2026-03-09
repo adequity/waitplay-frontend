@@ -129,7 +129,7 @@ const fetchInquiries = async () => {
     if (statusFilter.value) params.append('status', statusFilter.value)
 
     const response = await fetch(`${API_URL}/api/masteradmin/inquiries?${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -155,8 +155,8 @@ const submitAnswer = async () => {
     submitting.value = true
     const response = await fetch(`${API_URL}/api/masteradmin/inquiries/${selectedInquiry.value.id}/answer`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ answer: answerText.value })
@@ -177,7 +177,7 @@ const confirmDelete = async (inquiry: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/inquiries/${inquiry.id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     fetchInquiries()

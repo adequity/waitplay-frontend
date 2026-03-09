@@ -85,7 +85,7 @@ const fetchNotices = async () => {
     loading.value = true
     const params = new URLSearchParams({ page: page.value.toString(), pageSize: pageSize.value.toString() })
     const response = await fetch(`${API_URL}/api/masteradmin/notices?${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -102,7 +102,7 @@ const togglePin = async (notice: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/notices/${notice.id}/pin`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     notice.isPinned = !notice.isPinned
@@ -116,7 +116,7 @@ const confirmDelete = async (notice: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/notices/${notice.id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     fetchNotices()

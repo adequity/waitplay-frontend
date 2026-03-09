@@ -222,14 +222,10 @@ const fetchDashboard = async () => {
     // Fetch stats and recent activity in parallel
     const [statsResponse, activityResponse] = await Promise.all([
       fetch(`${API_URL}/api/masteradmin/dashboard/stats`, {
-        headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`
-        }
+        credentials: 'include'
       }),
       fetch(`${API_URL}/api/masteradmin/system/recent-activity`, {
-        headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`
-        }
+        credentials: 'include'
       })
     ])
 

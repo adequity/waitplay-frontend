@@ -34,7 +34,7 @@ const isAdminRoute = computed(() => {
 })
 
 onMounted(() => {
-  if (authStore.accessToken) {
+  if (authStore.isAuthenticated) {
     authStore.fetchUser()
   }
 })

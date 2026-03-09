@@ -340,9 +340,7 @@ const loadInquiries = async () => {
     }
 
     const response = await fetch(`${API_BASE_URL}/api/inquiry?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) {
@@ -378,9 +376,9 @@ const submitInquiry = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/inquiry`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.accessToken}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         title: writeForm.value.title,
@@ -421,9 +419,7 @@ const deleteInquiry = async (id: number) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/inquiry/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`
-        }
+        credentials: 'include'
       })
 
       if (!response.ok) {

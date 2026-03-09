@@ -219,9 +219,7 @@ const fetchNotices = async () => {
   try {
     loading.value = true
     const response = await fetch(`${API_URL}/api/superadmin/notices`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) {
@@ -252,8 +250,8 @@ const toggleFixed = async (notice: Notice) => {
   try {
     const response = await fetch(`${API_URL}/api/superadmin/notices/${notice.id}/toggle-fixed`, {
       method: 'PATCH',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       }
     })
@@ -310,8 +308,8 @@ const saveNotice = async () => {
       const { id, ...updateData } = form.value
       const response = await fetch(`${API_URL}/api/superadmin/notices/${id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(updateData)
@@ -327,8 +325,8 @@ const saveNotice = async () => {
       const { id, ...createData } = form.value
       const response = await fetch(`${API_URL}/api/superadmin/notices`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(createData)
@@ -357,9 +355,7 @@ const deleteNotice = async (id: string) => {
   try {
     const response = await fetch(`${API_URL}/api/superadmin/notices/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) {

@@ -405,7 +405,7 @@ const uploadingBackground = ref(false)
 const fetchTemplates = async () => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/game-templates`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -426,7 +426,7 @@ const fetchAdminAccounts = async () => {
     if (searchAccount.value) params.append('search', searchAccount.value)
 
     const response = await fetch(`${API_URL}/api/masteradmin/accounts?${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -442,7 +442,7 @@ const fetchScores = async () => {
   try {
     const params = new URLSearchParams({ page: scoresPage.value.toString(), pageSize: '20' })
     const response = await fetch(`${API_URL}/api/masteradmin/games?${params}`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -463,7 +463,7 @@ const loadAccountGames = async (account: any) => {
   selectedAccount.value = account
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/accounts/${account.id}/games`, {
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -479,7 +479,7 @@ const toggleAccountGame = async (accountId: string, gameTemplateId: string) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/accounts/${accountId}/games/${gameTemplateId}/toggle`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
 
@@ -496,7 +496,7 @@ const assignDefaultsToAccount = async (accountId: string) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/accounts/${accountId}/games/assign-defaults`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -517,7 +517,7 @@ const assignDefaultsToAll = async () => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/games/assign-defaults-to-all`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     const data = await response.json()
@@ -533,7 +533,7 @@ const toggleTemplateActive = async (template: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/game-templates/${template.id}/toggle-active`, {
       method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     await fetchTemplates()
@@ -547,7 +547,7 @@ const toggleTemplateDefault = async (template: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/game-templates/${template.id}/toggle-default`, {
       method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     await fetchTemplates()
@@ -588,7 +588,7 @@ const confirmDeleteTemplate = async (template: any) => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/game-templates/${template.id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed')
     await fetchTemplates()
@@ -609,8 +609,8 @@ const saveTemplate = async () => {
   try {
     const response = await fetch(`${API_URL}/api/masteradmin/game-templates/${editingTemplate.value.id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -685,7 +685,7 @@ const handleIconImageUpload = async (event: Event) => {
 
     const response = await fetch(`${API_URL}/api/fileupload/logo`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` },
+      credentials: 'include',
       body: formData
     })
 
@@ -716,7 +716,7 @@ const handleBackgroundImageUpload = async (event: Event) => {
 
     const response = await fetch(`${API_URL}/api/fileupload/background`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.accessToken}` },
+      credentials: 'include',
       body: formData
     })
 

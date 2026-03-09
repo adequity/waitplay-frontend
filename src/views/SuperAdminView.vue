@@ -150,9 +150,7 @@ const tabs = [
 const fetchInviteCode = async () => {
   try {
     const response = await fetch(`${API_URL}/api/superadmin/invite-code`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
 
     if (!response.ok) throw new Error('Failed to fetch invite code')

@@ -7,29 +7,16 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
   timeout: 15000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
-// Auth endpoints that should NOT include Authorization header
-const noAuthPaths = ['/auth/standard-login', '/auth/login', '/auth/signup', '/auth/refresh']
-
-// Request interceptor to add auth token
+// Request interceptor (HttpOnly 쿠키가 자동 전송되므로 헤더 주입 불필요)
 apiClient.interceptors.request.use(
-  (config) => {
-    const isNoAuth = noAuthPaths.some(path => config.url?.includes(path))
-    if (!isNoAuth) {
-      const authStore = useAuthStore()
-      if (authStore.accessToken) {
-        config.headers.Authorization = `Bearer ${authStore.accessToken}`
-      }
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (config) => config,
+  (error) => Promise.reject(error)
 )
 
 // Flag to prevent multiple refresh attempts
@@ -78,8 +65,8 @@ apiClient.interceptors.response.use(
         const authStore = useAuthStore()
         const refreshed = await authStore.refreshAccessToken()
 
-        if (refreshed && originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`
+        if (refreshed) {
+          // 쿠키가 자동 갱신되므로 헤더 설정 불필요
           return apiClient(originalRequest)
         } else {
           // Refresh failed, only redirect if on a protected page

@@ -13,7 +13,7 @@ export interface SocialLoginRequest {
 }
 
 export interface RefreshTokenRequest {
-  refreshToken: string
+  refreshToken?: string
 }
 
 export interface EmailSignupRequest {

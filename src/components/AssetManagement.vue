@@ -236,9 +236,7 @@ const fetchAssets = async () => {
   try {
     loading.value = true
     const response = await fetch(`${API_URL}/api/superadmin/assets`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
+      credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed to fetch assets')
     const data = await response.json()
@@ -324,8 +322,8 @@ const saveAsset = async () => {
     if (isEditing.value) {
       const response = await fetch(`${API_URL}/api/superadmin/assets/${id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(submitData)
@@ -335,8 +333,8 @@ const saveAsset = async () => {
     } else {
       const response = await fetch(`${API_URL}/api/superadmin/assets`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(submitData)
@@ -357,9 +355,7 @@ const deleteAsset = async (id: string) => {
     try {
       const response = await fetch(`${API_URL}/api/superadmin/assets/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${authStore.accessToken}`
-        }
+        credentials: 'include'
       })
       if (!response.ok) throw new Error('Failed to delete asset')
       alert('에셋이 삭제되었습니다.')
