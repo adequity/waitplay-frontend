@@ -82,6 +82,12 @@
                   <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
                 </svg>
               </button>
+              <button class="detail-mention-btn" @click="toggleMentionPanel" :class="{ active: showMentionPanel }">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="4"/>
+                  <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -98,6 +104,54 @@
               <span v-if="getReactionCount(r.type) > 0" class="reaction-count">{{ getReactionCount(r.type) }}</span>
             </button>
           </div>
+
+          <!-- 멘션 패널 -->
+          <Transition name="mention-slide">
+            <div v-if="showMentionPanel" class="mention-panel">
+              <div class="mention-search-box">
+                <svg class="mention-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input
+                  v-model="mentionQuery"
+                  class="mention-search-input"
+                  placeholder="팔로우한 유저/매장 검색..."
+                  @input="onMentionSearch"
+                />
+              </div>
+              <div v-if="isLoadingMention" class="mention-loading">
+                <span class="loading-spinner-small"></span>
+              </div>
+              <div v-else-if="mentionResults.length === 0 && mentionSearched" class="mention-empty">
+                검색 결과가 없습니다
+              </div>
+              <div v-else class="mention-results">
+                <button
+                  v-for="user in mentionResults"
+                  :key="user.userId"
+                  class="mention-user-item"
+                  @click="sendMention(user)"
+                  :disabled="mentionSentIds.has(user.userId)"
+                >
+                  <img
+                    v-if="user.profileImage"
+                    :src="user.profileImage"
+                    class="mention-user-avatar"
+                    alt=""
+                  />
+                  <div v-else class="mention-user-avatar mention-avatar-placeholder">
+                    {{ user.isStore ? '🏪' : '👤' }}
+                  </div>
+                  <div class="mention-user-info">
+                    <span class="mention-user-name">{{ user.nickname }}</span>
+                    <span v-if="user.companyName" class="mention-user-company">{{ user.companyName }}</span>
+                    <span v-if="user.isStore" class="mention-store-badge">매장</span>
+                  </div>
+                  <span v-if="mentionSentIds.has(user.userId)" class="mention-sent-label">전송됨</span>
+                </button>
+              </div>
+            </div>
+          </Transition>
 
           <!-- 사장님 답글 -->
           <div v-if="isLoadingReplies" class="detail-replies-loading">
@@ -184,6 +238,54 @@ async function toggleReaction(type: string) {
       myReactions.value = myReactions.value.filter(r => r !== type)
     }
   } catch { /* silent */ }
+}
+
+// 멘션
+const showMentionPanel = ref(false)
+const mentionQuery = ref('')
+const mentionResults = ref<import('@/services/guestbookService').MentionableUser[]>([])
+const isLoadingMention = ref(false)
+const mentionSearched = ref(false)
+const mentionSentIds = ref<Set<string>>(new Set())
+let mentionDebounce: ReturnType<typeof setTimeout> | null = null
+
+function toggleMentionPanel() {
+  showMentionPanel.value = !showMentionPanel.value
+  if (showMentionPanel.value) {
+    mentionQuery.value = ''
+    mentionResults.value = []
+    mentionSearched.value = false
+    loadMentionUsers()
+  }
+}
+
+async function loadMentionUsers(q = '') {
+  isLoadingMention.value = true
+  try {
+    mentionResults.value = await guestbookService.searchMentionableUsers(q)
+    mentionSearched.value = true
+  } catch {
+    mentionResults.value = []
+  } finally {
+    isLoadingMention.value = false
+  }
+}
+
+function onMentionSearch() {
+  if (mentionDebounce) clearTimeout(mentionDebounce)
+  mentionDebounce = setTimeout(() => {
+    loadMentionUsers(mentionQuery.value)
+  }, 300)
+}
+
+async function sendMention(user: import('@/services/guestbookService').MentionableUser) {
+  if (!props.message || mentionSentIds.value.has(user.userId)) return
+  try {
+    await guestbookService.sendMention(props.message.id, user.userId)
+    mentionSentIds.value = new Set([...mentionSentIds.value, user.userId])
+  } catch {
+    alert('멘션 전송에 실패했습니다')
+  }
 }
 
 // 오디오 플레이어 상태
@@ -285,6 +387,8 @@ watch(() => props.visible, async (newVal) => {
     replies.value = []
     reactionCounts.value = {}
     myReactions.value = []
+    showMentionPanel.value = false
+    mentionSentIds.value = new Set()
     cleanupAudio()
   }
 })
@@ -738,6 +842,161 @@ const formatDate = (dateString: string): string => {
     padding: 8px 14px;
     font-size: 13px;
   }
+}
+
+/* 멘션 버튼 */
+.detail-mention-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.detail-mention-btn:hover,
+.detail-mention-btn.active {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* 멘션 패널 */
+.mention-panel {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 12px;
+  margin-top: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.mention-search-box {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 12px;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mention-search-icon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.5);
+}
+.mention-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+}
+.mention-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.mention-loading,
+.mention-empty {
+  text-align: center;
+  padding: 16px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+}
+
+.mention-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mention-user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+  text-align: left;
+}
+.mention-user-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+.mention-user-item:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.mention-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.mention-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 18px;
+}
+
+.mention-user-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.mention-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mention-user-company {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mention-store-badge {
+  font-size: 10px;
+  background: #4ECDC4;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.mention-sent-label {
+  font-size: 12px;
+  color: #4ECDC4;
+  flex-shrink: 0;
+}
+
+/* 멘션 패널 트랜지션 */
+.mention-slide-enter-active,
+.mention-slide-leave-active {
+  transition: all 0.2s ease;
+}
+.mention-slide-enter-from,
+.mention-slide-leave-to {
+  opacity: 0;
+  max-height: 0;
+  padding: 0 12px;
+  margin-top: 0;
 }
 
 /* 모달 트랜지션 */

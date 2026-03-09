@@ -49,6 +49,12 @@
 - **Build**: Nixpacks (`nixpacks.toml`)
 - **Stability**: Check `STABILITY_REPORT.md` for current infrastructure status (Rate limiting, DR, etc.).
 - **Env Vars**: managed in Railway, local `.env` required for dev (API URL).
+- **중요 — 프론트 변경 시 반드시 양쪽 레포 모두 커밋/푸시**:
+  1. `npm run build` in waitplay-frontend
+  2. `git add && git commit && git push` in **waitplay-frontend** (소스 보존)
+  3. `rm -rf wwwroot/* && cp -r dist/* wwwroot/` in waitplay-backend
+  4. `git add && git commit && git push` in **waitplay-backend** (배포)
+  - 프론트 레포 푸시를 절대 빠뜨리지 말 것!
 
 ## 6. AI & "Vibe Coding" Integration
 

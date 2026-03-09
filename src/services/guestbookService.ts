@@ -102,6 +102,15 @@ export interface GuestbookStatsSummary {
   qrCodeCount: number
 }
 
+export interface MentionableUser {
+  userId: string
+  nickname: string
+  profileImage?: string
+  profileCode?: string
+  companyName?: string
+  isStore: boolean
+}
+
 export interface TrendingMessage {
   id: string
   userId: string
@@ -608,6 +617,18 @@ class GuestbookService {
     const response = await apiClient.get<TrendingMessage[]>('/api/guestbook/trending', {
       params: { period, page, pageSize }
     })
+    return response.data
+  }
+
+  // ===== Mention =====
+
+  async sendMention(messageId: string, targetUserId: string): Promise<{ message: string; alreadySent: boolean }> {
+    const response = await apiClient.post(`/api/guestbook/${messageId}/mention`, { targetUserId })
+    return response.data
+  }
+
+  async searchMentionableUsers(q: string = ''): Promise<MentionableUser[]> {
+    const response = await apiClient.get<MentionableUser[]>('/api/guestbook/mention-search', { params: { q } })
     return response.data
   }
 }
