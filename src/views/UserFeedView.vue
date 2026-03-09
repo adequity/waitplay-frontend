@@ -1222,11 +1222,12 @@ async function confirmKnock() {
   if (!knockTarget.value) return
   const profileCode = knockTarget.value.profileCode
   showKnockModal.value = false
-  closeRoomFullscreen()
+  knockTarget.value = null
   // 노크 알림 전송 (실패해도 이동은 진행)
   notificationService.sendKnock(profileCode).catch(() => {})
-  router.push(`/u/${profileCode}`)
-  knockTarget.value = null
+  // 같은 UserFeedView 컴포넌트 내에서 다른 유저로 이동 시
+  // route.params.code가 const라 갱신 안 되므로 전체 네비게이션 사용
+  window.location.href = `/u/${profileCode}`
 }
 
 function cancelKnock() {
