@@ -85,7 +85,10 @@ export const useAuthStore = defineStore('auth', () => {
       return true
     } catch (error) {
       console.error('Token refresh failed:', error)
-      logout()
+      // 서버 logout 호출 없이 로컬 상태만 정리 (무한 루프 방지)
+      userRole.value = null
+      user.value = null
+      localStorage.removeItem('userRole')
       return false
     }
   }

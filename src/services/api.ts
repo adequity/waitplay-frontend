@@ -46,23 +46,13 @@ apiClient.interceptors.response.use(
     // Skip refresh logic for auth endpoints to prevent infinite loops
     const isAuthEndpoint = originalRequest?.url?.includes('/auth/refresh') ||
                            originalRequest?.url?.includes('/auth/me') ||
+                           originalRequest?.url?.includes('/auth/logout') ||
                            originalRequest?.url?.includes('/auth/standard-login') ||
                            originalRequest?.url?.includes('/auth/login') ||
                            originalRequest?.url?.includes('/auth/signup')
 
-    // If 401 on auth endpoint, logout and only redirect if on protected page
+    // If 401 on auth endpoint, just reject (no refresh attempt, no logout loop)
     if (error.response?.status === 401 && isAuthEndpoint) {
-      const authStore = useAuthStore()
-      authStore.logout()
-
-      // Only redirect to login if on a protected page (not customer/game pages)
-      const currentPath = window.location.pathname
-      const publicPaths = ['/customer', '/game', '/login', '/signup', '/forgot-password']
-      const isPublicPage = publicPaths.some(path => currentPath.startsWith(path))
-
-      if (!isPublicPage) {
-        window.location.href = '/login'
-      }
       return Promise.reject(error)
     }
 
